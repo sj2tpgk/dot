@@ -41,7 +41,7 @@ safelink(){
     fi
     ln -s -f "$tgtpath" "$lnpath"
   elif [ $backup -eq 1 ]; then
-    mv "$lnpath" "$lnpath_$(date +YYYY_MM_DD_hh_mm_ss)"
+    mv "$lnpath" "$lnpath_$(date +%y%m%d_%H%M%S)"
     ln -s "$tgtpath" "$lnpath"
   fi
 
