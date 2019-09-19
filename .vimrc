@@ -7,11 +7,14 @@ set pumheight=12      " Height of popup menu in completion
 set showcmd           " Show command being input
 set hidden            " Allow changeing buffer without saving
 set textwidth=0       " Prevent automatically insert '\n' and goto next line
-set ttymouse=xterm2   " Mouse drag to resize windows
 set scrolloff=3       " Cursor > (bottom of screen + n)
 set sidescrolloff=5
 let mapleader=" "
 set t_Co=16           " Number of colors = 16
+
+if exists("&ttymouse")
+    set ttymouse=xterm2   " Mouse drag to resize windows
+endif
 
 set clipboard=unnamedplus
 
