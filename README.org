@@ -1,0 +1,3 @@
+Necessary configuration files over different machines.
+
+run __init.sh to install

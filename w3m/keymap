@@ -1,0 +1,20 @@
+keymap k DOWN
+keymap j UP
+
+keymap DOWN MOVE_DOWN1
+keymap UP MOVE_UP1
+
+keymap u PREV_PAGE
+
+keymap / ISEARCH
+keymap ? ISEARCH_BACK
+
+keymap r REDRAW
+
+keymap b BACK
+
+keymap t TAB_MENU
+
+keymap f LINK_BEGIN
+
+keymap A ACCESSKEY

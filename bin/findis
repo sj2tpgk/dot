@@ -1,0 +1,6 @@
+#!/bin/sh
+
+str="$1"
+
+pat="*$str*"
+find . -not \( \( -path ./.git -o -path ./.cache \) -prune \) -iname "$pat"

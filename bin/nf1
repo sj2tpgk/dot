@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# Count number of files is current directory and subdirectories with depth 1
+
+collect(){
+  # use arg1 or current dir
+  ds=$(find ${1:-.} -maxdepth 1 -type d)
+
+  # deal with dirs with space like 'this is a directory'
+  ifs1="$IFS"; IFS=$'\n'
+
+  for i in $ds; do
+    n=$(find "$i" | wc -l)
+    echo -e "$n\t$i"
+  done
+
+  IFS="$ifs1"
+}
+
+collect | sort -n

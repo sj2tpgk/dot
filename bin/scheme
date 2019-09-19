@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# chibi-scheme -I ~/bin/scheme_lib $@
+gosh -r7 -I. -I ~/bin/scheme_lib $@
