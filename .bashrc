@@ -94,5 +94,20 @@ function parse_git_dirty {
 	fi
 }
 
-export PS1="\[\e[32m\]\w\[\e[m\] \[\e[32m\](\u\[\e[m\]@\[\e[32m\]\h)\[\e[m\] \[\e[35m\]\`parse_git_branch\`\[\e[m\]\[\e[1;33m\]>>>\[\e[m\] "
+function genprompt {
+  local s_path="36"
+  local s_usr="32"
+  local s_git="35"
+  local s_arrow="1;33"
+
+  local p_path="\[\e[${s_path}m\]\w\[\e[m\]"
+  local p_usr="\[\e[${s_usr}m\](\u@\h)\[\e[m\]"
+  local p_git="\[\e[${s_git}m\]\`parse_git_branch\`\[\e[m\]"
+  local p_arrow="\[\e[1;33m\]>>>\[\e[m\]"
+
+  echo "$p_path $p_usr $p_git$p_arrow "
+}
+
+export PS1=$(genprompt)
+# export PS1="\[\e[36m\]\w\[\e[m\] \[\e[32m\](\u\[\e[m\]@\[\e[32m\]\h)\[\e[m\] \[\e[35m\]\`parse_git_branch\`\[\e[m\]\[\e[1;33m\]>>>\[\e[m\] "
 # }}}
