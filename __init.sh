@@ -33,7 +33,12 @@ safelink(){
   fi
 
   if [ $force -eq 1 ]; then
-    mkdir -p "$(dirname $lnpath)"
+    [ ! -d $(dirname $lnpath) ] && mkdir -p "$(dirname $lnpath)"
+    if [ -d "$lnpath" ]; then
+      # Doing "ln -s X Y" with Y a directory creates a link IN Y, rather than
+      # making Y a link to X. Avoid this by removing Y first.
+      rm -r "$lnpath"
+    fi
     ln -s -f "$tgtpath" "$lnpath"
   elif [ $backup -eq 1 ]; then
     mv "$lnpath" "$lnpath_$(date +YYYY_MM_DD_hh_mm_ss)"
@@ -55,6 +60,7 @@ safelink $DOTDIR/bin/findis          ~/bin/findis
 safelink $DOTDIR/bin/img2txtfull     ~/bin/img2txtfull
 safelink $DOTDIR/bin/nf1             ~/bin/nf1
 safelink $DOTDIR/bin/passe           ~/bin/passe
+safelink $DOTDIR/bin/randomstr       ~/bin/randomstr
 safelink $DOTDIR/bin/running         ~/bin/running
 safelink $DOTDIR/bin/scheme          ~/bin/scheme
 safelink $DOTDIR/bin/scm             ~/bin/scm
