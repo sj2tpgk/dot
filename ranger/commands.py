@@ -21,7 +21,7 @@ class fzf_history(Command):
         import os
         rh=HISTFILE
         rht=rh+".tmp"
-        do_fzf(self.fm, f"cat {rh} | tail -n {HISTSIZE} | sort | uniq -u > {rht}; mv {rht} {rh}; cat {rh} | fzf --tac")
+        do_fzf(self.fm, "cat "+rh+" | tail -n {HISTSIZE} | sort | uniq -u > "+rht+"; mv "+rht+" "+rh+"; cat "+rh+" | fzf --tac")
 
 class fzf_here(Command):
     def execute(self):
