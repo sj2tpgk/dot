@@ -44,15 +44,16 @@ function greeting(){
 }
 
 greeting
+unset -f greeting
 ## }}}
 
 ## Prompt {{{
 # get current branch in git repo
-function parse_git_branch() {
+function __ps1_parse_git_branch() {
 	BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
 	if [ ! "${BRANCH}" == "" ]
 	then
-		STAT=`parse_git_dirty`
+		STAT=`__ps1_parse_git_dirty`
 		echo "(${BRANCH}${STAT}) "
 	else
 		echo ""
@@ -60,7 +61,7 @@ function parse_git_branch() {
 }
 
 # get current status of git repo
-function parse_git_dirty {
+function __ps1_parse_git_dirty {
 	status=`git status 2>&1 | tee`
 	dirty=`echo -n "${status}" 2> /dev/null | grep "modified:" &> /dev/null; echo "$?"`
 	untracked=`echo -n "${status}" 2> /dev/null | grep "Untracked files" &> /dev/null; echo "$?"`
@@ -94,20 +95,26 @@ function parse_git_dirty {
 	fi
 }
 
+function __ps1_arrow3_color {
+  [ -z $RANGER_LEVEL ] && echo -n "31" || echo -n "36"
+}
+
 function genprompt {
   local s_path="36"
   local s_usr="32"
   local s_git="35"
-  local s_arrow="1;33"
 
   local p_path="\[\e[${s_path}m\]\w\[\e[m\]"
   local p_usr="\[\e[${s_usr}m\](\u@\h)\[\e[m\]"
-  local p_git="\[\e[${s_git}m\]\`parse_git_branch\`\[\e[m\]"
-  local p_arrow="\[\e[1;33m\]>>>\[\e[m\]"
+  local p_git="\[\e[${s_git}m\]\`__ps1_parse_git_branch\`\[\e[m\]"
+  local p_arrow="\[\e[1;33m\]>>\[\e[\`__ps1_arrow3_color\`m\]>\[\e[m\]"
 
   echo "$p_path $p_usr $p_git$p_arrow "
 }
 
 export PS1=$(genprompt)
+unset -f genprompt
+
 # export PS1="\[\e[36m\]\w\[\e[m\] \[\e[32m\](\u\[\e[m\]@\[\e[32m\]\h)\[\e[m\] \[\e[35m\]\`parse_git_branch\`\[\e[m\]\[\e[1;33m\]>>>\[\e[m\] "
 # }}}
+
