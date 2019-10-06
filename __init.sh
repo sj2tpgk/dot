@@ -57,6 +57,7 @@ safelink $DOTDIR/bin/cl              ~/bin/cl
 safelink $DOTDIR/bin/du1             ~/bin/du1
 safelink $DOTDIR/bin/en              ~/bin/en
 safelink $DOTDIR/bin/findis          ~/bin/findis
+safelink $DOTDIR/bin/gir             ~/bin/gir
 safelink $DOTDIR/bin/img2txtfull     ~/bin/img2txtfull
 safelink $DOTDIR/bin/nf1             ~/bin/nf1
 safelink $DOTDIR/bin/passe           ~/bin/passe
