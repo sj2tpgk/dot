@@ -96,7 +96,16 @@ function __ps1_parse_git_dirty {
 }
 
 function __ps1_arrow3_color {
-  [ -z $RANGER_LEVEL ] && echo -n "31" || echo -n "36"
+  # -n not work ?
+  if [ -z $RANGER_LEVEL ]; then
+    if [ -z $NNNLVL ]; then
+      echo -n "31"
+    else
+      echo -n "36"
+    fi
+  else
+    echo -n "36"
+  fi
 }
 
 function genprompt {
@@ -122,14 +131,17 @@ unset -f genprompt
 
 # nnn {{{
 
-export NNN_USE_EDITOR=1
+if command -v nnn > /dev/null; then
 
-nn () {
-  # Block nesting of nnn in subshells
-  if [ -n $NNNLVL ] && [ "${NNNLVL:-0}" -ge 1 ]; then
-    echo "nnn is already running"
-    return
-  else
+  export NNN_USE_EDITOR=1          # use the $EDITOR to open text files
+  export NNN_CONTEXT_COLORS="2136" # use a different color for each context
+
+  nn () {
+    # Block nesting of nnn in subshells
+    if [ -n $NNNLVL ] && [ "${NNNLVL:-0}" -ge 1 ]; then
+      echo "nnn is already running"
+      return
+    else
 
     # The default behaviour is to cd on quit (nnn checks if NNN_TMPFILE is set)
     # To cd on quit only on ^G, remove the "export" as in:
@@ -149,7 +161,9 @@ nn () {
       . "$NNN_TMPFILE"
       rm -f "$NNN_TMPFILE" > /dev/null
     fi
-  fi
-}
+    fi
+  }
+
+fi
 
 # }}}
