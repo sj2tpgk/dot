@@ -57,6 +57,7 @@ inore <home> <c-o>^
 syntax on
 filetype on
 colorscheme desert
+hi Search ctermfg=0 ctermbg=12 guifg=wheat guibg=peru
 " }}}
 " Cursor {{{
 aug vimrc_cursor
@@ -78,6 +79,9 @@ set smartindent
 set fdm=marker
 nnore <tab> za
 nnore <leader>z :set fdm=marker<cr>zm
+
+" close folding by 'h' if cursor is 0 of the line and in a opened folding
+nnore <expr> h  (getcurpos()[2] == 1) && (foldlevel('.') != 0) ? 'zc' : 'h'
 " }}}
 " Modeline {{{
 set statusline=%<%{FileStatus()}\ %f%*%=%-10.(%l,%c%V%)\ %y%6.(%P%)
@@ -110,6 +114,13 @@ augroup END
 " Save/Quit {{{
 nnore <leader>w :wa<cr>
 nnore <leader>q :qa<cr>
+
+" Save fold settings.
+autocmd BufWinLeave * if expand('%') != '' && &buftype !~ 'nofile' | mkview | endif
+autocmd BufWinEnter * if expand('%') != '' && &buftype !~ 'nofile' | silent loadview | endif
+" Don't save options.
+set viewoptions-=options
+
 " }}}
 " Buffer {{{
 nnore s<leader> :ls<cr>:b<space>

@@ -89,10 +89,12 @@ function fish_prompt --description 'Write out the prompt'
 
   echo -n "$suffix"
 
-  if test -z $RANGER_LEVEL
-    echo -n (set_color red --bold)'>'(set_color yellow --bold)'>'(set_color green --bold)'> '
+  if test -n "$fish_private_mode"
+    echo -n (set_color magenta --bold)'>'(set_color magenta --bold)'>'(set_color blue --bold)'> '
+  else if test -n "$RANGER_LEVEL"
+    echo -n (set_color red --bold)'>'(set_color yellow --bold)'>'(set_color blue --bold)'> '
   else
-    echo -n (set_color yellow --bold)'>'(set_color green --bold)'>'(set_color blue --bold)'> '
+    echo -n (set_color red --bold)'>'(set_color yellow --bold)'>'(set_color green --bold)'> '
   end
 
   set_color normal

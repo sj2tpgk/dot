@@ -4,7 +4,14 @@
 "\es": "\C-asudo \C-e"
 "\eg": "\C-e | grep -i "
 
-"\ef": vi-forward-word
+"\C-h": vi-prev-word
+"\C-l": vi-next-word
+# "\M-h": vi-bWord
+# "\M-l": vi-fWord
+"\C-k": backward-word
+"\C-j": forward-word
+"\C-w": shell-backward-kill-word
+"\C-z": undo
 
 # Tab -> partial completion and show candidates
 set show-all-if-ambiguous on
@@ -28,6 +35,6 @@ set menu-complete-display-prefix On
 set echo-control-characters off
 
 # Vi editing mode: change cursor
-set show-mode-in-prompt on
-set vi-cmd-mode-string "\1\e[2 q\2"
-set vi-ins-mode-string "\1\e[6 q\2"
+# set show-mode-in-prompt on
+# set vi-cmd-mode-string "\1\e[2 q\2"
+# set vi-ins-mode-string "\1\e[6 q\2"

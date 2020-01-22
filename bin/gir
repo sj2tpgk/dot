@@ -2,4 +2,4 @@
 
 str="$1"
 
-grep --color -r -i "${str}" .
+grep --color -r -i $@ .

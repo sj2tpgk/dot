@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Get the N most recently modified file in the current directory
+
+N="$1"
+[ -z "$1" ] && N=10
+
+find . -printf "%T+\t%p\n" | sort -r | head -n $N

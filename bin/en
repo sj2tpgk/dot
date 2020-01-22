@@ -1,3 +1,5 @@
 #!/bin/sh
 
-emacs -nw $@
+# emacs -nw --color=yes $@
+# TERM=screen-16color
+emacs -nw --color=256 $@
