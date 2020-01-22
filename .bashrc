@@ -105,7 +105,7 @@ function genprompt {
   local s_git="35"
 
   local p_path="\[\e[${s_path}m\]\w\[\e[m\]"
-  local p_usr="\[\e[${s_usr}m\](\u@\h)\[\e[m\]"
+  local p_usr="\[\e[${s_usr}m\](\`whoami | cut -c-2\`@${HOSTNAME:0:2})\[\e[m\]"
   local p_git="\[\e[${s_git}m\]\`__ps1_parse_git_branch\`\[\e[m\]"
   local p_arrow="\[\e[1;33m\]>>\[\e[\`__ps1_arrow3_color\`m\]>\[\e[m\]"
 
@@ -118,4 +118,38 @@ unset -f genprompt
 # export PS1="\[\e[36m\]\w\[\e[m\] \[\e[32m\](\u\[\e[m\]@\[\e[32m\]\h)\[\e[m\] \[\e[35m\]\`parse_git_branch\`\[\e[m\]\[\e[1;33m\]>>>\[\e[m\] "
 # }}}
 
-set -o vi  # Enable vi-editing-mode (cursor settings in .inputrc)
+# set -o vi  # Enable vi-editing-mode (cursor settings in .inputrc)
+
+# nnn {{{
+
+export NNN_USE_EDITOR=1
+
+nn () {
+  # Block nesting of nnn in subshells
+  if [ -n $NNNLVL ] && [ "${NNNLVL:-0}" -ge 1 ]; then
+    echo "nnn is already running"
+    return
+  else
+
+    # The default behaviour is to cd on quit (nnn checks if NNN_TMPFILE is set)
+    # To cd on quit only on ^G, remove the "export" as in:
+    #     NNN_TMPFILE="${XDG_CONFIG_HOME:-$HOME/.config}/nnn/.lastd"
+    # NOTE: NNN_TMPFILE is fixed, should not be modified
+    export NNN_TMPFILE="${XDG_CONFIG_HOME:-$HOME/.config}/nnn/.lastd"
+
+    # Unmask ^Q (, ^V etc.) (if required, see `stty -a`) to Quit nnn
+    # stty start undef
+    # stty stop undef
+    # stty lwrap undef
+    # stty lnext undef
+
+    nnn "$@"
+
+    if [ -f "$NNN_TMPFILE" ]; then
+      . "$NNN_TMPFILE"
+      rm -f "$NNN_TMPFILE" > /dev/null
+    fi
+  fi
+}
+
+# }}}
