@@ -118,4 +118,4 @@ unset -f genprompt
 # export PS1="\[\e[36m\]\w\[\e[m\] \[\e[32m\](\u\[\e[m\]@\[\e[32m\]\h)\[\e[m\] \[\e[35m\]\`parse_git_branch\`\[\e[m\]\[\e[1;33m\]>>>\[\e[m\] "
 # }}}
 
-set -o vi  # Enable vi-editing-mode (cursor settings in .inputrc)
+# set -o vi  # Enable vi-editing-mode (cursor settings in .inputrc)
