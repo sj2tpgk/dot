@@ -70,8 +70,6 @@ safelink $DOTDIR/bin/w3              ~/bin/w3
 safelink $DOTDIR/fish/config.fish    ~/.config/fish/config.fish
 safelink $DOTDIR/fish/functions      ~/.config/fish/functions
 
-safelink $DOTDIR/i3/config           ~/.config/i3/config
-
 safelink $DOTDIR/ranger/commands.py  ~/.config/ranger/commands.py
 safelink $DOTDIR/ranger/rc.conf      ~/.config/ranger/rc.conf
 safelink $DOTDIR/ranger/rifle.conf   ~/.config/ranger/rifle.conf
@@ -81,3 +79,10 @@ safelink $DOTDIR/w3m/config          ~/.w3m/config
 safelink $DOTDIR/w3m/keymap          ~/.w3m/keymap
 safelink $DOTDIR/w3m/search.html     ~/.w3m/search.html
 
+# Termux
+safelink $DOTDIR/termux/colors.properties  ~/.termux/colors.properties
+safelink $DOTDIR/termux/termux.properties  ~/.termux/termux.properties
+safelink $DOTDIR/termux/termux_setup.sh    ~/.termux/termux_setup.sh
+
+# Graphical
+safelink $DOTDIR/i3/config           ~/.config/i3/config
