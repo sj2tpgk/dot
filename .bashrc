@@ -167,3 +167,5 @@ if command -v nnn > /dev/null; then
 fi
 
 # }}}
+
+source /home/tpat3/.config/broot/launcher/bash/br
