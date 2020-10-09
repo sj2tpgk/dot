@@ -4,7 +4,8 @@ keymap j UP
 keymap DOWN MOVE_DOWN1
 keymap UP MOVE_UP1
 
-keymap u PREV_PAGE
+keymap J NEXT_PAGE
+keymap K PREV_PAGE
 
 keymap / ISEARCH
 keymap ? ISEARCH_BACK
@@ -15,8 +16,28 @@ keymap b BACK
 
 keymap t TAB_MENU
 
-keymap e LINK_BEGIN
-
 keymap A ACCESSKEY
 
+
+# Follow link
+keymap e LINK_BEGIN
+
+# Encoding
 keymap E CHARSET
+
+# No confirm on exit
+keymap Q EXIT
+
+# colemakdh
+keymap k MOVE_LEFT
+keymap n UP
+keymap e DOWN
+keymap i MOVE_RIGHT
+
+keymap j SEARCH_NEXT
+keymap J SEARCH_PREV
+
+keymap u NEXT_PAGE
+keymap o PREV_PAGE
+
+keymap h LINK_BEGIN

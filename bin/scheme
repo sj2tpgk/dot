@@ -1,4 +1,33 @@
 #!/bin/sh
 
-# chibi-scheme -I ~/bin/scheme_lib $@
-gosh -r7 -I. -I ~/bin/scheme_lib $@
+libs_small=(
+    # R7RS small (except scheme.r5rs)
+    # These are automatically loaded when invoking "gosh -r7" interactively.
+    base case-lambda char complex cxr eval file inexact lazy load
+    process-context read repl time write
+)
+
+libs_srfi=(
+    # R7RS large
+    1   # list
+    114 # comparator (or 128)
+    125 # hash-table
+    132 # sort
+    133 # vector
+    151 # bitwise
+
+    # Others
+    2   # and-let*
+    8   # receive
+    26  # cut
+    42  # eager comprehension
+    152 # string
+    # 159 or 166 # combinator formatting
+)
+
+importstr="(import"
+for l in ${libs_small[@]}; do importstr+=" (scheme $l)"; done
+for l in ${libs_srfi[@]}; do importstr+=" (srfi $l)"; done
+importstr+=")"
+
+gosh -r7 -e "$importstr" $@

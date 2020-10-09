@@ -1,0 +1,3 @@
+#!/bin/sh
+
+du -d2 -BM $1 | sort -n

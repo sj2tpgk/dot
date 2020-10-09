@@ -1,35 +1,50 @@
 from ranger.api.commands import Command
 import os
 
-# Absolute path of histfile
-HISTFILE = os.path.expanduser("~/.ranger_history")
-HISTSIZE = 200
+class toggle_flat(Command):
+    """
+    :toggle_flat
 
-class add_history(Command):
+    (Custom command)
+    Flattens or unflattens the directory view.
+    """
+
     def execute(self):
-        f=open(HISTFILE, 'a+')
-        f.write(self.fm.thisfile.path + '\n')
+        if self.fm.thisdir.flat == 0:
+            self.fm.thisdir.unload()
+            self.fm.thisdir.flat = -1
+            self.fm.thisdir.load_content()
+        else:
+            self.fm.thisdir.unload()
+            self.fm.thisdir.flat = 0
+            self.fm.thisdir.load_content()
 
-from subprocess import PIPE
-class fzf_cd(Command):
+
+class reload_config(Command):
+    """
+    :reload_config
+
+    (Custom command)
+    Reload rc.conf and rifle.conf
+    """
+
     def execute(self):
-        command="find -L \( -path '*.wine-pipelight' -o -path '*.ivy2*' -o -path '*.texlive*' -o -path '*.git' -o -path '*.metadata' -o -path '*_notes' \) -prune -o -type d -print 2>/dev/null | fzf"
-        do_fzf(self.fm, command)
+        for cmd in ["source %confdir/rc.conf",
+                    "source %confdir/rifle.conf",
+                    "echo Reloaded rc.conf and rifle.conf"]:
+            self.fm.execute_console(cmd)
 
-class fzf_history(Command):
+
+class smart_rename(Command):
+    """
+    :smart_rename
+
+    (Custom command)
+    Rename or bulkrename if there are selected files.
+    """
+
     def execute(self):
-        import os
-        rh=HISTFILE
-        rht=rh+".tmp"
-        do_fzf(self.fm, "cat "+rh+" | tail -n {HISTSIZE} | sort | uniq -u > "+rht+"; mv "+rht+" "+rh+"; cat "+rh+" | fzf --tac")
-
-class fzf_here(Command):
-    def execute(self):
-        import os
-        do_fzf(self.fm, "fzf --tac") # --tac : reverse input lines
-
-def do_fzf(fm, cmd):
-    fzf = fm.execute_command(cmd, stdout=PIPE)
-    stdout, stderr = fzf.communicate()
-    path = stdout.decode('utf-8').rstrip('\n')
-    fm.select_file(path) # This automatically does cd
+        if self.fm.thistab.thisdir.marked_items:
+            self.fm.execute_console("bulkrename")
+        else:
+            self.fm.execute_console("console rename ")

@@ -116,8 +116,8 @@ nnore <leader>w :wa<cr>
 nnore <leader>q :qa<cr>
 
 " Save fold settings.
-autocmd BufWinLeave * if expand('%') != '' && &buftype !~ 'nofile' | mkview | endif
-autocmd BufWinEnter * if expand('%') != '' && &buftype !~ 'nofile' | silent loadview | endif
+" autocmd BufWinLeave * if expand('%') != '' && &buftype !~ 'nofile' | mkview | endif
+" autocmd BufWinEnter * if expand('%') != '' && &buftype !~ 'nofile' | silent loadview | endif
 " Don't save options.
 set viewoptions-=options
 
@@ -205,8 +205,10 @@ endfu
 
 set completefunc=FuzComp
 
-inore <tab>   <c-r>=pumvisible() ? "\<lt>c-n>" : "\<lt>c-x>\<lt>c-u>"<cr>
-inore <s-tab> <c-r>=pumvisible() ? "\<lt>c-p>" : "\<lt>c-x>\<lt>c-u>"<cr>
+"inore <tab>   <c-r>=pumvisible() ? "\<lt>c-n>" : "\<lt>c-x>\<lt>c-u>"<cr>
+"inore <s-tab> <c-r>=pumvisible() ? "\<lt>c-p>" : "\<lt>c-x>\<lt>c-u>"<cr>
+inore <tab>   <c-n>
+inore <s-tab> <c-p>
 inore <c-f> <c-x><c-f>
 " }}}
 

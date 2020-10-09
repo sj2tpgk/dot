@@ -4,4 +4,4 @@
 # so set TERM
 
 TERM=xterm
-w3m ~/.w3m/search.html
+w3mman "$@"

@@ -1,0 +1,40 @@
+#!/bin/sh
+
+url="$1"
+
+### Invidious to youtube
+url=$(echo "$url" | sed 's/invidiou[^/]*/youtube.com/')
+echo ">> URL: $url"
+
+
+### Format code
+tmpfile=$(mktemp /tmp/youtube-dl-fuzzy.XXXXXX)
+
+echo ">> Getting format list ..."
+youtube-dl -F "$url" > "$tmpfile"
+
+# read index of format code; 'expand' is for indenting lines containing \t.
+cat "$tmpfile" | expand | perl -ne 'if($a){printf "%-6d $_", $a;$a=$a+1}elsif(/^format/){$a=1;print "index  $_"}else{print}'
+echo -n ">> Index = "
+read index
+fmt_code=$(cat "$tmpfile" | perl -ne 'if($a){if($a=='$index'){s/ .*//;print;exit}$a=$a+1}elsif(/^format/){$a=1}')
+
+rm "$tmpfile"
+
+if [ -z "$fmt_code" ]; then echo Invalid input; exit; fi
+
+echo ">> Format code: $fmt_code"
+
+
+### Download
+if [ "$url" == *nicovideo* ]; then
+    echo ">> NicoNico"
+    vidfile=$(youtube-dl --get-filename "$url")
+    while ! youtube-dl -c --socket-timeout 5 -f "$fmt_code" "$url"; do
+        echo ">> Disconnected. Retrying... ";
+        sleep 2;
+    done
+else
+    youtube-dl -f "$fmt_code" "$url"
+fi
+

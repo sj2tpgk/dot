@@ -10,6 +10,8 @@ else
     export EDITOR=nano
     export VISUAL=nano
 fi
+
+MYKBD=colemakdh
 # }}}
 
 # Aliases and functions {{{

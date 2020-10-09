@@ -3,6 +3,7 @@
 
 "\es": "\C-asudo \C-e"
 "\eg": "\C-e | grep -i "
+"\eh": "\C-e --help"
 
 "\C-h": vi-prev-word
 "\C-l": vi-next-word
