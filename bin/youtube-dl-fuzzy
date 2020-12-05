@@ -3,7 +3,7 @@
 url="$1"
 
 ### Invidious to youtube
-url=$(echo "$url" | sed 's/invidiou[^/]*/youtube.com/')
+url=$(echo "$url" | sed 's/\(invidiou\|yewtu\)[^/]*/youtube.com/')
 echo ">> URL: $url"
 
 
@@ -29,10 +29,11 @@ echo ">> Format code: $fmt_code"
 ### Download
 if [ "$url" == *nicovideo* ]; then
     echo ">> NicoNico"
+    wait=20
     vidfile=$(youtube-dl --get-filename "$url")
     while ! youtube-dl -c --socket-timeout 5 -f "$fmt_code" "$url"; do
-        echo ">> Disconnected. Retrying... ";
-        sleep 2;
+        echo ">> Disconnected. Retrying in $wait seconds... ";
+        sleep $wait;
     done
 else
     youtube-dl -f "$fmt_code" "$url"

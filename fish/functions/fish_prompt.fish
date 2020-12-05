@@ -1,4 +1,12 @@
-function fish_prompt --description 'Write out the prompt'
+function fish_prompt
+  if test -n "$fish_private_mode"
+    myprompt fish_private
+  else
+    myprompt fish
+  end
+end
+
+function fish_prompt_old --description 'Write out the prompt'
   set -l last_status $status
 
   if not set -q __fish_git_prompt_show_informative_status

@@ -29,9 +29,27 @@ else
     set -xg VISUAL nano
 end
 
+# Rlwrap
+set -xg RLWRAP_HOME ~/.rlwrap/
+
 # Binding (binding for sudo is builtin)
+
+fzf_key_bindings
+
 bind \eg "commandline -r (commandline -b | sed 's/\s*\$/ | grep -i /')"
 bind \eh "commandline -r (commandline -b | sed 's/\s*\$/ --help/')"
+# bind \ed "commandline -r (find . -type d -iname '*(commandline -b | sed s/\///g)*' | fzy)"
+
+# bind \ed my_fish_fzy
+# bind \ef "commandline -r hello"
+# bind -k \cleft "commandline -r hello"
+
+# function my_fish_fzy
+#   set -l str1 (commandline -b | sed 's/\///g')
+#   set -l str2 (find . -type d -iname '*'$str1'*' | fzy)
+#   commandline -r $str2
+#   commandline -f repaint
+# end
 
 # Git prompt: use ascii chars
 set __fish_git_prompt_char_cleanstate       'cln'  # (Variable: ✔)

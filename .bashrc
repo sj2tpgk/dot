@@ -11,6 +11,8 @@ else
     export VISUAL=nano
 fi
 
+RLWRAP_HOME=~/.rlwrap
+
 MYKBD=colemakdh
 # }}}
 
@@ -117,7 +119,8 @@ function genprompt {
 
   local p_path="\[\e[${s_path}m\]\w\[\e[m\]"
   local p_usr="\[\e[${s_usr}m\](\`whoami | cut -c-2\`@${HOSTNAME:0:2})\[\e[m\]"
-  local p_git="\[\e[${s_git}m\]\`__ps1_parse_git_branch\`\[\e[m\]"
+  # Git prompt is slow.
+  # local p_git="\[\e[${s_git}m\]\`__ps1_parse_git_branch\`\[\e[m\]"
   local p_arrow="\[\e[1;33m\]>>\[\e[\`__ps1_arrow3_color\`m\]>\[\e[m\]"
 
   echo "$p_path $p_usr $p_git$p_arrow "
@@ -170,4 +173,4 @@ fi
 
 # }}}
 
-source /home/tpat3/.config/broot/launcher/bash/br
+# source /home/tpat3/.config/broot/launcher/bash/br
