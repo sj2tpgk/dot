@@ -1,0 +1,29 @@
+/* XPM */
+static char *stick_unfocus[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 7 1 ",
+"  c #222222",
+". c #323232",
+"X c gray54",
+"o c #9B9B9B",
+"O c #B2B2B2",
+"+ c #B7B7B7",
+"@ c #DADADA",
+/* pixels */
+".....OOOOOOOOOOO",
+"...OO..........o",
+"..O............o",
+".O.............o",
+".O.............o",
+"O....@@@@@@....o",
+"O....@....+....o",
+"O....@.@@.+....o",
+"o    @ ++ +    X",
+"o    @    +    X",
+"o    ++++++    X",
+"o              X",
+"o              X",
+"o              X",
+"o              X",
+"XXXXXXXXXXXXXXXX"
+};

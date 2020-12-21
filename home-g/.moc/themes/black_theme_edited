@@ -1,0 +1,47 @@
+# Black theme by Arn <arn.alduomacil@gmail.com>
+# edited by tpmj2, tpat3
+
+# Note: to apply themes correctly, you should restart mocp!
+
+background                 =   default    default
+frame                      =   white      default
+window_title               =   green      default
+
+# normal
+file                       =   magenta    default
+info                       =   blue       default
+# normal + cursor
+selected_file              =   magenta    default   underline
+selected_info              =   blue       default   underline
+# current
+marked_file                =   magenta    default   bold
+marked_info                =   blue       default   bold
+# current + cursor
+marked_selected_file       =   magenta    default   bold,underline
+marked_selected_info       =   blue       default   bold,underline
+
+directory                  =   white      default
+selected_directory         =   white      default   underline
+
+playlist                   =   white      default
+selected_playlist          =   white      black     reverse
+status                     =   white      default
+title                      =   magenta    default   bold
+state                      =   white      default
+current_time               =   white      default
+time_left                  =   white      default
+total_time                 =   white      default
+time_total_frames          =   white      default
+sound_parameters           =   white      default
+legend                     =   white      default
+disabled                   =   white      default
+enabled                    =   white      default
+empty_mixer_bar            =   white      default
+filled_mixer_bar           =   white      black     reverse
+empty_time_bar             =   white      default
+filled_time_bar            =   white      black     reverse
+entry                      =   white      default
+entry_title                =   white      default
+error                      =   white      default   bold,underline
+message                    =   white      default
+plist_time                 =   white      default

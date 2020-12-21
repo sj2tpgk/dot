@@ -1,0 +1,6 @@
+#!/bin/sh
+
+litefile=~/lite/lite.el
+
+emacs -q --load "$litefile" $@
+# emacs -q -nw --color=yes --load "$litefile" $@

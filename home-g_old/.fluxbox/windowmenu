@@ -1,0 +1,21 @@
+[begin]
+
+# [raise]           # Raise window to the top (最前面に)
+# [lower]           # Raise window to the bottom (最背面に)
+  [layer]           # Submenu: Change window's layer
+  [sendto]          # Submenu: send window to another workspace
+  [alpha]           # Submenu: Change window's transparency
+  [extramenus]      # Submenu: "remember ..." (記憶)
+
+  [separator]       # Horizontal line
+
+  [close]           # Close (閉じる)
+  [maximize]        # LeftClick=maximize, Middle=vertical, Right=horizontal (最大化)
+  [iconify]         # Minimize (最小化)
+  [shade]           # Roll-up (バーに格納)
+  [stick]           # Show in all workspaces (全てのワークスペースで表示)
+
+# [settitledialog]  # Change window's title
+# [kill]            # Kill process
+[end]
+

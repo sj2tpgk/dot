@@ -1,0 +1,49 @@
+[app] (name=fbrun|rofi)
+  [Position]	(CENTER)	{0 0}
+  [Layer]	{2}
+  [Alpha]	{200}
+[end]
+[app] (name=tint2)
+  [Layer]	{10}
+[end]
+[app] (title=lxxxxxxxxxxxxxemonbar)
+  [Layer]	{12}
+[end]
+[app] (name=urxvt) (title!=MOC|mounter|AlsaMixer) (@WM_COMMAND!=.*FM.*)
+  [Deco]	{0x6}
+  [Alpha]	{255}
+[end]
+[app] (title=MOC)
+  [Position]	(CENTER)	{0% 0%}
+  [Alpha]	{232}
+[end]
+[group]  (workspace=[current])
+ [app] (name=llpp)
+[end]
+[group]  (workspace=[current])
+ [app] (class=mpv)
+[end]
+[group]  (workspace=[current])
+ [app] (name=sxiv)
+[end]
+[app] (name=Navigator) (class=Pale moon) (role=browser)
+  [Alpha]	{255}
+[end]
+[app] (name=emacs)
+  [Alpha]	{240}
+[end]
+[app] (name=gvim)
+  [Dimensions]	{530 380}
+  [Position]	(UPPERLEFT)	{10% 10%}
+  [Alpha]	{230}
+[end]
+[app] (name=wpsoffice)
+  [Deco]	{NORMAL}
+[end]
+[app] (name=xvkbd) (class=XVkbd)
+  [Dimensions]	{23% 26%}
+  [Position]	(UPPERLEFT)	{76% 74%}
+  [Sticky]	{yes}
+  [Layer]	{6}
+  [Alpha]	{200}
+[end]

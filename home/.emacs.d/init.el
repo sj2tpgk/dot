@@ -1,0 +1,65 @@
+;;(load-file "~/.emacs.d/init-lite.el")
+(load-file "~/.emacs.d/init-full.el")
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("1010a81bf6786b59280673e59fb06b730e8f9d1eef845479a5b778e701f21108" "5e24ce3084aa4aa9052ec530be52b0998c6f765278f8b26a44c0650a8594779d" "c842d79bbde6470d5874e7893484281f7b34b910a35f8ba7ce2967cd4253c839" "28d3fe53bad1b351cae519852e722a53d1abf340ccb009dc150302455fb9dacf" "a58daf5c27b37d655593bb547a4b32dac9a8cefbf2864ee7ca2f27488000e0f1" "70b7352d145ad2b03b9c7ccd0bce5e19493cd996d61771f05d289417125de2da" "536032175147d90e4363883b1694cb36ca995a4f3bb4f7ca32c296920558d6dc" "89bfe15ed98dad8433444d5dbee93271ddcabef088a40d2d4c6960cb4e16c705" "17d68b9ea91c6d97ea7e704e0fc676e35b5c2118445b3b53cbcb7e0fd94f1bc8" default))
+ '(package-selected-packages
+   '(web web-mode ialign raku-mode centaur-tabs evil-lispy lispy helpful python-mode lua-mode nodejs-repl inf-ruby elpy kotlin-mode kotlin evil-collection lsp-mode magit htmlize selectrum-prescient selectrum dumb-jump org-plus-contrib company-fuzzy nim-mode lisp-extra-font-lock slime-company slime racket-mode highlight-symbol rainbow-delimiters md4rd diminish emr key-chord multiple-cursors expand-region avy xclip evil-snipe evil-commentary evil-surround company ivy-rich flx use-package evil counsel))
+ '(send-mail-function 'smtpmail-send-it)
+ '(smtpmail-smtp-server "smtp.office365.com")
+ '(smtpmail-smtp-service 587))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(counsel--mark-ring-highlight ((t (:family "Migu 2M" :size 15))))
+ '(counsel-active-mode ((t (:family "Migu 2M" :size 15))))
+ '(counsel-application-name ((t (:family "Migu 2M" :size 15))))
+ '(counsel-evil-register-face ((t (:family "Migu 2M" :size 15))))
+ '(counsel-key-binding ((t (:family "Migu 2M" :size 15))))
+ '(counsel-outline-1 ((t (:family "Migu 2M" :size 15))))
+ '(counsel-outline-2 ((t (:family "Migu 2M" :size 15))))
+ '(counsel-outline-3 ((t (:family "Migu 2M" :size 15))))
+ '(counsel-outline-4 ((t (:family "Migu 2M" :size 15))))
+ '(counsel-outline-5 ((t (:family "Migu 2M" :size 15))))
+ '(counsel-outline-6 ((t (:family "Migu 2M" :size 15))))
+ '(counsel-outline-7 ((t (:family "Migu 2M" :size 15))))
+ '(counsel-outline-8 ((t (:family "Migu 2M" :size 15))))
+ '(counsel-outline-default ((t (:family "Migu 2M" :size 15))))
+ '(counsel-variable-documentation ((t (:family "Migu 2M" :size 15))))
+ '(ivy-action ((t (:family "Migu 2M" :size 15))))
+ '(ivy-completions-annotations ((t (:family "Migu 2M" :size 15))))
+ '(ivy-confirm-face ((t (:family "Migu 2M" :size 15))))
+ '(ivy-current-match ((t (:family "Migu 2M" :size 15))))
+ '(ivy-cursor ((t (:family "Migu 2M" :size 15))))
+ '(ivy-grep-info ((t (:family "Migu 2M" :size 15))))
+ '(ivy-grep-line-number ((t (:family "Migu 2M" :size 15))))
+ '(ivy-highlight-face ((t (:family "Migu 2M" :size 15))))
+ '(ivy-match-required-face ((t (:family "Migu 2M" :size 15))))
+ '(ivy-minibuffer-match-face-1 ((t (:family "Migu 2M" :size 15))))
+ '(ivy-minibuffer-match-face-2 ((t (:family "Migu 2M" :size 15))))
+ '(ivy-minibuffer-match-face-3 ((t (:family "Migu 2M" :size 15))))
+ '(ivy-minibuffer-match-face-4 ((t (:family "Migu 2M" :size 15))))
+ '(ivy-minibuffer-match-highlight ((t (:family "Migu 2M" :size 15))))
+ '(ivy-modified-buffer ((t (:family "Migu 2M" :size 15))))
+ '(ivy-modified-outside-buffer ((t (:family "Migu 2M" :size 15))))
+ '(ivy-org ((t (:family "Migu 2M" :size 15))))
+ '(ivy-prompt-match ((t (:family "Migu 2M" :size 15))))
+ '(ivy-remote ((t (:family "Migu 2M" :size 15))))
+ '(ivy-separator ((t (:family "Migu 2M" :size 15))))
+ '(ivy-subdir ((t (:family "Migu 2M" :size 15))))
+ '(ivy-virtual ((t (:family "Migu 2M" :size 15))))
+ '(ivy-yanked-word ((t (:family "Migu 2M" :size 15))))
+ '(minibuffer-prompt ((t (:family "Migu 2M" :size 15))))
+ '(mode-line ((t (:family "Migu 2M"))))
+ '(rainbow-delimiters-depth-1-face ((((type tty)) :foreground "red") (((type graphic)) :foreground "#f66")))
+ '(rainbow-delimiters-depth-2-face ((((type tty)) :foreground "yellow") (((type graphic)) :foreground "yellow")))
+ '(rainbow-delimiters-depth-3-face ((((type tty)) :foreground "magenta") (((type graphic)) :foreground "#a363d5")))
+ '(rainbow-delimiters-depth-4-face ((((type tty)) :foreground "white") (((type graphic)) :foreground "gray")))
+ '(rainbow-delimiters-depth-5-face ((((type tty)) :foreground "cyan") (((type graphic)) :foreground "#4ce")))
+ '(slime-repl-output-face ((((type tty)) :background "unspecified-bg" :foreground "blue"))))

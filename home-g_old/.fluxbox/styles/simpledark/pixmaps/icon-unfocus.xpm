@@ -1,0 +1,29 @@
+/* XPM */
+static char *icon_unfocus[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 7 1 ",
+"  c #222222",
+". c #323232",
+"X c gray54",
+"o c #9B9B9B",
+"O c #A2A2A2",
+"+ c #B2B2B2",
+"@ c #CACACA",
+/* pixels */
+"++++++++++++++++",
+"+..............o",
+"+..............o",
+"+..............o",
+"+..............o",
+"+..............o",
+"+..............o",
+"+..............o",
+"o              X",
+"o    @@@@@O    X",
+"o    OOOOOO    X",
+"o              X",
+"o              X",
+"o              X",
+"o              X",
+"XXXXXXXXXXXXXXXX"
+};

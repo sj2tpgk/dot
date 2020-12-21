@@ -1,0 +1,10 @@
+* new file
+
+* Hello
+
+* lite.el
+- only builtin features, very fast startup
+- sane default
+- optionally use external packages ~lite/enable-package~
+- cheatsheet buffer
+

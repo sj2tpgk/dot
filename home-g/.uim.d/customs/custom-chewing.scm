@@ -1,0 +1,7 @@
+(define chewing-esc-clean? #f)
+(define chewing-phrase-forward? #f)
+(define chewing-space-as-selection? #t)
+(define chewing-phrase-choice-rearward? #f)
+(define chewing-auto-shift-cursor? #f)
+(define chewing-candidate-selection-style 'chewing-cand-selection-numkey)
+(define chewing-kbd-layout 'chewing-kbd-default)

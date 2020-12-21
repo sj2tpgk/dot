@@ -1,0 +1,21 @@
+* Todos
+** hippie fuzzy completion
+- abbrev (dict)
+- symbol (li-fa-di ==> list-faces-display)
+- fuzzy  (ittv ==> 
+** TODO flycheck, email
+** TODO window commands
+** TODO repeat keys, hydra?
+- ESC u u u   ==> undo 3 times
+- ESC w w     ==> other-window twice
+- ESC f a f f ==> evil-snipe like behaviour
+** TODO Fast editing cmd
+- kill line, kill forward word, move region up/dn/l/r
+- comment and goto next line
+- f/b word
+
+* Note
+** old ideas
+
+- always region :: not stable
+
