@@ -18,6 +18,7 @@
   (progn ;; Cursor color {{{
 
     (defun my/change-cursor (&optional a)
+      ;; (message "state change %s" a)
       ;;                 mode     skk     shape     color
       (let* ((alist  '(((normal . nil) . (block . "#e0a618"))
                        ((insert . nil) . (bar   . "#63c205"))
@@ -45,12 +46,15 @@
                  evil-normal-state-entry-hook
                  input-method-activate-hook
                  input-method-deactivate-hook
-                 window-selection-change-functions))
+                 window-selection-change-functions
+                 window-state-change-hook ;; needed when a repl (comint) starts
+                 ))
       (add-hook h 'my/change-cursor))
 
     (my/change-cursor)
     ) ;; }}}
 
+  (require 'evil-mapcmd)
   )
 
 ;; todo: manually bind keys (little speedup on startup)

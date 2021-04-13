@@ -30,7 +30,7 @@ class Scheme(Default):
                 fg = black
 
             if link_sav:
-                attr |= bold
+                attr |= (bold | underline) # make links distinguishable (see Note.1)
                 if context.bad:
                     fg = magenta
 
@@ -38,3 +38,9 @@ class Scheme(Default):
             context.link = link_sav
 
             return fg, bg, attr
+
+## Note.1
+# b.txt = link to a.txt
+# I copied b.txt as c.txt without noticing i'm just copying a link.
+# Then I removed part of c.txt ==> part of a.txt is removed, not recoverable!
+

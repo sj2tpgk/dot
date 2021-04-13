@@ -1,0 +1,53 @@
+(use kotlin-mode ($))
+(use php-mode ($))
+(use rust-mode ($))
+(use nim-mode ($)
+  :c (add-hook 'nim-mode-hook (lambda () (auto-fill-mode 0) (electric-indent-local-mode 0))))
+(use pov-mode ($))
+
+(use js (js-mode javascript-mode) :c (nmap js-mode-map ",e" 'nodejs-repl-send-line ",b" 'nodejs-repl-send-buffer))
+(use nodejs-repl ($))
+
+(use raku-mode ($ run-raku)
+  :i (when (fboundp 'electric-operator-mode) ;; featurep not works
+       (dolist (x '(raku-mode-hook raku-repl-mode-hook))
+         (add-hook x 'electric-operator-mode))))
+
+(use web-mode ($)
+  :i (add-to-list 'auto-mode-alist '("\\.html?\\'" . $))
+  :c (setq web-mode-markup-indent-offset 1 web-mode-code-indent-offset 4))
+
+(use-package cc-mode :defer t :commands (c-mode)
+  :config
+  (defun my/c-config ()
+
+    ;; C language indententation
+    (setq-default c-basic-offset 4)
+    (setq c-basic-offset 4)
+
+    ;; use line comment "//"
+    (c-toggle-comment-style -1)
+
+    (define-key c-mode-map (kbd "TAB") 'smart-tab))
+
+  (add-hook 'c-mode-common-hook 'my/c-config))
+
+(use lua-mode ($)
+  :config
+  (defun send-cr-lua (&rest args)
+    (send-cr (lua-get-create-process)))
+  (advice-add 'lua-send-string :after 'send-cr-lua)
+  (setq lua-default-application (or (executable-find "lua")
+                                    (executable-find "lua5.2")))
+  (defun lua-send-defun-or-line ()
+    (interactive)
+    (condition-case nil
+        (lua-send-defun (point))
+      (error
+       (lua-send-current-line))))
+
+  (nmap lua-mode-map
+        ",e" 'lua-send-defun-or-line
+        ",b" 'lua-send-buffer)
+  (vmap lua-mode-map
+        ",e" 'lua-send-region))

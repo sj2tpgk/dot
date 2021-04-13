@@ -1,20 +1,35 @@
 (definteractive evil-smart-esc
-  (if (= company-selection 0) (company-abort) (company-complete-selection))
-  (let ((p (point)) (b (line-beginning-position)) (e (line-end-position))) ;; evil-normal-state brings cursor to column 0 if cursor is at either column 0 or column 1. But we want forward-char only when column = 1. Calling (point) after evil-normal-state can't tell whether cursor was at column 0 or 1. evil-normal-state also changes line-end-position when the line only contains spaces.
+  (if company-selection-changed (company-complete-selection) (company-abort))
+  ;; (when company-selection (if (= company-selection 0) (company-abort) (company-complete-selection)))
+  (let ((p (point)) (b (line-beginning-position)) (e (line-end-position)))
     (evil-normal-state 1)
     ;; basically same as (evil-forward-char), but no eol error message
     (unless (member p (list b e))
       (forward-char))))
 
-(definteractive evil-smart-close-temp-window
+(setq smart-close-temp-window-bufnames '("*Help*" "*Messages*" "*grep*" "*Occur*" "*Backtrace*" "*Warnings*"))
+(definteractive smart-close-temp-window
   "Quit *Help* etc. if exists, or behave as vim's q command"
   ;; Note: `quit-windows-on' kills window (not just hiding *Help*) thus breaks window layout.
   (let ((ws (remove-if-not (lambda (w) (member (buffer-name (window-buffer w))
-                                               '("*Help*" "*Messages*" "*grep*" "*Occur*")))
+                                               smart-close-temp-window-bufnames))
                            (window-list))))
-    (if ws
-        (dolist (w ws) (quit-window nil w))
-      (call-interactively 'evil-record-macro))))
+    (when ws (dolist (w ws) (quit-window nil w)) t)))
+(definteractive smart-close-buffer
+  ;; close buffer with saving
+  (if (and (buffer-modified-p) (buffer-file-name (current-buffer)))
+      (if (yes-or-no-p (format "Save and kill buffer %s?" (current-buffer)))
+          (prog1 t (save-buffer) (kill-buffer-and-window))
+        nil)
+    (prog1 t (kill-buffer-and-window))
+    ;; (if (yes-or-no-p (format "Kill buffer %s?" (current-buffer)))
+    ;;     (prog1 t (kill-buffer-and-window))
+    ;;   nil)
+    ))
+(definteractive evil-smart-close
+  (or (smart-close-temp-window)
+      ;; (smart-close-buffer)
+      (call-interactively 'evil-record-macro)))
 
 (definteractive evil-smart-close-folds
   (unless (find (lambda (x) (and (boundp x) x))
@@ -29,7 +44,6 @@
   (interactive (list (prefix-numeric-value current-prefix-arg)
                      evil-symbol-word-search))
   (evil-search-word-forward count t))
-
 (evil-define-motion evil-search-symbol-backward (count &optional x)
   "Search backward for symbol (not just word) under point."
   :jump t
@@ -38,10 +52,11 @@
                      evil-symbol-word-search))
   (evil-search-word-backward count t))
 
+(definteractive my-redo-wrapper ;; For emacs27 and emacs28 compatibility
+  (call-interactively (if (fboundp 'undo-redo) 'undo-redo 'undo-tree-redo)))
+
 ;; Treat smart-beg-of-line same as forward-char etc. for evil-repeat
 (evil-set-command-property 'smart-beg-of-line :repeat 'motion)
-
-(require 'evil-mapcmd)
 
 (nunmap "SPC") (nunmap "s") (nunmap ",") (vunmap ",")
 
@@ -59,7 +74,7 @@
 (progn ;; normal, editing
   (nmap "D" 'evil-delete-whole-line
         "Y" 'evil-yank-line
-        "U" 'undo-tree-redo
+        "U" 'my-redo-wrapper
         "s=" 'beautify-buffer)
   (nmap "g SPC" 'evil-commentary-line)
   (vmap "ga" 'ialign)
@@ -68,9 +83,14 @@
 (progn ;; normal, misc
   (nmap "SPC w" 'save-some-buffers!
         "SPC q" 'save-buffers-kill-emacs
+        "s w" 'save-some-buffers!
+        "s q" 'save-buffers-kill-emacs
         "sb"    'kill-current-buffer)
   ;; visit file in clipboard
   (nmap "gp" (lambda()(interactive)(find-file(with-temp-buffer(yank)(buffer-string)))))
+
+  (nmap "<prior>" 'evil-scroll-up
+        "<next>"  'evil-scroll-down)
 
   (nmap "TAB" 'smart-toggle-folding)
 
@@ -93,13 +113,18 @@
 
   (nmap "0" 'smart-beg-of-line)
 
-  (nmap "q" 'evil-smart-close-temp-window) ;; close help window or record macro
+  (nmap "q" 'evil-smart-close
+        "Q" 'evil-quit
+        ;; "Q" smart close tab, buffer etc.
+        )
 
   ;; (nmap xref--xref-buffer-mode-map "RET" 'xref-goto-xref)
 
   (nmap "zm" 'evil-smart-close-folds)
 
   (nmap "zs" (lambda () "Toggle selective display." (interactive) (set-selective-display (mod (1+ (or selective-display 0)) 2))))
+
+  (nmap "RET" 'highlight-symbol-occur)
   )
 
 (progn ;; window
@@ -109,15 +134,17 @@
         "ss" 'smart-split-window-below
         "sv" 'smart-split-window-right)
 
-  (nmap "+" 'tab-next
+  (nmap "+"  'tab-next
         "tn" 'tab-new
         "tk" 'tab-close
         "to" 'tab-close-other)
 
+  (nmap "tl" 'tab-line-new-tab
+        "td" 'tab-line-close-tab)
+
   (dotimes (i 9)
     (eval `(nmap ,(format "SPC %s" (1+ i))
-                 (lambda()(interactive)(tab-bar-select-tab ,(1+ i))))))
-  )
+                 (lambda()(interactive)(tab-bar-select-tab ,(1+ i)))))))
 
 ;; nano-like insert mode
 ;; ()
@@ -163,6 +190,8 @@
 
          )
 
+  (nmap "l" 'evil-insert)
+
   (nimap "M-j" 'evil-join)
 
   (vmap "L" 'evil-insert)
@@ -184,6 +213,7 @@
         "sE" 'evil-window-move-very-top
         "sI" 'evil-window-move-far-right)
 
-  (nmap "l" 'evil-insert)
+  (nmap "K" 'tab-line-switch-to-prev-tab
+        "I" 'tab-line-switch-to-next-tab)
 
   )

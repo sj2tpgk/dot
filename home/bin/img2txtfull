@@ -1,48 +1,67 @@
-#!/usr/bin/env gosh
+#!/usr/bin/perl
 
-(use text.console)
-(use gauche.process)
-(use srfi-11) ; let-values
-(use srfi-13) ; string-concatenate
+my $img = $ARGV[0];
 
-(define (console-lines&cols console)
-  (values
-    (string->number (process-output->string "tput lines"))
-    (string->number (process-output->string "tput cols"))))
+my $tw = `tput cols`;
+my $th = `tput lines` - 1;
 
-(define (image-width&height img-path)
-  (let1 dim (map
-              string->number
-              (string-split
-                (process-output->string
-                  (string-append "identify -format \"%w %h\" " img-path))
-                #\space))
-    (values (car dim) (cadr dim))))
+my ($iw, $ih) = split(" ", `identify -format "%w %h" "$img"`);
 
-(define *default-console* (make-default-console))
-
-(define *font-aspect-ratio* (/ 5.45 10.2))
-
-(define (main args)
-  (define img-path (last args))
-  (define other-args (string-concatenate (drop-right (cdr args) 1)))
-  (define-values
-    (ccols crows)
-    (receive (lines cols) (console-lines&cols *default-console*)
-      (values cols (- lines 1)))) ; -1 required: prompt occupies 1 line
-
-  (define (image-wider-than-console?)
-    (let ((console-pixel-aspect-ratio
-            (* *font-aspect-ratio* (/ ccols crows)))
-          (image-aspect-ratio
-            (receive (iw ih) (image-width&height img-path)
-              (/ iw ih))))
-      (< console-pixel-aspect-ratio image-aspect-ratio)))
+# print "$tw,$th,$iw,$ih\n";
+if ($iw/$ih > $tw/$th) {
+    system("img2txt -W $tw -g 0.6 $img")
+} else {
+    system("img2txt -H $th -g 0.6 $img")
+}
 
 
-  (if (image-wider-than-console?)
-    (sys-system
-      (format "img2txt -W ~a -g 0.6 ~a ~a" ccols other-args img-path))
-    (sys-system
-      (format "img2txt -H ~a -g 0.6 ~a ~a" crows other-args img-path)))
-  )
+#       (format "img2txt -W ~a -g 0.6 ~a ~a" ccols other-args img-path))
+#     (sys-system
+#       (format "img2txt -H ~a -g 0.6 ~a ~a" crows other-args img-path)))
+
+# (use text.console)
+# (use gauche.process)
+# (use srfi-11) ; let-values
+# (use srfi-13) ; string-concatenate
+# 
+# (define (console-lines&cols console)
+#   (values
+#     (string->number (process-output->string "tput lines"))
+#     (string->number (process-output->string "tput cols"))))
+# 
+# (define (image-width&height img-path)
+#   (let1 dim (map
+#               string->number
+#               (string-split
+#                 (process-output->string
+#                   (string-append "identify -format \"%w %h\" " img-path))
+#                 #\space))
+#     (values (car dim) (cadr dim))))
+# 
+# (define *default-console* (make-default-console))
+# 
+# (define *font-aspect-ratio* (/ 5.45 10.2))
+# 
+# (define (main args)
+#   (define img-path (last args))
+#   (define other-args (string-concatenate (drop-right (cdr args) 1)))
+#   (define-values
+#     (ccols crows)
+#     (receive (lines cols) (console-lines&cols *default-console*)
+#       (values cols (- lines 1)))) ; -1 required: prompt occupies 1 line
+# 
+#   (define (image-wider-than-console?)
+#     (let ((console-pixel-aspect-ratio
+#             (* *font-aspect-ratio* (/ ccols crows)))
+#           (image-aspect-ratio
+#             (receive (iw ih) (image-width&height img-path)
+#               (/ iw ih))))
+#       (< console-pixel-aspect-ratio image-aspect-ratio)))
+# 
+# 
+#   (if (image-wider-than-console?)
+#     (sys-system
+#       (format "img2txt -W ~a -g 0.6 ~a ~a" ccols other-args img-path))
+#     (sys-system
+#       (format "img2txt -H ~a -g 0.6 ~a ~a" crows other-args img-path)))
+#   )

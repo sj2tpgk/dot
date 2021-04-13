@@ -1,31 +1,24 @@
-(defmacro use (pkg commands &rest args)
-  (let ((commands-clause (if commands `(:commands ,commands) nil)))
-    `(use-package ,pkg :ensure t ,@commands-clause ,@args)))
-(put 'use 'lisp-indent-function 2)
+;(defmacro use (pkg commands &rest args)
+;  ;; Example: (use package (xxx-mode) :config ...)
+;  (let ((commands-clause (if commands `(:commands ,commands) nil)))
+;    `(use-package ,pkg :ensure t ,@commands-clause ,@args)))
+;(put 'use 'lisp-indent-function 2)
 
-(use xclip () :config (xclip-mode 1))
+(use xclip :c (xclip-mode 1))
 (use avy (avy-goto-word-1))
 (use expand-region (er/expand-region))
 (use multiple-cursors (mc/mark-next-like-this) :config (global-set-key (kbd "C-n") 'mc/mark-next-like-this))
-(use key-chord () :config (setq key-chord-two-keys-delay 0.03) (key-chord-mode 1))
+(use key-chord :c (setq key-chord-two-keys-delay 0.03) (key-chord-mode 1))
 (use emr (emr-show-refactor-menu) :config (setq emr-pop-help-delay 0))
 
-(use diminish ()
-  :config
-  (dolist (x '((ivy-mode " Iv") (ivy-rich-mode "IvR") (counsel-mode) (company-mode " Cp") (eldoc-mode "Ed") (undo-tree-mode)))
-    (diminish (car x) (cadr x))))
-
-(use md4rd (md4rd)
-  :config
-  (setq md4rd--oauth-access-token
-        "298191575661-C6QD4uxejaUzrIlHuUt8XUFhe1k")
-  (setq md4rd--oauth-refresh-token
-        "298191575661-C6QD4uxejaUzrIlHuUt8XUFhe1k")
-  (setq md4rd-subs-active '(jokes emacs)))
+(use diminish
+  :i
+  (mapc (lambda (x) (diminish (car x) (cadr x)))
+        '((ivy-mode " Iv") (ivy-rich-mode "IvR") (counsel-mode) (company-mode " Cp") (eldoc-mode "Ed") (undo-tree-mode))))
 
 (use rainbow-delimiters (rainbow-delimiters-mode)
-  :init (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
-  :config
+  :i (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+  :c
   ;; Brighten parenthesis
   (setq rainbow-delimiters-max-face-count 5)
 
@@ -53,9 +46,8 @@
   ;; "brightred" is not available in GUI emacs
   )
 
-
-(use highlight-symbol ()
-  :init
+(use highlight-symbol
+  :i
   (setq highlight-symbol-idle-delay 0.6
         highlight-symbol-occurrence-message '(explicit)
         highlight-symbol-highlight-single-occurrence nil)
@@ -63,13 +55,33 @@
   (add-hook 'prog-mode-hook 'highlight-symbol-nav-mode) ;; M-n/M-p move around symbols
   (global-set-key (kbd "M-s M-r") 'highlight-symbol-query-replace))
 
-;; (use dumb-jump ()
-;;   :config
-;;   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
+;; (use dumb-jump :c (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
+;; (use magit (magit-status))
 
-(use magit (magit-status))
+(require 'motion-marker-mode) (motion-marker-mode)
 
-(use lispy ())
+(use ialign ($) :c (setq ialign-initial-repeat t)) ;; if nil, only align at first match
+(use neotree ($))
+(use ctrlf ($mode))
+(use lispy ($mode))
+(use electric-operator (electric-operator-mode)
+  :config
+  (let ((derive (lambda (new-mode base-mode nullify rest)
+                  (apply 'electric-operator-add-rules-for-mode new-mode
+                         (electric-operator-get-rules-for-mode base-mode))
+                  (dolist (x nullify) (electric-operator-add-rules-for-mode new-mode (cons x nil)))
+                  (while rest
+                    (let* ((x (pop rest)) (y (pop rest)))
+                      (electric-operator-add-rules-for-mode new-mode (cons x y)))))))
+    (dolist (x '(raku-mode raku-repl-mode))
+      (funcall derive x 'prog-mode '("%" "/" "<")
+               '("=>" " => "
+                 "->" " -> ")))))
 
-(require 'evil-marker-mode)
-(evil-marker-mode 1)
+(use sr-speedbar (sr-speedbar))
+
+(use embark ($act) :bind ("C-s" . $act) :c (use marginalia:m))
+
+(use eglot ($)
+  :c (setq resize-mini-windows t eglot-send-changes-idle-time 2)
+  (add-to-list 'eglot-server-programs '(js-mode . ("javascript-typescript-stdio"))))

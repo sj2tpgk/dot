@@ -1,5 +1,6 @@
 #!/bin/sh
 
-emacs -nw --color=yes "$@"
+# emacs -nw --color=yes "$@"
+emacs -nw --color=auto "$@"
 # TERM=screen-16color
 # emacs -nw --color=256 "$@"

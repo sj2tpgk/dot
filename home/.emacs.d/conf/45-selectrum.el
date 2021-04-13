@@ -1,5 +1,6 @@
-(use-package selectrum ;;(execute-extended-command describe-function describe-variable describe-key switch-to-buffer selectrum-switch-buffer+ find-file)
+(use-package selectrum
   :ensure t
+  ;; (execute-extended-command describe-function describe-variable describe-key switch-to-buffer selectrum-switch-buffer+ find-file)
   ;; :defer t
   ;; :init
   ;; (setq selectrum-commands

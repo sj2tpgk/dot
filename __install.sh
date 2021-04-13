@@ -6,7 +6,7 @@ source ./__lib.sh
 
 SCRIPTPATH=$(realpath -s "$0")
 SCRIPTDIR=$(dirname "$SCRIPTPATH")
-DOTHOME=${1:-$SCRIPTDIR/home}
+DOTHOME=${1:-$SCRIPTDIR/home/}
 REALHOME=${2:-~/}
 
 rec() {

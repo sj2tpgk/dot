@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 ;; TODO: more display support (8-color term, 256-color term, graphical etc.)
 ;; Custom rules (to be parsed to sexp in the form of arguments to custom-theme-set-faces)
 (setq sdt/theme-custom-rules
@@ -5,8 +7,10 @@
         (default                          :gg       :fg fore :bg back)
         (match                            (:g8 :gg) :fg y :bg k :b)
         ;; (mode-line                        (:g8 :gg) :fg b   :bg k :-b :u)
+        (header-line                      (:g8 :gg) :fg w  :bg k :-b :-u)
+        ;; (header-line-inactive             (:g8 :gg) :inherit header-line :fg w :bg w)
         (mode-line                        (:g8 :gg) :fg b  :bg k :-b :u)
-        (mode-line-inactive               (:g8 :gg) :inherit mode-line :fg w  :bg k :u)
+        (mode-line-inactive               (:g8 :gg) :inherit mode-line :fg w)
         (region                           (:g8 :gg) :fg k  :bg w)
         (show-paren-match                 (:g8 :gg) :fg k  :bg b)
         (tooltip                          (:g8 :gg) :fg b   :bg k :b)
@@ -23,13 +27,21 @@
         (font-lock-builtin-face           (:g8 :gg) :fg r :-b)
         (font-lock-warning-face           (:g8 :gg) :bg r)
 
+        (lisp-extra-font-lock-backquote             (:g8 :gg) :fg k :bg m)
+        (lisp-extra-font-lock-special-variable-name (:g8 :gg) :fg k :bg m)
+
         (button                           (:g8 :gg) :fg b)
+        (highlight                        (:g8 :gg) :fg k :bg w :b)
         (isearch                          (:g8 :gg) :inherit region :bg y)
         (lazy-highlight                   (:g8 :gg) :inherit region)
         (mode-line-buffer-id              (:g8 :gg) :b)
         (shadow                           (:g8 :gg) :fg y)
         (trailing-whitespace              (:g8 :gg) :inherit default :fg r :u)
         (vertical-border                  (:g8 :gg) :inherit mode-line-inactive :-u)
+
+        (link                             (:g8 :gg) :fg c :b :u)
+        (link-visited                     :g8 :fg m :b :u :gg :fg "violet" :b :u)
+        (info-menu-star                   (:g8 :gg) :fg r)
 
         (org-document-info-keyword        (:g8 :gg) :fg y) ;; #+title etc.
         (org-document-info                (:g8 :gg) :fg w) ;; value of #+title etc.
@@ -44,9 +56,14 @@
         (tab-bar                          (:g8 :gg) :inherit mode-line :fg w :-u)
         (tab-bar-tab                      (:g8 :gg) :inherit tab-bar :bg g :fg k :b :-u)
         (tab-bar-tab-inactive             (:g8 :gg) :inherit tab-bar :fg w :b)
-        ;; (tab-line                         (:g8 :gg) :fg k :bg b :b :-u)
 
-        ;; Faces from packages
+        (tab-line                         (:g8 :gg) :fg b :bg k :-b :-u)
+        (tab-line-tab                     (:g8 :gg) :inherit tab-line :box nil)
+        (tab-line-tab-inactive            (:g8 :gg) :inherit tab-line)
+        (tab-line-tab-current             (:g8 :gg) :inherit tab-line :invert)
+        (tab-line-highlight               (:g8 :gg) :inherit tab-line :invert :b)
+
+        ;; ---- Faces from packages ----
 
         ;; avy
         (avy-lead-face                    (:g8 :gg) :inherit isearch)
@@ -78,14 +95,13 @@
         (ivy-minibuffer-match-face-3      (:g8 :gg) :inherit ivy-minibuffer-match-face-1)
         (ivy-minibuffer-match-face-4      (:g8 :gg) :inherit ivy-minibuffer-match-face-1)
 
-        (lisp-extra-font-lock-backquote   (:g8 :gg) :inherit default)
-
-        (org-level-1     (:g8 :gg) :fg cb :height 140 :b :u)
-        (org-level-2     (:g8 :gg) :fg bb :b)
-        (org-level-3     (:g8 :gg) :fg bb)
-        (org-level-4     (:g8 :gg) :fg mb)
-        (org-link        (:g8 :gg) :fg bb)
-        (org-todo        (:g8 :gg) :fg rb)
+        (org-document-title (:g8 :gg) :fg cb :b)
+        (org-level-1        (:g8 :gg) :fg cb :height 140 :b :u)
+        (org-level-2        (:g8 :gg) :fg bb :b)
+        (org-level-3        (:g8 :gg) :fg bb)
+        (org-level-4        (:g8 :gg) :fg mb)
+        (org-link           (:g8 :gg) :fg bb)
+        (org-todo           (:g8 :gg) :fg rb)
 
         ;; emacs-refactor etc.
         (popup-face                       (:g8 :gg) :inherit tooltip)
@@ -93,6 +109,8 @@
         (popup-summary-face               (:g8 :gg) :fg r :bg k)
         (popup-menu-summary-face          (:g8 :gg) :inherit popup-summary-face)
         (popup-tip-face                   (:g8 :gg) :fg w :bg k)
+
+        (rainbow-delimiters-base-error-face (:g8 :gg) :fg k :bg m :b)
 
         (selectrum-completion-annotation  (:g8 :gg) :fg r)
         (selectrum-completion-docsig      (:g8 :gg) :fg g)
@@ -188,12 +206,14 @@
                           (:-b      1 ,(lambda (disp key) '(:weight normal)))
                           (:u       1 ,(lambda (disp key) '(:underline t)))
                           (:-u      1 ,(lambda (disp key) '(:underline nil)))
+                          (:box     2 ,(lambda (disp key val) val))
                           (:invert  1 ,(lambda (disp key) '(:inverse-video t)))
                           (:inherit 2 ,(lambda (disp key val) `(:inherit ,val)))))
 
 (defun sdt/colorize (color &optional display)
-  (cdr (assq display
-             (cdr (assq color sdt/colors)))))
+  (or (cdr (assq display
+                 (cdr (assq color sdt/colors))))
+      color))
 
 (defun sdt/parse-spec (disp spec)
   ;; DISP = :g8 :gg :gt etc.
@@ -246,22 +266,7 @@ SPEC = face specification (:fg color :bg color :b :u :inherit face)"
     ;;         ( (...) spec2 ...       ) ) )
     ))
 
-
-;; Create theme
-(let ((theme-name 'simple-dark)
-      (docstring  "Dark theme based on default 8-color terminal theme with base16-solarflare color palette."))
-
-  ;; Declare theme
-  (eval `(deftheme ,theme-name ,docstring))
-
-  ;; <<< IMPORTANT: first applied rule has more priority. >>>
-
-  ;; Apply custom rules (must be applied BEFORE rules from default theme)
-  (apply 'custom-theme-set-faces
-         theme-name
-         (mapcar 'sdt/parse-rule sdt/theme-custom-rules))
-
-  ;; Inherit from default theme
+(defun sdt/add-default-colors (theme-name)
   (custom-theme-set-faces
    theme-name
    ;; '(default ((t (:family "default" :foundry "default" :width normal :height 1 :weight normal :slant normal :underline nil :overline nil :strike-through nil :box nil :inverse-video nil :foreground "unspecified-fg" :background "unspecified-bg" :stipple nil :inherit nil))))
@@ -334,7 +339,27 @@ SPEC = face specification (:fg color :bg color :b :u :inherit face)"
    '(match ((((class color) (min-colors 88) (background light)) (:background "yellow1")) (((class color) (min-colors 88) (background dark)) (:background "RoyalBlue3")) (((class color) (min-colors 8) (background light)) (:foreground "black" :background "yellow")) (((class color) (min-colors 8) (background dark)) (:foreground "white" :background "blue")) (((type tty) (class mono)) (:inverse-video t)) (t (:background "gray"))))
    '(next-error ((t (:inherit (region)))))
    '(query-replace ((t (:inherit (isearch))))))
+  )
 
+
+;; Create theme
+(let ((theme-name 'simple-dark)
+      (docstring  "Dark theme based on default 8-color terminal theme with base16-solarflare color palette."))
+
+  ;; Declare theme
+  (eval `(deftheme ,theme-name ,docstring))
+
+  ;; <<< IMPORTANT: first applied rule has more priority. >>>
+
+  ;; Apply custom rules (must be applied BEFORE rules from default theme)
+  (apply 'custom-theme-set-faces
+         theme-name
+         (mapcar 'sdt/parse-rule sdt/theme-custom-rules))
+
+  ;; Inherit from default theme
+  (sdt/add-default-colors theme-name)
+
+  ;; Finally provide the theme
   (provide-theme theme-name)
 
   )

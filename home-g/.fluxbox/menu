@@ -27,29 +27,39 @@
       # [exec] (Nemo)       {nemo}                       <~/media/pict/icons/fileman16.png>
       [exec] (PCManFM)    {pcmanfm}                    <~/media/pict/icons/fileman16.png>
       [exec] (Gnumeric)   {LANG=C;gnumeric}            <~/media/pict/icons/gnumeric16.png>
-      [exec] (WPS Office) {~/work/univ/wps/wpswhite}   <~/media/pict/icons/wpsoffice16.png>
+      [exec] (WPS Office) {~/script/wps}               <~/media/pict/icons/wpsoffice16.png>
+      [exec] (Qbittorrent){qbittorrent}                <~/media/pict/icons/qbittorrent16.png>
     [end]
     [submenu] (Tools)
       [exec] (Urxvt)      {~/script/terminal.fish}    <~/media/pict/icons/system16.png>
       [exec] (Urxvt new)  {urxvt}                     <~/media/pict/icons/system16.png>
       [exec] (Emacs)      {~/script/emacsgui.sh}      <~/media/pict/icons/emacs16.png>
       [exec] (GVim)       {gvim}                      <~/media/pict/icons/gvim16.png>
+      [exec] (Windows XP) {vboxmanage startvm xp}     <~/media/pict/icons/virtualbox16.png>
+      # [exec] (Windows 7)  {vboxmanage startvm 7}      <~/media/pict/icons/virtualbox16.png>
       [exec] (VirtualBox) {virtualbox -style Fusion}  <~/media/pict/icons/virtualbox16.png>
       [exec] (Ranger)     {~/script/term/ranger.fish}
+      [exec] (Tint2)      {tint2}
+      [exec] (LxAppearance){lxappearance}
       [exec] (Xvkbd)      {xvkbd}
     [end]
     [submenu] (Multimedia)
       #       Label        Command                     Icon
       [exec] (Geeqie)     {geeqie}                    <~/media/pict/icons/image16.png>
       [exec] (Audacity)   {audacity}                  <~/media/pict/icons/audacity16.png>
+      [exec] (Gimp)       {gimp}                      <~/media/pict/icons/gimp16.png>
       [exec] (Mocp)       {~/script/term/mocp.fish}   <~/media/pict/icons/player16.png>
-      [exec] (Polybar)    {~/script/polybar/restart.fish}
+      # [exec] (Rescan musics) {~/.fluxbox/musicmenugen}
+      [submenu] (Music)
+        [include] (~/.fluxbox/musicmenu)
+      [end]
     [end]
     [submenu] (Games)
       #       Label        Command                     Icon
       [exec] (Minecraft)  {~/script/minecraft.sh}     <~/media/pict/icons/minecraft16.png>
       [exec] (Mgba)       {mgba-qt}                   <~/media/pict/icons/mgba16.png>
       [exec] (PCSX2)      {PCSX2}                     <~/media/pict/icons/playstation16.png>
+      [exec] (PPPSSPP)    {PPSSPPQt}                  <~/media/pict/icons/playstation16.png>
       [exec] (Pingus)     {pingus}
       [exec] (AsciiPortal){asciiportal}
       [exec] (SimuTrans)  {simutrans}
@@ -58,7 +68,7 @@
     [submenu] (Fluxbox)
       [config] (Configure)
       [submenu] (System Styles) {Choose a style...}
-        [stylesdir] (/usr/share/fluxbox/styles)
+        [stylesdir] (/usr/local/share/fluxbox/styles)
       [end]
       [submenu] (User Styles) {Choose a style...}
         [stylesdir] (~/.fluxbox/styles)
@@ -75,8 +85,8 @@
       [exec] (Lock Screen)   {xset dpms force suspend & sleep .3}
       [exec] (Suspend)       {systemctl suspend}
       [exec] (Hibernate)     {systemctl hibernate}
-      [exec] (Reboot)        {~/script/rofi/yesno.fish "Really reboot?" && systemctl reboot}
-      [exec] (Shutdown)      {~/script/rofi/yesno.fish "Really Shutdown?" && systemctl shutdown}
+      [exec] (Reboot)        {~/script/rofi/yesno "Really reboot?" && systemctl reboot}
+      [exec] (Shutdown)      {~/script/rofi/yesno "Really Shutdown?" && systemctl shutdown}
       [exit] (Exit Fluxbox)
     [end]
   [endencoding]

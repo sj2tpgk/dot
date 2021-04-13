@@ -1,0 +1,2 @@
+fluxbox-remote
+make sure session.screen0.allowRemoteActions is true

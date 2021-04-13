@@ -1,5 +1,6 @@
 # used in .tmux.conf .vimrc etc.
 xrdb ~/.Xresources
+setxkbmap -layout jp
 xset r rate 210 38
 xset b off
 xset s off -dpms          # Don't use dpms for screen timeout
@@ -56,11 +57,13 @@ amixer set Master 40%
 # exec openbox
 # exec icewm
 exec startfluxbox    # ~/.fluxbox/startup  will be executed
+# exec pekwm
 # setxkbmap -layout "us,jp" && exec awesome
 # exec i3 -V >> ~/.config/i3/i3log-$(date +'%F-%k-%M-%S') 2>&1
 # exec i3
 # exec startxfce4
 # exec fvwm
+# exec fvwm3
 # exec enlightenment_start
 
 # vim:ft=sh

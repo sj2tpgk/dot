@@ -1,0 +1,6 @@
+[begin] (Music)
+  [encoding] {UTF-8}
+  [include] (~/.fluxbox/musicmenu)
+  [exec] (** Rescan musics **) {~/.fluxbox/musicmenugen}
+  [endencoding]
+[end]

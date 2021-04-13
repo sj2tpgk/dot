@@ -153,13 +153,13 @@
                                    (to   (skk-make-string head (skk-opposite-kana kana-mode)))
                                    (dict-entry (string-append from " /" to "/"))
                                    )
-                              (with-output-to-file "/home/tpat3/.uim.d/newentry"
+                              (with-output-to-file "/home/tpa4/.uim.d/newentry"
                                 (lambda ()
                                         ; (display dict-entry)
                                   (display from) (newline)
                                   (display to) (newline)
                                   ))
-                              (process-with-daemon "/home/tpat3/.uim.d/addentry.sh")
+                              (process-with-daemon "/home/tpa4/.uim.d/addentry.sh")
                               ))
                                         ; commit converted string and flush as usual
                         (skk-commit sc (skk-make-string
@@ -234,7 +234,7 @@
 
                                         ; ;; Uim indicator in polybar {{{
                                         ; (let ((orig-skk-context-set-state! skk-context-set-state!)
-                                        ;       (skk-mode-file "/home/tpat3/.uim.d/skkmode"))
+                                        ;       (skk-mode-file "/home/tpa4/.uim.d/skkmode"))
                                         ;   (set! skk-context-set-state!
                                         ;     (lambda (sc state)
                                         ;       ; (display state)

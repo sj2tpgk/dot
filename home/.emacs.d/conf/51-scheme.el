@@ -89,3 +89,16 @@
 (use-package racket-mode
   :ensure t
   :commands (racket-mode))
+
+(use-package geiser
+  :ensure t
+  :init
+  (with-eval-after-load 'geiser-impl
+    (add-to-list 'geiser-active-implementations 'gauche))
+  :commands (geiser)
+  :config
+  (use-package geiser-gauche :ensure t)
+  (nmap scheme-mode-map
+        ",e" 'geiser-eval-definition
+        ",b" 'geiser-eval-buffer)
+  )

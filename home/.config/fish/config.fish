@@ -7,6 +7,7 @@ set -xg MYKBD "colemakdh"
 # Alias
 alias cp 'cp -i'
 alias rg ranger
+alias vim nvim
 
 # Pager ( -x (--export) is necessary )
 if command -v vimpager > /dev/null
@@ -39,6 +40,8 @@ fzf_key_bindings
 bind \eg "commandline -r (commandline -b | sed 's/\s*\$/ | grep -i /')"
 bind \eh "commandline -r (commandline -b | sed 's/\s*\$/ --help/')"
 # bind \ed "commandline -r (find . -type d -iname '*(commandline -b | sed s/\///g)*' | fzy)"
+bind -k ppage prevd-or-backward-word
+bind -k npage nextd-or-forward-word
 
 # bind \ed my_fish_fzy
 # bind \ef "commandline -r hello"
@@ -60,3 +63,28 @@ set __fish_git_prompt_char_untrackedfiles   'utr'  # (Variable: …)
 set __fish_git_prompt_char_upstream_ahead   '+'    # (Variable: ↑)
 set __fish_git_prompt_char_upstream_behind  '-'    # (Variable: ↓)
 set __fish_git_prompt_char_upstream_prefix  ''     # (Variable: '')
+
+
+set fish_color_autosuggestion 'magenta'
+# set fish_color_cancel:\x2dr
+set fish_color_command        'cyan'
+set fish_color_comment        'magenta'
+# set fish_color_cwd:green
+# set fish_color_cwd_root:red
+# set fish_color_end:009900
+set fish_color_error          'red'
+# set fish_color_escape:00a6b2
+# set fish_color_history_current:\x2d\x2dbold
+# set fish_color_host:normal
+# set fish_color_host_remote:yellow
+# set fish_color_match:\x2d\x2dbackground\x3dbrblue
+# set fish_color_normal:normal
+# set fish_color_operator:00a6b2
+# set fish_color_param:00afff
+set fish_color_quote          'yellow'
+# set fish_color_redirection:00afff
+# set fish_color_search_match:bryellow\x1e\x2d\x2dbackground\x3dbrblack
+# set fish_color_selection:white\x1e\x2d\x2dbold\x1e\x2d\x2dbackground\x3dbrblack
+# set fish_color_status:red
+# set fish_color_user:brgreen
+# set fish_color_valid_path:\x2d\x2dunderline

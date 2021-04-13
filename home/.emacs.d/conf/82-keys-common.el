@@ -6,6 +6,8 @@
      "<home>"  'smart-beg-of-line "C-a" 'smart-beg-of-line
      "C-x C-r" 'recentf-open-files)
 
+(key :chord "mw" 'save-some-buffers!)
+
 (key "<escape> TAB" 'other-window
      "<escape> w" 'save-some-buffers!
      "<escape> q" 'save-buffers-kill-terminal)
@@ -61,7 +63,7 @@
 
 (with-eval-after-load 'company
   (key company-mode-map   "<escape>" 'evil-smart-esc)
-  (key company-active-map   "<escape>" 'evil-smart-esc)
+  (key company-active-map "<escape>" 'evil-smart-esc)
   (key company-search-map "<escape>" 'evil-smart-esc)
   ;; "TAB"      'company-complete-common-or-cycle
   ;; "RET"      'company-complete-selection
@@ -97,3 +99,9 @@
   (key popup-menu-keymap "<escape>" 'popup-close))
 
 (key "<escape> r" 'emr-show-refactor-menu)
+
+(key Info-mode-map
+     "<S-mouse-4>" 'Info-history-back
+     "<S-mouse-5>" 'Info-history-forward
+     "<mouse-8>" 'Info-history-back
+     "<mouse-9>" 'Info-history-forward)

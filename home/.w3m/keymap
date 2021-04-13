@@ -4,8 +4,8 @@ keymap j UP
 keymap DOWN MOVE_DOWN1
 keymap UP MOVE_UP1
 
-keymap J NEXT_PAGE
 keymap K PREV_PAGE
+keymap J NEXT_PAGE
 
 keymap / ISEARCH
 keymap ? ISEARCH_BACK
@@ -33,6 +33,9 @@ keymap k MOVE_LEFT
 keymap n UP
 keymap e DOWN
 keymap i MOVE_RIGHT
+
+keymap N PREV_PAGE
+keymap E NEXT_PAGE
 
 keymap j SEARCH_NEXT
 keymap J SEARCH_PREV

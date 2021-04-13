@@ -5,7 +5,7 @@
 (require "japanese.scm")
 
 ;; File containing azik rules; must be EUC-JP
-(define azikpath "/home/tpat3/.uim.d/azik_colemakdh/rules-uim-eucjp.scm")
+(define azikpath "/home/tpa4/.uim.d/azik_colemakdh/rules-uim-eucjp.scm")
 
 ;; "abc" -> ("a" "b" "c")
 (define (string->string-list str) (map string (string->list str)))

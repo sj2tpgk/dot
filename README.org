@@ -1,3 +1,7 @@
 Necessary configuration files over different machines.
 
-run __init.sh to install
+run __install.sh (or __install-g.sh when GUI) to install
+
+* Todo
+store links in home-g/
+and when installing, find original files and link them

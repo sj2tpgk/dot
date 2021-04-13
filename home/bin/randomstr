@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ $# -ne 1 -a $# -ne 2 ]; then
+function usage {
   echo "Usage: randomstr <length> <spec>"
   echo "  Get a random string of length <length> using characters specified by <spec>,"
   echo "  and copy the string to clipboard using xclip if available."
@@ -10,11 +10,13 @@ if [ $# -ne 1 -a $# -ne 2 ]; then
   echo "    w:   shortcut for aAd_"
   echo "    _:   underscore"
   echo "    -:   some symbols:  !\"#\$%&()*+,-./:;<=>?@[]^_\`{|}~"
-  exit 0
-fi
+}
+
+if [ $# -ne 1 -a $# -ne 2 ]; then usage; exit 0; fi
 
 len=$1
 [ $# -eq 1 ] && options=xad || options=x$2
+[ $options = xw ] && options=xaAd_
 
 charset=""
 
@@ -23,6 +25,8 @@ charset=""
 [ $options != ${options//d/} ] && charset=${charset}0-9
 [ $options != ${options//_/} ] && charset=${charset}_
 [ $options != ${options//-/} ] && charset=${charset}'!"#$%&()*+,-./:;<=>?@[\]^_`{|}~'
+
+if [ -z "$charset" ]; then echo "Invalid spec."; usage; exit 0; fi
 
 rnd=$(tr -dc "$charset" </dev/urandom | head -c $len ; echo '')
 

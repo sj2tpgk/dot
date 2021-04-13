@@ -25,6 +25,10 @@ function mkcd(){
     mkdir -p "$1"
     cd "$1"
 }
+
+function tmuxcd(){
+    cd "$(tmux last-pane; tmux display -pF '#{pane_current_path}'; tmux last-pane)"
+}
 # }}}
 
 ## Greeting {{{

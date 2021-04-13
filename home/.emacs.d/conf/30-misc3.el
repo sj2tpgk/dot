@@ -65,23 +65,6 @@
         recentf-auto-cleanup    'never ;; don't remove non-existent files
         recentf-exclude         '("/recentf")))
 
-(progn ;; Tabs (emacs 27)
-  (setq tab-bar-close-button-show nil
-        tab-bar-new-button-show nil
-        tab-bar-tab-name-truncated-max 24
-        tab-bar-tab-name-ellipsis ".."
-        tab-bar-separator " "
-        tab-bar-new-tab-choice "*scratch*")
-  (fset tab-bar-tab-name-function
-        (lambda ()
-          (let ((tab-name (tab-bar-tab-name-truncated)))
-            (format " %s " tab-name))))
-  (defun add-tab-scroll-bindings (lis) ;; lis = (keymap x1 x2 ...)
-    `(keymap (mouse-4 . tab-previous)
-             (mouse-5 . tab-next)
-             ,@(cdr lis)))
-  (advice-add 'tab-bar-make-keymap-1 :filter-return 'add-tab-scroll-bindings))
-
 (progn ;; xref TODO grep
 
   (setq tags-revert-without-query t) ;; no confirm on reloading TAGS
@@ -164,8 +147,8 @@
       (tags-create-in d "TAGS")
       (visit-tags-table (concat d "TAGS"))))
 
-  (advice-add 'xref-find-definitions :before 'auto-create-tags-on-xref)
-  (add-hook 'write-file-functions 'auto-create-tags-on-save)
+  ;; (advice-add 'xref-find-definitions :before 'auto-create-tags-on-xref)
+  ;; (add-hook 'write-file-functions 'auto-create-tags-on-save)
 
   )
 
@@ -193,4 +176,3 @@
 
 ;; Auto insert closing parens
 (electric-pair-mode 1)
-

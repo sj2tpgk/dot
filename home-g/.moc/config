@@ -217,7 +217,7 @@ ALSAStutterDefeat = yes
 # Example:    Theme = laras_theme
 #
 #Theme =
-Theme=/home/tpat3/.moc/themes/black_theme_edited
+Theme=${HOME}/.moc/themes/black_theme_edited
 
 # The theme used when running on an xterm.
 #
@@ -522,7 +522,7 @@ CanStartInPlaylist = yes
 # Examples:   ExecCommand1 = "cp %f /mnt/usb_drive"
 #             ExecCommand2 = "/home/joe/now_playing %I"
 #
-ExecCommand1 = "mocp --seek +30"
+ExecCommand1 = "mocp --seek  30"
 ExecCommand2 = "mocp --seek -30"
 #ExecCommand3 =
 #ExecCommand4 =

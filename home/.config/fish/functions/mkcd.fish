@@ -1,12 +1,3 @@
-function mkcd -d 'Create a directory and set CWD'
-  command mkdir $argv
-  if test $status = 0
-    switch $argv[(count $argv)]
-      case '-*'
-
-      case '*'
-        cd $argv[(count $argv)]
-        return
-    end
-  end
+function tmuxcd -d 'Cd to pwd of tmux last-pane'
+  cd (tmux last-pane; tmux display -pF "#{pane_current_path}"; tmux last-pane)
 end

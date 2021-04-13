@@ -206,3 +206,28 @@ If keymap is omitted, (current-global-map) is used by default."
              (buffer-substring (region-beginning) (region-end))
            (format "%s" (thing-at-point 'symbol)))))
     (occur str)))
+
+(defun make-scratch-of (&optional major-mode-symbol)
+  "MAJOR-MODE-SYMBOL is a symbol or nil."
+  (interactive)
+  (let ((mode
+         (or major-mode-symbol
+             (let ((cands
+                    (mapcar (lambda (sym)
+                              (string-remove-suffix "-mode"
+                                                    (symbol-name sym)))
+                            (remove-duplicates
+                             (mapcan (lambda (x)
+                                       (let ((y (if (symbolp (cdr x)) (cdr x) (cadr x))))
+                                         (and y (list y))))
+                                     auto-mode-alist)))))
+               (intern
+                (format "%s-mode"
+                        (completing-read "Choose major mode: " cands)))))))
+    (switch-to-buffer
+     (get-buffer-create
+      (format "*scratch%s*"
+              (if (eq 'lisp-interaction-mode mode)
+                  ""
+                (concat "[" (substring (symbol-name mode) 0 -5) "]")))))
+    (funcall mode)))

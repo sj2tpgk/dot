@@ -31,8 +31,8 @@ OnRightGrip Move1    :StartResizing bottomright
 # Maximize with mouse
 # OnTitlebar     Mouse2        :Maximize
 OnWindowBorder Mouse2        :Maximize
-OnLeftGrip     Mouse2        :Maximize
-OnRightGrip    Mouse2        :Maximize
+# OnLeftGrip     Mouse2        :Maximize
+# OnRightGrip    Mouse2        :Maximize
 OnTitlebar     Double Mouse1 :Maximize
 OnWindowBorder Double Mouse1 :Maximize
 OnLeftGrip     Double Mouse1 :Maximize
@@ -64,7 +64,10 @@ OnRightGrip    Mouse3 :MacroCmd {Lower} {NextWindow {groups} (workspace=[current
 # Temporarily disable Alt+Tab for use with VNC
 # Mod1 Tab        :NextWindow {groups} (workspace=[current])
 # Mod1 Shift Tab  :PrevWindow {groups} (workspace=[current])
-Mod1 4          :Exec fluxbox-remote "NextWindow {groups} (workspace=[current])"; sleep 0.05; xdotool key a
+#
+# exclude windows in extreme layers (video etc. are placed in those layers)
+Mod1 4          :Exec fluxbox-remote "NextWindow {groups} (workspace=[current]) (layer!=AboveDock) (layer!=Dock) (layer!=Desktop)"; sleep 0.05; xdotool key a
+#
 # Mod1 4          :Exec ~/script/nextwindow.pl; sleep 0.05; xdotool key a
 # workaround for fluxbox+xcape? problem
 #     When switching window via xcape key event (regardless whether fluxbox
@@ -132,11 +135,15 @@ OnRightGrip    Mouse4 :Exec ~/script/changews.pl -pks
 
 ## Misc {{{
 # Swap windows (horizontally)
-Mod4 s :Exec sleep .2 && ~/script/fluxbox/swapv.sh -s
+# Mod4 s :Exec sleep .2 && ~/script/fluxbox/swapv.sh -s
+Mod4 s :Exec ~/script/fluxbox/swapv.sh
 
 # Middle click on the titlebar for a menu of options
 OnTitlebar Mouse9 :WindowMenu
 OnTitlebar Mouse2 :WindowMenu
+OnWindowBorder Mod1 Mouse2 :WindowMenu
+OnLeftGrip     Mouse2 :WindowMenu
+OnRightGrip    Mouse3 :WindowMenu
 
 # Raise/lower layer
 Mod4 a :RaiseLayer
@@ -155,18 +162,18 @@ Mod4 d :ToggleDecor
 Control Mod1 Delete :Exit
 
 # Screenshot
-None Print :Exec gnome-screenshot -f "media/pict/screenshots/ss_$(date +%Y-%m-%d_%H-%M-%S).png"
-None Shift Print :Exec gnome-screenshot --window -f "media/pict/screenshots/ss_$(date +%Y-%m-%d_%H-%M-%S).png"
+None Print :Exec ~/script/screenshot --root
+None Shift Print :Exec ~/script/screenshot
 
-# Volume control keys
-XF86AudioMute         :Exec amixer sset Master toggle
-XF86AudioRaiseVolume  :Exec amixer sset Master 3%+
-XF86AudioLowerVolume  :Exec amixer sset Master 3%-
-XF86AudioMicMute      :Exec amixer set Capture toggle
+# Volume control keys (alsa || pulseaudio)
+XF86AudioMute         :Exec sh -c 'amixer sset Master toggle || pactl set-sink-mute @DEFAULT_SINK@ toggle'
+XF86AudioRaiseVolume  :Exec sh -c 'amixer sset Master 3%+    || pactl set-sink-volume @DEFAULT_SINK@ +2%'
+XF86AudioLowerVolume  :Exec sh -c 'amixer sset Master 3%-    || pactl set-sink-volume @DEFAULT_SINK@ -2%'
+XF86AudioMicMute      :Exec sh -c 'amixer set Capture toggle || pactl set-source-mute @DEFAULT_SOURCE@ toggle'
 
 # Mocp
-F9 u :Exec mocp --toggle-pause
-XF86AudioPlay :Exec mocp --toggle-pause
+F9 u :Exec ~/script/moctoggle
+XF86AudioPlay :Exec ~/script/moctoggle
 XF86AudioPrev :Exec mocp --previous
 XF86AudioNext :Exec mocp --next
 
@@ -191,7 +198,7 @@ Mod4 l :Exec sleep .5 && xdotool keydown l
 Mod4 m :RootMenu
 
 # Text-to-speech
-Pause :Exec ~/script/speak.sh
+F9 F10 :Exec ~/script/speak.sh
 # }}}
 
 ## Launch apps {{{
@@ -201,7 +208,8 @@ F9 a       :Exec pavucontrol
 F9 c       :Exec ~/script/term/mocp.fish
 F9 d       :Exec ~/script/drracket.sh
 F9 e       :Exec running emacs && wmctrl -x -a emacs || ~/script/emacsgui.sh
-F9 f       :Exec running palemoon && wmctrl -x -a 'pale moon' || sh -c 'MOZ_USE_OMTC=1; palemoon'
+# F9 f       :Exec running palemoon && wmctrl -x -a 'pale moon' || sh -c 'MOZ_USE_OMTC=1; palemoon'
+F9 f       :Exec running firefox && wmctrl -x -a 'firefox' || firefox
 F9 shift f :Exec GTK_THEME=Vertex:light firefox --private-window
 F9 g       :Exec geeqie
 F9 l       :Exec ~/script/polybar/restart.fish
@@ -212,20 +220,21 @@ F9 t       :Exec ~/script/terminal.fish
 F9 w       :Exec /usr/lib/mozc/mozc_tool --mode=word_register_dialog
 F9 v       :Exec vivaldi-stable
 F9 shift v :Exec vivaldi-stable --incognito
-F9 x       :Exec ~/script/rofi/tmuxp.sh
+F9 x       :Exec ~/script/rofi/tmuxp
 F9 y       :Exec XMODIFIERS="" alacritty
 F9 F5      :Reconfigure
+F9 F6      :Restart
 
-F9 b     :Exec ~/script/rofi/session.sh
-F9 s     :Exec ~/script/rofi/misc.sh
-F9 k     :Exec ~/script/rofi/kbdlayout.fish
-F9 p     :Exec ~/script/rofi/pass.fish
-F9 F4    :Exec ~/script/rofi/apps.fish
+F9 b     :Exec ~/script/rofi/session
+F9 s     :Exec ~/script/rofi/misc
+F9 k     :Exec ~/script/rofi/kbdlayout
+F9 p     :Exec ~/script/rofi/pass
+F9 F4    :Exec ~/script/rofi/apps
 
 78  :Exec rofi -show window
 
-F9 F9 l  :Exec ~/script/rofi/wallpaper.fish
-F9 F9 w  :Exec ~/script/rofi/rofi-wifi-menu.sh
+F9 F9 l  :Exec ~/script/rofi/wallpaper
+F9 F9 w  :Exec ~/script/rofi/rofi-wifi-menu
 
 # F9 F9 b  :Exec ~/script/rofi/bluetooth.fish
 
