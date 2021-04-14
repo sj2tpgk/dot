@@ -36,7 +36,7 @@
               (lambda (input)
                 `((candidates . ,(if (string-prefix-p " " input) all-buf-names lis))
                   (input      . ,input)))))
-           (cand (selectrum-read "Switch to: " candidates)))
+           (cand (selectrum--read "Switch to: " candidates)))
 
       (funcall (if (get-buffer cand) 'switch-to-buffer 'find-file)
                cand)))
