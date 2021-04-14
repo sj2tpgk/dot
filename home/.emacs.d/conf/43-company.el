@@ -77,7 +77,7 @@
 
   (eldoc-add-command 'company-smart-space 'company-complete-selection 'company-abort)
 
-  (company-tng-mode 1) ;; tab key for cycle+insert
+  (company-tng-configure-default) ;; tab key for cycle+insert
   ;; (global-company-fuzzy-mode 1)
   )
 
