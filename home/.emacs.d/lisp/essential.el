@@ -18,7 +18,7 @@
   (setq use-file-dialog t  ;; Use file opener of OS
         use-dialog-box  t)
 
-  (blink-cursor-mode 0) ;; No cursor blinking
+  (blink-cursor-mode 0) (setq visible-cursor nil) ;; No cursor blinking
 
   (setq scroll-margin 3) ;; Scroll screen when cursor reaches top/bottom N lines
 

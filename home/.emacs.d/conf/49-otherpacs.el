@@ -1,13 +1,7 @@
-;(defmacro use (pkg commands &rest args)
-;  ;; Example: (use package (xxx-mode) :config ...)
-;  (let ((commands-clause (if commands `(:commands ,commands) nil)))
-;    `(use-package ,pkg :ensure t ,@commands-clause ,@args)))
-;(put 'use 'lisp-indent-function 2)
-
 (use xclip :c (xclip-mode 1))
-(use avy (avy-goto-word-1))
-(use expand-region (er/expand-region))
-(use multiple-cursors (mc/mark-next-like-this) :config (global-set-key (kbd "C-n") 'mc/mark-next-like-this))
+;; (use avy (avy-goto-word-1))
+;; (use expand-region (er/expand-region))
+;; (use multiple-cursors (mc/mark-next-like-this) :config (global-set-key (kbd "C-n") 'mc/mark-next-like-this))
 (use key-chord :c (setq key-chord-two-keys-delay 0.03) (key-chord-mode 1))
 (use emr (emr-show-refactor-menu) :config (setq emr-pop-help-delay 0))
 
@@ -61,9 +55,9 @@
 (require 'motion-marker-mode) (motion-marker-mode)
 
 (use ialign ($) :c (setq ialign-initial-repeat t)) ;; if nil, only align at first match
-(use neotree ($))
-(use ctrlf ($mode))
-(use lispy ($mode))
+;; (use neotree ($))
+;; (use ctrlf ($mode))
+;; (use lispy ($mode))
 (use electric-operator (electric-operator-mode)
   :config
   (let ((derive (lambda (new-mode base-mode nullify rest)

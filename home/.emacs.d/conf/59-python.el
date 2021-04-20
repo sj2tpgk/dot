@@ -7,11 +7,11 @@
 
 (use-package python-mode :defer t)
 
-(use-package elpy
-  :ensure t
-  :defer t
-  :init
-  (advice-add 'python-mode :before 'elpy-enable))
+;; (use-package elpy
+;;   :ensure t
+;;   :defer t
+;;   :init
+;;   (advice-add 'python-mode :before 'elpy-enable))
 
 
 ;; See `send-cr' function for the comint mode issue where you can't send inputs.

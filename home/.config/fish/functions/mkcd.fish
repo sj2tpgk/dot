@@ -1,3 +1,5 @@
-function tmuxcd -d 'Cd to pwd of tmux last-pane'
-  cd (tmux last-pane; tmux display -pF "#{pane_current_path}"; tmux last-pane)
+function mkcd -d 'mkdir plus cd'
+  set dirname $argv[1]
+  mkdir -p $dirname
+  eval "cd" $dirname
 end

@@ -2,7 +2,7 @@
 (setq inhibit-startup-screen t)
 
 ;; No menu-bar, tool-bar, cursor blink
-(menu-bar-mode 0) (tool-bar-mode 0) (blink-cursor-mode 0)
+(menu-bar-mode 0) (tool-bar-mode 0) (blink-cursor-mode 0) (setq visible-cursor nil)
 
 ;; Line numbers
 (setq display-line-numbers-width 3)

@@ -10,10 +10,10 @@
 
         (1  "~/.emacs.d/conf/30-misc3.el")
         (1  "~/.emacs.d/conf/31-cmds.el")
-        ;(1  "~/.emacs.d/conf/35-comint.el")
+        (1  "~/.emacs.d/conf/35-comint.el")
         ;(1  "~/.emacs.d/conf/36-modeline.el")
 
-        (1  "~/.emacs.d/conf/40-ivy.el")
+        ;(1  "~/.emacs.d/conf/40-ivy.el")
         ;(1  "~/.emacs.d/conf/41-lsp.el")
         (1  "~/.emacs.d/conf/43-company.el")
         (1  "~/.emacs.d/conf/44-evil.el")

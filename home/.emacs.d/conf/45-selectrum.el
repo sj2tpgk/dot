@@ -50,3 +50,5 @@
   (prescient-persist-mode +1)
   (setq prescient-filter-method 'fuzzy)
   (recentf-mode))
+
+(use consult)
