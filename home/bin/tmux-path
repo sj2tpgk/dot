@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# See asciinema-run for details.
+
+usage(){
+    echo "Usage: ./tmux-path setpanepid <pane> <pid>"
+    echo "             Remember <pid> as the pid of shell for tmux pane <pane>"
+    echo "       ./tmux-path getpanepath"
+    echo "             Echo the pid of shell of current tmux pane."
+    echo "             If not registered, echo pwd."
+}
+
+if [ $# -lt 1 ]; then usage; exit 1; fi
+
+operation=$1
+
+get_panepid_file(){ echo /home/tpa4/.tmux_panepid/pane${1}_pid; }
+
+if [ "$operation" = setpanepid ]; then
+    pane=$2
+    pid=$3
+    echo $pid > $(get_panepid_file "$pane")
+
+elif [ "$operation" = getpanepath ]; then
+    if [ -n "$TMUX" ]; then
+        paneid=$(tmux display -pF "#{pane_id}" | sed 's/ //g')
+        pidfile=$(get_panepid_file "$paneid")
+        if [ -e "$pidfile" ]; then
+            pid=$(cat "$pidfile")
+            cwdfile=/proc/$pid/cwd
+            # echo "tmux-get-path: $paneid, $pid, $cwdfile"
+            [ -e "$cwdfile" ] && path=$(readlink "$cwdfile")
+            # [ -e "$cwdfile" ] && echo $pid
+        fi
+        [ -z "$path" ] && path=$(tmux display -pF "#{pane_current_path}")
+    else
+        # for debug
+        # path=/var
+        path=$(pwd)
+    fi
+    echo "$path"
+
+else
+    echo "tmux-path: unknown operation: $operation"
+fi
+
+# bind s run "id=\$(tmux display -pF '#{pane_id}' | sed 's/ //g'); tmux split-window -vc \"\$(readlink /proc/\$(cat /home/tpa4/pids\$id)/cwd)\""
+

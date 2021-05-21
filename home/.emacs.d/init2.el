@@ -13,7 +13,6 @@
         (1  "~/.emacs.d/conf/35-comint.el")
         ;(1  "~/.emacs.d/conf/36-modeline.el")
 
-        ;(1  "~/.emacs.d/conf/40-ivy.el")
         ;(1  "~/.emacs.d/conf/41-lsp.el")
         (1  "~/.emacs.d/conf/43-company.el")
         (1  "~/.emacs.d/conf/44-evil.el")
@@ -28,6 +27,10 @@
 
         (1  "~/.emacs.d/conf/82-keys-common.el")
         (1  "~/.emacs.d/conf/84-keys-evil.el")
+
+        (1  "~/.emacs.d/conf/80-evil-extra.el")
+        (1  "~/.emacs.d/conf/81-keys.el")
+        (1  "~/.emacs.d/conf/82-keys-nq.el")
 
         (1  "~/.emacs.d/conf/90-kcui.el")
         ))

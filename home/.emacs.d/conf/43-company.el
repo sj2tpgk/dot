@@ -39,6 +39,30 @@
       (interactive (company-begin-backend 'company-keywords+))
       (t           (let ((company-keywords-alist company-keywords-alist+))
                      (company-keywords command arg ignored)))))
+
+  (defun company-keywords-web (command &optional arg &rest ignored)
+    "Copy of `company-keywords' except:
+1. this detects the language in html dynamically (js, css)
+2. this uses `company-keywords-alist+' (for additional js words)"
+    (interactive (list 'interactive))
+    (let ((lang (or (cdr (assoc (web-mode-language-at-pos)
+                                '(("javascript" . javascript-mode)
+                                  ("css"        . css-mode))
+                                'string=))
+                    'web-mode)))
+      (cl-case command
+        (interactive (company-begin-backend 'company-keywords-web))
+        (prefix (and (assq lang company-keywords-alist+)
+                     (not (company-in-string-or-comment))
+                     (or (company-grab-symbol) 'stop)))
+        (candidates
+         (let ((completion-ignore-case nil)
+               (symbols (cdr (assq lang company-keywords-alist+))))
+           (all-completions arg (if (consp symbols)
+                                    symbols
+                                  (cdr (assq symbols company-keywords-alist+))))))
+        (kind 'keyword)
+        (sorted t))))
   )
 
 (use-package company

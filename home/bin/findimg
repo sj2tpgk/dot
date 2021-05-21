@@ -1,0 +1,3 @@
+#!/bin/sh
+
+find . -type f | sed -rn '/(bmp|gif|jpeg|jpg|png|webm)/Ip'

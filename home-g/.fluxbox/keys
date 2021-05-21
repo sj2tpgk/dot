@@ -205,7 +205,7 @@ F9 F10 :Exec ~/script/speak.sh
 # Use vim's :sort in visual mode.
 
 F9 a       :Exec pavucontrol
-F9 c       :Exec ~/script/term/mocp.fish
+F9 c       :Exec ~/script/term/mocp
 F9 d       :Exec ~/script/drracket.sh
 F9 e       :Exec running emacs && wmctrl -x -a emacs || ~/script/emacsgui.sh
 # F9 f       :Exec running palemoon && wmctrl -x -a 'pale moon' || sh -c 'MOZ_USE_OMTC=1; palemoon'
@@ -214,9 +214,9 @@ F9 shift f :Exec GTK_THEME=Vertex:light firefox --private-window
 F9 g       :Exec geeqie
 F9 l       :Exec ~/script/polybar/restart.fish
 F9 m       :Exec claws-mail
-F9 r       :Exec ~/script/term/ranger.fish
+F9 r       :Exec ~/script/term/ranger
 F9 shift s :Exec ~/script/emacsgui.sh
-F9 t       :Exec ~/script/terminal.fish
+F9 t       :Exec ~/script/terminal
 F9 w       :Exec /usr/lib/mozc/mozc_tool --mode=word_register_dialog
 F9 v       :Exec vivaldi-stable
 F9 shift v :Exec vivaldi-stable --incognito

@@ -159,7 +159,7 @@
    ((not (package-installed-p 'use-package))
     (package-refresh-contents)
     (package-install 'use-package))
-   (t
+   (nil ;; temporary disabled due to "url-http-connection" error
     ;; Refresh package database every 3 days
     (let ((elpa-file (concat user-emacs-directory "/elpa/archives/gnu")))
       (when (or (not (file-exists-p elpa-file))

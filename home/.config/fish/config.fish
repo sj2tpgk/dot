@@ -42,10 +42,12 @@ bind \eh "commandline -r (commandline -b | sed 's/\s*\$/ --help/')"
 # bind \ed "commandline -r (find . -type d -iname '*(commandline -b | sed s/\///g)*' | fzy)"
 bind -k ppage prevd-or-backward-word
 bind -k npage nextd-or-forward-word
-bind \cf forward-jump
-bind \ef backward-jump
-bind \ct repeat-jump
-bind \et repeat-jump-reverse
+
+source ~/.config/fish/smart_jump.fish
+# bind \cf forward-jump
+# bind \ef backward-jump
+# bind \ct repeat-jump
+# bind \et repeat-jump-reverse
 
 # bind \ed my_fish_fzy
 # bind \ef "commandline -r hello"

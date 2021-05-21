@@ -56,7 +56,6 @@
 
 (use ialign ($) :c (setq ialign-initial-repeat t)) ;; if nil, only align at first match
 ;; (use neotree ($))
-;; (use ctrlf ($mode))
 ;; (use lispy ($mode))
 (use electric-operator (electric-operator-mode)
   :config
@@ -74,7 +73,7 @@
 
 (use sr-speedbar (sr-speedbar))
 
-(use embark ($act) :bind ("C-s" . $act) :c (use marginalia:m))
+;; (use embark ($act) :c (use marginalia:m))
 
 (use eglot ($)
   :c (setq resize-mini-windows t eglot-send-changes-idle-time 2)

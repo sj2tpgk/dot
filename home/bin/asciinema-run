@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# Usage: ./asciinema-run [cmd]
+# If [cmd] is missing, command selection is done by fish shell.
+
+## Using asciinema, tmux -- make tmux split-window open in the same directory as current pane's cwd (rather than ~)
+# Asciinema don't follow child process's cwd change.
+# So "tmux display -pF '#{pane_current_path}'" doesn't show child process' cwd,
+# it rather shows asciinema's cwd (unchanged from initial state)
+# Workaround: when run shell, record pair (<tmux pane>, <shell pid>) -- done by "tmux-pane setpanepid <pane> <pid>"
+# When splitting tmux window, get <paneid>, then get <shell pid> (done by "tmux-pane getpanepath")
+# Note for other shells, we must modify this script (use of \$fish_pid etc.)
+
+# vv seems "tmux new fish" is good but "tmux" is bad
+cmd=$1
+outdir=~/media/asciinema
+
+# id=$(printf %05d $(expr 1 + $(ls "$outdir" | sed 's/-.*//' | sort | tail -n 1)))
+# date=$(date +%Y%m%d-%H%M%S)
+
+outsubdir="$outdir/$(date +'%Y/%m%d')"
+[ ! -d "$outsubdir" ] && mkdir -p "$outsubdir"
+datetime=$(date +%Y%m%d-%H%M%S)
+id=$(printf %03d $(expr 1 + $({ ls "$outsubdir" | sed 's/-.*//'; echo 0; } | sort | tail -n 1)))
+outfile="$outsubdir/$id-$datetime.cast"
+
+# echo "asciinema-run: pwd=$(pwd), cmd=$cmd, out=$outfile"
+
+# export ASCIINEMA_OUTPUT="$outfile"
+if [ -n "$TMUX_PANE" ]; then
+    # echo "TMUX PANE $TMUX_PANE"
+    asciinema rec "$outfile" -q -c "fish -C 'tmux-path setpanepid \$TMUX_PANE \$fish_pid' ${cmd:+-c \"$cmd\"}"
+else
+    # echo "NOT tmux"
+    asciinema rec "$outfile" -q -c "fish ${cmd:+-c \"$cmd\"}"
+fi

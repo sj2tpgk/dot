@@ -57,7 +57,7 @@ If keymap is omitted, (current-global-map) is used by default."
    (t                   (smart-toggle-folding))))
 
 (definteractive save-some-buffers!
-  "Call `save-some-buffers' without confirmation."
+  "`save-some-buffers' without confirmation."
   (save-some-buffers 1))
 
 (definteractive beautify-buffer
@@ -106,12 +106,33 @@ If keymap is omitted, (current-global-map) is used by default."
       smart-toggle-folding-detected   nil)
 (defun smart-toggle-folding-detector (&rest args)
   (setq smart-toggle-folding-detected t))
+(defun smart-toggle-folding-web-folded-at-p (pos)
+  "In web-mode, check whether code at POS is folded."
+  (and pos
+       (dolist (elt (overlays-at pos))
+         (when (eq (overlay-get elt 'font-lock-face) 'web-mode-folded-face)
+           (return t)))))
 (definteractive smart-toggle-folding
-  "Toggle folding. (Enable hs-minor-mode if not present)"
+  "Toggle folding. (Automatically enable hs-minor-mode if not present)"
   (cond
 
    ;; In org-mode, call org-cycle
    ((eq major-mode 'org-mode) (org-cycle))
+
+   ;; In web-mode
+   ((and (eq major-mode 'web-mode)
+         (string= "html" (web-mode-language-at-pos)))
+    (let ((child (web-mode-element-child-position))
+          (children (web-mode-element-children)))
+      (if children
+          (if (find-if 'smart-toggle-folding-web-folded-at-p children)
+              ;; If the child is folded -> close this tag
+              ;; If this tag and children are folded -> open this tag
+              (web-mode-fold-or-unfold)
+            ;; If the child is open -> close children
+            (web-mode-element-children-fold-or-unfold))
+        ;; If no child -> toggle this tag
+        (web-mode-fold-or-unfold))))
 
    ;; Enable hs-minor-mode and recur (to check following clauses)
    ((not (bound-and-true-p hs-minor-mode))
@@ -133,23 +154,29 @@ If keymap is omitted, (current-global-map) is used by default."
       (unless smart-toggle-folding-detected
         (hs-toggle-hiding) (backward-char)))))
 
+(defun smart-forward-delete-char-empty-line-p () (string-match-p "\\`\\s-*$" (thing-at-point 'line)))
+(defun smart-forward-delete-line-length-multibyte ()
+  ;; (goto-char b) ;; (goto-char (+ b c)) doesn't work well with multibyte
+  ;; (forward-char multibyte-column-num)
+  (save-excursion (let ((i 0) (b (line-beginning-position)))
+                    (while (< b (point))
+                      (setq i (+ i 1))
+                      (backward-char))
+                    i)))
 (definteractive smart-forward-delete-char
   "Similar to `delete-forward-char' but when at end of line, joins lines."
   (let ((b (line-beginning-position)) (e (line-end-position)))
     (if (or (not (= (point) e)) (< 256 (- e b)))
         ;; do nothing special if not at beg of line, or if in very long line
         (call-interactively 'delete-forward-char)
-      (let ((multibyte-column-num
-             (save-excursion (let ((i 0))
-                               (while (< b (point))
-                                 (setq i (+ i 1))
-                                 (backward-char))
-                               i))))
+      (if (not (smart-forward-delete-char-empty-line-p))
+          ;; when non-empty line
+          (progn (join-line 1) (indent-region b (line-end-position)))
+        ;; when empty line
         (join-line 1)
-        ;; following code needed when at a empty line. (save-excursion not work)
-        (indent-region b e)
-        (goto-char b) ;; (goto-char (+ b c)) doesn't work well with multibyte
-        (forward-char multibyte-column-num)))))
+        (indent-region b (line-end-position))
+        (beginning-of-line-text) ;; move to char that was originally beg of next line
+        ))))
 
 (dolist (cmd '(backward-delete-char-untabify evil-delete-backward-char-and-join))
   (advice-add cmd ':around 'backward-delete-decorator))

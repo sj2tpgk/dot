@@ -1,5 +1,4 @@
-;; Keybinds for "apps" (md4rd, notmuch) go into its own use-package declaration
-
+(when nil
 (key "TAB"     'smart-tab
      "C-x s"   'save-some-buffers!
      "C-x ;"   'comment-lines
@@ -105,3 +104,4 @@
      "<S-mouse-5>" 'Info-history-forward
      "<mouse-8>" 'Info-history-back
      "<mouse-9>" 'Info-history-forward)
+)

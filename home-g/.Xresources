@@ -86,7 +86,7 @@ URxvt*inheritPixmap: false
 ! Color mapping {{{
 
 #define col_db #10191F
-#define col_df #B6BFC8
+#define col_df #C6CFD8
 #define col_dc #F9F5F4
 #define col_do 85
 
@@ -169,10 +169,12 @@ URxvt.color15: col_dbw
 ! Font
 ! URxvt.font: xft:Dina-9,xft:dinamplus gothic Wide:style=Regular:pixelsize=14,xft:Unifont
 ! URxvt.font: xft:Borg Sans Mono:style=Regular:size=14,xft:TakaoExGothic:style=Regular:size=15
-! URxvt.font: xft:Droid Sans Mono Dotted:style=Regular:size=12,xft:TakaoExGothic:style=Regular:size=13
+URxvt.font: xft:Droid Sans Mono Dotted:style=Regular:size=12,xft:TakaoExGothic:style=Regular:size=13
 ! URxvt.font: xft:Comic Mono:size=13,xft:TakaoExGothic:style=Regular:size=13
-URxvt.font: xft:Comic Mono:size=13,xft:azuki_font:size=13
-!URxvt.font: xft:Dina-9
+! URxvt.font: xft:Comic Mono:size=13,xft:azuki_font:size=13
+! URxvt.font: xft:Unifont\\-JP:style=Regular:size=24
+! URxvt.font: xft:Dina-9
+
 
 ! No scroll bar
 URxvt.scrollBar: false

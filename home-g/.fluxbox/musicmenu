@@ -43,7 +43,9 @@
 [exec] (cut2.mp3) {mocp -l "/home/tpa4/media/music/trainsound//cut2.mp3"}
 [exec] (cut3.mp3) {mocp -l "/home/tpa4/media/music/trainsound//cut3.mp3"}
 [exec] (E231系 常磐快速線 取手-上野 sm16048274.mp4) {mocp -l "/home/tpa4/media/music/trainsound//E231系 常磐快速線 取手-上野 sm16048274.mp4"}
-[exec] (E233系3000番台 上野-伊東 VhBw9mLSh_w.webm) {mocp -l "/home/tpa4/media/music/trainsound//E233系3000番台 上野-伊東 VhBw9mLSh_w.webm"}
+[exec] (E231系 成田線 成田-上野 uPx0wq_ns20.webm.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E231系 成田線 成田-上野 uPx0wq_ns20.webm.m4a"}
+[exec] (E233系2000番台 代々木上原-北綾瀬 Bg75v7zXKgw.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E233系2000番台 代々木上原-北綾瀬 Bg75v7zXKgw.m4a"}
+[exec] (E233系3000番台 上野-伊東 VhBw9mLSh_w.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E233系3000番台 上野-伊東 VhBw9mLSh_w.m4a"}
 [exec] (E233系3000番台 東京-小田原 cYT5h-KuLmM.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E233系3000番台 東京-小田原 cYT5h-KuLmM.m4a"}
 [exec] (E233系 京浜東北線 大宮-大船 yAKvYAJ02SI.webm) {mocp -l "/home/tpa4/media/music/trainsound//E233系 京浜東北線 大宮-大船 yAKvYAJ02SI.webm"}
 [exec] (E235系 (三菱\) MThU3qP07xY.webm) {mocp -l "/home/tpa4/media/music/trainsound//E235系 (三菱) MThU3qP07xY.webm"}
@@ -55,3 +57,4 @@
 [exec] (東京ﾒﾄﾛ10000系 和光市-新木場 agfIX3KljLc.m4a) {mocp -l "/home/tpa4/media/music/trainsound//東京ﾒﾄﾛ10000系 和光市-新木場 agfIX3KljLc.m4a"}
 [exec] (東京メトロ16000系.mp3) {mocp -l "/home/tpa4/media/music/trainsound//東京メトロ16000系.mp3"}
 [exec] (東京メトロ16000系 三菱 唐木田-綾瀬-pQGue0oXhbA.m4a) {mocp -l "/home/tpa4/media/music/trainsound//東京メトロ16000系 三菱 唐木田-綾瀬-pQGue0oXhbA.m4a"}
+[exec] (東京ﾒﾄﾛ16000系 代々木上原-我孫子 w7oJK2TPHkw.webm) {mocp -l "/home/tpa4/media/music/trainsound//東京ﾒﾄﾛ16000系 代々木上原-我孫子 w7oJK2TPHkw.webm"}

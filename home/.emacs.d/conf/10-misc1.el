@@ -17,9 +17,17 @@
 (progn ;; Set theme
   (setq frame-background-mode 'dark)
   (load-theme 'wombat t)
-  (custom-set-faces '(cursor  (( t            (:background "#ddd" :foreground "#111") ))))
-  (custom-set-faces '(default (( ((type tty)) (:background "unspecified-bg")          ))))
-  (custom-set-faces '(hl-line (( t            (:underline t)                          ))))
+  (custom-set-faces
+   '(cursor  (( t            (:background "#ddd" :foreground "#111")                )))
+   '(default (( ((type tty)) (:background "unspecified-bg")                         )))
+   '(hl-line (( t            (:underline t)                                         )))
+
+   '(tab-bar              (( ((type tty)) (:background "unspecified-bg" :foreground "#fff" :weight bold) )))
+   '(tab-bar-tab          (( ((type tty)) (:background "#aa4" :foreground "#000" :weight bold) )))
+   '(tab-bar-tab-inactive (( ((type tty)) (:background "unspecified-bg" :foreground "#fff" :weight bold) )))
+
+   '(font-lock-comment-face (( ((type tty)) (:foreground "blue")          )))
+   )
   )
 
 ;; "Reload config" command

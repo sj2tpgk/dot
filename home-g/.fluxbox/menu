@@ -31,14 +31,14 @@
       [exec] (Qbittorrent){qbittorrent}                <~/media/pict/icons/qbittorrent16.png>
     [end]
     [submenu] (Tools)
-      [exec] (Urxvt)      {~/script/terminal.fish}    <~/media/pict/icons/system16.png>
+      [exec] (Urxvt)      {~/script/terminal}         <~/media/pict/icons/system16.png>
       [exec] (Urxvt new)  {urxvt}                     <~/media/pict/icons/system16.png>
       [exec] (Emacs)      {~/script/emacsgui.sh}      <~/media/pict/icons/emacs16.png>
       [exec] (GVim)       {gvim}                      <~/media/pict/icons/gvim16.png>
       [exec] (Windows XP) {vboxmanage startvm xp}     <~/media/pict/icons/virtualbox16.png>
       # [exec] (Windows 7)  {vboxmanage startvm 7}      <~/media/pict/icons/virtualbox16.png>
       [exec] (VirtualBox) {virtualbox -style Fusion}  <~/media/pict/icons/virtualbox16.png>
-      [exec] (Ranger)     {~/script/term/ranger.fish}
+      [exec] (Ranger)     {~/script/term/ranger}
       [exec] (Tint2)      {tint2}
       [exec] (LxAppearance){lxappearance}
       [exec] (Xvkbd)      {xvkbd}
@@ -48,7 +48,7 @@
       [exec] (Geeqie)     {geeqie}                    <~/media/pict/icons/image16.png>
       [exec] (Audacity)   {audacity}                  <~/media/pict/icons/audacity16.png>
       [exec] (Gimp)       {gimp}                      <~/media/pict/icons/gimp16.png>
-      [exec] (Mocp)       {~/script/term/mocp.fish}   <~/media/pict/icons/player16.png>
+      [exec] (Mocp)       {~/script/term/mocp}        <~/media/pict/icons/player16.png>
       # [exec] (Rescan musics) {~/.fluxbox/musicmenugen}
       [submenu] (Music)
         [include] (~/.fluxbox/musicmenu)
