@@ -1,3 +1,5 @@
+;; extra commands for evil.  -*- lexical-binding: t; -*-
+
 (definteractive evil-smart-esc
   (if company-selection-changed (company-complete-selection) (company-abort))
   ;; (when company-selection (if (= company-selection 0) (company-abort) (company-complete-selection)))

@@ -44,10 +44,10 @@
 [exec] (cut3.mp3) {mocp -l "/home/tpa4/media/music/trainsound//cut3.mp3"}
 [exec] (E231系 常磐快速線 取手-上野 sm16048274.mp4) {mocp -l "/home/tpa4/media/music/trainsound//E231系 常磐快速線 取手-上野 sm16048274.mp4"}
 [exec] (E231系 成田線 成田-上野 uPx0wq_ns20.webm.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E231系 成田線 成田-上野 uPx0wq_ns20.webm.m4a"}
+[exec] (E233系1000番台 大宮-大船 yAKvYAJ02SI.webm) {mocp -l "/home/tpa4/media/music/trainsound//E233系1000番台 大宮-大船 yAKvYAJ02SI.webm"}
 [exec] (E233系2000番台 代々木上原-北綾瀬 Bg75v7zXKgw.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E233系2000番台 代々木上原-北綾瀬 Bg75v7zXKgw.m4a"}
 [exec] (E233系3000番台 上野-伊東 VhBw9mLSh_w.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E233系3000番台 上野-伊東 VhBw9mLSh_w.m4a"}
 [exec] (E233系3000番台 東京-小田原 cYT5h-KuLmM.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E233系3000番台 東京-小田原 cYT5h-KuLmM.m4a"}
-[exec] (E233系 京浜東北線 大宮-大船 yAKvYAJ02SI.webm) {mocp -l "/home/tpa4/media/music/trainsound//E233系 京浜東北線 大宮-大船 yAKvYAJ02SI.webm"}
 [exec] (E235系 (三菱\) MThU3qP07xY.webm) {mocp -l "/home/tpa4/media/music/trainsound//E235系 (三菱) MThU3qP07xY.webm"}
 [exec] (E235系 (東芝\) 9BAqqbXSRnU.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E235系 (東芝) 9BAqqbXSRnU.m4a"}
 [exec] (h1008_東京メトロ06系 e2.mp3) {mocp -l "/home/tpa4/media/music/trainsound//h1008_東京メトロ06系 e2.mp3"}
@@ -58,3 +58,4 @@
 [exec] (東京メトロ16000系.mp3) {mocp -l "/home/tpa4/media/music/trainsound//東京メトロ16000系.mp3"}
 [exec] (東京メトロ16000系 三菱 唐木田-綾瀬-pQGue0oXhbA.m4a) {mocp -l "/home/tpa4/media/music/trainsound//東京メトロ16000系 三菱 唐木田-綾瀬-pQGue0oXhbA.m4a"}
 [exec] (東京ﾒﾄﾛ16000系 代々木上原-我孫子 w7oJK2TPHkw.webm) {mocp -l "/home/tpa4/media/music/trainsound//東京ﾒﾄﾛ16000系 代々木上原-我孫子 w7oJK2TPHkw.webm"}
+[exec] (相鉄10000系 更新車 海老名-横浜 (急行\) 8KcM9uPMIuo.m4a) {mocp -l "/home/tpa4/media/music/trainsound//相鉄10000系 更新車 海老名-横浜 (急行) 8KcM9uPMIuo.m4a"}

@@ -2,20 +2,21 @@
 set -xg PATH $HOME/bin $PATH
 
 # Keyboard
-set -xg MYKBD "colemakdh"
+if [ (cat /etc/machine-id | md5sum | cut -c1-4) = f63a ]
+    set -xg MYKBD "colemakdh"
+end
 
 # Alias
 alias cp 'cp -i'
-alias rg ranger
 alias vim nvim
 
 # Pager ( -x (--export) is necessary )
 if command -v vimpager > /dev/null
-  set -xg PAGER vimpager
-  set -xg VIMPAGER_RC ~/.vimpagerrc
+    set -xg PAGER vimpager
+    set -xg VIMPAGER_RC ~/.vimpagerrc
 else if command -v w3mman > /dev/null
-  set -xg PAGER w3_pager
-  alias man w3_man
+    set -xg PAGER w3_pager
+    alias man w3_man
 end
 
 # Editor

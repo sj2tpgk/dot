@@ -13,13 +13,17 @@ fi
 
 RLWRAP_HOME=~/.rlwrap
 
-MYKBD=colemakdh
+
+# Keyboard
+if [ $(cat /etc/machine-id | md5sum | cut -c1-4) = f63a ]; then
+    export MYKBD colemakdh
+fi
+
 # }}}
 
 # Aliases and functions {{{
 alias ls='ls --color=auto'
 alias cp='cp -i' # safe cp
-alias rg='ranger'
 
 function mkcd(){
     mkdir -p "$1"

@@ -91,7 +91,7 @@
 ;; nano-like insert mode
 ;; ()
 
-(when (and (getenv "MYKBD")
+(when (and nil (getenv "MYKBD")
            (string= (getenv "MYKBD") "colemakdh"))
 
   (dolist (cmd '(smart-backward-char smart-forward-char))

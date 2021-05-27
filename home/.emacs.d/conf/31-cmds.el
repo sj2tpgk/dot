@@ -111,7 +111,7 @@ If keymap is omitted, (current-global-map) is used by default."
   (and pos
        (dolist (elt (overlays-at pos))
          (when (eq (overlay-get elt 'font-lock-face) 'web-mode-folded-face)
-           (return t)))))
+           (cl-return t)))))
 (definteractive smart-toggle-folding
   "Toggle folding. (Automatically enable hs-minor-mode if not present)"
   (cond
