@@ -1,6 +1,29 @@
 #!/bin/sh
 
 # emacs -nw --color=yes "$@"
-emacs -nw --color=auto "$@"
+# emacs -nw --color=auto "$@"
 # TERM=screen-16color
 # emacs -nw --color=256 "$@"
+
+# Guide for emacs + tmux + truecolor
+# When using urxvt-truecolor
+# In .tmux.conf
+#   default-terminal = screen-256color
+#   terminal-overrides = ",$TERM:Tc"
+#   ($TERM gets expanded to default-terminal (screen-256color)
+# When launching emacs,
+#   if inside  tmux, use TERM=xterm-direct
+#   if outside tmux, use TERM=st-direct
+# Diagnose:
+#   - check if 24bit-colors.sh show smoothly changing colors
+#   - "TERM=xxxx emacs -nw -Q --eval '(list-colors-display)'"
+#     to check (1) it shows 500~ colors and (2) color code emacs says and that of colorpicker matches.
+# Still a problem:
+#   if server run on low colors and client in true-color, crash.
+
+if [ -n "$TMUX" ]; then
+  TERM=xterm-direct emacs -nw "$@"
+else
+  TERM=st-direct emacs -nw "$@"
+fi
+

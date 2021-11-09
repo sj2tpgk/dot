@@ -1,5 +1,5 @@
 (progn
-  (put 'use 'lisp-indent-function 1)
+  (put 'use 'lisp-indent-function 2)
   (defmacro use (pkgspec &optional cmds &rest body)
     (let* ((pkgpl (use-analyze-pkgspec pkgspec))
            (pkg   (plist-get pkgpl :pkg))

@@ -35,16 +35,19 @@
 ;;          (p (floor (/ (* l (+ x (/ n 2 l))) n))))
 ;;     (format "[%s#%s]" (make-string (max 0 (1- p)) ?.) (make-string (min (1- l) (- l p)) ?.))))
 
-(defun ml-buffer-region-size ()
+(defun ml-buffer-region-size () ;; todo rectangle, ignore commented lines
   (if (not (region-active-p))
       ""
     (let* ((b (region-beginning)) (e (region-end))
            (lb (line-number-at-pos b)) (le (line-number-at-pos e))
-           (lines (- le lb))
-           (chars (case evil-visual-selection
-                    (char (- (bufferpos-to-filepos e 'exact)
-                             (bufferpos-to-filepos b 'exact)
+           (lines (1+ (- le lb)))
+           (chars (cl-case evil-visual-selection
+                    (char (- e b
                              (- lines 1)))
+                    ;; Why the following was needed ??? (moreover it's not accurate)
+                    ;; (char (- (bufferpos-to-filepos e 'exact)
+                    ;;          (bufferpos-to-filepos b 'exact)
+                    ;;          (- lines 1)))
                     (line (- (line-end-position
                               (- le (line-number-at-pos) -1))
                              (line-beginning-position
@@ -61,16 +64,16 @@
         (let ((n (length (tab-bar-tabs))))
           (if (< 6 n)
               (format "%s tabs" n)
-            `(:eval ,(loop for i below n
-                           concat (propertize (format "%s " i)
-                                              'face (if (= i (tab-bar--current-tab-index))
-                                                        '(:inverse-video t) '())
-                                              'help-echo (format "Select window config %s" i)
-                                              'keymap `(keymap
-                                                        (tab-line keymap
-                                                                  (mouse-1 . (lambda () (interactive) (message "%s" ,(1+ i)) (tab-bar-select-tab ,(1+ i))))
-                                                                  (mouse-4 . tab-bar-switch-to-prev-tab)
-                                                                  (mouse-5 . tab-bar-switch-to-next-tab))))))))))
+            `(:eval ,(cl-loop for i below n
+                              concat (propertize (format "%s " i)
+                                                 'face (if (= i (tab-bar--current-tab-index))
+                                                           '(:inverse-video t) '())
+                                                 'help-echo (format "Select window config %s" i)
+                                                 'keymap `(keymap
+                                                           (tab-line keymap
+                                                                     (mouse-1 . (lambda () (interactive) (message "%s" ,(1+ i)) (tab-bar-select-tab ,(1+ i))))
+                                                                     (mouse-4 . tab-bar-switch-to-prev-tab)
+                                                                     (mouse-5 . tab-bar-switch-to-next-tab))))))))))
 
 ;; (defun ml-update-major-mode-name ()
 ;;   (message "yes %s" (buffer-name))
@@ -85,17 +88,19 @@
 ;; (dolist (b (buffer-list)) (with-current-buffer b (ml-update-major-mode-name)))
 ;; (message "mm: %s" (buffer-list))
 
-(let ((ht (make-hash-table :test 'equal)))
+(let ((ht (make-hash-table :test 'eq)))
   (defun ml-shorten-path (path)
-    (or (gethash path ht)
-        (let* ((l (split-string (string-remove-suffix "/" (abbreviate-file-name path)) "/" nil))
-               (abbr (string-join (append (mapcar (lambda (s)
-                                                    (substring s 0 (min 1 (length s))))
-                                                  (butlast l))
-                                          (last l))
-                                  "/")))
-          (puthash path abbr ht)
-          abbr))))
+    (let* ((l (split-string (string-remove-suffix "/" (abbreviate-file-name path)) "/" nil))
+           (abbr (string-join (append (mapcar (lambda (s)
+                                                (substring s 0 (min 1 (length s))))
+                                              (butlast l))
+                                      (last l))
+                              "/")))
+      abbr))
+  (defun ml-buffer-directory-short (buf)
+    ;; (message "%s" (gethash path ht))
+    (or (gethash buf ht)
+        (puthash buf (ml-shorten-path (with-current-buffer buf default-directory)) ht))))
 
 ;; For fun
 (let* ((ls '("<*_*>"    "<')><"    "Zzz.."   "*(oo)*"   "@('_')@"   "<'^_)~"
@@ -107,7 +112,7 @@
   (defun ml-easter-egg ()
     (or (gethash (current-buffer) ht)
         (let* ((s (buffer-name))
-               (h (loop for i below (length s) by 4 sum (elt s i)))
+               (h (cl-loop for i below (length s) by 4 sum (elt s i)))
                (res (propertize (nth (mod h (length ls)) ls)
                                 'face (nth (mod h (length lf)) lf))))
           (puthash (current-buffer) res ht)
@@ -123,7 +128,7 @@
 (defun set-header-line-format (fmt) (set-mode-line-format fmt 'header-line-format))
 (defun set-tab-line-format    (fmt) (set-mode-line-format fmt 'tab-line-format))
 
-(set-header-line-format nil)
+;; (set-header-line-format nil)
 ;; (set-header-line-format
 ;;  '((:eval (if (eq ml-selected-window (selected-window))
 ;;               `(:propertize ,mode-line-format face (:foreground "blue"))
@@ -133,22 +138,29 @@
 ;; (add-hook 'buffer-list-update-hook 'ml-record-window)
 
 (set-mode-line-format
- '(:eval (ml-left-right
-          '((:eval ml-tab-bar-switcher)
-            "  "
-            (:eval (ml-buffer-status))
-            " "
-            mode-line-buffer-identification
-            " [" (:eval (ml-shorten-path default-directory)) "]"
-            "     L%2l/" (:eval (format "%s" (line-number-at-pos (point-max))))
-            "  C%2c "
-            " " (:eval (ml-buffer-region-size)))
-          '((vc-mode vc-mode)
-            ;; " [" ml-major-mode-name "]  "
-            " "
-            mode-line-modes
-            " " ;; (:eval (ml-easter-egg))
-            mode-line-client))))
+ `("%e" mode-line-front-space mode-line-mule-info mode-line-client mode-line-modified mode-line-remote mode-line-frame-identification mode-line-buffer-identification
+   " [" (:eval (ml-buffer-directory-short (current-buffer))) "]"
+   "   " mode-line-position (:eval (ml-buffer-region-size))
+   (vc-mode vc-mode)
+   "  " mode-line-modes mode-line-misc-info mode-line-end-spaces))
+
+;; (set-mode-line-format
+;;  '(:eval (ml-left-right
+;;           '((:eval ml-tab-bar-switcher)
+;;             "  "
+;;             (:eval (ml-buffer-status))
+;;             " "
+;;             mode-line-buffer-identification
+;;             " [" (:eval (ml-shorten-path default-directory)) "]"
+;;             "     L%2l/" (:eval (format "%s" (line-number-at-pos (point-max))))
+;;             "  C%2c "
+;;             " " (:eval (ml-buffer-region-size)))
+;;           '((vc-mode vc-mode)
+;;             ;; " [" ml-major-mode-name "]  "
+;;             " "
+;;             mode-line-modes
+;;             " " ;; (:eval (ml-easter-egg))
+;;             mode-line-client))))
 
 ;; (set-mode-line-format
 
@@ -192,7 +204,7 @@
         tab-bar-tab-name-truncated-max 24
         tab-bar-tab-name-ellipsis ".."
         tab-bar-separator " "
-        tab-bar-show nil
+        tab-bar-show 1
         tab-bar-new-tab-choice "*scratch*")
   (fset tab-bar-tab-name-function
         (lambda ()
@@ -204,7 +216,7 @@
              ,@(cdr lis)))
   (advice-add 'tab-bar-make-keymap-1 :filter-return 'add-tab-scroll-bindings))
 
-(when t ;; tab-line
+(when nil ;; tab-line
   ;; (global-tab-line-mode 1)
   ;; (require 'cl)
   (require 'tab-line) ;; necessary
@@ -228,7 +240,7 @@
                       ((nil . t  ) . "+")
                       ((t   . nil) . "R")
                       ((t   . t  ) . "R+")))))))
- 
+
   (defun tab-line-tab-name-truncated-buffer2 (buffer &optional _buffers)
     "Generate tab name from BUFFER.
 Truncate it to the length specified by `tab-line-tab-name-truncated-max'.

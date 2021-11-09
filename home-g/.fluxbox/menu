@@ -57,6 +57,7 @@
     [submenu] (Games)
       #       Label        Command                     Icon
       [exec] (Minecraft)  {~/script/minecraft.sh}     <~/media/pict/icons/minecraft16.png>
+      [exec] (MultiMC)    {multimc}                   <~/media/pict/icons/minecraft16.png>
       [exec] (Mgba)       {mgba-qt}                   <~/media/pict/icons/mgba16.png>
       [exec] (PCSX2)      {PCSX2}                     <~/media/pict/icons/playstation16.png>
       [exec] (PPPSSPP)    {PPSSPPQt}                  <~/media/pict/icons/playstation16.png>

@@ -7,7 +7,7 @@
      :c (add-hook 'nim-mode-hook (lambda () (auto-fill-mode 0) (electric-indent-local-mode 0))))
 (use pov-mode ($))
 
-(use js (js-mode javascript-mode) :c (nmap js-mode-map ",e" 'nodejs-repl-send-line ",b" 'nodejs-repl-send-buffer))
+(use js (js-mode javascript-mode) :c (nmap js-mode-map "|" 'nodejs-repl-send-line ",e" 'nodejs-repl-send-line ",b" 'nodejs-repl-send-buffer))
 (use nodejs-repl ($))
 
 (use raku-mode ($ run-raku)
@@ -16,7 +16,7 @@
             (add-hook x 'electric-operator-mode))))
 
 (use web-mode ($)
-     :i (add-to-list 'auto-mode-alist '("\\.html?\\'" . $))
+     :i (add-to-list 'auto-mode-alist '("\\.html?\\'" . $)) (add-to-list 'auto-mode-alist '("\\.svg\\'" . $))
      (add-hook 'web-mode-hook (lambda () (set (make-local-variable 'company-backends) '((company-css company-web-html company-keywords-web company-capf company-dabbrev-code company-files)))))
      :c (setq web-mode-markup-indent-offset 1 web-mode-code-indent-offset 4))
 
@@ -50,18 +50,22 @@
           (lua-send-current-line))))
 
      (nmap lua-mode-map
+           "|"  'lua-send-defun-or-line
            ",e" 'lua-send-defun-or-line
            ",b" 'lua-send-buffer)
      (vmap lua-mode-map
+           "|"  'lua-send-region
            ",e" 'lua-send-region))
 
+(use markdown-mode ($))
+
 (use tex-mode)
-(let ((custom--inhibit-theme-enable nil))
-  (custom-theme-set-faces
-   'wombat
-   '(font-latex-sedate-face      ((t (:inherit font-lock-keyword-face :weight normal))))
-   '(font-latex-script-char-face ((t (:foreground "Red" :weight normal))))
-   ))
+;; (let ((custom--inhibit-theme-enable nil))
+;;   (custom-theme-set-faces
+;;    'wombat
+;;    '(font-latex-sedate-face      ((t (:inherit font-lock-keyword-face :weight normal))))
+;;    '(font-latex-script-char-face ((t (:foreground "Red" :weight normal))))
+;;    ))
 
 (defun insert-snippet (snippet)
   "Insert snippet. | denotes the cursor position."

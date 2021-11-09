@@ -20,5 +20,5 @@
 (define skk-vi-escape-key? (make-key-predicate '("escape" "<Control>[")))
 (define skk-state-direct-no-preedit-nop-key '("<IgnoreCase><Control>j"))
 (define skk-state-direct-no-preedit-nop-key? (make-key-predicate '("<IgnoreCase><Control>j")))
-(define skk-purge-candidate-key '("<IgnoreCase><Shift><Control>x"))
-(define skk-purge-candidate-key? (make-key-predicate '("<IgnoreCase><Shift><Control>x")))
+(define skk-purge-candidate-key '("<IgnoreCase><Shift><Control>x" "<IgnoreShift><Control>-"))
+(define skk-purge-candidate-key? (make-key-predicate '("<IgnoreCase><Shift><Control>x" "<IgnoreShift><Control>-")))

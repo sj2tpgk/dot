@@ -11,7 +11,7 @@
         (1  "~/.emacs.d/conf/30-misc3.el")
         (1  "~/.emacs.d/conf/31-cmds.el")
         (1  "~/.emacs.d/conf/35-comint.el")
-        ;(1  "~/.emacs.d/conf/36-modeline.el")
+        (1  "~/.emacs.d/conf/36-modeline.el")
 
         ;(1  "~/.emacs.d/conf/41-lsp.el")
         (1  "~/.emacs.d/conf/43-company.el")
@@ -25,12 +25,12 @@
         (1  "~/.emacs.d/conf/57-org.el")
         (1  "~/.emacs.d/conf/59-python.el")
 
-        (1  "~/.emacs.d/conf/82-keys-common.el")
-        (1  "~/.emacs.d/conf/84-keys-evil.el")
+        ;; (1  "~/.emacs.d/conf/82-keys-common.el")
+        ;; (1  "~/.emacs.d/conf/84-keys-evil.el")
 
         (1  "~/.emacs.d/conf/80-evil-extra.el")
         (1  "~/.emacs.d/conf/81-keys.el")
         (1  "~/.emacs.d/conf/82-keys-nq.el")
 
-        (1  "~/.emacs.d/conf/90-kcui.el")
+        ;; (1  "~/.emacs.d/conf/90-kcui.el")
         ))

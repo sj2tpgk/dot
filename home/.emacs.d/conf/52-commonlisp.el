@@ -29,9 +29,11 @@
 
     ;; Keymap
     (nmap lisp-mode-map
+          "|"  'slime-eval-defun
           ",e" 'slime-eval-defun
           ",b" 'slime-eval-buffer)
     (vmap lisp-mode-map
+          "|"  'slime-eval-region
           ",e" 'slime-eval-region)
 
     )
@@ -58,7 +60,7 @@
     )
 
   (add-hook 'slime-mode-hook 'my/common-lisp-conf)
-  (global-set-key (kbd "<f7>") 'common-lisp-mode)
+  ;; (global-set-key (kbd "<f7>") 'common-lisp-mode)
   ;; (global-set-key (kbd "<f7>") 'my/common-lisp-conf)
 
   :config

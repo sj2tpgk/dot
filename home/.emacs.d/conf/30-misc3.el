@@ -21,10 +21,20 @@
 (setq-default truncate-lines nil) ;; nil = wrap
 (setq truncate-partial-width-windows nil)
 
-;; Backup files in one directory (like vim's view file)
-(let ((backup-directory (concat user-emacs-directory "/swap")))
-  (setq backup-directory-alist `((".*" . ,backup-directory))
-        auto-save-file-name-transforms `((".*" ,backup-directory t))))
+(progn ;; Backup, save, lock etc.
+  ;; Backup files (foo.txt~; copy of file before editing)
+  ;; in one directory (like vim's view file)
+  (let ((backup-directory (concat user-emacs-directory "/backup")))
+    (setq backup-directory-alist `((".*" . ,backup-directory))
+          auto-save-file-name-transforms `((".*" ,backup-directory t))))
+
+  ;; Auto-save files (#foo.txt#; useful when emacs crashed etc.)
+  (setq auto-save-file-name-transforms
+        `((".*" ,(concat user-emacs-directory "/auto-save") t)))
+
+  ;; No lock file (.#foo.txt)
+  (setq create-lockfiles nil))
+
 
 ;; Show column-number like vim
 (column-number-mode 1)
@@ -171,8 +181,29 @@
                      (server-running-p))))
   (server-start))
 
+(progn ;; TMUX + xterm-direct, Home and End key
+  (define-key function-key-map "\e[1~" [Home])
+  (define-key function-key-map [select] [End]))
+
 ;; Don't colorize colors in css
 (setq css-fontify-colors nil)
 
 ;; Auto insert closing parens
 (electric-pair-mode 1)
+
+;; When joining lines, add space or not (yes in most cases, no if at parens () [] (but yes if {}))
+(progn
+  (advice-add 'fixup-whitespace :override 'fixup-whitespace2)
+  (defun fixup-whitespace2 ()
+    "Fixup white space between objects around point.
+Leave one space or none, according to the context."
+    (interactive "*")
+    (save-excursion
+      (delete-horizontal-space)
+      (if (or (and (looking-at "^\\|$\\|\\s)") ;; no space when at parens ...
+                   (not (looking-at "}")))     ;; ... except braces
+              (save-excursion (forward-char -1)
+                              (and (looking-at "$\\|\\s(\\|\\s'")
+                                   (not (looking-at "{")))))
+          nil
+        (insert ?\s)))))

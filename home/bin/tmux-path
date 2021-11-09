@@ -23,7 +23,9 @@ if [ "$operation" = setpanepid ]; then
 
 elif [ "$operation" = getpanepath ]; then
     if [ -n "$TMUX" ]; then
-        paneid=$(tmux display -pF "#{pane_id}" | sed 's/ //g')
+        paneid=${2:-$(tmux display -pF "#{pane_id}" | sed 's/ //g')}
+        # paneid=$2
+        # echo "$paneid" > ~/idmemo
         pidfile=$(get_panepid_file "$paneid")
         if [ -e "$pidfile" ]; then
             pid=$(cat "$pidfile")
@@ -31,6 +33,7 @@ elif [ "$operation" = getpanepath ]; then
             # echo "tmux-get-path: $paneid, $pid, $cwdfile"
             [ -e "$cwdfile" ] && path=$(readlink "$cwdfile")
             # [ -e "$cwdfile" ] && echo $pid
+            # echo -n "P$cwdfile$path "
         fi
         [ -z "$path" ] && path=$(tmux display -pF "#{pane_current_path}")
     else
@@ -38,6 +41,7 @@ elif [ "$operation" = getpanepath ]; then
         # path=/var
         path=$(pwd)
     fi
+    # echo "$paneid $path"
     echo "$path"
 
 else

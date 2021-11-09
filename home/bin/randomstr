@@ -1,18 +1,24 @@
 #!/bin/sh
 
 function usage {
-  echo "Usage: randomstr <length> <spec>"
-  echo "  Get a random string of length <length> using characters specified by <spec>,"
-  echo "  and copy the string to clipboard using xclip if available."
-  echo "  <spec> is a string of following characters. (default ad)"
-  echo "    a/A: small/capital alphabets"
-  echo "    d:   digits (0-9)"
-  echo "    w:   shortcut for aAd_"
-  echo "    _:   underscore"
-  echo "    -:   some symbols:  !\"#\$%&()*+,-./:;<=>?@[]^_\`{|}~"
+    echo "Usage: randomstr [-n] <length> <spec>"
+    echo "  Get a random string of length <length> using characters specified by <spec>,"
+    echo "  and copy the string to clipboard using xclip if available."
+    echo
+    echo "   -n    don't copy to clipboard"
+    echo
+    echo "  <spec> is a string of following characters. (default ad)"
+    echo "    a/A: small/capital alphabets"
+    echo "    d:   digits (0-9)"
+    echo "    w:   shortcut for aAd_"
+    echo "    _:   underscore"
+    echo "    -:   some symbols:  !\"#\$%&()*+,-./:;<=>?@[]^_\`{|}~"
 }
 
-if [ $# -ne 1 -a $# -ne 2 ]; then usage; exit 0; fi
+if [ $# -eq 0 ]; then usage; exit 0; fi
+
+nflag=0
+if [ "$1" = -n ]; then nflag=1; shift; fi
 
 len=$1
 [ $# -eq 1 ] && options=xad || options=x$2
@@ -32,8 +38,8 @@ rnd=$(tr -dc "$charset" </dev/urandom | head -c $len ; echo '')
 
 echo $rnd
 
-if command -v xclip > /dev/null; then
-  echo -n $rnd | xclip -i -selection clipboard
+if [ $nflag -eq 0 ] && command -v xclip > /dev/null; then
+    echo -n $rnd | xclip -i -selection clipboard
 fi
 
 # #!/bin/bash

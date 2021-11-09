@@ -50,10 +50,12 @@
 
   (with-eval-after-load 'evil-mapcmd
     (nmap scheme-mode-map
+          "|"  'scheme-send-definition
           ",e" 'scheme-send-definition
           ",b" 'scheme-send-buffer
           ",r" 'run-scheme-other-window)
     (vmap scheme-mode-map
+          "|"  'scheme-send-region
           ",e" 'scheme-send-region))
 
   (setq company-scheme-keywords
@@ -99,6 +101,7 @@
   :config
   (use-package geiser-gauche :ensure t)
   (nmap scheme-mode-map
+        "|"  'geiser-eval-definition
         ",e" 'geiser-eval-definition
         ",b" 'geiser-eval-buffer)
   )

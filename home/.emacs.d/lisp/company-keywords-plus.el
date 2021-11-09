@@ -41,46 +41,30 @@
       (interactive (company-begin-backend 'company-keywords+))
       (t           (let ((company-keywords-alist company-keywords-alist+))
                      (company-keywords command arg ignored)))))
-  )
 
-(use-package company
-  :ensure t
-  :commands (global-company-mode)
-  :init (add-hook 'evil-normal-state-exit-hook 'global-company-mode)
-  :config
-  (remove-hook 'evil-normal-state-exit-hook 'global-company-mode)
-  ;; small delay
-  ;; comp types: file, snippet, keyword
-  (setq company-idle-delay 0.1
-        company-minimum-prefix-length 2
-        completion-styles  '(initials basic partial-completion)
-        company-backends   '(
-                             ;; company-bbdb
-                             ;; company-eclim
-                             ;; company-semantic
-                             ;; company-clang
-                             ;; company-xcode
-                             ;; company-cmake
-                             ;; company-capf
-                             (company-capf :with company-files :with company-yasnippet)
-                             ;; (company-dabbrev-code company-gtags company-etags company-keywords)
-                             (company-dabbrev-code company-gtags company-etags company-keywords+)
-                             company-dabbrev
-                             company-oddmuse
-                             )
-        company-global-modes '(not inferior-python-mode org-mode))
-
-  ;; kakutei kakspace next quit space
-  ;; Complete on symbols (,.() etc.)
-  (defun company-smart-space ()
-    (interactive)
-    (if (= company-selection 0) (company-abort) (company-complete-selection))
-    (insert " "))
-
-  (eldoc-add-command 'company-smart-space 'company-complete-selection 'company-abort)
-
-  (company-tng-mode 1) ;; tab key for cycle+insert
-  ;; (global-company-fuzzy-mode 1)
+  (defun company-keywords-web (command &optional arg &rest ignored)
+    "Copy of `company-keywords' except:
+1. this detects the language in html dynamically (js, css)
+2. this uses `company-keywords-alist+' (for additional js words)"
+    (interactive (list 'interactive))
+    (let ((lang (or (cdr (assoc (web-mode-language-at-pos)
+                                '(("javascript" . javascript-mode)
+                                  ("css"        . css-mode))
+                                'string=))
+                    'web-mode)))
+      (cl-case command
+        (interactive (company-begin-backend 'company-keywords-web))
+        (prefix (and (assq lang company-keywords-alist+)
+                     (not (company-in-string-or-comment))
+                     (or (company-grab-symbol) 'stop)))
+        (candidates
+         (let ((completion-ignore-case nil)
+               (symbols (cdr (assq lang company-keywords-alist+))))
+           (all-completions arg (if (consp symbols)
+                                    symbols
+                                  (cdr (assq symbols company-keywords-alist+))))))
+        (kind 'keyword)
+        (sorted t))))
   )
 
 (progn ;; english completion
@@ -1312,8 +1296,11 @@
 ;;                    (nreverse res)))
 ;;     ;; (annotation  ...)
 ;;     (meta        (format "This value is named %s" arg))))
-
 ;; =================
+
+
+
+
 ;; Hippie expand
 ;; TODO
 ;;  priority = currentBuf > otherBufOfSameType > Dict > otherBufs
@@ -1517,3 +1504,6 @@
 ;;     t)))
 
 ;; }}}
+
+(provide 'company-keywords-plus)
+;;; company-keywords-plus.el ends here

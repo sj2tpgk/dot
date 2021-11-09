@@ -1,3 +1,10 @@
 #!/bin/sh
 
-emacsclient -a nano -nw -c "$@"
+# emacsclient -a nano -nw -c "$@"
+
+if [ -n "$TMUX" ]; then
+  TERM=xterm-direct emacsclient -a nano -c -nw "$@"
+else
+  TERM=st-direct emacs -a nano -c -nw "$@"
+fi
+

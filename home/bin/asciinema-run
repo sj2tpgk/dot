@@ -29,8 +29,10 @@ outfile="$outsubdir/$id-$datetime.cast"
 # export ASCIINEMA_OUTPUT="$outfile"
 if [ -n "$TMUX_PANE" ]; then
     # echo "TMUX PANE $TMUX_PANE"
+    # { echo tmux; date; } > ~/idmemo
     asciinema rec "$outfile" -q -c "fish -C 'tmux-path setpanepid \$TMUX_PANE \$fish_pid' ${cmd:+-c \"$cmd\"}"
 else
     # echo "NOT tmux"
+    # { echo notmux; date; } > ~/idmemo
     asciinema rec "$outfile" -q -c "fish ${cmd:+-c \"$cmd\"}"
 fi

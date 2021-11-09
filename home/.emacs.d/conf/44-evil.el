@@ -4,6 +4,8 @@
   (setq evil-want-keybinding nil) ;; set nil when using evil-collection
 
   :config
+  (evil-set-initial-state 'speedbar-mode 'emacs)
+
   (setq evil-mode-line-format nil)
   (cua-mode 0)
   (evil-mode 1)

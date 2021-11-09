@@ -33,6 +33,16 @@
       ;; (smart-close-buffer)
       (call-interactively 'evil-record-macro)))
 
+(definteractive evil-smart-quit
+  (if (frame-parameter nil 'client) ;; if emacsclient
+      ;; (progn (save-some-buffers (current-buffer)) (delete-frame))
+      ;; (server-edit) ;; quit client, optionally saving buffer.
+      ;; (delete-frame)
+      (evil-quit)
+    (if (yes-or-no-p "Really quit server?")
+        (save-buffers-kill-terminal)
+      (message "Yeah it's dangerous."))))
+
 (definteractive evil-smart-close-folds
   (unless (find (lambda (x) (and (boundp x) x))
                 '(outline-mode hs-minor-mode origami-mode hide-ifdef-mode))
@@ -57,5 +67,38 @@
 (definteractive my-redo-wrapper ;; For emacs27 and emacs28 compatibility
   (call-interactively (if (fboundp 'undo-redo) 'undo-redo 'undo-tree-redo)))
 
+(defun smart-evil-scroll-dir (<=or>= evil-window-dir evil-scroll-dir)
+  "temporarily disabled"
+  (if (eq evil-state 'visual)
+      (call-interactively 'evil-scroll-up)
+    (funcall evil-scroll-dir evil-scroll-count)
+    (evil-window-middle)
+    (when nil
+      (let ((oldl (line-number-at-pos)))
+        ;; (evil-window-middle)
+        (let ((newl (line-number-at-pos)))
+          (when (or t
+                    (funcall <=or>= oldl newl)
+                    (<= (abs (- oldl newl)) 5))
+            (funcall evil-window-dir (round (* 3.5 scroll-margin)))
+            (when (funcall <=or>= oldl (line-number-at-pos))
+              (funcall evil-scroll-dir evil-scroll-count)))))
+      )))
+(definteractive smart-evil-scroll-up
+  "Scroll to window-mid, window-top then scroll-up."
+  (smart-evil-scroll-dir '<= 'evil-window-top 'evil-scroll-up))
+(definteractive smart-evil-scroll-down
+  "Scroll to window-mid, window-bottom then scroll-down."
+  (smart-evil-scroll-dir '>= 'evil-window-bottom 'evil-scroll-down))
+
+(definteractive eval-print-defun
+  (save-excursion
+    (evil-with-state 'insert
+      (evil-insert-state)
+      (end-of-defun)
+      (eval-print-last-sexp))))
+
 ;; Treat smart-beg-of-line same as forward-char etc. for evil-repeat
-(evil-set-command-property 'smart-beg-of-line :repeat 'motion)
+(dolist (cmd '(smart-beg-of-line smart-backward-char smart-forward-char smart-evil-scroll-up smart-evil-scroll-down
+                                 smart-toggle-folding smart-toggle-folding-mouse))
+  (evil-set-command-property cmd :repeat 'motion))

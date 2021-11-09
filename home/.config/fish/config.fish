@@ -10,6 +10,10 @@ end
 alias cp 'cp -i'
 alias vim nvim
 
+# Completion
+# "quiet" : completion like "if" or "sudo" (followed by another commands)
+complete -c quiet -xa '(__fish_complete_subcommand)'
+
 # Pager ( -x (--export) is necessary )
 if command -v vimpager > /dev/null
     set -xg PAGER vimpager

@@ -1,61 +1,62 @@
-[exec] (d/e231 musashino.mp3) {mocp -l "/home/tpa4/media/music/trainsound//download/e231 musashino.mp3"}
-[exec] (d/E231系 未更新 上野-熱海 bgsZJRgcttQ.m4a) {mocp -l "/home/tpa4/media/music/trainsound//download/E231系 未更新 上野-熱海 bgsZJRgcttQ.m4a"}
-[exec] (d/E233系2000番台 唐木田-取手 9VT63J_iV8w.m4a) {mocp -l "/home/tpa4/media/music/trainsound//download/E233系2000番台 唐木田-取手 9VT63J_iV8w.m4a"}
-[exec] (d/E531系 品川-水戸 MCvX-WZAI58.m4a) {mocp -l "/home/tpa4/media/music/trainsound//download/E531系 品川-水戸 MCvX-WZAI58.m4a"}
-[exec] (d/metro 05-124.mp3) {mocp -l "/home/tpa4/media/music/trainsound//download/metro 05-124.mp3"}
-[exec] (d/metro 15000 256.mp3) {mocp -l "/home/tpa4/media/music/trainsound//download/metro 15000 256.mp3"}
-[exec] (d/E531系.mp3) {mocp -l "/home/tpa4/media/music/trainsound//download-save/E531系.mp3"}
-[exec] (p/E231系800番台.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/E231系800番台.mp3"}
-[exec] (p/E231系900番台 日立.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/E231系900番台 日立.mp3"}
-[exec] (p/E531系.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/E531系.mp3"}
-[exec] (p/h1008_E231系800番台.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_E231系800番台.mp3"}
-[exec] (p/h1008_E231系900番台 日立.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_E231系900番台 日立.mp3"}
-[exec] (p/h1008_E531系.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_E531系.mp3"}
-[exec] (p/h1008_京王8000系 GTO.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_京王8000系 GTO.mp3"}
-[exec] (p/h1008_京王9000系 京王新線-都営新宿線.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_京王9000系 京王新線-都営新宿線.mp3"}
-[exec] (p/h1008_小田急3000形 3655?.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_小田急3000形 3655?.mp3"}
-[exec] (p/h1008_小田急4000形 千代田線.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_小田急4000形 千代田線.mp3"}
-[exec] (p/h1008_東京メトロ05系 18.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_東京メトロ05系 18.mp3"}
-[exec] (p/h1008_東京メトロ05系 37.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_東京メトロ05系 37.mp3"}
-[exec] (p/h1008_東京メトロ9000系 日立GTO.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_東京メトロ9000系 日立GTO.mp3"}
-[exec] (p/h1008_東急5080系 南北線.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_東急5080系 南北線.mp3"}
-[exec] (p/h1008_相鉄10000系 10704.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_相鉄10000系 10704.mp3"}
-[exec] (p/h1008_相鉄11000系.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_相鉄11000系.mp3"}
-[exec] (p/h1008_相鉄20000系.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_相鉄20000系.mp3"}
-[exec] (p/京王8000系 GTO.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/京王8000系 GTO.mp3"}
-[exec] (p/京王9000系 京王新線-都営新宿線.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/京王9000系 京王新線-都営新宿線.mp3"}
-[exec] (p/小田急3000形 3655?.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/小田急3000形 3655?.mp3"}
-[exec] (p/小田急4000形 千代田線.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/小田急4000形 千代田線.mp3"}
-[exec] (p/東京メトロ05系 18.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/東京メトロ05系 18.mp3"}
-[exec] (p/東京メトロ05系 37.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/東京メトロ05系 37.mp3"}
-[exec] (p/東京メトロ9000系 日立GTO.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/東京メトロ9000系 日立GTO.mp3"}
-[exec] (p/東急5080系 南北線.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/東急5080系 南北線.mp3"}
-[exec] (p/相鉄10000系 10704.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/相鉄10000系 10704.mp3"}
-[exec] (p/相鉄11000系.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/相鉄11000系.mp3"}
-[exec] (p/相鉄20000系.mp3) {mocp -l "/home/tpa4/media/music/trainsound//product/相鉄20000系.mp3"}
-[exec] (209系500番台 1 東京-蘇我 me7IwHEaHbg.m4a) {mocp -l "/home/tpa4/media/music/trainsound//209系500番台 1 東京-蘇我 me7IwHEaHbg.m4a"}
-[exec] (209系500番台 2 東京-蘇我 xuk2Ha_jOX4.webm) {mocp -l "/home/tpa4/media/music/trainsound//209系500番台 2 東京-蘇我 xuk2Ha_jOX4.webm"}
-[exec] (209系500番台 3 蘇我-東京 YdV2YLeq614.webm) {mocp -l "/home/tpa4/media/music/trainsound//209系500番台 3 蘇我-東京 YdV2YLeq614.webm"}
-[exec] (209系500番台 4 通勤快速 東京-君津 6j72lVmrKxU.m4a) {mocp -l "/home/tpa4/media/music/trainsound//209系500番台 4 通勤快速 東京-君津 6j72lVmrKxU.m4a"}
-[exec] (209系500番台 5 東京-上総一ノ宮 v8ZGx9zh6jQ.webm) {mocp -l "/home/tpa4/media/music/trainsound//209系500番台 5 東京-上総一ノ宮 v8ZGx9zh6jQ.webm"}
-[exec] (209系500番台 6 上総一ノ宮-東京 pS5NzGI9z0A.webm) {mocp -l "/home/tpa4/media/music/trainsound//209系500番台 6 上総一ノ宮-東京 pS5NzGI9z0A.webm"}
-[exec] (cut1.mp3) {mocp -l "/home/tpa4/media/music/trainsound//cut1.mp3"}
-[exec] (cut2.mp3) {mocp -l "/home/tpa4/media/music/trainsound//cut2.mp3"}
-[exec] (cut3.mp3) {mocp -l "/home/tpa4/media/music/trainsound//cut3.mp3"}
-[exec] (E231系 常磐快速線 取手-上野 sm16048274.mp4) {mocp -l "/home/tpa4/media/music/trainsound//E231系 常磐快速線 取手-上野 sm16048274.mp4"}
-[exec] (E231系 成田線 成田-上野 uPx0wq_ns20.webm.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E231系 成田線 成田-上野 uPx0wq_ns20.webm.m4a"}
-[exec] (E233系1000番台 大宮-大船 yAKvYAJ02SI.webm) {mocp -l "/home/tpa4/media/music/trainsound//E233系1000番台 大宮-大船 yAKvYAJ02SI.webm"}
-[exec] (E233系2000番台 代々木上原-北綾瀬 Bg75v7zXKgw.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E233系2000番台 代々木上原-北綾瀬 Bg75v7zXKgw.m4a"}
-[exec] (E233系3000番台 上野-伊東 VhBw9mLSh_w.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E233系3000番台 上野-伊東 VhBw9mLSh_w.m4a"}
-[exec] (E233系3000番台 東京-小田原 cYT5h-KuLmM.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E233系3000番台 東京-小田原 cYT5h-KuLmM.m4a"}
-[exec] (E235系 (三菱\) MThU3qP07xY.webm) {mocp -l "/home/tpa4/media/music/trainsound//E235系 (三菱) MThU3qP07xY.webm"}
-[exec] (E235系 (東芝\) 9BAqqbXSRnU.m4a) {mocp -l "/home/tpa4/media/music/trainsound//E235系 (東芝) 9BAqqbXSRnU.m4a"}
-[exec] (h1008_東京メトロ06系 e2.mp3) {mocp -l "/home/tpa4/media/music/trainsound//h1008_東京メトロ06系 e2.mp3"}
-[exec] (JR2.mp4) {mocp -l "/home/tpa4/media/music/trainsound//JR2.mp4"}
-[exec] (lnorm.mp3) {mocp -l "/home/tpa4/media/music/trainsound//lnorm.mp3"}
-[exec] (test.mp3) {mocp -l "/home/tpa4/media/music/trainsound//test.mp3"}
-[exec] (東京ﾒﾄﾛ10000系 和光市-新木場 agfIX3KljLc.m4a) {mocp -l "/home/tpa4/media/music/trainsound//東京ﾒﾄﾛ10000系 和光市-新木場 agfIX3KljLc.m4a"}
-[exec] (東京メトロ16000系.mp3) {mocp -l "/home/tpa4/media/music/trainsound//東京メトロ16000系.mp3"}
-[exec] (東京メトロ16000系 三菱 唐木田-綾瀬-pQGue0oXhbA.m4a) {mocp -l "/home/tpa4/media/music/trainsound//東京メトロ16000系 三菱 唐木田-綾瀬-pQGue0oXhbA.m4a"}
-[exec] (東京ﾒﾄﾛ16000系 代々木上原-我孫子 w7oJK2TPHkw.webm) {mocp -l "/home/tpa4/media/music/trainsound//東京ﾒﾄﾛ16000系 代々木上原-我孫子 w7oJK2TPHkw.webm"}
-[exec] (相鉄10000系 更新車 海老名-横浜 (急行\) 8KcM9uPMIuo.m4a) {mocp -l "/home/tpa4/media/music/trainsound//相鉄10000系 更新車 海老名-横浜 (急行) 8KcM9uPMIuo.m4a"}
+[exec] (d/E231系 東海道線 上野-熱海 bgsZJRgcttQ.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//download/E231系 東海道線 上野-熱海 bgsZJRgcttQ.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (d/E231系 武蔵野線 府中本町-東京.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//download/E231系 武蔵野線 府中本町-東京.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (d/E233系2000番台 唐木田-取手 9VT63J_iV8w.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//download/E233系2000番台 唐木田-取手 9VT63J_iV8w.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (d/E531系 品川-水戸 MCvX-WZAI58.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//download/E531系 品川-水戸 MCvX-WZAI58.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (d/metro 05-124.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//download/metro 05-124.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (d/metro 15000 256.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//download/metro 15000 256.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (d/E531系.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//download-save/E531系.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/E231系800番台.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/E231系800番台.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/E231系900番台 日立.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/E231系900番台 日立.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/E233系7000番台 新宿-海老名 (特急\) oL_LiGwWnSw.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/E233系7000番台 新宿-海老名 (特急) oL_LiGwWnSw.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/E531系.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/E531系.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_E231系800番台.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_E231系800番台.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_E231系900番台 日立.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_E231系900番台 日立.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_E531系.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_E531系.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_京王8000系 GTO.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_京王8000系 GTO.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_京王9000系 京王新線-都営新宿線.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_京王9000系 京王新線-都営新宿線.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_小田急3000形 3655?.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_小田急3000形 3655?.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_小田急4000形 千代田線.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_小田急4000形 千代田線.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_東京メトロ05系 18.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_東京メトロ05系 18.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_東京メトロ05系 37.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_東京メトロ05系 37.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_東京メトロ9000系 日立GTO.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_東京メトロ9000系 日立GTO.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_東急5080系 南北線.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_東急5080系 南北線.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_相鉄10000系 10704.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_相鉄10000系 10704.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_相鉄11000系.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_相鉄11000系.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/h1008_相鉄20000系.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product-high/h1008_相鉄20000系.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/京王8000系 GTO.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/京王8000系 GTO.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/京王9000系 京王新線-都営新宿線.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/京王9000系 京王新線-都営新宿線.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/小田急3000形 3655?.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/小田急3000形 3655?.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/小田急4000形 千代田線.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/小田急4000形 千代田線.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/東京メトロ05系 18.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/東京メトロ05系 18.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/東京メトロ05系 37.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/東京メトロ05系 37.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/東京メトロ9000系 日立GTO.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/東京メトロ9000系 日立GTO.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/東急5080系 南北線.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/東急5080系 南北線.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/相鉄10000系 10704.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/相鉄10000系 10704.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/相鉄11000系.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/相鉄11000系.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (p/相鉄20000系.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//product/相鉄20000系.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (t/JR 使用駅が少ない発車メロディー 1W7FZV1mF3U.short.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//tokaido/JR 使用駅が少ない発車メロディー 1W7FZV1mF3U.short.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (t/新宿駅.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//tokaido/新宿駅.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (t/東海道線ご当地発車メロディー集-HRMt_HLxEPg.short.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//tokaido/東海道線ご当地発車メロディー集-HRMt_HLxEPg.short.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (t/藤沢 茅ヶ崎 平塚 発車メロディー.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//tokaido/藤沢 茅ヶ崎 平塚 発車メロディー.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (cut1.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//cut1.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (cut2.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//cut2.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (cut3.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//cut3.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (E231系 常磐快速線 取手-上野 sm16048274.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//E231系 常磐快速線 取手-上野 sm16048274.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (E233系2000番台 代々木上原-北綾瀬 Bg75v7zXKgw.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//E233系2000番台 代々木上原-北綾瀬 Bg75v7zXKgw.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (E233系3000番台 上野-伊東 VhBw9mLSh_w.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//E233系3000番台 上野-伊東 VhBw9mLSh_w.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (E235系 (三菱\) MThU3qP07xY.webm) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//E235系 (三菱) MThU3qP07xY.webm"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (h1008_東京メトロ06系 e2.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//h1008_東京メトロ06系 e2.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (JR2.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//JR2.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (lnorm.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//lnorm.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (test.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//test.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (京王5000系 特急 京王八王子-新宿 ItWOn7hAymI.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//京王5000系 特急 京王八王子-新宿 ItWOn7hAymI.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (小田急1000形 準急 綾瀬行き HOcGjWz-FzM.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//小田急1000形 準急 綾瀬行き HOcGjWz-FzM.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (小田急4000形 我孫子-本厚木 _VfyHI7B9qI.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//小田急4000形 我孫子-本厚木 _VfyHI7B9qI.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (東京メトロ16000系 16125 取手-伊勢原 58G5tLUF5nk.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ16000系 16125 取手-伊勢原 58G5tLUF5nk.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (東京メトロ16000系.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ16000系.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (東京メトロ9000系 東芝 各停 日吉-目黒 d7CpOUatUwM.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ9000系 東芝 各停 日吉-目黒 d7CpOUatUwM.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (東京メトロ9000系 東芝 急行 日吉-溜池山王 1-BfgPulsAU.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ9000系 東芝 急行 日吉-溜池山王 1-BfgPulsAU.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (相鉄8000系 各停 横浜-海老名 wB4pbj21fKU.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄8000系 各停 横浜-海老名 wB4pbj21fKU.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (相鉄8000系 快速 海老名-横浜 sm29850257.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄8000系 快速 海老名-横浜 sm29850257.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (相鉄8000系 特急 横浜-湘南台 mz8gJnDFV-8.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄8000系 特急 横浜-湘南台 mz8gJnDFV-8.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (相鉄・JR直通線関連ATOS放送集-jsZmzKuWAH8.webm) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄・JR直通線関連ATOS放送集-jsZmzKuWAH8.webm"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}

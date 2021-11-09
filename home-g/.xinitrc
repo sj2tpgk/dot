@@ -1,7 +1,8 @@
 # used in .tmux.conf .vimrc etc.
 xrdb ~/.Xresources
 setxkbmap -layout jp
-xset r rate 210 38
+# xset r rate 210 38
+xset r rate 180 45
 xset b off
 xset s off -dpms          # Don't use dpms for screen timeout
 xset s 7200 7200          # Specify screen timeout here
@@ -39,6 +40,10 @@ export TZ=Asia/Tokyo
 export EDITOR='vim'
 
 export MYKBD="colemakdh"
+
+# no gtk3 scrollbar fade
+export GTK_OVERLAY_SCROLLING=0
+
 
 # wminit
 sh ~/script/wminit.sh

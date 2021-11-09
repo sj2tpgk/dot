@@ -5,8 +5,14 @@ m=~/.fluxbox/musicmenu
 
 cd "$d"
 
-# find . | grep -i -e mp3 -e m4a -e flac -e webm | perl -pe 'chomp; s/^\.\///; $f=$_; $f=~s/\)/\\\\)/g; s#(.*)#[exec] ($f) {mocp -l "'"$d"'/\1"}\n#' | tee "$m"
 { find . -mindepth 2 | sort -t '/'; find . -mindepth 1 -maxdepth 1 | sort -t '/'; } | \
     grep -i -e mp3 -e m4a -e flac -e wav -e webm -e mp4 | \
-    perl -pe 'chomp; s/^\.\///; $f=$_; $f=~s/\)/\\)/g; $f=~s#([^/])([^/]*)/#\1/#g; s#(.*)#[exec] ($f) {mocp -l "'"$d"'/\1"}\n#' | \
+    perl -pe 'chomp; s/^\.\///; $f=$_; $f=~s/\)/\\)/g; $f=~s#([^/])([^/]*)/#\1/#g; s#(.*)#[exec] ($f) {mocp -Q "" || mocp -S; mocp -l "'"$d"'/\1"; sleep .1; pactl set-sink-mute \@DEFAULT_SINK\@ 0}\n#' | \
     tee "$m"
+
+# Start server if not present:  mocp -Q "" || mocp -S
+# Play file:                    mocp -l <file>
+# Unmute if muted:              pactl set-sink-mute @DEFAULT_SINK@ 0
+
+# "sleep .1" to wait until music switching finishes
+# (otherwise previous song can be heard for a very short time)

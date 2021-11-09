@@ -117,6 +117,7 @@ If keymap is omitted, (current-global-map) is used by default."
   (cond
 
    ;; In org-mode, call org-cycle
+   ;; TODO BUG: cant open fold (cursor automatically go to line-end)
    ((eq major-mode 'org-mode) (org-cycle))
 
    ;; In web-mode
@@ -153,6 +154,13 @@ If keymap is omitted, (current-global-map) is used by default."
       (advice-remove 'hs-make-overlay 'smart-toggle-folding-detector)
       (unless smart-toggle-folding-detected
         (hs-toggle-hiding) (backward-char)))))
+
+(definteractive smart-toggle-folding-mouse
+  "Toggle folding under mouse."
+  (call-interactively 'mouse-set-point)
+  (smart-toggle-folding)
+  (when (and (fboundp 'evil-visual-state-p) (evil-visual-state-p))
+    (evil-normal-state)))
 
 (defun smart-forward-delete-char-empty-line-p () (string-match-p "\\`\\s-*$" (thing-at-point 'line)))
 (defun smart-forward-delete-line-length-multibyte ()
@@ -209,9 +217,9 @@ If keymap is omitted, (current-global-map) is used by default."
 
 (definteractive smart-backward-char
   ;; Close folding optionally
-  (when (= (point) (line-beginning-position))
-    (and (bound-and-true-p hs-minor-mode)
-         (condition-case e (save-excursion (hs-hide-block)) (error 'error))))
+  ;; (when (= (point) (line-beginning-position))
+  ;;   (and (bound-and-true-p hs-minor-mode)
+  ;;        (condition-case e (save-excursion (hs-hide-block)) (error 'error))))
   (if (bound-and-true-p evil-mode) (evil-backward-char) (backward-char)))
 
 (eldoc-add-command 'smart-forward-char 'smart-backward-char)
@@ -235,26 +243,36 @@ If keymap is omitted, (current-global-map) is used by default."
     (occur str)))
 
 (defun make-scratch-of (&optional major-mode-symbol)
-  "MAJOR-MODE-SYMBOL is a symbol or nil."
+  "MAJOR-MODE-SYMBOL is a symbol (e.g. 'sh-mode) or nil (prompt to choose)."
+  ;; idea: multiple buf for same mode (ask "use existing buffer?" if necessary)
   (interactive)
-  (let ((mode
-         (or major-mode-symbol
-             (let ((cands
-                    (mapcar (lambda (sym)
-                              (string-remove-suffix "-mode"
-                                                    (symbol-name sym)))
-                            (remove-duplicates
-                             (mapcan (lambda (x)
-                                       (let ((y (if (symbolp (cdr x)) (cdr x) (cadr x))))
-                                         (and y (list y))))
-                                     auto-mode-alist)))))
-               (intern
-                (format "%s-mode"
-                        (completing-read "Choose major mode: " cands)))))))
-    (switch-to-buffer
-     (get-buffer-create
-      (format "*scratch%s*"
-              (if (eq 'lisp-interaction-mode mode)
-                  ""
-                (concat "[" (substring (symbol-name mode) 0 -5) "]")))))
-    (funcall mode)))
+  (let* ((mode
+          (or major-mode-symbol
+              (let ((cands
+                     (mapcar (lambda (sym)
+                               (string-remove-suffix "-mode"
+                                                     (symbol-name sym)))
+                             (remove-duplicates
+                              (mapcan (lambda (x)
+                                        (let ((y (if (symbolp (cdr x)) (cdr x) (cadr x))))
+                                          (and y (list y))))
+                                      auto-mode-alist)))))
+                (intern
+                 (format "%s-mode"
+                         (completing-read "Choose major mode: " cands))))))
+         (get-nth-bufname
+          (lambda (n) ;; n = 1,2,3,...
+            (format "*scratch%s%s*"
+                    (if (eq 'lisp-interaction-mode mode)
+                        ""
+                      (concat "[" (substring (symbol-name mode) 0 -5) "]"))
+                    (if (= n 1) "" n))))
+         (n 1))
+
+    ;; (while (get-buffer (funcall get-nth-bufname n)) (cl-incf n))
+
+    (let ((exist (get-buffer (funcall get-nth-bufname n))))
+      (switch-to-buffer
+       (get-buffer-create
+        (funcall get-nth-bufname n)))
+      (unless exist (funcall mode)))))

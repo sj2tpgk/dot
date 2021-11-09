@@ -11,6 +11,7 @@ set jump_cmd none
 function smart_jump -d 'Jump like vim-snipe.'
     set -l now (jump_gettime)
     set -l cmd $argv[1]
+    commandline -f backward-char
     if [ (math $now - $jump_lasttime) -le $jump_cooldown ]
         if [ $jump_cmd = $cmd ]
             # \cf \cf => non-reverse
@@ -25,6 +26,7 @@ function smart_jump -d 'Jump like vim-snipe.'
         commandline -f $cmd # forward-jump or backward-jump
         set jump_cmd $cmd
     end
+    commandline -f forward-char
     set jump_lasttime $now
 end
 

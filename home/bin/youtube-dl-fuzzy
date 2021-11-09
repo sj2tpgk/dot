@@ -3,7 +3,7 @@
 url="$1"
 
 ### Invidious to youtube
-url=$(echo "$url" | sed 's/\(invidiou\|yewtu\)[^/]*/youtube.com/')
+url=$(echo "$url" | sed 's/\(invidiou\|yewtu\|vid.puffyan\)[^/]*/youtube.com/')
 echo ">> URL: $url"
 
 

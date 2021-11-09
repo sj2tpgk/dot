@@ -13,6 +13,10 @@ OnWindowBorder Move1 :StartMoving
 # left click on the titlebar to move the window
 OnTitlebar Mouse1 :MacroCmd {Raise} {Focus} {ActivateTab}
 OnTitlebar Move1  :StartMoving
+
+# left click on the border to move the window
+OnWindowBorder Mouse1 :MacroCmd {Raise} {Focus} {ActivateTab}
+OnWindowBorder Move1  :StartMoving
 # }}}
 ## Resizing windows {{{
 # Basic Bindings
@@ -21,7 +25,8 @@ Mod1 F10 :Maximize
 Mod1 F11 :Fullscreen
 
 # Toggle {max, v-max, normal}
-F10 :ToggleCmd {Maximize} {MaximizeHorizontal} {MaximizeVertical}
+# F10 :ToggleCmd {Maximize} {MaximizeHorizontal} {MaximizeVertical}
+F10 :ToggleCmd {Maximize}
 
 # Alt + right_click to resize windows
 OnWindow Mod1 Mouse3 :MacroCmd {Raise} {Focus} {StartResizing NearestCorner}
@@ -111,8 +116,8 @@ Mod4 Mouse4   :TakeToNextWorkspace
 
 # Change workspace (skipping empty workspaces)
 F2                    :Exec ~/script/changews.pl -nks
-Shift F2              :Exec ~/script/changews.pl -pks
-Mod1 F2               :Workspace 1
+Mod1 F2               :Exec ~/script/changews.pl -pks
+Shift F2              :Workspace 1
 F9 F2                 :Workspace 1
 
 OnDesktop Mouse5      :Exec ~/script/changews.pl -nks   # scroll up
@@ -206,13 +211,12 @@ F9 F10 :Exec ~/script/speak.sh
 
 F9 a       :Exec pavucontrol
 F9 c       :Exec ~/script/term/mocp
-F9 d       :Exec ~/script/drracket.sh
+F9 d       :Exec sh ~/drawio_export.sh
 F9 e       :Exec running emacs && wmctrl -x -a emacs || ~/script/emacsgui.sh
 # F9 f       :Exec running palemoon && wmctrl -x -a 'pale moon' || sh -c 'MOZ_USE_OMTC=1; palemoon'
 F9 f       :Exec running firefox && wmctrl -x -a 'firefox' || firefox
 F9 shift f :Exec GTK_THEME=Vertex:light firefox --private-window
 F9 g       :Exec geeqie
-F9 l       :Exec ~/script/polybar/restart.fish
 F9 m       :Exec claws-mail
 F9 r       :Exec ~/script/term/ranger
 F9 shift s :Exec ~/script/emacsgui.sh
@@ -228,6 +232,8 @@ F9 F6      :Restart
 F9 b     :Exec ~/script/rofi/session
 F9 s     :Exec ~/script/rofi/misc
 F9 k     :Exec ~/script/rofi/kbdlayout
+F9 n     :Exec ~/script/rofi/niconico
+F9 F9 n  :Exec ~/script/rofi/niconico -b
 F9 p     :Exec ~/script/rofi/pass
 F9 F4    :Exec ~/script/rofi/apps
 
