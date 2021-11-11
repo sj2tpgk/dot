@@ -1,4 +1,0 @@
-; -*- mode: scheme;-*-
-
-(load "/home/tpa4/.uim.d/scheme/azik.scm")
-(load "/home/tpa4/.uim.d/scheme/skk-misc.scm")
