@@ -1,0 +1,5 @@
+#!/bin/sh
+
+[ $# -le 0 ] && echo -e "Usage: ./quiet COMMAND ARGS ...\nSuppress stdout and stderr."
+
+"$@" >/dev/null 2>/dev/null

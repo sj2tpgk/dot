@@ -1,0 +1,96 @@
+#!/bin/perl
+use strict; use warnings;
+
+# Usage: ./colormod s+20 v-10 '#ff8855'
+#        saturate +20 and value -10 and print hex;
+
+# rgb: 0 to 255
+# h:   0 to 255
+# sv:  0 to 100
+
+sub max { my ($a,$b) = @_; return $a >= $b ? $a : $b; }
+sub min { my ($a,$b) = @_; return $a <= $b ? $a : $b; }
+
+sub rgb_hsv {
+    my ($r,$g,$b) = @_;
+
+    my $mx = max($r,max($g,$b));
+    my $mn = min($r,min($g,$b));
+
+    my $h;
+    if ($mx == $mn) { $h = 0 }
+    elsif ($r == $mx) { $h = (60 * ($g - $b)) / ($mx - $mn) }
+    elsif ($g == $mx) { $h = (60 * ($b - $r)) / ($mx - $mn) + 120 }
+    elsif ($b == $mx) { $h = (60 * ($r - $g)) / ($mx - $mn) + 240 }
+
+    if ($h < 0) { $h += 360 }
+
+    my $s = (100 * ($mx - $mn)) / $mx;
+    my $v = ($mx * 100) / 255;
+
+    return ($h,$s,$v)
+}
+
+sub hsv_rgb {
+    my ($h,$s,$v) = @_;
+
+    while ($h < 0) { $h += 256 }
+    while ($h >= 256) { $h -= 256 }
+    $s = max(0,min(100,$s));
+    $v = max(0,min(100,$v));
+
+    my $mx = ($v * 255) / 100;
+    my $mn = -((($s / 100) * $mx) - $mx);
+
+    my ($r,$g,$b);
+    if (300 <= $h)    { $r = $mx; $g = $mn; $b = -((($h - 360) * ($mx - $mn)) / 60) + $mn }
+    elsif ($h <= 60)  { $r = $mx; $b = $mn; $g = +((($h - 0  ) * ($mx - $mn)) / 60) + $mn }
+    elsif ($h <= 120) { $g = $mx; $b = $mn; $r = -((($h - 120) * ($mx - $mn)) / 60) + $mn }
+    elsif ($h <= 180) { $g = $mx; $r = $mn; $b = +((($h - 120) * ($mx - $mn)) / 60) + $mn }
+    elsif ($h <= 240) { $b = $mx; $r = $mn; $g = -((($h - 240) * ($mx - $mn)) / 60) + $mn }
+    else              { $b = $mx; $g = $mn; $r = +((($h - 240) * ($mx - $mn)) / 60) + $mn }
+
+    return ($r,$g,$b)
+}
+
+sub hex_rgb {
+    my $s = $_[0];
+    if ($s =~ /#(..)(..)(..)/) { return (hex("0x$1"),hex("0x$2"),hex("0x$3")) }
+    elsif ($s =~ /#(.)(.)(.)/) { return (hex("0x$1$1"),hex("0x$2$2"),hex("0x$3$3")) }
+}
+
+sub rgb_hex {
+    my ($r,$g,$b) = @_;
+    $r = max(0,min(255,$r));
+    $g = max(0,min(255,$g));
+    $b = max(0,min(255,$b));
+    return sprintf("#%02X%02X%02X",$r,$g,$b);
+}
+
+# main
+my $dels=0;
+my $delv=0;
+my @inrgb;
+for (@ARGV) {
+    if    (/s([-+][0-9]*)/) { $dels = $1 }
+    elsif (/v([-+][0-9]*)/) { $delv = $1 }
+    elsif (/#.*/) { @inrgb = hex_rgb($&) }
+}
+
+my ($h,$s,$v) = rgb_hsv(@inrgb);
+my ($h2,$s2,$v2) = ($h,$s+$dels,$v+$delv);
+my @outrgb = hsv_rgb($h2,$s2,$v2);
+my $outhex = rgb_hex(@outrgb);
+print $outhex, "\n";
+
+# debug
+print
+    "in: ", join(",",@inrgb),
+    "\ninhsv: ", join(",",$h,$s,$v),
+    "\ndels: $dels,  delv: $delv",
+    "\nouthsv: ", join(",",$h2,$s2,$v2),
+    "\noutrgb: ", join(",",@outrgb),
+    "\nouthex: $outhex",
+    "\n";
+
+

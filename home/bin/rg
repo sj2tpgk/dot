@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# exec is important; otherwise tmux-path fails
+if [ -n "$MYKBD" ] && [ "$MYKBD" = colemakdh ]; then
+    exec ranger --cmd="source ~/.config/ranger/rc-mykbd.conf" "$@"
+else
+    exec ranger "$@"
+fi
