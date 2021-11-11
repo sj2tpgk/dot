@@ -50,6 +50,7 @@ safelink(){
 
         # Warning when removing many files
         if [ -d "$to" -a $(ls -1 "$to" | wc -l) -ge 30 ]; then
+            echo In directory "$to":
             echo Trying to remove many files, you might be doing something wrong.
             echo Do you really continue?
             ask "[y]es, [n]o"
