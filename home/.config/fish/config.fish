@@ -9,6 +9,9 @@ end
 # Alias
 alias cp 'cp -i'
 alias vim nvim
+if command -v nvim > /dev/null
+    alias nv nvim
+end
 
 # Completion
 # "quiet" : completion like "if" or "sudo" (followed by another commands)

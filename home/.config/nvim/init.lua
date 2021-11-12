@@ -92,7 +92,8 @@ aug vimrc_folding
   au FileType lua setl fdm=expr fde=max([indent(v:lnum),indent(NonEmptyLine(v:lnum,1)),indent(NonEmptyLine(v:lnum,-1))])/&shiftwidth
   " save folding status
   au BufWinLeave * if expand('%') != '' && &buftype !~ 'nofile' | mkview | endif
-  au BufWinEnter * if expand('%') != '' && &buftype !~ 'nofile' | silent loadview | endif
+  au BufWinEnter * if expand('%') != '' && &buftype !~ 'nofile' | silent! loadview | endif
+  " ! in sil! is needed (for new or unvisited-yet files)
 aug END
 " }}}
 
