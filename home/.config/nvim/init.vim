@@ -1,7 +1,5 @@
--- vim: fdm=marker
--- todo: mkview
-
-vim.cmd [[
+" vim: fdm=marker
+" todo: smart-beg, count for togcmt
 
 " Fast startup {{{
 let g:python_host_skip_check=1
@@ -90,6 +88,13 @@ endfu
 aug vimrc_folding
   au!
   au FileType lua setl fdm=expr fde=max([indent(v:lnum),indent(NonEmptyLine(v:lnum,1)),indent(NonEmptyLine(v:lnum,-1))])/&shiftwidth
+aug END
+" }}}
+
+" View {{{
+" remove "options" from 'viewoptions' -- otherwise modifying vimrc sometimes ineffective
+set viewoptions=cursor,folds
+aug vimrc_view
   " save folding status
   au BufWinLeave * if expand('%') != '' && &buftype !~ 'nofile' | mkview | endif
   au BufWinEnter * if expand('%') != '' && &buftype !~ 'nofile' | silent! loadview | endif
@@ -116,7 +121,7 @@ augroup END
 
 " vimrc
 nnore <f5> :wa<cr>:sil source $MYVIMRC<cr>
-nnore s<f5> :sp $MYVIMRC<cr>
+nnore s<f5> :lua smartSp("$MYVIMRC")<cr>
 
 " motion
 onore m %
@@ -133,6 +138,8 @@ nnore yf :let @+=expand("%:t")<cr>
 nnore yp :let @+=expand("%:p")<cr>
 nnore db ggVGd
 nnore s= :call SaveExcursion("ggVG=")<cr>
+nnore ;  :lua toggleCmt(false)<cr>
+vnore ;  :lua toggleCmt(true)<cr>
 
 " window, buffer
 nnore Q :q<cr>
@@ -141,11 +148,14 @@ nnore so <c-w>o
 nnore sd <c-w>c
 nnore ss :sp<cr>
 nnore sv :vsp<cr>
-nnore su :ls<cr>:b<space>
+nnore sm :ls<cr>:b<space>
+" nnore sb :sp\|b#<cr><c-w>p:bd<cr>
+nnore sb :bd<cr>
+nnore sp :lua smartSp()<cr>
 
 " misc
 nnore s/ :noh<cr>
-nnore :: :<up><cr>
+nnore :<cr> :<up><cr>
 
 fu! SaveExcursion(normcmd)
   let l:w = winsaveview()
@@ -171,9 +181,10 @@ aug vimrc_complete
 
   " Completion using dictionary files for rlwrap
   fu! AddCompSource(ft, name)
+  " exe "au FileType " . a:ft . " setl cpt+=k~/.cpt/" . a:name
     exe "au FileType " . a:ft . " setl cpt+=k~/.rlwrap/" . a:name . "_completions"
   endfu
-  for ft in ["lua"] | call AddCompSource(ft, ft) | endfor
+  for ft in ["lua", "python"] | call AddCompSource(ft, ft) | endfor
   " call AddCompSource("javascript", "node")
 
   au FileType lua setl iskeyword+=.
@@ -192,7 +203,26 @@ aug END
 
 " Colorscheme, cursor {{{
 "colorscheme slate
-colorscheme ron
+"colorscheme ron
+colorscheme default
+
+fu! MyColor()
+  hi Constant     ctermfg=green cterm=bold
+  hi NonText      ctermfg=magenta
+  hi comment      ctermfg=blue
+  "hi statement    ctermfg=red
+  hi String       ctermfg=green
+  hi Type         ctermfg=cyan cterm=bold
+  hi Conditional  ctermfg=green cterm=bold
+  hi preproc      ctermfg=cyan
+  "hi Identifier   ctermfg=red cterm=bold
+  hi Special      ctermfg=red
+endfu
+call MyColor()
+aug vimrc_hi " :hi need to be autocmd on first run??
+  au!
+  au VimEnter * :call MyColor()
+aug END
 
 set cursorline
 aug vimrc_cursor
@@ -202,17 +232,11 @@ aug vimrc_cursor
 aug END
 
 set list listchars=trail:.
-
-hi Constant ctermfg=green
-hi NonText  ctermfg=magenta
-aug vimrc_hi " :hi need to be autocmd on first run??
-  au!
-  au VimEnter * hi Constant ctermfg=green
-  au VimEnter * hi NonText  ctermfg=magenta
-aug END
 " }}}
 
-]]
+" Lua part
+
+lua << EOF
 
 do -- Keys (keyboard layout specific) {{{
 
@@ -225,7 +249,7 @@ do -- Keys (keyboard layout specific) {{{
         "nv  K  E  <c-u>",
         "v   h  k  h",
         "v   l  i  l",
-        "nv  gh gk <home>",
+        "nv  gh gk ^",
         "nv  gl gi <end>",
         "nv  i  l  i",
         "nv  I  L  I",
@@ -256,3 +280,48 @@ do -- Keys (keyboard layout specific) {{{
 
 end -- }}}
 
+function smartSp(file) -- {{{
+    local w = vim.fn.winwidth(0)
+    local h = vim.fn.winheight(0)
+    vim.cmd((w/h < 3) and "sp" or "vsp")
+    if file then vim.cmd("e " .. file) end
+end -- }}}
+
+function toggleCmt(visual) -- {{{
+    local function regEscape(s) return (s:gsub("([^%w])", "%%%1")) end
+
+    -- Analyze commentstring
+    local cms    = vim.bo.cms
+    local x,y,z  = cms:match("(.*%S)(%s*)%%s(.*)")
+    local p      = "^(%s*)" .. regEscape(x) .. "(.*)" .. regEscape(z)
+    local p1     = "^(%s*)" .. regEscape(x) .. y:gsub(".", " ?") .. "(.*)" .. regEscape(z)
+
+    -- let cms = "# %s"
+    -- p  : must match line if middle space is absent
+    -- p1 : middle space must be at most 1 (%s should eat rest spaces)
+
+    -- Get range
+    local lbeg   = visual and vim.fn.line("'<") or vim.fn.line(".")
+    local lend   = visual and vim.fn.line("'>") or lbeg
+
+    for i = lbeg, lend do
+
+        local line = vim.fn.getline(i)
+        if line:match(p) then
+            -- print("commented")
+            local new = line:gsub(p1, "%1%2")
+            vim.fn.setline(i, new)
+        else
+            -- print("not commented")
+            local new = cms:gsub("%%s", regEscape(line))
+            vim.fn.setline(i, new)
+        end
+
+    end
+end -- }}}
+
+EOF
+
+let aaaaa = "aaa%1"
+let bb = "aaa%1"
+    "let ccc = "aaa%1"

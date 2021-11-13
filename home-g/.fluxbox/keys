@@ -229,6 +229,8 @@ F9 y       :Exec XMODIFIERS="" alacritty
 F9 F5      :Reconfigure
 F9 F6      :Restart
 
+Mod4 x :Exec sh -c "sleep .3; xvkbd -text '\Cs\D3\r\D3\Afx'"
+
 F9 b     :Exec ~/script/rofi/session
 F9 s     :Exec ~/script/rofi/misc
 F9 k     :Exec ~/script/rofi/kbdlayout

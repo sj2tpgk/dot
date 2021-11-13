@@ -1,5 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 
+(add-to-list 'auto-mode-alist '("\\.osh?\\'" . sh-mode))
+
 (use kotlin-mode ($))
 (use php-mode ($))
 (use rust-mode ($))
