@@ -1,5 +1,5 @@
 " vim: fdm=marker
-" todo: smart-beg, count for togcmt
+" todo: smart-beg
 
 " Fast startup {{{
 let g:python_host_skip_check=1
@@ -140,6 +140,7 @@ nnore db ggVGd
 nnore s= :call SaveExcursion("ggVG=")<cr>
 nnore ;  :lua toggleCmt(false)<cr>
 vnore ;  :lua toggleCmt(true)<cr>
+nnore <a-j> J
 
 " window, buffer
 nnore Q :q<cr>
@@ -170,9 +171,13 @@ inore <tab> <c-n>
 inore <s-tab> <c-p>
 
 inore <expr> <del> pumvisible() ? "\<c-e>" : "\<del>"
+"inore <expr> n MyComp('n')
+"inore <expr> c MyComp('c')
 
 set shortmess+=c                           " No message like "Pattern not found"
 set completeopt+=menuone,noinsert,noselect " Needed for auto completion
+set completeopt+=longest
+set completefunc=MyComp " Needed for auto completion
 
 let g:comp_minlen = 2  " At least N chars to start completion
 
@@ -211,8 +216,8 @@ fu! MyColor()
   hi NonText      ctermfg=magenta
   hi comment      ctermfg=blue
   "hi statement    ctermfg=red
-  hi String       ctermfg=green
-  hi Type         ctermfg=cyan cterm=bold
+  hi String       ctermfg=green cterm=bold
+  hi Type         ctermfg=cyan
   hi Conditional  ctermfg=green cterm=bold
   hi preproc      ctermfg=cyan
   "hi Identifier   ctermfg=red cterm=bold
@@ -296,13 +301,13 @@ function toggleCmt(visual) -- {{{
     local p      = "^(%s*)" .. regEscape(x) .. "(.*)" .. regEscape(z)
     local p1     = "^(%s*)" .. regEscape(x) .. y:gsub(".", " ?") .. "(.*)" .. regEscape(z)
 
-    -- let cms = "# %s"
+    -- Suppose cms == "# %s"
     -- p  : must match line if middle space is absent
     -- p1 : middle space must be at most 1 (%s should eat rest spaces)
 
     -- Get range
     local lbeg   = visual and vim.fn.line("'<") or vim.fn.line(".")
-    local lend   = visual and vim.fn.line("'>") or lbeg
+    local lend   = visual and vim.fn.line("'>") or (lbeg + math.max(0, vim.v.count - 1))
 
     for i = lbeg, lend do
 

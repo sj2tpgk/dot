@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# todo: xonsh
+
  k='\e[30m'  r='\e[31m'  g='\e[32m'  y='\e[33m'
  b='\e[34m'  m='\e[35m'  c='\e[36m'  w='\e[37m'
 bk='\e[40m' br='\e[41m' bg='\e[42m' by='\e[43m'
@@ -17,6 +19,7 @@ s+="$g$dir"
 [ ! -z "$git" ] && s+=" $m$git"
 s+=" $bold"
 case $1 in
+  # fish)         s+="$r>$b<$g($y'$r>" ;;
   fish)         s+="$r>$y>"; if [ -z $RANGER_LEVEL ]; then s+="$b>"; else s+="$g>"; fi ;;
   fish_private) s+="$m>>$b>" ;;
   bash)         s+="$y>>$r>" ;;

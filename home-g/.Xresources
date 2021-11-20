@@ -112,22 +112,22 @@ URxvt*inheritPixmap: false
 #define col_bb #f4f0f0
 #define col_bf #554
 #define col_bc #444
-#define col_bo 100
+#define col_bo 94
 
 #define col_bdk #f8f4f4
 #define col_bbk #f8f4f4
 #define col_bdr #e22
 #define col_bbr #f33
-#define col_bdg #090
-#define col_bbg #1d4
-#define col_bdy #d60
-#define col_bby #f80
-#define col_bdb #44d
-#define col_bbb #66d
+#define col_bdg #060
+#define col_bbg #171
+#define col_bdy #c07700
+#define col_bby #c88018
+#define col_bdb #33c
+#define col_bbb #44d
 #define col_bdm #a59
-#define col_bbm #d4c
-#define col_bdc #0aa
-#define col_bbc #2cb
+#define col_bbm #b6a
+#define col_bdc #088
+#define col_bbc #0aa
 #define col_bdw #111
 #define col_bbw #111
 
@@ -220,6 +220,7 @@ URxvt.keysym.M-Page_Up:   command:\033]710;xft:Droid Sans Mono Dotted:style=Regu
 ! URxvt.keysym.M-Page_Down: command:\033]710;xft:Comic Mono:size=13,xft:TakaoExGothic:style=Regular:size=13\007
 URxvt.keysym.M-Page_Down: command:\033]710;xft:UnifontMy:size=12\007
 
+! transparency: see https://gist.github.com/ehegnes/e68ca87e7623d58cfa19
 URxvt.keysym.S-Page_Up:   change-color:10;col_bf,49;[col_bo]col_bb,12;col_bc,4;0;col_bdk,4;1;col_bdr,4;2;col_bdg,4;3;col_bdy,4;4;col_bdb,4;5;col_bdm,4;6;col_bdc,4;7;col_bdw,4;8;col_bbk,4;9;col_bbr,4;10;col_bbg,4;11;col_bby,4;12;col_bbb,4;13;col_bbm,4;14;col_bbc,4;15;col_bbw
 URxvt.keysym.S-Page_Down: change-color:10;col_df,49;[col_do]col_db,12;col_dc,4;0;col_ddk,4;1;col_ddr,4;2;col_ddg,4;3;col_ddy,4;4;col_ddb,4;5;col_ddm,4;6;col_ddc,4;7;col_ddw,4;8;col_dbk,4;9;col_dbr,4;10;col_dbg,4;11;col_dby,4;12;col_dbb,4;13;col_dbm,4;14;col_dbc,4;15;col_dbw
 

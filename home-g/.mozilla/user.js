@@ -61,10 +61,10 @@ user_pref("app.update.auto", false);
 user_pref("app.update.checkInstallTime", false);
 user_pref("app.update.doorhanger", false);
 user_pref("browser.feeds.showFirstRunUI", false);
-user_pref("browser.newtabpage.activity-stream.feeds.section.highlights", false);
+// user_pref("browser.newtabpage.activity-stream.feeds.section.highlights", false); // Use in firefox home
 user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
 user_pref("browser.newtabpage.activity-stream.feeds.telemetry", false);
-user_pref("browser.newtabpage.activity-stream.feeds.topsites", false);
+// user_pref("browser.newtabpage.activity-stream.feeds.topsites", false); // Use in firefox home
 user_pref("browser.newtabpage.activity-stream.prerender", false);
 user_pref("browser.newtabpage.activity-stream.telemetry", false);
 user_pref("browser.newtabpage.activity-stream.telemetry.ping.endpoint", "https://localhost");
@@ -99,7 +99,7 @@ user_pref("browser.safebrowsing.provider.mozilla.updateURL", "https://localhost"
 user_pref("browser.safebrowsing.reportPhishURL", "https://localhost");
 user_pref("browser.search.geoSpecificDefaults.url", "https://localhost");
 user_pref("browser.search.searchEnginesURL", "https://localhost");
-user_pref("browser.search.suggest.enabled", false);
+// user_pref("browser.search.suggest.enabled", false); // I want suggestion in some profiles
 user_pref("browser.search.update", false);
 user_pref("browser.search.update.interval", 24000000);
 // user_pref("browser.startup.page", 0); // 0 - startup with single tab: about:blank

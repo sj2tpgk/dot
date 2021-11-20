@@ -34,6 +34,14 @@ class Scheme(Default):
                 if context.bad:
                     fg = magenta
 
+            if not context.selected and (context.cut or context.copied):
+                attr |= bold
+                fg = magenta
+                bg = black
+
+            if context.marked:
+                fg = yellow
+
             # Revert
             context.link = link_sav
 
