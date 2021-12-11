@@ -3,7 +3,10 @@
 # emacsclient -a nano -nw -c "$@"
 
 if [ -n "$TMUX" ]; then
-  TERM=xterm-direct emacsclient -a nano -c -nw "$@"
+  # TERM=xterm-direct emacsclient -a nano -c -nw "$@"
+
+  # Non-truecolor (when using rxvt-unicode packge)
+  TERM=xterm-256color emacsclient -a nano -c -nw "$@"
 else
   TERM=st-direct emacs -a nano -c -nw "$@"
 fi

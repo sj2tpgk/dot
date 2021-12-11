@@ -116,8 +116,8 @@ Mod4 Mouse4   :TakeToNextWorkspace
 
 # Change workspace (skipping empty workspaces)
 F2                    :Exec ~/script/changews.pl -nks
-Mod1 F2               :Exec ~/script/changews.pl -pks
-Shift F2              :Workspace 1
+Shift F2              :Exec ~/script/changews.pl -pks
+Mod1 F2               :Workspace 1
 F9 F2                 :Workspace 1
 
 OnDesktop Mouse5      :Exec ~/script/changews.pl -nks   # scroll up
@@ -229,7 +229,7 @@ F9 y       :Exec XMODIFIERS="" alacritty
 F9 F5      :Reconfigure
 F9 F6      :Restart
 
-Mod4 x :Exec sh -c "sleep .3; xvkbd -text '\Cs\D3\r\D3\Afx'"
+Mod4 x :Exec sh -c "sleep .4; xvkbd -text '\Cs\D3\r\D3\Af\D1x'"
 
 F9 b     :Exec ~/script/rofi/session
 F9 s     :Exec ~/script/rofi/misc

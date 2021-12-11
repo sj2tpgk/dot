@@ -58,6 +58,7 @@
         (org-table                        (:gf :g8 :gg) :fg c)
 
         (sh-quoted-exec                   (:gf :g8 :gg) :inherit font-lock-function-name-face :-b)
+        (sh-heredoc                       (:gf :g8 :gg) :inherit font-lock-string-face)
 
         (tab-bar                          (:gf :g8 :gg) :inherit mode-line :fg w :-u)
         (tab-bar-tab                      (:gf :g8 :gg) :inherit tab-bar :bg g :fg k :b :-u)

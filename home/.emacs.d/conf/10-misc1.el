@@ -14,7 +14,8 @@
 (mapc 'contextual-menubar (frame-list))
 
 ;; Line numbers
-(setq display-line-numbers-width 3)
+(setq display-line-numbers-width 3
+      display-line-numbers-width-start 5)
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 
 ;; Avoid "Symbolic link to Git-controlled ..." question

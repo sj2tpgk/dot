@@ -56,6 +56,7 @@
 [exec] (東京メトロ16000系.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ16000系.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (東京メトロ9000系 東芝 各停 日吉-目黒 d7CpOUatUwM.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ9000系 東芝 各停 日吉-目黒 d7CpOUatUwM.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (東京メトロ9000系 東芝 急行 日吉-溜池山王 1-BfgPulsAU.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ9000系 東芝 急行 日吉-溜池山王 1-BfgPulsAU.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (東京メトロ9000系 東芝 白金高輪-赤羽岩淵-日吉 vwb2G5zfyGc.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ9000系 東芝 白金高輪-赤羽岩淵-日吉 vwb2G5zfyGc.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (相鉄8000系 各停 横浜-海老名 wB4pbj21fKU.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄8000系 各停 横浜-海老名 wB4pbj21fKU.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (相鉄8000系 快速 海老名-横浜 sm29850257.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄8000系 快速 海老名-横浜 sm29850257.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (相鉄8000系 特急 横浜-湘南台 mz8gJnDFV-8.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄8000系 特急 横浜-湘南台 mz8gJnDFV-8.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}

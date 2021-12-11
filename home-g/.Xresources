@@ -87,6 +87,7 @@ URxvt*inheritPixmap: false
 
 ! Color mapping {{{
 
+! dark
 #define col_db #10191F
 #define col_df #C6CFD8
 #define col_dc #F9F5F4
@@ -109,9 +110,10 @@ URxvt*inheritPixmap: false
 #define col_ddw dwhite
 #define col_dbw bwhite
 
+! light
 #define col_bb #f4f0f0
-#define col_bf #554
-#define col_bc #444
+#define col_bf #443
+#define col_bc #333
 #define col_bo 94
 
 #define col_bdk #f8f4f4
@@ -119,17 +121,35 @@ URxvt*inheritPixmap: false
 #define col_bdr #e22
 #define col_bbr #f33
 #define col_bdg #060
-#define col_bbg #171
+#define col_bbg #282
 #define col_bdy #c07700
 #define col_bby #c88018
-#define col_bdb #33c
-#define col_bbb #44d
+#define col_bdb #11a
+#define col_bbb #33c
 #define col_bdm #a59
 #define col_bbm #b6a
 #define col_bdc #088
 #define col_bbc #0aa
 #define col_bdw #111
 #define col_bbw #111
+
+! color for tests
+! #define col_bdk #333
+! #define col_bbk #333
+! #define col_bdr #333
+! #define col_bbr #333
+! #define col_bdg #333
+! #define col_bbg #333
+! #define col_bdy #333
+! #define col_bby #333
+! #define col_bdb #333
+! #define col_bbb #333
+! #define col_bdm #333
+! #define col_bbm #333
+! #define col_bdc #333
+! #define col_bbc #333
+! #define col_bdw #333
+! #define col_bbw #333
 
 ! }}}
 
@@ -160,6 +180,32 @@ URxvt.color12: col_dbb
 URxvt.color13: col_dbm
 URxvt.color14: col_dbc
 URxvt.color15: col_dbw
+
+! URxvt.foreground:   col_bf
+! #ifdef col_bo
+! URxvt.background: [col_bo]col_bb
+! #else
+! URxvt.background:   col_bb
+! #endif
+! URxvt.cursorColor:  col_bc
+
+! URxvt.color0:  col_bdk
+! URxvt.color1:  col_bdr
+! URxvt.color2:  col_bdg
+! URxvt.color3:  col_bdy
+! URxvt.color4:  col_bdb
+! URxvt.color5:  col_bdm
+! URxvt.color6:  col_bdc
+! URxvt.color7:  col_bdw
+
+! URxvt.color8:  col_bbk
+! URxvt.color9:  col_bbr
+! URxvt.color10: col_bbg
+! URxvt.color11: col_bby
+! URxvt.color12: col_bbb
+! URxvt.color13: col_bbm
+! URxvt.color14: col_bbc
+! URxvt.color15: col_bbw
 
 
 ! }}}

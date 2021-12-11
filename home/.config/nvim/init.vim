@@ -1,5 +1,8 @@
 " vim: fdm=marker
-" todo: smart-beg
+" todo: smart-beg, comment take indenting into account
+" todo: update encoding (let format not precompiled)
+
+lua if not vim.cmd then vim.cmd = vim.api.nvim_command end
 
 " Fast startup {{{
 let g:python_host_skip_check=1
@@ -46,6 +49,10 @@ set splitbelow
 set splitright
 set confirm           " Ask on :q :wq etc.
 
+" Status line: show encoding
+set statusline=%f\ %h%w%m%r\ \ \ (%{&fileencoding})\ %=%-14.(%l,%c%V%)\ %P
+set laststatus=2
+
 if exists("&ttymouse")
     set ttymouse=xterm2   " Mouse drag to resize windows
 endif
@@ -66,6 +73,11 @@ set smartindent
 set shiftwidth=4            " Tab = N spaces in << >> etc.
 set softtabstop=4           " Insert N spaces as a tab
 set tabstop=4               " A tab shows as N spaces
+
+aug vimrc_indent
+  au!
+  au FileType html setl shiftwidth=1 tabstop=1
+aug END
 " }}}
 
 " Folding {{{
@@ -127,6 +139,9 @@ nnore s<f5> :lua smartSp("$MYVIMRC")<cr>
 onore m %
 nnore m %
 nnore M m
+nnore 0      :lua smartHome()<cr>
+nnore <home> :lua smartHome()<cr>
+inore <home> <c-o>:lua smartHome(true)<cr>
 
 " edit
 nnore D dd
@@ -153,6 +168,7 @@ nnore sm :ls<cr>:b<space>
 " nnore sb :sp\|b#<cr><c-w>p:bd<cr>
 nnore sb :bd<cr>
 nnore sp :lua smartSp()<cr>
+nnore s<space> :b#<cr>
 
 " misc
 nnore s/ :noh<cr>
@@ -216,12 +232,14 @@ fu! MyColor()
   hi NonText      ctermfg=magenta
   hi comment      ctermfg=blue
   "hi statement    ctermfg=red
-  hi String       ctermfg=green cterm=bold
+  hi String       ctermfg=green
   hi Type         ctermfg=cyan
   hi Conditional  ctermfg=green cterm=bold
   hi preproc      ctermfg=cyan
   "hi Identifier   ctermfg=red cterm=bold
   hi Special      ctermfg=red
+  hi Folded       ctermfg=blue ctermbg=black cterm=bold
+  hi Visual       ctermfg=black ctermbg=blue
 endfu
 call MyColor()
 aug vimrc_hi " :hi need to be autocmd on first run??
@@ -245,7 +263,7 @@ lua << EOF
 
 do -- Keys (keyboard layout specific) {{{
 
-    local mykbd = (vim.env.MYKBD == "colemakdh")
+    local mykbd = (vim.env and vim.env.MYKBD == "colemakdh")
 
     local mappings = {
         "nv  j  n  gj",
@@ -254,7 +272,7 @@ do -- Keys (keyboard layout specific) {{{
         "nv  K  E  <c-u>",
         "v   h  k  h",
         "v   l  i  l",
-        "nv  gh gk ^",
+        "nv  gh gk :lua smartHome()<cr>",
         "nv  gl gi <end>",
         "nv  i  l  i",
         "nv  I  L  I",
@@ -325,8 +343,13 @@ function toggleCmt(visual) -- {{{
     end
 end -- }}}
 
+function smartHome(insert) -- {{{
+    local c = vim.fn.col(".") - (insert and 1 or 0)
+    vim.cmd("norm! ^")
+    if c == vim.fn.col(".") then vim.cmd("norm! 0") end
+end -- }}}
+
 EOF
 
-let aaaaa = "aaa%1"
-let bb = "aaa%1"
-    "let ccc = "aaa%1"
+
+
