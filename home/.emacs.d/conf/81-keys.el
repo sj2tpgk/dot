@@ -63,6 +63,7 @@
   (imap "<escape>" 'evil-smart-esc
         "<delete>" 'smart-forward-delete-char
         "<deletechar>" 'smart-forward-delete-char
+        "<home>" 'smart-beg-of-line
         "TAB" 'smart-tab
         "M-j" 'evil-join)
   (imap python-mode-map "DEL" 'python-indent-dedent-line-backspace))

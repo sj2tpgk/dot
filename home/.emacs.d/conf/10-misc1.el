@@ -13,16 +13,18 @@
 (add-hook 'after-make-frame-functions 'contextual-menubar)
 (mapc 'contextual-menubar (frame-list))
 
-;; Line numbers
-(setq display-line-numbers-width 3
-      display-line-numbers-width-start 5)
-(add-hook 'prog-mode-hook 'display-line-numbers-mode)
-
 ;; Avoid "Symbolic link to Git-controlled ..." question
 (setq vc-follow-symlinks t)
 
 ;; More GC thresh
 (setq gc-cons-threshold 8000000)
+
+(progn ;; Line numbers
+  (setq display-line-numbers-width 3
+        display-line-numbers-width-start 7)
+  (setq-default display-line-numbers-width 3
+                display-line-numbers-width-start 7)
+  (add-hook 'prog-mode-hook 'display-line-numbers-mode))
 
 (progn ;; Set theme
   (setq frame-background-mode 'dark)
