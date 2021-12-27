@@ -8,38 +8,6 @@ lua if not vim.cmd then vim.cmd = vim.api.nvim_command end
 " Easy lua debug. Use L! to print nested table. Example ":L 123,456"
 command! -nargs=* -bang -complete=lua L lua pp(<q-args>, true, ("<bang>" == "") and 1 or 99, <args>)
 
-" Fzf {{{
-fu! FzfExists()
-    return executable("fzf")
-endfu
-let s:fzf_callback = 0
-fu! Fzf(list, callback)
-    if !FzfExists() | echo "fzf not installed" | return 0 | endif
-    au TermOpen  * ++once startinsert
-    au TermOpen  * ++once tnore <buffer> <esc> <c-c>
-    " On fzf exit, pass stdout to FzfOnExit (need to wait a bit, to ensure "[Process exited N]" is printed)
-    au TermClose * ++once call timer_start(10, { -> FzfOnExit(getline(1, line("$"))) })
-    " Need to use callback (or some other mechanism), as :exe "term ..." doesn't wait until exit
-    let s:fzf_callback = a:callback
-    " Print a:list to tmpfile then pipe to fzf
-    " (Can I pipe a:list directly to :term ? (it's possible if :! instead of :term))
-    let tmpfile = tempname()
-    call writefile(a:list, tmpfile)
-    " Can't use termopen() here, as it *replaces* current buf with :term buf (thus lose the current buf)
-    exe "term sh -c 'cat " . tmpfile . " | fzf'"
-endfu
-fu! FzfOnExit(stdout) " stdout = list of strings
-    " Delete fzf buffer
-    bd!
-    " Do nothing if user canceled fzf
-    if -1 == index(a:stdout, "[Process exited 0]") | return | endif
-    " Call callback with selected string (first line of stdout)
-    call s:fzf_callback(a:stdout[0])
-endfu
-com!       FzfBuffers call Fzf(map(filter(range(1, bufnr("$")), "buflisted(v:val)"), "bufname(v:val)"), { sel -> execute("edit " . sel . "") })
-com! -bang FzfFiles   call Fzf(expand("<bang>" == "" ? "*" : "**", 0, 1),                               { sel -> execute("edit " . sel . "") })
-" }}}
-
 " Fast startup {{{
 let g:python_host_skip_check=1
 let g:loaded_python3_provider=1
@@ -355,6 +323,38 @@ fu! Surr_vsurr(c = 0)
   call setpos('.', p1)
   exe "norm! i" . c1 . "\<esc>"
 endfu
+" }}}
+
+" Fzf {{{
+fu! FzfExists()
+    return executable("fzf")
+endfu
+let s:fzf_callback = 0
+fu! Fzf(list, callback)
+    if !FzfExists() | echo "fzf not installed" | return 0 | endif
+    au TermOpen  * ++once startinsert
+    au TermOpen  * ++once tnore <buffer> <esc> <c-c>
+    " On fzf exit, pass stdout to FzfOnExit (need to wait a bit, to ensure "[Process exited N]" is printed)
+    au TermClose * ++once call timer_start(10, { -> FzfOnExit(getline(1, line("$"))) })
+    " Need to use callback (or some other mechanism), as :exe "term ..." doesn't wait until exit
+    let s:fzf_callback = a:callback
+    " Print a:list to tmpfile then pipe to fzf
+    " (Can I pipe a:list directly to :term ? (it's possible if :! instead of :term))
+    let tmpfile = tempname()
+    call writefile(a:list, tmpfile)
+    " Can't use termopen() here, as it *replaces* current buf with :term buf (thus lose the current buf)
+    exe "term sh -c 'cat " . tmpfile . " | fzf'"
+endfu
+fu! FzfOnExit(stdout) " stdout = list of strings
+    " Delete fzf buffer
+    bd!
+    " Do nothing if user canceled fzf
+    if -1 == index(a:stdout, "[Process exited 0]") | return | endif
+    " Call callback with selected string (first line of stdout)
+    call s:fzf_callback(a:stdout[0])
+endfu
+com!       FzfBuffers call Fzf(map(filter(range(1, bufnr("$")), "buflisted(v:val)"), "bufname(v:val)"), { sel -> execute("edit " . sel . "") })
+com! -bang FzfFiles   call Fzf(expand("<bang>" == "" ? "*" : "**", 0, 1),                               { sel -> execute("edit " . sel . "") })
 " }}}
 
 " Repl
