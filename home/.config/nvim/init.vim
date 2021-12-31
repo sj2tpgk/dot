@@ -2,6 +2,7 @@
 " TODO comment take indenting into account
 " TODO update encoding (let format not precompiled)
 " TODO describe-face
+" TODO auto 16color
 
 lua if not vim.cmd then vim.cmd = vim.api.nvim_command end
 
@@ -77,11 +78,6 @@ set smartindent
 set shiftwidth=4            " Tab = N spaces in << >> etc.
 set softtabstop=4           " Insert N spaces as a tab
 set tabstop=4               " A tab shows as N spaces
-
-aug vimrc_indent
-  au!
-  au FileType html setl shiftwidth=1 tabstop=1
-aug END
 " }}}
 
 " Folding {{{
@@ -143,9 +139,9 @@ nnore s<f5> :lua smartSp("$MYVIMRC")<cr>
 onore m %
 nnore m %
 nnore M m
-nnore 0      :lua smartHome()<cr>
-nnore <home> :lua smartHome()<cr>
-inore <home> <c-o>:lua smartHome(true)<cr>
+nnore <silent> 0      :lua smartHome()<cr>
+nnore <silent> <home> :lua smartHome()<cr>
+inore <silent> <home> <c-o>:lua smartHome(true)<cr>
 
 " edit
 nnore D dd
@@ -157,9 +153,9 @@ nnore yf :let @+=expand("%:t")<cr>
 nnore yp :let @+=expand("%:p")<cr>
 nnore db ggVGd
 nnore s= :call SaveExcursion("ggVG=")<cr>
-nnore ;  :lua toggleCmt(false)<cr>
-vnore ;  :lua toggleCmt(true)<cr>
 nnore <a-j> J
+nnore <silent> ; :lua toggleCmt(false)<cr>
+vnore <silent> ; :lua toggleCmt(true)<cr>
 
 " window, buffer
 nnore Q :q<cr>
@@ -173,9 +169,9 @@ nnore sb :bd<cr>
 nnore sp :lua smartSp()<cr>
 nnore s<space> :b#<cr>
 "nnore sm :ls<cr>:b<space>
-exe "nnore sm " . (FzfExists() ? ":FzfBuffers<cr>" : ":ls<cr>:b<space>")
-exe "nnore sf " . (FzfExists() ? ":FzfFiles<cr>"   : ":e<space>"       )
-exe "nnore sF " . (FzfExists() ? ":FzfFiles!<cr>"  : ":e<space>"       )
+nnore <expr> sm FzfExists() ? ":FzfBuffers\<cr>" : ":ls\<cr>:b\<space>"
+nnore <expr> sf FzfExists() ? ":FzfFiles\<cr>"   : ":e\<space>"
+nnore <expr> sF FzfExists() ? ":FzfFiles!\<cr>"  : ":e\<space>"
 
 " misc
 nnore s/ :noh<cr>:let @/ = ""<cr>
@@ -257,7 +253,7 @@ fu! MyColor()
   hi preproc      ctermfg=cyan
   "hi Identifier   ctermfg=red cterm=bold
   hi Special      ctermfg=red
-  hi Folded       ctermfg=blue ctermbg=black cterm=bold
+  hi Folded       ctermfg=magenta ctermbg=black cterm=bold
   hi Visual       ctermfg=black ctermbg=blue
 endfu
 call MyColor()
@@ -332,9 +328,10 @@ endfu
 let s:fzf_callback = 0
 fu! Fzf(list, callback)
     if !FzfExists() | echo "fzf not installed" | return 0 | endif
+    split " fzf in new window (or else original win will be lost)
     au TermOpen  * ++once startinsert
     au TermOpen  * ++once tnore <buffer> <esc> <c-c>
-    " On fzf exit, pass stdout to FzfOnExit (need to wait a bit, to ensure "[Process exited N]" is printed)
+    " On fzf exit, pass stdout to FzfOnExit (need to wait a bit to ensure "[Process exited N]" is printed)
     au TermClose * ++once call timer_start(10, { -> FzfOnExit(getline(1, line("$"))) })
     " Need to use callback (or some other mechanism), as :exe "term ..." doesn't wait until exit
     let s:fzf_callback = a:callback
@@ -348,18 +345,30 @@ endfu
 fu! FzfOnExit(stdout) " stdout = list of strings
     " Delete fzf buffer
     bd!
-    " Do nothing if user canceled fzf
+    " Do nothing if user cancelled fzf
     if -1 == index(a:stdout, "[Process exited 0]") | return | endif
     " Call callback with selected string (first line of stdout)
     call s:fzf_callback(a:stdout[0])
 endfu
-com!       FzfBuffers call Fzf(map(filter(range(1, bufnr("$")), "buflisted(v:val)"), "bufname(v:val)"), { sel -> execute("edit " . sel . "") })
-com! -bang FzfFiles   call Fzf(expand("<bang>" == "" ? "*" : "**", 0, 1),                               { sel -> execute("edit " . sel . "") })
+com! -bar       FzfBuffers call Fzf(map(filter(range(1, bufnr("$")), "buflisted(v:val)"), "bufname(v:val)"), { sel -> execute("edit " . sel . "") })
+com! -bar -bang FzfFiles   call Fzf(expand("<bang>" == "" ? "*" : "**", 0, 1),                               { sel -> execute("edit " . sel . "") })
 " }}}
 
 " Repl
 " b:terminal_job_id
 " jobsend(3, join(getline(1,"$"), "\n") . "\n")
+
+" Filetype specific {{{
+" === HTML ===
+let g:html_indent_autotags="html,head,body,style" " no indent for these tags
+let g:html_indent_script1="zero"
+let g:html_indent_style1="zero"
+aug vimrc_ft_html
+    au!
+    au BufNewFile,BufRead *.html setl tabstop=4 shiftwidth=4
+    au BufNewFile,BufRead *.html call HtmlIndent_CheckUserSettings()
+augroup END
+" }}}
 
 " Lua part
 
@@ -502,7 +511,7 @@ end -- }}}
 function mycomp_done() -- Reset cache, add history etc. {{{
     mycomp_cache = nil
     local comp = vim.v.completed_item
-    mycomp_add_history(comp)
+    if comp then mycomp_add_history(comp) end
 end -- }}}
 
 -- function mycomp_memoizef(func, shouldUpdate) -- memoization {{{
@@ -696,6 +705,7 @@ end -- }}}
 -- }}}
 
 function pp(input, doprint, maxdepth, ...) -- Pretty print lua {{{
+    -- TODO avoid circular recursion
     -- If 'doprint' is true and 'input' is given, print like repl into *Messages* buffer
     local function compare(x, y) -- compare any two values
         local tx, ty = type(x), type(y)

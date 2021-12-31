@@ -5,7 +5,7 @@
       warning-suppress-log-types '((comp)))
 
 ;; Disable native comp (until 28.1 is released)
-;; (setq native-comp-deferred-compilation-deny-list '("."))
+(setq native-comp-deferred-compilation-deny-list '("."))
 
 ;; To force compile builtin:
 ;; (native-compile-async (format "/usr/share/emacs/%s/lisp" emacs-version) 'recursively)
