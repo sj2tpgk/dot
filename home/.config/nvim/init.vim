@@ -125,7 +125,9 @@ set hlsearch
 set ttimeoutlen=8
 augroup vimrc_inoreesc
   autocmd!
-  autocmd InsertLeave * normal! l
+  " Two autocmds needed (for when cursor is at beginning or end of line)
+  autocmd InsertLeavePre * let vimrc_inoreesc_col = col(".")
+  autocmd InsertLeave    * exe (vimrc_inoreesc_col >= 2) ? "norm! l" : ""
 augroup END
 " }}}
 
@@ -177,6 +179,7 @@ nnore <expr> sF FzfExists() ? ":FzfFiles!\<cr>"  : ":e\<space>"
 nnore s/ :noh<cr>:let @/ = ""<cr>
 nnore :<cr> :<up><cr>
 tnore <esc> <c-\><c-n>
+nnore <c-h>F :call DescribeFace()<cr>
 
 fu! SaveExcursion(normcmd)
   let l:w = winsaveview()
@@ -209,7 +212,7 @@ aug vimrc_complete_mycomp
   au CompleteDone * lua mycomp_done()
 aug END
 
-let g:comp_minlen = 2  " At least N chars to start completion
+let g:comp_minlen = 3  " At least N chars to start completion
 
 aug vimrc_complete
   au!
@@ -255,9 +258,18 @@ fu! MyColor()
   hi Special      ctermfg=red
   hi Folded       ctermfg=magenta ctermbg=black cterm=bold
   hi Visual       ctermfg=black ctermbg=blue
+
+  " Pmenu (completion popup menu)
+  hi Pmenu        ctermfg=magenta ctermbg=black cterm=bold
+  hi PmenuSel     ctermfg=magenta ctermbg=black cterm=bold,reverse
+
+  " Filetype specific
+  " === HTML ===
+  hi link javaScript Normal
+  hi link htmlEvent  Special
 endfu
 call MyColor()
-aug vimrc_hi " :hi need to be autocmd on first run??
+aug vimrc_hi " :hi need to be in autocmd on first run??
   au!
   au VimEnter * :call MyColor()
 aug END
@@ -270,6 +282,16 @@ aug vimrc_cursor
 aug END
 
 set list listchars=trail:.
+
+fu! DescribeFace()
+  let first = 1
+  for id in synstack(line("."), col("."))
+      if first == 1 | let first = 0 | else | echon " > " | endif
+      let name = synIDattr(id, "name")
+      let nameTrans = synIDattr(synIDtrans(id), "name")
+      exe "echohl " . name | echon name . (name != nameTrans ? "(" . nameTrans . ")" : "") | echohl None
+  endfor
+endfu
 " }}}
 
 " Surround {{{
@@ -328,7 +350,9 @@ endfu
 let s:fzf_callback = 0
 fu! Fzf(list, callback)
     if !FzfExists() | echo "fzf not installed" | return 0 | endif
-    split " fzf in new window (or else original win will be lost)
+    " Fzf in new window (or else original win will be lost)
+    split
+    " Convenience
     au TermOpen  * ++once startinsert
     au TermOpen  * ++once tnore <buffer> <esc> <c-c>
     " On fzf exit, pass stdout to FzfOnExit (need to wait a bit to ensure "[Process exited N]" is printed)
@@ -367,7 +391,7 @@ aug vimrc_ft_html
     au!
     au BufNewFile,BufRead *.html setl tabstop=4 shiftwidth=4
     au BufNewFile,BufRead *.html call HtmlIndent_CheckUserSettings()
-augroup END
+aug END
 " }}}
 
 " Lua part
@@ -424,19 +448,30 @@ function smartSp(file) -- {{{
 end -- }}}
 
 function toggleCmt(visual) -- {{{
-    local function isLuaInVim()
-        if not (vim.bo.ft == "vim") then return false end
+    -- TODO multiple lines with commented & not commented mixed
+    local function hasSyntax(synName)
         for _, v in pairs(vim.fn.synstack(vim.fn.line("."), vim.fn.col("."))) do
-            if vim.fn.synIDattr(v, "name") == "vimLuaRegion" then
+            if vim.fn.synIDattr(v, "name") == synName then
                 return true
             end
         end
         return false
     end
+    local function getCMSHere()
+        if vim.bo.ft == "vim" and hasSyntax("vimLuaRegion") then
+            return "--%s"
+        elseif vim.bo.ft == "html" and hasSyntax("javaScript") then
+            return "//%s"
+        elseif vim.bo.ft == "html" and hasSyntax("cssStyle") then
+            return "/*%s*/"
+        else
+            return vim.bo.cms
+        end
+    end
     local function regEscape(s) return (s:gsub("([^%w])", "%%%1")) end
 
     -- Analyze commentstring
-    local cms    = isLuaInVim() and "--%s" or vim.bo.cms
+    local cms    = getCMSHere()
     local x,y,z  = cms:match("(.*%S)(%s*)%%s(.*)")
     local p      = "^(%s*)" .. regEscape(x) .. "(.*)" .. regEscape(z)
     local p1     = "^(%s*)" .. regEscape(x) .. y:gsub(".", " ?") .. "(.*)" .. regEscape(z)
@@ -648,7 +683,9 @@ function mycomp_collect_buffer(buf) -- Collect from a buf {{{
 end -- }}}
 
 function mycomp_collect_omni() -- Collect from omnifunc {{{
-    if not vim.bo.omnifunc then return {} end
+    if (not vim.bo.omnifunc) or (vim.bo.omnifunc == "") then
+        return {}
+    end
     -- Emulate first call of omnifunc (a:findstart = 1)
     local col = vim.call(vim.bo.omnifunc, 1, nil)
     if col >= 0 then
@@ -706,7 +743,7 @@ end -- }}}
 
 function pp(input, doprint, maxdepth, ...) -- Pretty print lua {{{
     -- TODO avoid circular recursion
-    -- If 'doprint' is true and 'input' is given, print like repl into *Messages* buffer
+    -- If 'doprint' is true and 'input' is given, print like in repl into *Messages* buffer
     local function compare(x, y) -- compare any two values
         local tx, ty = type(x), type(y)
         if (tx == "number" and ty == "number") or (tx == "string" and ty == "string") then
@@ -766,4 +803,3 @@ function pp(input, doprint, maxdepth, ...) -- Pretty print lua {{{
 end -- }}}
 
 EOFLUA
-
