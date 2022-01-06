@@ -88,6 +88,9 @@ nnore <leader>z :set fdm=marker<cr>zm
 " close folding by 'h' if cursor is 0 of the line and in a opened folding
 "nnore <expr> h  (getcurpos()[2] == 1) && (foldlevel('.') != 0) ? 'zc' : 'h'
 
+set nofoldenable
+
+" Use for lua folding
 fu! NonEmptyLine(lnum, dir) " find nonempty line (but not a:lnum) in given direction (1 or -1)
   let lnum = a:lnum + a:dir
   let max = line("$")
@@ -97,9 +100,33 @@ fu! NonEmptyLine(lnum, dir) " find nonempty line (but not a:lnum) in given direc
   return lnum
 endfu
 
+" Markdown folding (https://stackoverflow.com/a/4677454)
+function! MarkdownLevel()
+    if getline(v:lnum) =~ '^# .*$'
+        return ">1"
+    endif
+    if getline(v:lnum) =~ '^## .*$'
+        return ">2"
+    endif
+    if getline(v:lnum) =~ '^### .*$'
+        return ">3"
+    endif
+    if getline(v:lnum) =~ '^#### .*$'
+        return ">4"
+    endif
+    if getline(v:lnum) =~ '^##### .*$'
+        return ">5"
+    endif
+    if getline(v:lnum) =~ '^###### .*$'
+        return ">6"
+    endif
+    return "="
+endfunction
+
 aug vimrc_folding
   au!
-  au FileType lua setl fdm=expr fde=max([indent(v:lnum),indent(NonEmptyLine(v:lnum,1)),indent(NonEmptyLine(v:lnum,-1))])/&shiftwidth
+  au FileType lua       setl fdm=expr fde=max([indent(v:lnum),indent(NonEmptyLine(v:lnum,1)),indent(NonEmptyLine(v:lnum,-1))])/&shiftwidth
+  au FileType markdown  setl fdm=expr fde=MarkdownLevel()
 aug END
 " }}}
 
@@ -144,6 +171,8 @@ nnore M m
 nnore <silent> 0      :lua smartHome()<cr>
 nnore <silent> <home> :lua smartHome()<cr>
 inore <silent> <home> <c-o>:lua smartHome(true)<cr>
+nnore [ <c-o>
+nnore ] <c-i>
 
 " edit
 nnore D dd
@@ -240,17 +269,52 @@ aug vimrc_complete
 aug END
 " }}}
 
-" Colorscheme, cursor {{{
+" Colorscheme, syntax, cursor {{{
 "colorscheme slate
 "colorscheme ron
 colorscheme default
+
+fu! MySyn(ft)
+    if a:ft == "javascript"
+        sil! syn clear jsVarDef0 jsVarDef1 jsVarDef2 jsVarDef3 jsVarDef4 jsFuncDef0 jsFuncDef1
+        " Cannot modify nextgroup of existing groups; we must use regexp lookback
+        " TODO var, multiline defs
+        syn keyword jsVarDef0 const let var skipwhite skipempty contained=javascriptReserved nextgroup=jsVarDef1
+        syn match jsVarDef1 /\<\w\+\>/ skipwhite skipempty contained
+"        syn match jsVarDef2 /const.*\@<=\<\w\+\>\_s*=/ skipwhite skipempty contains=jsVarDef1
+"        syn keyword jsVarDef const contained
+"        syn match jsVarDef /\(\(const\|let\)\_s\+\)\@<=\<\w\+\>/ containedin=javaScript
+        syn match jsFuncDef1 /\(\(function\)\_s\+\)\@<=\<\w\+\>/ containedin=javaScript
+"        syn match jsFuncDef0 /000000000000000/ containedin=javaScript
+    endif
+endfu
+let firstbuf = bufnr("%")
+bufdo call MySyn(&ft)
+exec "b" firstbuf
+aug vimrc_syn
+  au!
+  au Syntax,FileType javascript,html call MySyn("javascript")
+  au BufNewFile,BufRead *.js,*.html call MySyn("javascript")
+aug END
+
+hi VarDef ctermfg=blue cterm=bold
+hi link vimMapLhs VarDef
+hi link jsVarDef0 javascriptStatement
+hi link jsVarDef1 varDef
+
+hi FuncDef ctermfg=yellow cterm=bold
+hi link vimFunction FuncDef
+hi link jsFuncDef0 javaScriptFunction
+hi link jsFuncDef1 FuncDef
+
 
 fu! MyColor()
   hi Constant     ctermfg=green cterm=bold
   hi NonText      ctermfg=magenta
   hi comment      ctermfg=blue
   "hi statement    ctermfg=red
-  hi String       ctermfg=green
+"  hi String       ctermfg=green
+  hi String       ctermfg=yellow
   hi Type         ctermfg=cyan
   hi Conditional  ctermfg=green cterm=bold
   hi preproc      ctermfg=cyan
@@ -258,6 +322,14 @@ fu! MyColor()
   hi Special      ctermfg=red
   hi Folded       ctermfg=magenta ctermbg=black cterm=bold
   hi Visual       ctermfg=black ctermbg=blue
+"  hi Statement    ctermfg=green cterm=bold
+"  hi Statement    ctermfg=green cterm=none
+  hi Statement    ctermfg=cyan cterm=none
+"  hi Statement    ctermfg=magenta cterm=bold
+"  hi Statement    ctermfg=yellow cterm=none
+"  hi Identifier    ctermfg=yellow cterm=none
+"  hi Identifier   ctermfg=green cterm=none
+"  hi Identifier   ctermfg=green cterm=bold
 
   " Pmenu (completion popup menu)
   hi Pmenu        ctermfg=magenta ctermbg=black cterm=bold
@@ -265,8 +337,9 @@ fu! MyColor()
 
   " Filetype specific
   " === HTML ===
-  hi link javaScript Normal
-  hi link htmlEvent  Special
+  hi link javaScript       Normal
+  hi link javaScriptNumber Number
+  hi link htmlEvent        Special
 endfu
 call MyColor()
 aug vimrc_hi " :hi need to be in autocmd on first run??
