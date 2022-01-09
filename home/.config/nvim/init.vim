@@ -344,7 +344,6 @@ fu! MyHighlight()
   hi Constant     ctermfg=blue
   hi NonText      ctermfg=magenta
   hi comment      ctermfg=blue
-  "hi statement    ctermfg=red
 "  hi String       ctermfg=green
   hi String       ctermfg=yellow
 "  hi Type         ctermfg=cyan
@@ -358,7 +357,8 @@ fu! MyHighlight()
   hi Visual       ctermfg=black ctermbg=blue
 "  hi Statement    ctermfg=green cterm=bold
 "  hi Statement    ctermfg=green cterm=none
-  hi Statement    ctermfg=cyan cterm=none
+"  hi Statement    ctermfg=cyan cterm=none
+"  hi Statement    ctermfg=red cterm=none
 "  hi Statement    ctermfg=magenta cterm=bold
   hi Statement    ctermfg=yellow cterm=none
 "  hi Identifier    ctermfg=yellow cterm=none
