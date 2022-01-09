@@ -88,7 +88,7 @@ nnore <leader>z :set fdm=marker<cr>zm
 " close folding by 'h' if cursor is 0 of the line and in a opened folding
 "nnore <expr> h  (getcurpos()[2] == 1) && (foldlevel('.') != 0) ? 'zc' : 'h'
 
-set nofoldenable
+"set nofoldenable
 
 " Use for lua folding
 fu! NonEmptyLine(lnum, dir) " find nonempty line (but not a:lnum) in given direction (1 or -1)
@@ -150,11 +150,11 @@ set hlsearch
 
 " Esc {{{
 set ttimeoutlen=8
-augroup vimrc_inoreesc
+augroup vimrc_myesc
   autocmd!
   " Two autocmds needed (for when cursor is at beginning or end of line)
-  autocmd InsertLeavePre * let vimrc_inoreesc_col = col(".")
-  autocmd InsertLeave    * exe (vimrc_inoreesc_col >= 2) ? "norm! l" : ""
+  autocmd InsertLeavePre * let myesc_col = col(".")
+  autocmd InsertLeave    * exe (myesc_col >= 2) ? "norm! l" : ""
 augroup END
 " }}}
 
@@ -208,7 +208,8 @@ nnore <expr> sF FzfExists() ? ":FzfFiles!\<cr>"  : ":e\<space>"
 nnore s/ :noh<cr>:let @/ = ""<cr>
 nnore :<cr> :<up><cr>
 tnore <esc> <c-\><c-n>
-nnore <c-h>F :call DescribeFace()<cr>
+"nnore <c-h>F :call DescribeFace()<cr>
+nnore <c-h> :call DescribeFace()<cr>
 
 fu! SaveExcursion(normcmd)
   let l:w = winsaveview()
@@ -274,51 +275,82 @@ aug END
 "colorscheme ron
 colorscheme default
 
-fu! MySyn(ft)
-    if a:ft == "javascript"
-        sil! syn clear jsVarDef0 jsVarDef1 jsVarDef2 jsVarDef3 jsVarDef4 jsFuncDef0 jsFuncDef1
-        " Cannot modify nextgroup of existing groups; we must use regexp lookback
-        " TODO var, multiline defs
-        syn keyword jsVarDef0 const let var skipwhite skipempty contained=javascriptReserved nextgroup=jsVarDef1
-        syn match jsVarDef1 /\<\w\+\>/ skipwhite skipempty contained
-"        syn match jsVarDef2 /const.*\@<=\<\w\+\>\_s*=/ skipwhite skipempty contains=jsVarDef1
-"        syn keyword jsVarDef const contained
-"        syn match jsVarDef /\(\(const\|let\)\_s\+\)\@<=\<\w\+\>/ containedin=javaScript
-        syn match jsFuncDef1 /\(\(function\)\_s\+\)\@<=\<\w\+\>/ containedin=javaScript
-"        syn match jsFuncDef0 /000000000000000/ containedin=javaScript
+" --- Custom Syntax ---
+fu! MySyntax()
+    let ft = &ft
+    if ft == "javascript" || ft == "html"
+        for i in ["jsVarDef", "jsVarDefName", "jsFuncDefName", "jsFuncDefArgs", "jsVarDefWrap"] | exe "sil! syn clear " . i | endfor
+
+        " Match variable definition statement e.g. "const x = 1, y = 2;"
+        " remove const/let/var from keywords
+        sil! syn clear javaScriptIdentifier
+        sil! syn clear javaScriptReserved
+        syn keyword javaScriptIdentifier this arguments
+        syn keyword javaScriptReserved long transient float int async synchronized protected static interface private final implements import goto export volatile class double short boolean char throws native enum public byte debugger package abstract extends super
+        " now define region
+        syn region jsVarDef matchgroup=jsVarDefType start=/const/ start=/let/ start=/var/ matchgroup=NONE end=/;/ keepend end=/[^,;]$/ transparent containedin=javaScript contains=javaScript[a-zA-Z].*,jsVarDefName,jsVarDefWrap
+        syn region jsVarDefWrap start=/[[(]/ end=/[])]/ keepend transparent contained contains=javaScript[a-zA-Z].*
+
+        " Match variable name in definitions e.g. "x" and "y" in "const x = 1, y = 2;" or "function f(x, y=2)"
+        "                                    (varname)
+        syn match jsVarDefName /\([-+=.&|<>*/]\_s*\)\@<!\<\h\w*\>/ contained containedin=jsFuncDefArgs,jsVarDef
+"        syn match jsVarDefName /[^ =]\_s*\<\h\w*\>/ contained containedin=jsFuncDefArgs,jsVarDef
+        "                                      ^^ varname don't start with 0-9
+        "                       ^^^^^^^^^ bad prefix (i.e. "=" (to exclude assignment rhs, default arg value etc.))
+        "                            "AAA\@<!BBB" matches BBB not after AAA
+
+        " Match function definition "function f(x, y=2)" (jsFuncDefName matches "f", jsFuncDefArgs matches "(x, y=2)")
+        " TODO arrow function, "var f = function()..."
+        sil! syn clear javaScriptFunction
+        syn keyword javaScriptFunction function skipwhite nextgroup=jsFuncDefName
+        syn match jsFuncDefName /\<\w\+\>/ skipwhite contained nextgroup=jsFuncDefArgs
+        syn region jsFuncDefArgs start="(" end=")" keepend contained contains=javaScript[a-zA-Z].*,jsVarDefName
+
+        " Note: Cannot modify nextgroup of existing groups; we must use regexp lookback OR wrap everything in a region
+        "       Lookback example:                         ( "AAA\@<=BBB" matches BBB after AAA )
+        "         syn match jsFuncDefName /\(\(function\)\_s\+\)\@<=\<\w\+\>/ skipwhite
+        " Note: Keyword has precedence over match and region. If "const" is a keyword, a region with start=/const/ cannot start there.
+
+    elseif ft == "org"
+        call MyOrgSyntaxHighlight()
     endif
 endfu
-let firstbuf = bufnr("%")
-bufdo call MySyn(&ft)
-exec "b" firstbuf
+nnore <f6> :call MySyntax()<cr>
+"let firstbuf = bufnr("%")
+"bufdo call MySyntax()
+"exec "b" firstbuf
 aug vimrc_syn
   au!
-  au Syntax,FileType javascript,html call MySyn("javascript")
-  au BufNewFile,BufRead *.js,*.html call MySyn("javascript")
+  au Syntax,FileType javascript,html call MySyntax()
+  au BufNewFile,BufRead *.js,*.html call MySyntax()
 aug END
 
-hi VarDef ctermfg=blue cterm=bold
-hi link vimMapLhs VarDef
-hi link jsVarDef0 javascriptStatement
-hi link jsVarDef1 varDef
+"hi myVarName ctermfg=blue cterm=bold
+hi myVarName ctermfg=cyan cterm=bold
+hi link vimMapLhs    myVarName
+hi link jsVarDefName myVarName
+hi link jsVarDefType Type
 
-hi FuncDef ctermfg=yellow cterm=bold
-hi link vimFunction FuncDef
-hi link jsFuncDef0 javaScriptFunction
-hi link jsFuncDef1 FuncDef
+hi myFuncName ctermfg=yellow cterm=bold
+hi link vimFunction   myFuncName
+hi link jsFuncDefName myFuncName
 
 
-fu! MyColor()
-  hi Constant     ctermfg=green cterm=bold
+" --- Custom Highlight ---
+fu! MyHighlight()
+"  hi Constant     ctermfg=green cterm=bold
+  hi Constant     ctermfg=none
   hi NonText      ctermfg=magenta
   hi comment      ctermfg=blue
   "hi statement    ctermfg=red
 "  hi String       ctermfg=green
   hi String       ctermfg=yellow
-  hi Type         ctermfg=cyan
+"  hi Type         ctermfg=cyan
+  hi Type         ctermfg=green
   hi Conditional  ctermfg=green cterm=bold
-  hi preproc      ctermfg=cyan
+  hi Preproc      ctermfg=cyan
   "hi Identifier   ctermfg=red cterm=bold
+  hi Identifier   ctermfg=green cterm=bold
   hi Special      ctermfg=red
   hi Folded       ctermfg=magenta ctermbg=black cterm=bold
   hi Visual       ctermfg=black ctermbg=blue
@@ -326,7 +358,7 @@ fu! MyColor()
 "  hi Statement    ctermfg=green cterm=none
   hi Statement    ctermfg=cyan cterm=none
 "  hi Statement    ctermfg=magenta cterm=bold
-"  hi Statement    ctermfg=yellow cterm=none
+  hi Statement    ctermfg=yellow cterm=none
 "  hi Identifier    ctermfg=yellow cterm=none
 "  hi Identifier   ctermfg=green cterm=none
 "  hi Identifier   ctermfg=green cterm=bold
@@ -337,16 +369,25 @@ fu! MyColor()
 
   " Filetype specific
   " === HTML ===
-  hi link javaScript       Normal
-  hi link javaScriptNumber Number
-  hi link htmlEvent        Special
+  hi link javaScript         Normal
+  hi      javaScriptParens   ctermfg=magenta
+  hi link javaScriptBraces   javaScriptParens
+  hi link javaScriptBrackets javaScriptParens
+  hi link javaScriptNumber   Number
+  hi link htmlEvent          Special
+  hi link htmlTag            Normal
+  hi link htmlEndTag         htmlTag
+  hi      htmlTagName        ctermfg=magenta
+  hi link htmlSpecialTagName htmlTagName
 endfu
-call MyColor()
+call MyHighlight()
 aug vimrc_hi " :hi need to be in autocmd on first run??
   au!
-  au VimEnter * :call MyColor()
+  au VimEnter * :call MyHighlight()
 aug END
 
+
+" --- Cursor ---
 set cursorline
 aug vimrc_cursor
   au!
@@ -354,6 +395,8 @@ aug vimrc_cursor
   au! InsertLeave * set cursorline!
 aug END
 
+
+" --- Misc ---
 set list listchars=trail:.
 
 fu! DescribeFace()
@@ -456,6 +499,7 @@ com! -bar -bang FzfFiles   call Fzf(expand("<bang>" == "" ? "*" : "**", 0, 1),  
 " jobsend(3, join(getline(1,"$"), "\n") . "\n")
 
 " Filetype specific {{{
+
 " === HTML ===
 let g:html_indent_autotags="html,head,body,style" " no indent for these tags
 let g:html_indent_script1="zero"
@@ -464,6 +508,47 @@ aug vimrc_ft_html
     au!
     au BufNewFile,BufRead *.html setl tabstop=4 shiftwidth=4
     au BufNewFile,BufRead *.html call HtmlIndent_CheckUserSettings()
+aug END
+
+" === Org mode ===
+fu! MyOrgConfig()
+    set ft=org cms=##\ %s
+    setl fdm=expr fde=OrgLevel()
+    call MyOrgSyntaxHighlight()
+endfu
+fu! OrgLevel()
+    if getline(v:lnum) =~ '^\* .*$'
+        return ">1"
+    elseif getline(v:lnum) =~ '^\*\* .*$'
+        return ">2"
+    elseif getline(v:lnum) =~ '^\*\*\* .*$'
+        return ">3"
+    endif
+    return "="
+endfu
+fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
+    sil! syn clear orgProperty orgComment orgHeading1 orgHeading2 orgHeading3 orgMathInline orgBold orgTex
+    syn region orgProperty   matchgroup=Special start=/^#+\S*:/ end=/$/ oneline
+    syn region orgComment    start=/^#[^+]/   end=/$/  oneline
+    syn region orgHeading1   start=/^\* /     end=/$/  oneline
+    syn region orgHeading2   start=/^\*\{2} / end=/$/  oneline
+    syn region orgHeading3   start=/^\*\{3} / end=/$/  oneline
+    syn region orgMathInline start=/\$/       end=/\$/ oneline
+    syn region orgBold       start=/\*\S/     end=/\*/ oneline
+    syn match  orgTex        /\\\S\+/
+    let b:current_syntax = "org"
+    hi link orgProperty   String
+    hi link orgComment    Comment
+    hi      orgHeading1   ctermfg=cyan cterm=bold
+    hi      orgHeading2   ctermfg=cyan
+    hi      orgHeading3   ctermfg=green
+    hi      orgMathInline ctermfg=blue
+    hi link orgBold       Statement
+    hi link orgTex        Preproc
+endfu
+aug vimrc_ft_org
+    au!
+    au BufNewFile,BufRead *.org call MyOrgConfig()
 aug END
 " }}}
 
