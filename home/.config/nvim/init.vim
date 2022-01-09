@@ -289,11 +289,13 @@ fu! MySyntax()
         syn keyword javaScriptReserved long transient float int async synchronized protected static interface private final implements import goto export volatile class double short boolean char throws native enum public byte debugger package abstract extends super
         " now define region
         syn region jsVarDef matchgroup=jsVarDefType start=/const/ start=/let/ start=/var/ matchgroup=NONE end=/;/ keepend end=/[^,;]$/ transparent containedin=javaScript contains=javaScript[a-zA-Z].*,jsVarDefName,jsVarDefWrap
-        syn region jsVarDefWrap start=/[[(]/ end=/[])]/ keepend transparent contained contains=javaScript[a-zA-Z].*
+        " symbols inside function calls, arrays and objects are not varname (except destructuring assignment)
+        syn region jsVarDefWrap start=/\(\(const\|let\|var\)\_s*\)\@<![[({]/ end=/[])}]/ keepend transparent contained contains=javaScript[a-zA-Z].*
 
         " Match variable name in definitions e.g. "x" and "y" in "const x = 1, y = 2;" or "function f(x, y=2)"
         "                                    (varname)
-        syn match jsVarDefName /\([-+=.&|<>*/]\_s*\)\@<!\<\h\w*\>/ contained containedin=jsFuncDefArgs,jsVarDef
+"        syn match jsVarDefName /\([-+=.&|<>*/]\_s*\)\@<!\<\h\w*\>/ contained containedin=jsFuncDefArgs,jsVarDef
+        syn match jsVarDefName /\([-+=.&|<>*/]\_s*\)\@<!\zs\<\h\w*\>\ze\_s*[])=,;]/ contained containedin=jsFuncDefArgs,jsVarDef
 "        syn match jsVarDefName /[^ =]\_s*\<\h\w*\>/ contained containedin=jsFuncDefArgs,jsVarDef
         "                                      ^^ varname don't start with 0-9
         "                       ^^^^^^^^^ bad prefix (i.e. "=" (to exclude assignment rhs, default arg value etc.))
@@ -339,7 +341,7 @@ hi link jsFuncDefName myFuncName
 " --- Custom Highlight ---
 fu! MyHighlight()
 "  hi Constant     ctermfg=green cterm=bold
-  hi Constant     ctermfg=none
+  hi Constant     ctermfg=blue
   hi NonText      ctermfg=magenta
   hi comment      ctermfg=blue
   "hi statement    ctermfg=red
