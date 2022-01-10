@@ -350,17 +350,19 @@ fu! MyHighlight()
   hi Type         ctermfg=green
   hi Conditional  ctermfg=green cterm=bold
   hi Preproc      ctermfg=cyan
-  "hi Identifier   ctermfg=red cterm=bold
+"  hi Identifier   ctermfg=red cterm=none
   hi Identifier   ctermfg=green cterm=bold
+"  hi Identifier   ctermfg=cyan cterm=none
   hi Special      ctermfg=red
   hi Folded       ctermfg=magenta ctermbg=black cterm=bold
   hi Visual       ctermfg=black ctermbg=blue
 "  hi Statement    ctermfg=green cterm=bold
 "  hi Statement    ctermfg=green cterm=none
 "  hi Statement    ctermfg=cyan cterm=none
-"  hi Statement    ctermfg=red cterm=none
+  hi Statement    ctermfg=red cterm=none
+"  hi Statement    ctermfg=red cterm=bold
 "  hi Statement    ctermfg=magenta cterm=bold
-  hi Statement    ctermfg=yellow cterm=none
+"  hi Statement    ctermfg=yellow cterm=none
 "  hi Identifier    ctermfg=yellow cterm=none
 "  hi Identifier   ctermfg=green cterm=none
 "  hi Identifier   ctermfg=green cterm=bold
@@ -513,11 +515,6 @@ aug vimrc_ft_html
 aug END
 
 " === Org mode ===
-fu! MyOrgConfig()
-    set ft=org cms=##\ %s
-    setl fdm=expr fde=OrgLevel()
-    call MyOrgSyntaxHighlight()
-endfu
 fu! OrgLevel()
     if getline(v:lnum) =~ '^\* .*$'
         return ">1"
@@ -529,19 +526,21 @@ fu! OrgLevel()
     return "="
 endfu
 fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
+    set ft=org cms=#\ %s
+    setl fdm=expr fde=OrgLevel()
     sil! syn clear orgProperty orgComment orgHeading1 orgHeading2 orgHeading3 orgMathInline orgBold orgTex
     syn region orgProperty   matchgroup=Special start=/^#+\S*:/ end=/$/ oneline
-    syn region orgComment    start=/^#[^+]/   end=/$/  oneline
-    syn region orgHeading1   start=/^\* /     end=/$/  oneline
-    syn region orgHeading2   start=/^\*\{2} / end=/$/  oneline
-    syn region orgHeading3   start=/^\*\{3} / end=/$/  oneline
-    syn region orgMathInline start=/\$/       end=/\$/ oneline
-    syn region orgBold       start=/\*\S/     end=/\*/ oneline
+    syn region orgComment    start=/^\s*#[^+]/ end=/$/  oneline
+    syn region orgHeading1   start=/^\* /      end=/$/  oneline
+    syn region orgHeading2   start=/^\*\{2} /  end=/$/  oneline
+    syn region orgHeading3   start=/^\*\{3} /  end=/$/  oneline
+    syn region orgMathInline start=/\$/        end=/\$/ oneline
+    syn region orgBold       start=/\*[^* ]/   end=/\*/ oneline
     syn match  orgTex        /\\\S\+/
     let b:current_syntax = "org"
     hi link orgProperty   String
     hi link orgComment    Comment
-    hi      orgHeading1   ctermfg=cyan cterm=bold
+    hi      orgHeading1   ctermfg=cyan cterm=bold,underline
     hi      orgHeading2   ctermfg=cyan
     hi      orgHeading3   ctermfg=green
     hi      orgMathInline ctermfg=blue
@@ -550,7 +549,7 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
 endfu
 aug vimrc_ft_org
     au!
-    au BufNewFile,BufRead *.org call MyOrgConfig()
+    au BufNewFile,BufRead *.org call MyOrgSyntaxHighlight()
 aug END
 " }}}
 
@@ -635,6 +634,9 @@ function toggleCmt(visual) -- {{{
     local x,y,z  = cms:match("(.*%S)(%s*)%%s(.*)")
     local p      = "^(%s*)" .. regEscape(x) .. "(.*)" .. regEscape(z)
     local p1     = "^(%s*)" .. regEscape(x) .. y:gsub(".", " ?") .. "(.*)" .. regEscape(z)
+
+    -- temporary fix for org-mode: "#" must be followed by a space
+    if vim.bo.ft == "org" then p = "^(%s*)# (.*)" end
 
     -- Suppose cms == "# %s"
     -- p  : must match line if middle space is absent
