@@ -536,6 +536,7 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     syn region orgHeading3   start=/^\*\{3} /  end=/$/  oneline
     syn region orgMathInline start=/\$/        end=/\$/ oneline
     syn region orgBold       start=/\*[^* ]/   end=/\*/ oneline
+    syn region orgMonospace  start=/\~[^ ]/    end=/\~/ oneline
     syn match  orgTex        /\\\S\+/
     let b:current_syntax = "org"
     hi link orgProperty   String
@@ -545,6 +546,7 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     hi      orgHeading3   ctermfg=green
     hi      orgMathInline ctermfg=blue
     hi link orgBold       Statement
+    hi link orgMonospace  String
     hi link orgTex        Preproc
 endfu
 aug vimrc_ft_org

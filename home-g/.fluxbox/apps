@@ -51,3 +51,6 @@
 [app] (name=kitty) (class=kitty)
   [Alpha]	{222}
 [end]
+[app] (name=draw.io) (class=draw.io) (role=browser-window)
+  [Deco]	{NORMAL}
+[end]
