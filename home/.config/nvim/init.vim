@@ -516,6 +516,7 @@ aug END
 
 " === Org mode ===
 fu! OrgLevel()
+    " TODO blank line between level 1 foldings
     if getline(v:lnum) =~ '^\* .*$'
         return ">1"
     elseif getline(v:lnum) =~ '^\*\* .*$'
@@ -529,15 +530,18 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     set ft=org cms=#\ %s
     setl fdm=expr fde=OrgLevel()
     sil! syn clear orgProperty orgComment orgHeading1 orgHeading2 orgHeading3 orgMathInline orgBold orgTex
-    syn region orgProperty   matchgroup=Special start=/^#+\S*:/ end=/$/ oneline
-    syn region orgComment    start=/^\s*#[^+]/ end=/$/  oneline
-    syn region orgHeading1   start=/^\* /      end=/$/  oneline
-    syn region orgHeading2   start=/^\*\{2} /  end=/$/  oneline
-    syn region orgHeading3   start=/^\*\{3} /  end=/$/  oneline
-    syn region orgMathInline start=/\$/        end=/\$/ oneline
-    syn region orgBold       start=/\*[^* ]/   end=/\*/ oneline
-    syn region orgMonospace  start=/\~[^ ]/    end=/\~/ oneline
+    syn region orgProperty   matchgroup=Special start=/^#+\S*/ end=/$/ oneline
+    syn region orgComment    start=/^\s*#[^+]/ end=/$/   oneline
+    syn region orgHeading1   start=/^\* /      end=/$/   oneline
+    syn region orgHeading2   start=/^\*\{2} /  end=/$/   oneline
+    syn region orgHeading3   start=/^\*\{3} /  end=/$/   oneline
+    syn region orgMathInline start=/\$/        end=/\$/  oneline
+    syn region orgBold       start=/\*[^* ]/   end=/\*/  oneline
+    syn region orgMonospace  start=/\~[^ ]/    end=/\~/  oneline
+    syn region orgMacro      start=/{{{/       end=/}}}/ oneline contains=orgMacroComma,orgMacroName
     syn match  orgTex        /\\\S\+/
+    syn match  orgMacroComma /\\\@<!,/         contained
+    syn match  orgMacroName  /\({{{\)\@<=\w\+/ contained
     let b:current_syntax = "org"
     hi link orgProperty   String
     hi link orgComment    Comment
@@ -548,6 +552,9 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     hi link orgBold       Statement
     hi link orgMonospace  String
     hi link orgTex        Preproc
+    hi link orgMacro      Special
+    hi      orgMacroComma ctermfg=green ctermbg=black cterm=reverse,bold
+    hi link orgMacroName  Identifier
 endfu
 aug vimrc_ft_org
     au!
