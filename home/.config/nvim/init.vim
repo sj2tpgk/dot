@@ -1,7 +1,6 @@
 " vim: fdm=marker
 " TODO comment take indenting into account
 " TODO update encoding (let format not precompiled)
-" TODO describe-face
 " TODO auto 16color
 
 lua if not vim.cmd then vim.cmd = vim.api.nvim_command end
@@ -90,6 +89,9 @@ nnore <leader>z :set fdm=marker<cr>zm
 
 "set nofoldenable
 
+set fillchars=fold:\  foldtext=substitute(getline(v:foldstart),'{{{','','g').'\ \ '.(v:foldend-v:foldstart).'\ '
+" }}} <- dummy
+
 " Use for lua folding
 fu! NonEmptyLine(lnum, dir) " find nonempty line (but not a:lnum) in given direction (1 or -1)
   let lnum = a:lnum + a:dir
@@ -173,6 +175,8 @@ nnore <silent> <home> :lua smartHome()<cr>
 inore <silent> <home> <c-o>:lua smartHome(true)<cr>
 nnore [ <c-o>
 nnore ] <c-i>
+nnore <silent> f :lua smartf(1)<cr>
+nnore <silent> F :lua smartf(-1)<cr>
 
 " edit
 nnore D dd
@@ -355,6 +359,7 @@ fu! MyHighlight()
 "  hi Identifier   ctermfg=cyan cterm=none
   hi Special      ctermfg=red
   hi Folded       ctermfg=magenta ctermbg=black cterm=bold
+"  hi Folded       ctermfg=magenta ctermbg=none cterm=bold
   hi Visual       ctermfg=black ctermbg=blue
 "  hi Statement    ctermfg=green cterm=bold
 "  hi Statement    ctermfg=green cterm=none
@@ -516,14 +521,26 @@ aug END
 
 " === Org mode ===
 fu! OrgLevel()
-    " TODO blank line between level 1 foldings
-    if getline(v:lnum) =~ '^\* .*$'
+    let l  = getline(v:lnum)
+    let lp = getline(v:lnum - 1)
+    let ln = getline(v:lnum + 1)
+    " if two empty lines before heading, one blank line between folds.
+    if ln =~ '^\* .*$' && l =~ '^\s*$' && lp =~ '^\s*$'
+        return "0"
+    elseif ln =~ '^\*\* .*$' && l =~ '^\s*$' && lp =~ '^\s*$'
+        return "1"
+    elseif ln =~ '^\*\*\* .*$' && l =~ '^\s*$' && lp =~ '^\s*$'
+        return "2"
+    endif
+    " foldings start from headings
+    if l =~ '^\* .*$'
         return ">1"
-    elseif getline(v:lnum) =~ '^\*\* .*$'
+    elseif l =~ '^\*\* .*$'
         return ">2"
-    elseif getline(v:lnum) =~ '^\*\*\* .*$'
+    elseif l =~ '^\*\*\* .*$'
         return ">3"
     endif
+    " otherwise use previous line
     return "="
 endfu
 fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
@@ -542,6 +559,7 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     syn match  orgTex        /\\\S\+/
     syn match  orgMacroComma /\\\@<!,/         contained
     syn match  orgMacroName  /\({{{\)\@<=\w\+/ contained
+    " }}} <- dummy
     let b:current_syntax = "org"
     hi link orgProperty   String
     hi link orgComment    Comment
@@ -561,6 +579,7 @@ aug vimrc_ft_org
     au BufNewFile,BufRead *.org call MyOrgSyntaxHighlight()
 aug END
 " }}}
+
 
 " Lua part
 
@@ -613,6 +632,22 @@ function smartSp(file) -- {{{
     local h = vim.fn.winheight(0)
     vim.cmd((w/h < 3) and "sp" or "vsp")
     if file then vim.cmd("e " .. file) end
+end -- }}}
+
+local smartf_last_time, smartf_last_char = 0, nil
+function smartf(direction) -- {{{
+    local function revfind(str, char, init)
+        local n = str:reverse():find(char, #str + 1 - init)
+        return n and (#str + 1 - n)
+    end
+    local time = os.time()
+    local char = (time - smartf_last_time <= 1) and smartf_last_char or vim.fn.nr2char(vim.fn.getchar())
+    local line = vim.fn.getline(".")
+    local col  = vim.fn.col(".")
+    local col2 = (direction == 1) and line:find(char, col+1) or revfind(line, char, col-1)
+    if col2 then vim.fn.setpos(".", { 0, vim.fn.line("."), col2 }) end
+    smartf_last_time = time
+    smartf_last_char = char
 end -- }}}
 
 function toggleCmt(visual) -- {{{
@@ -800,7 +835,7 @@ function mycomp_collect() -- Collect words {{{
     return res
 end -- }}}
 
-local mycomp_history, mycomp_history_max = {}, 50
+local mycomp_history, mycomp_history_max = {}, 300
 function mycomp_collect_history() -- Collect from completion history {{{
     return mycomp_history
 end -- }}}
