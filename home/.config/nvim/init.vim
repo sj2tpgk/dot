@@ -2,6 +2,7 @@
 " TODO comment take indenting into account
 " TODO update encoding (let format not precompiled)
 " TODO auto 16color
+" TODO completion case
 
 lua if not vim.cmd then vim.cmd = vim.api.nvim_command end
 
@@ -388,6 +389,7 @@ fu! MyHighlight()
   hi link htmlEndTag         htmlTag
   hi      htmlTagName        ctermfg=magenta
   hi link htmlSpecialTagName htmlTagName
+  hi link htmlTitle          Normal
 endfu
 call MyHighlight()
 aug vimrc_hi " :hi need to be in autocmd on first run??
@@ -1009,3 +1011,47 @@ function pp(input, doprint, maxdepth, ...) -- Pretty print lua {{{
 end -- }}}
 
 EOFLUA
+
+
+" Wiimote
+finish
+lua <<EOFLUA
+dirs = { "<left>", "<up>", "<right>", "<down>" }
+arr = {
+    -- 11LL
+--    { "<right><up>"   , "arx?" },
+--    { "<right><down>" , "nmf!" },
+--    { "<left><up>"    , "tcz." },
+--    { "<left><down>"  , "ihj," },
+--    { "<up><left>"    , "sdg'" },
+--    { "<up><right>"   , "ybpq" },
+--    { "<down><left>"  , "elk@" },
+--    { "<down><right>" , "ouvw" },
+    { "<down>", "2"   , "arx?" },
+    { "<down>", "1" , "nmf!" },
+    { "<up>", "2"    , "tcz." },
+    { "<up>", "1"  , "ihj," },
+    { "<right>", "1"    , "sdg'" },
+    { "<right>", "2"   , "ybpq" },
+    { "<left>", "1"  , "elk@" },
+    { "<left>", "2" , "ouvw" },
+    }
+function wii1(a, b, c)
+    vim.cmd("inore "  .. a .. b          .." ".. c:sub(1, 1))
+    vim.cmd("inore "  .. a .. b..b       .." ".. c:sub(2, 2))
+    vim.cmd("inore "  .. a .. b..b..b    .." ".. c:sub(3, 3))
+    vim.cmd("inore "  .. a .. b..b..b..b .." ".. c:sub(4, 4))
+end
+for k, v in pairs(arr) do
+    wii1(v[1], v[2], v[3])
+end
+EOFLUA
+"imap  <down><down>   <tab>
+"inore <right><right> <space>
+"inore <up><up>       <esc>
+"inore <left><left>   <backspace>
+inore <down><down>   <space>
+inore <right><right> <esc>
+inore <up><up>       <backspace>
+imap  <left><left>   <tab>
+
