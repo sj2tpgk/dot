@@ -233,7 +233,7 @@ URxvt.scrollBar: false
 URxvt.geometry: 84x29
 
 ! Spacing
-URxvt.letterSpace: -1
+URxvt.letterSpace: 0
 URxvt.lineSpace: -5
 
 ! Disable popup on the left-bottom corner on Ctrl+Shift

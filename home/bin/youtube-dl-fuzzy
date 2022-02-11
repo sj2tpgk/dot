@@ -11,7 +11,7 @@ echo ">> URL: $url"
 tmpfile=$(mktemp /tmp/youtube-dl-fuzzy.XXXXXX)
 
 echo ">> Getting format list ..."
-youtube-dl -F "$url" > "$tmpfile"
+yt-dlp -F "$url" > "$tmpfile"
 
 # read index of format code; 'expand' is for indenting lines containing \t.
 cat "$tmpfile" | expand | perl -ne 'if($a){printf "%-6d $_", $a;$a=$a+1}elsif(/^format/){$a=1;print "index  $_"}else{print}'
@@ -30,12 +30,12 @@ echo ">> Format code: $fmt_code"
 if [ "$url" == *nicovideo* ]; then
     echo ">> NicoNico"
     wait=20
-    vidfile=$(youtube-dl --get-filename "$url")
-    while ! youtube-dl -c --socket-timeout 5 -f "$fmt_code" "$url"; do
+    vidfile=$(yt-dlp --get-filename "$url")
+    while ! yt-dlp -c --socket-timeout 5 -f "$fmt_code" "$url"; do
         echo ">> Disconnected. Retrying in $wait seconds... ";
         sleep $wait;
     done
 else
-    youtube-dl -f "$fmt_code" "$url"
+    yt-dlp -f "$fmt_code" "$url"
 fi
 

@@ -4,7 +4,11 @@
 " TODO auto 16color
 " TODO completion case
 
+" Charcode at cursor
+" :echo char2nr(matchstr(getline('.'), '\%'.col('.').'c.'))
+
 lua if not vim.cmd then vim.cmd = vim.api.nvim_command end
+mapclear | imapclear
 
 " Easy lua debug. Use L! to print nested table. Example ":L 123,456"
 command! -nargs=* -bang -complete=lua L lua pp(<q-args>, true, ("<bang>" == "") and 1 or 99, <args>)
@@ -187,13 +191,14 @@ nnore si s
 nnore yb :call SaveExcursion("ggVGy")<cr>
 nnore yf :let @+=expand("%:t")<cr>
 nnore yp :let @+=expand("%:p")<cr>
+nnore yd :let @+=expand("%:h")<cr>
 nnore db ggVGd
 nnore s= :call SaveExcursion("ggVG=")<cr>
 nnore <a-j> J
 nnore <silent> ; :lua toggleCmt(false)<cr>
 vnore <silent> ; :lua toggleCmt(true)<cr>
 
-" window, buffer
+" window, buffer, tab
 nnore Q :q<cr>
 nnore - <C-w>w
 nnore so <c-w>o
@@ -208,6 +213,7 @@ nnore s<space> :b#<cr>
 nnore <expr> sm FzfExists() ? ":FzfBuffers\<cr>" : ":ls\<cr>:b\<space>"
 nnore <expr> sf FzfExists() ? ":FzfFiles\<cr>"   : ":e\<space>"
 nnore <expr> sF FzfExists() ? ":FzfFiles!\<cr>"  : ":e\<space>"
+nnore + :tabnext<cr>
 
 " misc
 nnore s/ :noh<cr>:let @/ = ""<cr>
@@ -389,7 +395,8 @@ fu! MyHighlight()
   hi link htmlEndTag         htmlTag
   hi      htmlTagName        ctermfg=magenta
   hi link htmlSpecialTagName htmlTagName
-  hi link htmlTitle          Normal
+  hi      Title              ctermfg=none cterm=bold
+  hi link htmlTitle          Title
 endfu
 call MyHighlight()
 aug vimrc_hi " :hi need to be in autocmd on first run??
@@ -399,12 +406,12 @@ aug END
 
 
 " --- Cursor ---
-set cursorline
-aug vimrc_cursor
-  au!
-  au! InsertEnter * set nocursorline!
-  au! InsertLeave * set cursorline!
-aug END
+"set cursorline
+"aug vimrc_cursor
+"  au!
+"  au! InsertEnter * set nocursorline!
+"  au! InsertLeave * set cursorline!
+"aug END
 
 
 " --- Misc ---
@@ -638,15 +645,17 @@ end -- }}}
 
 local smartf_last_time, smartf_last_char = 0, nil
 function smartf(direction) -- {{{
+    local function regEscape(s) return (s:gsub("([^%w])", "%%%1")) end
     local function revfind(str, char, init)
         local n = str:reverse():find(char, #str + 1 - init)
         return n and (#str + 1 - n)
     end
     local time = os.time()
     local char = (time - smartf_last_time <= 1) and smartf_last_char or vim.fn.nr2char(vim.fn.getchar())
+    local reg  = regEscape(char)
     local line = vim.fn.getline(".")
     local col  = vim.fn.col(".")
-    local col2 = (direction == 1) and line:find(char, col+1) or revfind(line, char, col-1)
+    local col2 = (direction == 1) and line:find(reg, col+1) or revfind(line, reg, col-1)
     if col2 then vim.fn.setpos(".", { 0, vim.fn.line("."), col2 }) end
     smartf_last_time = time
     smartf_last_char = char
@@ -1016,42 +1025,42 @@ EOFLUA
 " Wiimote
 finish
 lua <<EOFLUA
-dirs = { "<left>", "<up>", "<right>", "<down>" }
-arr = {
-    -- 11LL
---    { "<right><up>"   , "arx?" },
---    { "<right><down>" , "nmf!" },
---    { "<left><up>"    , "tcz." },
---    { "<left><down>"  , "ihj," },
---    { "<up><left>"    , "sdg'" },
---    { "<up><right>"   , "ybpq" },
---    { "<down><left>"  , "elk@" },
---    { "<down><right>" , "ouvw" },
-    { "<down>", "2"   , "arx?" },
-    { "<down>", "1" , "nmf!" },
-    { "<up>", "2"    , "tcz." },
-    { "<up>", "1"  , "ihj," },
-    { "<right>", "1"    , "sdg'" },
-    { "<right>", "2"   , "ybpq" },
-    { "<left>", "1"  , "elk@" },
-    { "<left>", "2" , "ouvw" },
-    }
-function wii1(a, b, c)
-    vim.cmd("inore "  .. a .. b          .." ".. c:sub(1, 1))
-    vim.cmd("inore "  .. a .. b..b       .." ".. c:sub(2, 2))
-    vim.cmd("inore "  .. a .. b..b..b    .." ".. c:sub(3, 3))
-    vim.cmd("inore "  .. a .. b..b..b..b .." ".. c:sub(4, 4))
+--dirs = { "<left>", "<up>", "<right>", "<down>" }
+-- 1 2 11 22
+-- l r u d ll rr uu dd
+-- 1 2 11 22
+strs = { "arx?", "nmf!", "sdg'", "ybpq", "tcz.", "ihj,", "elk@", "ouvw" }
+--b1 = { "d", "r", "u", "l", "dd", "rr", "uu", "ll" }
+dirs = { "d", "r", "u", "l" }
+arr = {}
+for i, s in ipairs(strs) do
+    local one = (i%2 == 1) and "1" or "11"
+    local two = (i%2 == 1) and "2" or "22"
+    local d = dirs[math.floor((i-1) / 2) + 1]
+    arr[#arr+1] = { one ..d          , s:sub(1, 1) }
+    arr[#arr+1] = { one ..d..d       , s:sub(2, 2) }
+    arr[#arr+1] = { one ..d..d..d    , s:sub(3, 3) }
+    arr[#arr+1] = { one ..d..d..d..d , s:sub(4, 4) }
+    arr[#arr+1] = { two ..d          , s:sub(1, 1):upper() }
+    arr[#arr+1] = { two ..d..d       , s:sub(2, 2):upper() }
+    arr[#arr+1] = { two ..d..d..d    , s:sub(3, 3):upper() }
+    arr[#arr+1] = { two ..d..d..d..d , s:sub(4, 4):upper() }
 end
-for k, v in pairs(arr) do
-    wii1(v[1], v[2], v[3])
+
+function wiidef(from, to)
+--    local from2 = from:gsub("r", "<right>"):gsub("u", "<up>"):gsub("l", "<left>"):gsub("d", "<down>")
+    local from2 = from:gsub("d", "<down>"):gsub("r", "<right>"):gsub("u", "<up>"):gsub("l", "<left>")
+    vim.cmd("inore " .. from2 .. " " .. to)
 end
+
+for _, v in ipairs(arr) do
+    wiidef(v[1], v[2])
+end
+
 EOFLUA
-"imap  <down><down>   <tab>
-"inore <right><right> <space>
-"inore <up><up>       <esc>
-"inore <left><left>   <backspace>
-inore <down><down>   <space>
-inore <right><right> <esc>
-inore <up><up>       <backspace>
-imap  <left><left>   <tab>
+
+inore b<down>   <space>
+inore b<right> <esc>
+inore b<up>       <backspace>
+imap  b<left>   <tab>
 

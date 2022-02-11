@@ -22,11 +22,13 @@
 #   if server run on low colors and client in true-color, crash.
 
 if [ -n "$TMUX" ]; then
+  emacs -nw --color=yes "$@"
   # TERM=xterm-direct emacs -nw "$@"
 
   # Non-truecolor (when using rxvt-unicode packge)
-  TERM=screen-256color emacs -nw "$@"
+  # TERM=screen-256color emacs -nw "$@"
 else
-  TERM=st-direct emacs -nw "$@"
+  emacs -nw --color=yes "$@"
+  # TERM=st-direct emacs -nw "$@"
 fi
 
