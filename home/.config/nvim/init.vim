@@ -919,6 +919,13 @@ function mycomp_collect_omni() -- Collect from omnifunc {{{
 end -- }}}
 
 local mycomp_collect_keywords_cache = {}
+local mycomp_collect_keywords_extra = {
+    javascript = {
+        "setInterval", "getContext",
+        -- Array
+        "map", "forEach", "filter", "reduce", "reduceRight", "every", "some", "indexOf", "lastIndexOf", "slice",
+    },
+}
 function mycomp_collect_keywords() -- Collect from (1) keyword file and (2) syntaxcomplete TODO: split 1 and 2 {{{
     local ft = vim.bo.ft
     if mycomp_collect_keywords_cache[ft] then
