@@ -30,52 +30,56 @@ let g:loaded_python3_provider=1
 " TODO: nv0 = no plugin, nv = yes plugin etc.
 " TODO: echodoc
 
-" " Install vim-plug
-" let autoload_plug_path = stdpath('data') . '/site/autoload/plug.vim'
-" if !filereadable(autoload_plug_path)
-"   silent execute '!curl -fLo ' . autoload_plug_path . '  --create-dirs 
-"       \ "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"'
-"   autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
-" endif
-" unlet autoload_plug_path
-" 
-" " Plugin declaration
-" call plug#begin(stdpath('data') . '/plugged')
-" Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
-" call plug#end()
-" 
-" " Install missing plugins
-" autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
-"   \| PlugInstall --sync | source $MYVIMRC
-" \| endif
-" 
-" " Treesitter
-" lua << EOFLUA
-" require'nvim-treesitter.configs'.setup {
-"   highlight = {
-"     enable = true,
-"     custom_captures = {
-"       -- Highlight the @foo.bar capture group with the "Identifier" highlight group.
-"       ["foo.bar"] = "Identifier",
-"     },
-"     -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
-"     -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
-"     -- Using this option may slow down your editor, and you may see some duplicate highlights.
-"     -- Instead of true it can also be a list of languages
-"     additional_vim_regex_highlighting = false,
-"   },
-"   incremental_selection = {
-"     enable = true,
-"     keymaps = {
-"       init_selection = "gnn",
-"       node_incremental = "grn",
-"       scope_incremental = "grc",
-"       node_decremental = "grm",
-"     },
-"   },
-" --  indent = { enable = true },
-" }
-" EOFLUA
+if 0
+
+    " Install vim-plug
+    let autoload_plug_path = stdpath('data') . '/site/autoload/plug.vim'
+    if !filereadable(autoload_plug_path)
+        silent execute '!curl -fLo ' . autoload_plug_path . '  --create-dirs 
+                    \ "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"'
+        autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+    endif
+    unlet autoload_plug_path
+
+    " Plugin declaration
+    call plug#begin(stdpath('data') . '/plugged')
+    Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
+    call plug#end()
+
+    " Install missing plugins
+    autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+                \| PlugInstall --sync | source $MYVIMRC
+                \| endif
+
+    " Treesitter
+    lua << EOFLUA
+    require'nvim-treesitter.configs'.setup {
+        highlight = {
+        enable = true,
+        custom_captures = {
+            -- Highlight the @foo.bar capture group with the "Identifier" highlight group.
+            ["foo.bar"] = "Identifier",
+            },
+        -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
+        -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
+        -- Using this option may slow down your editor, and you may see some duplicate highlights.
+        -- Instead of true it can also be a list of languages
+        additional_vim_regex_highlighting = false,
+        },
+    incremental_selection = {
+    enable = true,
+    keymaps = {
+        init_selection = "gnn",
+        node_incremental = "grn",
+        scope_incremental = "grc",
+        node_decremental = "grm",
+        },
+    },
+-- indent = { enable = true },
+}
+EOFLUA
+
+endif
 
 " }}}
 
@@ -706,7 +710,8 @@ function smartf(direction) -- {{{
 end -- }}}
 
 function toggleCmt(visual) -- {{{
-    -- TODO multiple lines with commented & not commented mixed
+    -- TODO todo indent "# " at same column when multiline indenting
+    -- TODO dont put "# " etc on empty line when commenting
     local function hasSyntax(synName)
         for _, v in pairs(vim.fn.synstack(vim.fn.line("."), vim.fn.col("."))) do
             if vim.fn.synIDattr(v, "name") == synName then
@@ -731,13 +736,32 @@ function toggleCmt(visual) -- {{{
     -- Analyze commentstring
     local cms    = getCMSHere()
     local x,y,z  = cms:match("(.*%S)(%s*)%%s(.*)")
+
+    local p1     = "^(%s*)" .. regEscape(x) .. "(.*)" .. regEscape(z)
+    local function isCommented(line) return line:match(p1) and true or false end
+    local function comment(line, indTo)
+        local ind,text = line:match("^(%s*)(.*)") -- note that %s* is greedy
+        -- local sp1 = 
+        if indTo then ind = string.rep(" ", indTo) end
+        local y1 = (y == "") and " " or y
+        local new = ind .. x .. y1 .. text .. z
+        return new
+    end
+    local function unComment(line)
+        local ind,cm1,sp,text,cm2 = line:match("^(%s*)(" .. regEscape(x) .. ")(%s*)(.*)(" .. regEscape(z) .. ")")
+        local new = ind .. text
+        return new
+    end
+
+    local l = vim.fn.getline(vim.fn.line("."))
+    pp(1, true, 99, { isCommented(l), "[" .. (isCommented(l) and unComment(l) or comment(l)) .. "]" })
+
+    -- Suppose cms == "# %s"
     local p      = "^(%s*)" .. regEscape(x) .. "(.*)" .. regEscape(z)
     local p1     = "^(%s*)" .. regEscape(x) .. y:gsub(".", " ?") .. "(.*)" .. regEscape(z)
 
     -- temporary fix for org-mode: "#" must be followed by a space
-    if vim.bo.ft == "org" then p = "^(%s*)# (.*)" end
-
-    -- Suppose cms == "# %s"
+    -- if vim.bo.ft == "org" then p = "^(%s*)# (.*)" end
     -- p  : must match line if middle space is absent
     -- p1 : middle space must be at most 1 (%s should eat rest spaces)
 
@@ -745,20 +769,22 @@ function toggleCmt(visual) -- {{{
     local lbeg   = visual and vim.fn.line("'<") or vim.fn.line(".")
     local lend   = visual and vim.fn.line("'>") or (lbeg + math.max(0, vim.v.count - 1))
 
+    -- Will comment if at least one line is uncommented
+    local willComment = false
+    local leastIndent = 10000
     for i = lbeg, lend do
-
         local line = vim.fn.getline(i)
-        if line:match(p) then
-            -- print("commented")
-            local new = line:gsub(p1, "%1%2")
-            vim.fn.setline(i, new)
-        else
-            -- print("not commented")
-            local new = cms:gsub("%%s", regEscape(line))
-            vim.fn.setline(i, new)
-        end
-
+        local ind = line:match("^(%s*)"):len()
+        leastIndent = math.min(ind, leastIndent)
+        if not isCommented(line) then willComment = true break end
     end
+
+    -- Do comment or unComment
+    for i = lbeg, lend do
+        local line = vim.fn.getline(i)
+        vim.fn.setline(i, willComment and comment(line, leastIndent) or unComment(line))
+    end
+
 end -- }}}
 
 function smartHome(insert) -- {{{

@@ -53,6 +53,7 @@
 [exec] (京王5000系 特急 京王八王子-新宿 ItWOn7hAymI.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//京王5000系 特急 京王八王子-新宿 ItWOn7hAymI.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (小田急1000形 準急 綾瀬行き HOcGjWz-FzM.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//小田急1000形 準急 綾瀬行き HOcGjWz-FzM.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (小田急4000形 我孫子-本厚木 _VfyHI7B9qI.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//小田急4000形 我孫子-本厚木 _VfyHI7B9qI.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (東京メトロ10000系 和光市-新木場 agfIX3KljLc.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ10000系 和光市-新木場 agfIX3KljLc.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (東京メトロ16000系 16125 取手-伊勢原 58G5tLUF5nk.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ16000系 16125 取手-伊勢原 58G5tLUF5nk.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (東京メトロ16000系.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ16000系.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (東京メトロ9000系 東芝 急行 日吉-溜池山王 1-BfgPulsAU.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ9000系 東芝 急行 日吉-溜池山王 1-BfgPulsAU.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
