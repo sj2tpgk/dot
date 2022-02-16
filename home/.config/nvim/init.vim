@@ -16,7 +16,7 @@ command! -nargs=* -bang -complete=lua L lua pp(<q-args>, true, ("<bang>" == "") 
 " Fast startup {{{
 let g:python_host_skip_check=1
 let g:loaded_python3_provider=1
-set noloadplugins
+"set noloadplugins
 " set shada="none"
 " filetype off
 " syntax off
@@ -27,15 +27,56 @@ set noloadplugins
 " }}}
 
 " Plugin {{{
-" let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
-" if empty(glob(data_dir . '/autoload/plug.vim'))
-"   silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+" TODO: nv0 = no plugin, nv = yes plugin etc.
+" TODO: echodoc
+
+" " Install vim-plug
+" let autoload_plug_path = stdpath('data') . '/site/autoload/plug.vim'
+" if !filereadable(autoload_plug_path)
+"   silent execute '!curl -fLo ' . autoload_plug_path . '  --create-dirs 
+"       \ "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"'
 "   autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 " endif
-"
-" call plug#begin('~/.vim/plugged')
-" Plug 'neovim/nvim-lspconfig'
+" unlet autoload_plug_path
+" 
+" " Plugin declaration
+" call plug#begin(stdpath('data') . '/plugged')
+" Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
 " call plug#end()
+" 
+" " Install missing plugins
+" autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+"   \| PlugInstall --sync | source $MYVIMRC
+" \| endif
+" 
+" " Treesitter
+" lua << EOFLUA
+" require'nvim-treesitter.configs'.setup {
+"   highlight = {
+"     enable = true,
+"     custom_captures = {
+"       -- Highlight the @foo.bar capture group with the "Identifier" highlight group.
+"       ["foo.bar"] = "Identifier",
+"     },
+"     -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
+"     -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
+"     -- Using this option may slow down your editor, and you may see some duplicate highlights.
+"     -- Instead of true it can also be a list of languages
+"     additional_vim_regex_highlighting = false,
+"   },
+"   incremental_selection = {
+"     enable = true,
+"     keymaps = {
+"       init_selection = "gnn",
+"       node_incremental = "grn",
+"       scope_incremental = "grc",
+"       node_decremental = "grm",
+"     },
+"   },
+" --  indent = { enable = true },
+" }
+" EOFLUA
+
 " }}}
 
 " Misc (options) {{{
@@ -289,7 +330,7 @@ colorscheme default
 " --- Custom Syntax ---
 fu! MySyntax()
     let ft = &ft
-    if ft == "javascript" || ft == "html"
+    if ft == "ajavascript" || ft == "html"
         for i in ["jsVarDef", "jsVarDefName", "jsFuncDefName", "jsFuncDefArgs", "jsVarDefWrap"] | exe "sil! syn clear " . i | endfor
 
         " Match variable definition statement e.g. "const x = 1, y = 2;"
@@ -298,6 +339,8 @@ fu! MySyntax()
         sil! syn clear javaScriptReserved
         syn keyword javaScriptIdentifier this arguments
         syn keyword javaScriptReserved long transient float int async synchronized protected static interface private final implements import goto export volatile class double short boolean char throws native enum public byte debugger package abstract extends super
+        syn keyword javascriptStatement yield yield*
+
         " now define region
         syn region jsVarDef matchgroup=jsVarDefType start=/const/ start=/let/ start=/var/ matchgroup=NONE end=/;/ keepend end=/[^,;]$/ transparent containedin=javaScript contains=javaScript[a-zA-Z].*,jsVarDefName,jsVarDefWrap
         " symbols inside function calls, arrays and objects are not varname (except destructuring assignment)
@@ -314,8 +357,9 @@ fu! MySyntax()
 
         " Match function definition "function f(x, y=2)" (jsFuncDefName matches "f", jsFuncDefArgs matches "(x, y=2)")
         " TODO arrow function, "var f = function()..."
+        syn iskeyword @,48-57,_,192-255,*
         sil! syn clear javaScriptFunction
-        syn keyword javaScriptFunction function skipwhite nextgroup=jsFuncDefName
+        syn keyword javaScriptFunction function function* skipwhite nextgroup=jsFuncDefName
         syn match jsFuncDefName /\<\w\+\>/ skipwhite contained nextgroup=jsFuncDefArgs
         syn region jsFuncDefArgs start="(" end=")" keepend contained contains=javaScript[a-zA-Z].*,jsVarDefName
 
