@@ -324,7 +324,8 @@ fu! RecenterTopBottom()
     if abs(g:RecenterTopBottom_time - localtime()) >= 2
         " syn sync fromstart " slow for some reason?? (called even this if clause is skipped??)
         exe "syn sync fromstart"
-        norm! <c-l>zz
+        exe "norm! \<c-l>"
+        norm! zz
     elseif abs(l - (h/2)) <= thresh
         norm! zt
     elseif abs(l - &scrolloff) <= thresh
