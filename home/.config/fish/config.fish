@@ -51,6 +51,7 @@ bind \eh "commandline -r (commandline -b | sed 's/\s*\$/ --help/')"
 # bind \ed "commandline -r (find . -type d -iname '*(commandline -b | sed s/\///g)*' | fzy)"
 bind -k ppage prevd-or-backward-word
 bind -k npage nextd-or-forward-word
+bind -k btab  nextd-or-forward-word # shift+tab
 
 source ~/.config/fish/smart_jump.fish
 # bind \cf forward-jump

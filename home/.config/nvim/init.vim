@@ -1,8 +1,6 @@
 " vim: fdm=marker
-" TODO comment take indenting into account
 " TODO update encoding (let format not precompiled)
 " TODO auto 16color
-" TODO completion case
 
 " Charcode at cursor
 " :echo char2nr(matchstr(getline('.'), '\%'.col('.').'c.'))
@@ -28,8 +26,6 @@ let g:loaded_python3_provider=1
 
 " Plugin {{{
 " TODO: nv0 = no plugin, nv = yes plugin etc.
-" TODO: echodoc
-
 if 0
 
     " Install vim-plug
@@ -43,7 +39,23 @@ if 0
 
     " Plugin declaration
     call plug#begin(stdpath('data') . '/plugged')
-    Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
+    let g:rainbow_active = 1
+    let g:rainbow_ctermfgs = [
+                \ 'red',
+                \ 'yellow',
+                \ 'magenta',
+                \ 'white',
+                \ 'cyan',
+                \ ]
+    Plug 'frazrepo/vim-rainbow'
+    " set cmdheight=2
+    " let g:echodoc_enable_at_startup = 1
+    " let g:echodoc#type = 'floating'
+    " let g:echodoc#events = ['CompleteDone', 'TextChangedP', 'CursorMoved', 'CursorMovedI']
+    " Plug 'Shougo/echodoc'
+    " Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
+    " Plug 'nvim-treesitter/playground'
+    " Plug 'jelera/vim-javascript-syntax'
     call plug#end()
 
     " Install missing plugins
@@ -52,32 +64,59 @@ if 0
                 \| endif
 
     " Treesitter
-    lua << EOFLUA
-    require'nvim-treesitter.configs'.setup {
-        highlight = {
-        enable = true,
-        custom_captures = {
-            -- Highlight the @foo.bar capture group with the "Identifier" highlight group.
-            ["foo.bar"] = "Identifier",
+    if has_key(g:plugs, "nvim-treesitter")
+        lua <<EOFLUA
+        require'nvim-treesitter.configs'.setup {
+            highlight = {
+                enable = true,
+                custom_captures = {
+                    -- Highlight the @foo.bar capture group with the "Identifier" highlight group.
+                    ["foo.bar"]  = "Identifier",
+                    ["keyword"]  = "Identifier",
+                    ["function"] = "myFuncName",
+                    ["variable"] = "myVarName",
+                },
+                -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
+                -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
+                -- Using this option may slow down your editor, and you may see some duplicate highlights.
+                -- Instead of true it can also be a list of languages
+                additional_vim_regex_highlighting = false,
             },
-        -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
-        -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
-        -- Using this option may slow down your editor, and you may see some duplicate highlights.
-        -- Instead of true it can also be a list of languages
-        additional_vim_regex_highlighting = false,
-        },
-    incremental_selection = {
-    enable = true,
-    keymaps = {
-        init_selection = "gnn",
-        node_incremental = "grn",
-        scope_incremental = "grc",
-        node_decremental = "grm",
-        },
-    },
--- indent = { enable = true },
-}
+            incremental_selection = {
+                enable = true,
+                keymaps = {
+                    init_selection = "gnn",
+                    node_incremental = "grn",
+                    scope_incremental = "grc",
+                    node_decremental = "grm",
+                },
+            },
+            -- indent = { enable = true },
+        }
 EOFLUA
+    endif
+
+    " Treesitter playground
+    if has_key(g:plugs, "playground")
+        fu! TSDescribeFace()
+            " let matches = [['@variable', 'javascriptTSVariable', 'TSVariable'], ['@function', 'javascriptTSFunction', 'TSFunction']]
+            let matches = luaeval("(function () local ms = {} for _, x in ipairs(require'nvim-treesitter-playground.hl-info'.get_treesitter_hl()) do local a2 = {} for y in x:gmatch('@?%a+') do table.insert(a2, y) end table.insert(ms, a2) end return ms end)()")
+            if len(matches) > 0
+                let first1 = 1
+                for lis in matches
+                    if first1 == 1 | let first1 = 0 | else | echo "" | endif
+                    let first = 1
+                    for name in lis
+                        if first == 1 | let first = 0 | else | echon " > " | endif
+                        let nameTrans = synIDattr(synIDtrans(hlID(name)), "name")
+                        exe "echohl " . name | echon name . ((name != nameTrans && name == lis[-1]) ? "(" . nameTrans . ")" : "") | echohl None
+                    endfor
+                endfor
+                return 1
+            endif
+            return 0
+        endfu
+    endif
 
 endif
 
@@ -266,11 +305,47 @@ nnore :<cr> :<up><cr>
 tnore <esc> <c-\><c-n>
 "nnore <c-h>F :call DescribeFace()<cr>
 nnore <c-h> :call DescribeFace()<cr>
+nnore <c-k> :lua browseDoc(false)<cr>
+vnore <c-k> :lua browseDoc(true)<cr>
+command! -nargs=* BD lua browseDoc(false, "<args>")
+nnore <c-l> :call RecenterTopBottom()<cr>
 
 fu! SaveExcursion(normcmd)
-  let l:w = winsaveview()
-  exe "norm! " . a:normcmd
-  call winrestview(l:w)
+    let l:w = winsaveview()
+    exe "norm! " . a:normcmd
+    call winrestview(l:w)
+endfu
+
+let g:RecenterTopBottom_time = 0 " last invoked time
+fu! RecenterTopBottom()
+    let h = winheight(".")
+    let l = winline()
+    let thresh = 2
+    if abs(g:RecenterTopBottom_time - localtime()) >= 2
+        " syn sync fromstart " slow for some reason?? (called even this if clause is skipped??)
+        exe "syn sync fromstart"
+        norm! <c-l>zz
+    elseif abs(l - (h/2)) <= thresh
+        norm! zt
+    elseif abs(l - &scrolloff) <= thresh
+        norm! zb
+    else
+        norm! zz
+    endif
+    let g:RecenterTopBottom_time = localtime()
+endfu
+
+fu! GetVisualSelection()
+    " Why is this not a built-in Vim script function?!
+    let [line_start, column_start] = getpos("'<")[1:2]
+    let [line_end, column_end] = getpos("'>")[1:2]
+    let lines = getline(line_start, line_end)
+    if len(lines) == 0
+        return ''
+    endif
+    let lines[-1] = lines[-1][: column_end - (&selection == 'inclusive' ? 1 : 2)]
+    let lines[0] = lines[0][column_start - 1:]
+    return join(lines, "\n")
 endfu
 
 " }}}
@@ -334,7 +409,7 @@ colorscheme default
 " --- Custom Syntax ---
 fu! MySyntax()
     let ft = &ft
-    if ft == "ajavascript" || ft == "html"
+    if ft == "javascript" || ft == "html"
         for i in ["jsVarDef", "jsVarDefName", "jsFuncDefName", "jsFuncDefArgs", "jsVarDefWrap"] | exe "sil! syn clear " . i | endfor
 
         " Match variable definition statement e.g. "const x = 1, y = 2;"
@@ -466,6 +541,8 @@ aug END
 set list listchars=trail:.
 
 fu! DescribeFace()
+  " Try treesitter highlighting
+  if exists("*TSDescribeFace") && TSDescribeFace() | return | endif
   let first = 1
   for id in synstack(line("."), col("."))
       if first == 1 | let first = 0 | else | echon " > " | endif
@@ -710,7 +787,6 @@ function smartf(direction) -- {{{
 end -- }}}
 
 function toggleCmt(visual) -- {{{
-    -- TODO todo indent "# " at same column when multiline indenting
     -- TODO dont put "# " etc on empty line when commenting
     local function hasSyntax(synName)
         for _, v in pairs(vim.fn.synstack(vim.fn.line("."), vim.fn.col("."))) do
@@ -737,39 +813,37 @@ function toggleCmt(visual) -- {{{
     local cms    = getCMSHere()
     local x,y,z  = cms:match("(.*%S)(%s*)%%s(.*)")
 
+    -- Helper functions
     local p1     = "^(%s*)" .. regEscape(x) .. "(.*)" .. regEscape(z)
     local function isCommented(line) return line:match(p1) and true or false end
     local function comment(line, indTo)
-        local ind,text = line:match("^(%s*)(.*)") -- note that %s* is greedy
-        -- local sp1 = 
-        if indTo then ind = string.rep(" ", indTo) end
-        local y1 = (y == "") and " " or y
-        local new = ind .. x .. y1 .. text .. z
-        return new
+        -- Optionally indent to indTo'th column
+        local indCur,text = line:match("^(%s*)(.*)") -- note that %s* is greedy
+        indTo = indTo or indCur:len()
+        local ind = string.rep(" ", indTo)
+        local sp = string.rep(" ", indCur:len() - indTo) -- nonempty if current indent is larger than indTo; so need extra space after "#", "//" etc.
+        local y1 = (y == "") and " " or y -- at least one space after "#", "//" etc.
+        -- If line is "      echo", shiftwidth=2 and indTo=2 then ...
+        -- ind="  ", x="#", y1=" ", sp="    ", text="echo", z=""
+        return ind .. x .. y1 .. sp .. text .. z
     end
     local function unComment(line)
-        local ind,cm1,sp,text,cm2 = line:match("^(%s*)(" .. regEscape(x) .. ")(%s*)(.*)(" .. regEscape(z) .. ")")
-        local new = ind .. text
-        return new
+        -- If line is "  #     echo" and shiftwidth=2 then ...
+        -- ind="  ", xmatch="#", sp1=" ", sp2="    ", text="echo", zmatch=""
+        -- We need to strip xmatch, sp1, zmatch
+        local ind,xmatch,sp1,sp2,text,zmatch = line:match("^(%s*)(" .. regEscape(x) .. ")(%s?)(%s*)(.*)(" .. regEscape(z) .. ")")
+        return ind .. sp2 .. text
     end
 
-    local l = vim.fn.getline(vim.fn.line("."))
-    pp(1, true, 99, { isCommented(l), "[" .. (isCommented(l) and unComment(l) or comment(l)) .. "]" })
-
-    -- Suppose cms == "# %s"
-    local p      = "^(%s*)" .. regEscape(x) .. "(.*)" .. regEscape(z)
-    local p1     = "^(%s*)" .. regEscape(x) .. y:gsub(".", " ?") .. "(.*)" .. regEscape(z)
-
-    -- temporary fix for org-mode: "#" must be followed by a space
-    -- if vim.bo.ft == "org" then p = "^(%s*)# (.*)" end
-    -- p  : must match line if middle space is absent
-    -- p1 : middle space must be at most 1 (%s should eat rest spaces)
+    -- Debug
+    -- local l = vim.fn.getline(vim.fn.line("."))
+    -- pp1({ isCommented(l), "[" .. (isCommented(l) and unComment(l) or comment(l)) .. "]" })
 
     -- Get range
     local lbeg   = visual and vim.fn.line("'<") or vim.fn.line(".")
     local lend   = visual and vim.fn.line("'>") or (lbeg + math.max(0, vim.v.count - 1))
 
-    -- Will comment if at least one line is uncommented
+    -- Compute willComment (if at least one line in range is currently uncommented), and leastIndent in range
     local willComment = false
     local leastIndent = 10000
     for i = lbeg, lend do
@@ -791,6 +865,17 @@ function smartHome(insert) -- {{{
     local c = vim.fn.col(".") - (insert and 1 or 0)
     vim.cmd("norm! ^")
     if c == vim.fn.col(".") then vim.cmd("norm! 0") end
+end -- }}}
+
+function browseDoc(visual, text) -- {{{
+    text = virual and vim.fn.GetVisualSelection() or (text or vim.fn.expand("<cword>"))
+    local ft    = vim.bo.ft
+    local extra = (ft == "javascript" or ft == "html") and " mdn" or ""
+    local query = text .. " " .. ft .. extra
+    -- TODO: w3m?
+    local cmd   = "sil! !firefox 'https://lite.duckduckgo.com/lite/?q=" .. query .. "'"
+    -- pp1(cmd)
+    vim.cmd(cmd)
 end -- }}}
 
 -- My completefunc {{{
@@ -857,7 +942,9 @@ function mycomp_compword(comp) -- (1) { word=w } => w, (2) 'str' => 'str' {{{
 end -- }}}
 
 function mycomp_filter(base, list) -- {{{
---    vim.cmd("sleep " .. math.min(1000, math.floor(1 + #list)) .. "m")
+    -- TODO: Currently converting BASE and each item in LIST to lower case. Better solutions?
+    base = base:lower()
+    -- vim.cmd("sleep " .. math.min(1000, math.floor(1 + #list)) .. "m")
     -- e.g. max_common_length("abcd", "bcx") = 2
     -- TODO: ("abcxyz", "abxy") should have higher score than ("abcxyz", "ab")
     local maxscore = 5 + base:len()
@@ -884,8 +971,8 @@ function mycomp_filter(base, list) -- {{{
     -- Calc score for each fuzzy match
     for _, comp in ipairs(list) do
         local w = mycomp_compword(comp)
-        if w:match(fuzreg) then
-            table.insert(t[score(w, base)], comp)
+        if w:lower():match(fuzreg) then
+            table.insert(t[score(w:lower(), base)], comp)
         end
     end
     -- Result
@@ -1094,6 +1181,9 @@ function pp(input, doprint, maxdepth, ...) -- Pretty print lua {{{
         vim.fn.appendbufline(b, vim.fn.getbufinfo(b)[1].linecount, strs) -- \n not allowed; use list
     end
     return allstr
+end
+function pp1(...)
+    pp(false, false, 99, {...})
 end -- }}}
 
 EOFLUA
