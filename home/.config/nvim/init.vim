@@ -1,6 +1,7 @@
 " vim: fdm=marker
 " TODO update encoding (let format not precompiled)
 " TODO auto 16color
+" TODO surround ys( ys) etc.
 
 " Charcode at cursor
 " :echo char2nr(matchstr(getline('.'), '\%'.col('.').'c.'))
@@ -262,8 +263,8 @@ nnore M m
 nnore <silent> 0      :lua smartHome()<cr>
 nnore <silent> <home> :lua smartHome()<cr>
 inore <silent> <home> <c-o>:lua smartHome(true)<cr>
-nnore [ <c-o>
-nnore ] <c-i>
+nnore ( <c-o>
+nnore ) <c-i>
 nnore <silent> f :lua smartf(1)<cr>
 nnore <silent> F :lua smartf(-1)<cr>
 
@@ -322,7 +323,7 @@ fu! RecenterTopBottom()
     let l = winline()
     let thresh = 2
     if abs(g:RecenterTopBottom_time - localtime()) >= 2
-        " syn sync fromstart " slow for some reason?? (called even this if clause is skipped??)
+        " syn sync fromstart " slow for some reason?? (called even if this if clause is skipped??)
         exe "syn sync fromstart"
         exe "norm! \<c-l>"
         norm! zz
@@ -366,7 +367,7 @@ set infercase
 
 " My completion
 set completefunc=MyComp
-fu! MyComp(findstart, base) 
+fu! MyComp(findstart, base)
     return v:lua.mycomp(a:findstart, a:base)
 endfu
 aug vimrc_complete_mycomp
@@ -410,6 +411,20 @@ colorscheme default
 " --- Custom Syntax ---
 fu! MySyntax()
     let ft = &ft
+    if ft == "html"
+        " TODO command to replace &forall; etc. with unicode chars?
+        for i in [ "> gt", "< lt", "∀ forall", "∂ part", "∃ exist", "∅ empty", "∇ nabla", "∈ isin", "∉ notin", "∋ ni", "∏ prod", "∑ sum", "− minus", "∗ lowast", "√ radic", "∝ prop", "∞ infin", "∠ ang", "∧ and", "∨ or", "∩ cap", "∪ cup", "∫ int", "∴ there4", "∼ sim", "≅ cong", "≈ asymp", "≠ ne", "≡ equiv", "≤ le", "≥ ge", "⊂ sub", "⊃ sup", "⊄ nsub", "⊆ sube", "⊇ supe", "⊕ oplus", "⊗ otimes", "⊥ perp", "⋅ sdot" ]
+            let from = matchstr(i, "\\S*$")
+            let to   = matchstr(i, "^\\S*")
+            exe "syntax match MyHtml_" . from . " \"&" . from . ";\" conceal cchar=" . to
+        endfo
+        syntax match MyHtml_br "<br>" conceal cchar=⏎
+        sil! syntax clear MyHtml_span
+        syntax region MyHtml_span matchgroup=MyHtml_hidden start='<span\( class="\?[^>"]*"\?\)\?>' end='<\/span>' oneline concealends
+        hi MyHtml_span cterm=underline
+        hi Conceal ctermfg=7 ctermbg=8 cterm=bold
+        setlocal conceallevel=2 concealcursor=nc
+    endif
     if ft == "javascript" || ft == "html"
         for i in ["jsVarDef", "jsVarDefName", "jsFuncDefName", "jsFuncDefArgs", "jsVarDefWrap"] | exe "sil! syn clear " . i | endfor
 
