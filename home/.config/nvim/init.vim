@@ -2,6 +2,10 @@
 " TODO update encoding (let format not precompiled)
 " TODO auto 16color
 " TODO surround ys( ys) etc.
+" TODO common english words
+" TODO enter key behavior on line-end??
+" TODO comp: prioritize omni (it gives func args etc!)
+" TODO snippet (for statement)
 
 " Charcode at cursor
 " :echo char2nr(matchstr(getline('.'), '\%'.col('.').'c.'))
@@ -171,6 +175,7 @@ set tabstop=4               " A tab shows as N spaces
 
 " Folding {{{
 set fdm=marker
+set fdn=2
 nnore <tab> za
 nnore <leader>z :set fdm=marker<cr>zm
 
@@ -183,13 +188,20 @@ set fillchars=fold:\  foldtext=substitute(getline(v:foldstart),'{{{','','g').'\ 
 " }}} <- dummy
 
 " Use for lua folding
-fu! NonEmptyLine(lnum, dir) " find nonempty line (but not a:lnum) in given direction (1 or -1)
-  let lnum = a:lnum + a:dir
-  let max = line("$")
-  while lnum >= 1 && lnum <= max && getline(lnum) =~ '^\s*$'
-    let lnum += a:dir
-  endwh
-  return lnum
+fu! NextLine(lnum, dir)
+    " Find next nonempty and non-multiline-string line (but not a:lnum) in given direction (1 or -1)
+    let lnum = a:lnum + a:dir
+    let max = line("$")
+    while lnum >= 1 && lnum <= max && (getline(lnum) =~ '^\s*$' || IsFirstCharInString(lnum))
+        let lnum += a:dir
+    endwh
+    return lnum
+endfu
+
+fu! IsFirstCharInString(lnum)
+    " Maybe true iff inside a multiline string.
+    let synNames = map(synstack(a:lnum, 1), "synIDattr(synIDtrans(v:val), 'name')")
+    return len(synNames) > 0 && synNames[-1] == "String"
 endfu
 
 " Markdown folding (https://stackoverflow.com/a/4677454)
@@ -216,10 +228,24 @@ function! MarkdownLevel()
 endfunction
 
 aug vimrc_folding
-  au!
-  au FileType lua       setl fdm=expr fde=max([indent(v:lnum),indent(NonEmptyLine(v:lnum,1)),indent(NonEmptyLine(v:lnum,-1))])/&shiftwidth
-  au FileType markdown  setl fdm=expr fde=MarkdownLevel()
+    au!
+    au FileType lua,javascript,python,markdown call MyFolding()
 aug END
+
+fu! MyFolding()
+    let ft = &ft
+    if ft == "lua" || ft == "javascript"
+        setl fdm=expr fde=max([indent(v:lnum),indent(NextLine(v:lnum,1)),indent(NextLine(v:lnum,-1))])/&shiftwidth
+    elseif ft == "python"
+        " In python, only when inside multiline string, take into account NextLine(v:lnum,-1)
+        " TODO fold multiline string
+        setl fdm=expr fde=max([indent(v:lnum),indent(NextLine(v:lnum,1)),(IsFirstCharInString(v:lnum)?indent(NextLine(v:lnum,-1)):0)])/&shiftwidth
+    elseif ft == "Markdown"
+        setl fdm=expr fde=MarkdownLevel()
+    endif
+endfu
+
+nnore <f7> :call MyFolding()<cr>
 " }}}
 
 " View {{{
@@ -259,14 +285,15 @@ nnore s<f5> :lua smartSp("$MYVIMRC")<cr>
 " motion
 onore m %
 nnore m %
+vnore m %
 nnore M m
 nnore <silent> 0      :lua smartHome()<cr>
 nnore <silent> <home> :lua smartHome()<cr>
 inore <silent> <home> <c-o>:lua smartHome(true)<cr>
 nnore ( <c-o>
 nnore ) <c-i>
-nnore <silent> f :lua smartf(1)<cr>
-nnore <silent> F :lua smartf(-1)<cr>
+nnore <expr> f (reg_recording() . reg_executing()) != "" ? "f" : ":lua smartf(1)\<cr>"
+nnore <expr> F (reg_recording() . reg_executing()) != "" ? "F" : ":lua smartf(-1)\<cr>"
 
 " edit
 nnore D dd
@@ -299,9 +326,11 @@ nnore <expr> sm FzfExists() ? ":FzfBuffers\<cr>" : ":ls\<cr>:b\<space>"
 nnore <expr> sf FzfExists() ? ":FzfFiles\<cr>"   : ":e\<space>"
 nnore <expr> sF FzfExists() ? ":FzfFiles!\<cr>"  : ":e\<space>"
 nnore + :tabnext<cr>
+nnore <silent> su :vsplit<bar>wincmd l<bar>exe "norm! Ljz<c-v><cr>"<cr>:set scb<cr>:wincmd h<cr>:set scb<cr>
 
 " misc
 nnore s/ :noh<cr>:let @/ = ""<cr>
+nnore s* :call AddHighlight()<cr>
 nnore :<cr> :<up><cr>
 tnore <esc> <c-\><c-n>
 "nnore <c-h>F :call DescribeFace()<cr>
@@ -350,6 +379,16 @@ fu! GetVisualSelection()
     return join(lines, "\n")
 endfu
 
+fu! AddHighlight()
+    " Highlight word under cursor IN ADDITION TO currently highlighted ones.
+    let word = expand("<cword>")
+    let @/ = (@/ == "" ? "" : (@/ . "\\|")) . ("\\<" . word . "\\>")
+    " Turn on highlighting (if no word was previously highlighted); need feedkeys for some reason
+    call feedkeys(":set hlsearch\<cr>")
+    " Goto next match
+    norm! n
+endfu
+
 " }}}
 
 " Completion {{{
@@ -375,7 +414,7 @@ aug vimrc_complete_mycomp
   au CompleteDone * lua mycomp_done()
 aug END
 
-let g:comp_minlen = 3  " At least N chars to start completion
+let g:comp_minlen = 2  " At least N chars to start completion
 
 aug vimrc_complete
   au!
@@ -413,11 +452,11 @@ fu! MySyntax()
     let ft = &ft
     if ft == "html"
         " TODO command to replace &forall; etc. with unicode chars?
-        for i in [ "> gt", "< lt", "∀ forall", "∂ part", "∃ exist", "∅ empty", "∇ nabla", "∈ isin", "∉ notin", "∋ ni", "∏ prod", "∑ sum", "− minus", "∗ lowast", "√ radic", "∝ prop", "∞ infin", "∠ ang", "∧ and", "∨ or", "∩ cap", "∪ cup", "∫ int", "∴ there4", "∼ sim", "≅ cong", "≈ asymp", "≠ ne", "≡ equiv", "≤ le", "≥ ge", "⊂ sub", "⊃ sup", "⊄ nsub", "⊆ sube", "⊇ supe", "⊕ oplus", "⊗ otimes", "⊥ perp", "⋅ sdot" ]
+        for i in [ "> gt", "< lt", "∀ forall", "∂ part", "∃ exist", "∅ empty", "∇ nabla", "∈ isin", "∉ notin", "∋ ni", "∏ prod", "∑ sum", "− minus", "∗ lowast", "√ radic", "∝ prop", "∞ infin", "∠ ang", "∧ and", "∨ or", "∩ cap", "∪ cup", "∫ int", "∴ there4", "∼ sim", "≅ cong", "≈ asymp", "≠ ne", "≡ equiv", "≤ le", "≥ ge", "⊂ sub", "⊃ sup", "⊄ nsub", "⊆ sube", "⊇ supe", "⊕ oplus", "⊗ otimes", "⊥ perp", "⋅ sdot", "∈ in" ]
             let from = matchstr(i, "\\S*$")
             let to   = matchstr(i, "^\\S*")
             exe "syntax match MyHtml_" . from . " \"&" . from . ";\" conceal cchar=" . to
-        endfo
+        endfor
         syntax match MyHtml_br "<br>" conceal cchar=⏎
         sil! syntax clear MyHtml_span
         syntax region MyHtml_span matchgroup=MyHtml_hidden start='<span\( class="\?[^>"]*"\?\)\?>' end='<\/span>' oneline concealends
@@ -427,6 +466,9 @@ fu! MySyntax()
     endif
     if ft == "javascript" || ft == "html"
         for i in ["jsVarDef", "jsVarDefName", "jsFuncDefName", "jsFuncDefArgs", "jsVarDefWrap"] | exe "sil! syn clear " . i | endfor
+
+        " TODO this fails for multiline string e.g. "const str = `aa\nbb\ncc`;" (\n means really newline)
+        " workaround: put "=" and the string literal in the next line.
 
         " Match variable definition statement e.g. "const x = 1, y = 2;"
         " remove const/let/var from keywords
@@ -517,6 +559,14 @@ fu! MyHighlight()
 "  hi Identifier    ctermfg=yellow cterm=none
 "  hi Identifier   ctermfg=green cterm=none
 "  hi Identifier   ctermfg=green cterm=bold
+
+  hi Question     ctermfg=green   " not applied when opening in-use file (since vimrc is not loaded yet)
+  hi MoreMsg      ctermfg=cyan
+  hi WarningMsg   ctermfg=red
+  hi ErrorMsg     ctermfg=255 ctermbg=red cterm=bold
+  hi Directory    ctermfg=magenta " "ctermfg=" etc in :hi
+
+  hi MatchParen   ctermbg=blue
 
   " Pmenu (completion popup menu)
   hi Pmenu        ctermfg=magenta ctermbg=black cterm=bold
@@ -710,6 +760,7 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     syn match  orgMacroComma /\\\@<!,/         contained
     syn match  orgMacroName  /\({{{\)\@<=\w\+/ contained
     " }}} <- dummy
+    syn keyword orgTODO TODO
     let b:current_syntax = "org"
     hi link orgProperty   String
     hi link orgComment    Comment
@@ -723,6 +774,7 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     hi link orgMacro      Special
     hi      orgMacroComma ctermfg=green ctermbg=black cterm=reverse,bold
     hi link orgMacroName  Identifier
+    hi link orgTODO       Todo
 endfu
 aug vimrc_ft_org
     au!
@@ -742,6 +794,8 @@ do -- Keys (keyboard layout specific) {{{
     local mappings = {
         "nv  j  n  gj",
         "nv  k  e  gk",
+        "nv  gj gn j",
+        "nv  gk ge k",
         "nv  J  N  <c-d>",
         "nv  K  E  <c-u>",
         "v   h  k  h",
@@ -751,6 +805,11 @@ do -- Keys (keyboard layout specific) {{{
         "nv  i  l  i",
         "nv  I  L  I",
         "nv  si sl s",
+
+        "n   sh sk <c-w>H",
+        "n   sj sn <c-w>J",
+        "n   sk se <c-w>K",
+        "n   sl si <c-w>L",
 
         "nv  n  j  n",
         "nv  N  J  N",
@@ -793,10 +852,18 @@ function smartf(direction) -- {{{
     end
     local time = os.time()
     local char = (time - smartf_last_time <= 1) and smartf_last_char or vim.fn.nr2char(vim.fn.getchar())
-    local reg  = regEscape(char)
-    local line = vim.fn.getline(".")
+    local reg  = regEscape(char:lower())
+    local line = vim.fn.getline("."):lower()
     local col  = vim.fn.col(".")
-    local col2 = (direction == 1) and line:find(reg, col+1) or revfind(line, reg, col-1)
+    -- Do not use ternary here (if direction==1 and line:find is falsy, then revfind gets called!)
+    -- local col2 = (direction == 1) and line:find(reg, col+1) or revfind(line, reg, col-1)
+    -- Need 6 lines!?
+    local col2
+    if direction == 1 then
+        col2 = line:find(reg, col+1)
+    else
+        col2 = revfind(line, reg, col-1)
+    end
     if col2 then vim.fn.setpos(".", { 0, vim.fn.line("."), col2 }) end
     smartf_last_time = time
     smartf_last_char = char
@@ -820,7 +887,8 @@ function toggleCmt(visual) -- {{{
         elseif vim.bo.ft == "html" and hasSyntax("cssStyle") then
             return "/*%s*/"
         else
-            return vim.bo.cms
+            local cms = vim.bo.cms
+            return (cms and cms:len() >= 1) and cms or "#%s" -- fallback to #%s when no cms
         end
     end
     local function regEscape(s) return (s:gsub("([^%w])", "%%%1")) end
@@ -841,13 +909,15 @@ function toggleCmt(visual) -- {{{
         local y1 = (y == "") and " " or y -- at least one space after "#", "//" etc.
         -- If line is "      echo", shiftwidth=2 and indTo=2 then ...
         -- ind="  ", x="#", y1=" ", sp="    ", text="echo", z=""
-        return ind .. x .. y1 .. sp .. text .. z
+        local zWithSpace = z:len() >= 1 and (" " .. z) or "" -- add space between text and "*/", "-->" etc.
+        return ind .. x .. y1 .. sp .. text .. zWithSpace
     end
     local function unComment(line)
         -- If line is "  #     echo" and shiftwidth=2 then ...
         -- ind="  ", xmatch="#", sp1=" ", sp2="    ", text="echo", zmatch=""
         -- We need to strip xmatch, sp1, zmatch
-        local ind,xmatch,sp1,sp2,text,zmatch = line:match("^(%s*)(" .. regEscape(x) .. ")(%s?)(%s*)(.*)(" .. regEscape(z) .. ")")
+        local ind,xmatch,sp1,sp2,text,sp3,zmatch = line:match("^(%s*)(" .. regEscape(x) .. ")(%s?)(%s*)(.*)(" .. regEscape(z) .. ")")
+        text = text:match("^(.*%S)") or text -- strip trailing whitespaces (probably before "*/", "-->" etc.)
         return ind .. sp2 .. text
     end
 
@@ -884,13 +954,12 @@ function smartHome(insert) -- {{{
 end -- }}}
 
 function browseDoc(visual, text) -- {{{
-    text = virual and vim.fn.GetVisualSelection() or (text or vim.fn.expand("<cword>"))
+    text = visual and vim.fn.GetVisualSelection() or (text or vim.fn.expand("<cword>"))
     local ft    = vim.bo.ft
     local extra = (ft == "javascript" or ft == "html") and " mdn" or ""
     local query = text .. " " .. ft .. extra
     -- TODO: w3m?
     local cmd   = "sil! !firefox 'https://lite.duckduckgo.com/lite/?q=" .. query .. "'"
-    -- pp1(cmd)
     vim.cmd(cmd)
 end -- }}}
 
@@ -1094,7 +1163,10 @@ end -- }}}
 local mycomp_collect_keywords_cache = {}
 local mycomp_collect_keywords_extra = {
     javascript = {
-        "setInterval", "getContext",
+        "console.log",
+        "clearTimeout", "clearInterval", "setTimeout", "setInterval",
+        "getContext",
+        "addEventListener", "createElement",
         -- Array
         "map", "forEach", "filter", "reduce", "reduceRight", "every", "some", "indexOf", "lastIndexOf", "slice",
     },
@@ -1128,7 +1200,7 @@ function mycomp_collect_keywords() -- Collect from (1) keyword file and (2) synt
         end
     end -- }}}
     -- Combine results from (1) and (2)
-    local res = mycomp_append(load_comp_file(ft) or {}, vim.call("syntaxcomplete#OmniSyntaxList"), (ft == "vim" and load_comp_file("lua")) or {})
+    local res = mycomp_append(load_comp_file(ft) or {}, vim.call("syntaxcomplete#OmniSyntaxList"), (ft == "vim" and load_comp_file("lua")) or {}, mycomp_collect_keywords_extra[ft] or (ft == "html" and mycomp_collect_keywords_extra["javascript"]) or {})
     mycomp_collect_keywords_cache[ft] = res
     -- if html, include css, js
     -- if vim,  include lua

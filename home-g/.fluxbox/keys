@@ -5,7 +5,7 @@ OnDesktop Mouse2 :WorkspaceMenu
 OnDesktop Mouse3 :RootMenu
 # }}}
 
-## Move windows with mouse {{{
+## Move windows {{{
 # alt + left click to move/resize a window
 OnWindow Mod1 Mouse1 :MacroCmd {Raise} {Focus} {StartMoving}
 OnWindowBorder Move1 :StartMoving
@@ -17,6 +17,17 @@ OnTitlebar Move1  :StartMoving
 # left click on the border to move the window
 OnWindowBorder Mouse1 :MacroCmd {Raise} {Focus} {ActivateTab}
 OnWindowBorder Move1  :StartMoving
+
+# Mod4+arrow to move windows
+Mod4 Left  :Move -20   0
+Mod4 Down  :Move   0  20
+Mod4 Right :Move  20   0
+Mod4 Up    :Move   0 -20
+
+# Unclutter / Arrange*
+Mod4 u :Unclutter (layer=Normal)
+Mod4 o :ToggleCmd {ArrangeWindowsStackLeft (layer=Normal)} {ArrangeWindowsStackRight (layer=Normal)}
+# Mod4 o :ArrangeWindows (layer!=Top) (layer!=AboveDock) (layer!=Dock) (layer!=Desktop)
 # }}}
 ## Resizing windows {{{
 # Basic Bindings
@@ -120,6 +131,8 @@ Shift F2              :Exec ~/script/changews.pl -pks
 Mod1 F2               :Workspace 1
 F9 F2                 :Workspace 1
 
+# OnDesktop Mouse5      :NextWorkspace
+# OnDesktop Mouse4      :PrevWorkspace
 OnDesktop Mouse5      :Exec ~/script/changews.pl -nks   # scroll up
 OnDesktop Mouse4      :Exec ~/script/changews.pl -pks   # scroll down
 
@@ -224,33 +237,33 @@ F9 t       :Exec ~/script/terminal
 F9 w       :Exec /usr/lib/mozc/mozc_tool --mode=word_register_dialog
 F9 v       :Exec vivaldi-stable
 F9 shift v :Exec vivaldi-stable --incognito
-F9 x       :Exec ~/script/rofi/tmuxp
+F9 x       :Exec ~/script/guisel/tmuxp
 F9 y       :Exec XMODIFIERS="" alacritty
 F9 F5      :Reconfigure
 F9 F6      :Restart
 
 Mod4 x :Exec sh -c "sleep .4; xvkbd -text '\Cs\D3\r\D3\Af\D1x'"
 
-F9 b     :Exec ~/script/rofi/session
-F9 s     :Exec ~/script/rofi/misc
-F9 k     :Exec ~/script/rofi/kbdlayout
-F9 n     :Exec ~/script/rofi/niconico
-F9 F9 n  :Exec ~/script/rofi/niconico -b
-F9 p     :Exec ~/script/rofi/pass
-F9 F4    :Exec ~/script/rofi/apps
+F9 b     :Exec ~/script/guisel/session
+F9 s     :Exec ~/script/guisel/misc
+F9 k     :Exec ~/script/guisel/kbdlayout
+# F9 n     :Exec ~/script/rofi/niconico
+# F9 F9 n  :Exec ~/script/rofi/niconico -b
+F9 p     :Exec ~/script/guisel/pass
+F9 F4    :Exec ~/script/guisel/apps
 
-78  :Exec rofi -show window
+# 78  :Exec rofi -show window
 
-F9 F9 l  :Exec ~/script/rofi/wallpaper
-F9 F9 w  :Exec ~/script/rofi/rofi-wifi-menu
+F9 F9 l  :Exec ~/script/guisel/wallpaper
+# F9 F9 w  :Exec ~/script/rofi/rofi-wifi-menu
 
 # F9 F9 b  :Exec ~/script/rofi/bluetooth.fish
 
 # Cheat sheet
-F9 F1    p :Exec ~/script/rofi/cheatsheet.sh  ~/script/rofi/cheat/perl-1liner "Perl5 cheat sheet"
-F9 F1 F1 p :Exec emacsclient -a mousepad -c   ~/script/rofi/cheat/perl-1liner
-F9 F1    l :Exec ~/script/rofi/cheatsheet.sh  ~/script/rofi/cheat/linux "Linux cheat sheet"
-F9 F1 F1 l :Exec emacsclient -a mousepad -c   ~/script/rofi/cheat/linux
+# F9 F1    p :Exec ~/script/rofi/cheatsheet.sh  ~/script/rofi/cheat/perl-1liner "Perl5 cheat sheet"
+# F9 F1 F1 p :Exec emacsclient -a mousepad -c   ~/script/rofi/cheat/perl-1liner
+# F9 F1    l :Exec ~/script/rofi/cheatsheet.sh  ~/script/rofi/cheat/linux "Linux cheat sheet"
+# F9 F1 F1 l :Exec emacsclient -a mousepad -c   ~/script/rofi/cheat/linux
 # }}}
 
 # vim:fdm=marker:ft=fbkeys:cms=#%s

@@ -38,9 +38,13 @@
 [exec] (t/新宿駅.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//tokaido/新宿駅.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (t/東海道線ご当地発車メロディー集-HRMt_HLxEPg.short.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//tokaido/東海道線ご当地発車メロディー集-HRMt_HLxEPg.short.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (t/藤沢 茅ヶ崎 平塚 発車メロディー.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//tokaido/藤沢 茅ヶ崎 平塚 発車メロディー.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (05系 40編成 西船橋-荻窪 sm9780961.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//05系 40編成 西船橋-荻窪 sm9780961.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (ATOS放送 ランダム再生100選-VwFDlrwM92U.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//ATOS放送 ランダム再生100選-VwFDlrwM92U.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (ATOS放送 ランダム再生100選-VwFDlrwM92U.m4a.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//ATOS放送 ランダム再生100選-VwFDlrwM92U.m4a.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (cut1.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//cut1.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (cut2.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//cut2.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (cut3.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//cut3.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (E217系 千葉-東京 sm35183386.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//E217系 千葉-東京 sm35183386.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (E231系 常磐快速線 取手-上野 sm16048274.mp4) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//E231系 常磐快速線 取手-上野 sm16048274.mp4"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (E233系2000番台 代々木上原-北綾瀬 Bg75v7zXKgw.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//E233系2000番台 代々木上原-北綾瀬 Bg75v7zXKgw.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (E233系3000番台 上野-伊東 VhBw9mLSh_w.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//E233系3000番台 上野-伊東 VhBw9mLSh_w.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
@@ -58,6 +62,10 @@
 [exec] (東京メトロ16000系.mp3) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ16000系.mp3"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (東京メトロ9000系 東芝 急行 日吉-溜池山王 1-BfgPulsAU.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ9000系 東芝 急行 日吉-溜池山王 1-BfgPulsAU.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (東京メトロ9000系 東芝 白金高輪-赤羽岩淵-日吉 vwb2G5zfyGc.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ9000系 東芝 白金高輪-赤羽岩淵-日吉 vwb2G5zfyGc.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (東京メトロ副都心線 新宿三丁目駅 dYifh9wJQ1I.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ副都心線 新宿三丁目駅 dYifh9wJQ1I.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (東京メトロ千代田線 北千住駅 TY-FQTLa2Oo.webm) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ千代田線 北千住駅 TY-FQTLa2Oo.webm"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (東京メトロ半蔵門線・銀座線 表参道駅 kW4ef8WbInY.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ半蔵門線・銀座線 表参道駅 kW4ef8WbInY.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (東京メトロ東西線 大手町駅 aFDfW2TZE7o.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ東西線 大手町駅 aFDfW2TZE7o.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (相鉄8000系 各停 横浜-海老名 wB4pbj21fKU.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄8000系 各停 横浜-海老名 wB4pbj21fKU.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (相鉄8000系 快速 海老名-横浜 sm29850257.mp4.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄8000系 快速 海老名-横浜 sm29850257.mp4.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (相鉄・JR直通線関連ATOS放送集-jsZmzKuWAH8.webm) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄・JR直通線関連ATOS放送集-jsZmzKuWAH8.webm"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}

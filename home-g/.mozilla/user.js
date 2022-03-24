@@ -5,6 +5,7 @@
 
 user_pref("browser.aboutConfig.showWarning", false);
 user_pref("browser.download.autohideButton", true);
+user_pref("browser.download.alwaysOpenPanel", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons", false);
 user_pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", false);

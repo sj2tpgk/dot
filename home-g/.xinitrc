@@ -8,6 +8,8 @@ xset s off -dpms          # Don't use dpms for screen timeout
 xset s 7200 7200          # Specify screen timeout here
 xset dpms 1800 2700 3600  # DPMS standby/suspend/off time (?)
 
+dbus-update-activation-environment --systemd DBUS_SESSION_BUS_ADDRESS DISPLAY XAUTHORITY
+
 ## Japanese IME {{{
 # -- only works when in .xinitrc ?
 export GTK_IM_MODULE='uim'
@@ -56,10 +58,14 @@ amixer set Master 40%
 # /usr/bin/dropbox &
 /usr/bin/syncthing &
 
+# Auto mount USB etc.
+udiskie &
+
 # Pulseaudio
 # /usr/bin/start-pulseaudio-x11
 
 # exec openbox
+# exec icewm-session
 # exec icewm
 exec startfluxbox    # ~/.fluxbox/startup  will be executed
 # exec pekwm

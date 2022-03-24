@@ -28,12 +28,15 @@ else if command -v w3mman > /dev/null
 end
 
 # Editor
-if command -v emacs > /dev/null
-    set -xg EDITOR ec
-    set -xg VISUAL ec
-else if command -v vim > /dev/null
+# if command -v emacs > /dev/null
+#     set -xg EDITOR ec
+#     set -xg VISUAL ec
+if command -v vim > /dev/null
     set -xg EDITOR vim
     set -xg VISUAL vim
+else if command -v nvim > /dev/null
+    set -xg EDITOR nvim
+    set -xg VISUAL nvim
 else
     set -xg EDITOR nano
     set -xg VISUAL nano

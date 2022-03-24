@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# All passwords in single plaintext file /all
+# Each line "%xx.yy=pswd" means passwords ("%" must be at beginning of line)
+# For convenience, copy into the password into file /auto/xx/yy
+# on genauto command.
+# Single file is flexible and easier to remember (than using directories)
+
+function usage {
+    echo "Usage:"
+    echo "  passq show <query>  -- Show password that matches <query> in /all"
+    echo "                         Also copy to clipboard (using xclip)"
+    echo "  passq edit          -- Edit /all (and run passq genauto)"
+    echo "  passq list          -- List passwords in /all"
+    echo "  passq genauto       -- For each password in /all, store it under /auto/ directory"
+    echo "                         (convenient with rofi pass etc.)"
+    echo "In /all, each line of the format \"%xx.yy=pswd\" defines a password."
+    echo "When genauto is used, this password will become /auto/xx/yy with contents pswd."
+}
+
+[ $# -eq 0 ] && { usage; exit; }
+
+## Setup parameters
+op=$1
+query=$2
+
+## Get "%name=text" from $1, and add /auto/name with contents text
+function addauto {
+    # split from while loop bacause of incorrect vim indentation.
+    line=$1
+    name=$(echo "$line" | sed 's/^%\([^=]*\)=\(.*\)/\1/; s/\./\//g')
+    text=$(echo "$line" | sed 's/^%\([^=]*\)=\(.*\)/\2/')
+    # echo -e "$name\t$text"
+    echo -e "$text\n$text" | pass insert --force "auto/$name" >/dev/null
+}
+
+## Copy stdin to clipboard (will not output to stdout)
+has_xclip=$(command -v xclip >/dev/null && echo y || echo n)
+function clipboard_copy {
+    if [ "$has_xclip" = y ]; then
+        xclip -selection clipboard -i
+    else
+        cat >/dev/null
+    fi
+}
+
+## genauto (update auto/*)
+function genauto {
+    echo "Cleaning /auto/* ..."
+    pass rm -r --force auto >/dev/null
+    echo "Generating /auto/* ..."
+    pass show all | sed "/^%/!d" | while read line; do addauto "$line"; done
+}
+
+## Main
+case "$op" in
+    show)    pass show all | sed "/^%$query/!d; s/^[^=]*=//" | tee /dev/stderr | clipboard_copy ;;
+    edit)    pass edit all; genauto ;;
+    list)    pass show all | sed "/^%/!d" ;;
+    genauto) genauto ;;
+    *) echo "Unknown operation: $op" ; usage ;;
+esac
+

@@ -38,6 +38,7 @@
       [exec] (Windows XP) {vboxmanage startvm xp}     <~/media/pict/icons/virtualbox16.png>
       # [exec] (Windows 7)  {vboxmanage startvm 7}      <~/media/pict/icons/virtualbox16.png>
       [exec] (VirtualBox) {virtualbox -style Fusion}  <~/media/pict/icons/virtualbox16.png>
+      [exec] (Android)    {sh ~/qemu/qemu-android}    <~/media/pict/icons/android16.png>
       [exec] (Ranger)     {~/script/term/ranger}
       [exec] (Tint2)      {tint2}
       [exec] (LxAppearance){lxappearance}

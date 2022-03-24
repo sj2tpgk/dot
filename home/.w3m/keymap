@@ -34,8 +34,8 @@ keymap n UP
 keymap e DOWN
 keymap i MOVE_RIGHT
 
-keymap N PREV_PAGE
-keymap E NEXT_PAGE
+keymap N NEXT_PAGE
+keymap E PREV_PAGE
 
 keymap j SEARCH_NEXT
 keymap J SEARCH_PREV
