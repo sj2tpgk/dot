@@ -35,7 +35,10 @@ export XMODIFIERS='@im=uim'
 # }}}
 
 ## Environment variables (mustn't be set in wminit.sh ???)
+# qt5
 export QT_QPA_PLATFORMTHEME=qt5ct
+# qt6; need aur/qt6gtk2;
+# export QT_QPA_PLATFORMTHEME=qt6gtk2
 # export DESKTOP_SESSION=gnome
 export QT_QPA_PLATFORMTHEME=gtk2
 export TZ=Asia/Tokyo

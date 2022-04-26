@@ -4,7 +4,6 @@
 " TODO surround ys( ys) etc.
 " TODO common english words
 " TODO enter key behavior on line-end??
-" TODO comp: prioritize omni (it gives func args etc!)
 " TODO snippet (for statement)
 
 " Charcode at cursor
@@ -184,11 +183,30 @@ nnore <leader>z :set fdm=marker<cr>zm
 
 "set nofoldenable
 
-set fillchars=fold:\  foldtext=substitute(getline(v:foldstart),'{{{','','g').'\ \ '.(v:foldend-v:foldstart).'\ '
+set foldminlines=3
+set fillchars=fold:\  foldtext='==\ '.substitute(getline(v:foldstart),'{{{','','g').'\ \ '.(v:foldend-v:foldstart).'\ '
 " }}} <- dummy
 
-" Use for lua folding
-fu! NextLine(lnum, dir)
+" Better indent-based folding; alto take 'fdn' into account
+fu! MyFold(l, python)
+    let l = a:l
+    let sw = &shiftwidth
+    if IsFirstCharInString(l)
+        let lev = 1 + (indent(MyFold_NextLine(l, -1)) / sw)
+    elseif IsFirstCharInString(l+1)
+        let lev = 1 + (indent(l) / sw)
+    else
+        if a:python
+            " In python, only when inside multiline string, take into account NextLine(v:lnum,-1)
+            let lev = max([indent(v:lnum),indent(MyFold_NextLine(v:lnum,1)),(IsFirstCharInString(v:lnum)?indent(MyFold_NextLine(v:lnum,-1)):0)])/&shiftwidth
+        else
+            let lev = max([indent(l),indent(MyFold_NextLine(l,1)),indent(MyFold_NextLine(l,-1))])/sw
+        endif
+    endif
+    return min([lev, &fdn])
+endfu
+
+fu! MyFold_NextLine(lnum, dir)
     " Find next nonempty and non-multiline-string line (but not a:lnum) in given direction (1 or -1)
     let lnum = a:lnum + a:dir
     let max = line("$")
@@ -199,7 +217,7 @@ fu! NextLine(lnum, dir)
 endfu
 
 fu! IsFirstCharInString(lnum)
-    " Maybe true iff inside a multiline string.
+    " Maybe true  if and only if  inside a multiline string.
     let synNames = map(synstack(a:lnum, 1), "synIDattr(synIDtrans(v:val), 'name')")
     return len(synNames) > 0 && synNames[-1] == "String"
 endfu
@@ -234,12 +252,10 @@ aug END
 
 fu! MyFolding()
     let ft = &ft
-    if ft == "lua" || ft == "javascript"
-        setl fdm=expr fde=max([indent(v:lnum),indent(NextLine(v:lnum,1)),indent(NextLine(v:lnum,-1))])/&shiftwidth
+    if ft == "lua" || ft == "javascript" || ft == "html"
+        setl fdm=expr fde=MyFold(v:lnum,0)
     elseif ft == "python"
-        " In python, only when inside multiline string, take into account NextLine(v:lnum,-1)
-        " TODO fold multiline string
-        setl fdm=expr fde=max([indent(v:lnum),indent(NextLine(v:lnum,1)),(IsFirstCharInString(v:lnum)?indent(NextLine(v:lnum,-1)):0)])/&shiftwidth
+        setl fdm=expr fde=MyFold(v:lnum,1)
     elseif ft == "Markdown"
         setl fdm=expr fde=MarkdownLevel()
     endif
@@ -309,6 +325,8 @@ nnore s= :call SaveExcursion("ggVG=")<cr>
 nnore <a-j> J
 nnore <silent> ; :lua toggleCmt(false)<cr>
 vnore <silent> ; :lua toggleCmt(true)<cr>
+nnore <lt> <lt><lt>
+nnore > >>
 
 " window, buffer, tab
 nnore Q :q<cr>
@@ -333,7 +351,6 @@ nnore s/ :noh<cr>:let @/ = ""<cr>
 nnore s* :call AddHighlight()<cr>
 nnore :<cr> :<up><cr>
 tnore <esc> <c-\><c-n>
-"nnore <c-h>F :call DescribeFace()<cr>
 nnore <c-h> :call DescribeFace()<cr>
 nnore <c-k> :lua browseDoc(false)<cr>
 vnore <c-k> :lua browseDoc(true)<cr>
@@ -397,6 +414,8 @@ inore <expr> <tab>       pumvisible() ? "\<c-n>" : "\<c-x>\<c-u>"
 inore <expr> <plug>MyTab pumvisible() ? "\<c-n>" : "\<c-x>\<c-u>"
 inore <expr> <s-tab>     pumvisible() ? "\<c-p>" : "\<c-x>\<c-u>"
 "inore <expr> <del>       pumvisible() ? "\<c-e>" : "\<del>"
+
+inore <expr> <c-f> pumvisible() ? "\<c-n>" : "\<c-x>\<c-f>"
 
 set shortmess+=c                           " No message like "Pattern not found"
 set completeopt+=menuone,noinsert,noselect " Needed for auto completion
@@ -546,7 +565,8 @@ fu! MyHighlight()
   hi Identifier   ctermfg=green cterm=bold
 "  hi Identifier   ctermfg=cyan cterm=none
   hi Special      ctermfg=red
-  hi Folded       ctermfg=magenta ctermbg=black cterm=bold
+  " hi Folded       ctermfg=magenta ctermbg=black cterm=bold
+  hi Folded       ctermfg=magenta ctermbg=236 cterm=bold
 "  hi Folded       ctermfg=magenta ctermbg=none cterm=bold
   hi Visual       ctermfg=black ctermbg=blue
 "  hi Statement    ctermfg=green cterm=bold
@@ -604,7 +624,8 @@ aug END
 
 
 " --- Misc ---
-set list listchars=trail:.
+set list
+set listchars=tab:\ \ ,trail:.
 
 fu! DescribeFace()
   " Try treesitter highlighting
@@ -1073,7 +1094,12 @@ end -- }}}
 function mycomp_collect() -- Collect words {{{
 --    vim.cmd("sleep 1")
     local res, seen = {}, {}
-    local comps_list = { { "h", mycomp_collect_history() }, { "b", mycomp_collect_bufferall() }, { "k", mycomp_collect_keywords() }, { "o", mycomp_collect_omni() } }
+    local comps_list = { -- TODO Keep history as first source, but with info from omni.
+        { "h", mycomp_collect_history() },
+        { "o", mycomp_collect_omni() },
+        { "b", mycomp_collect_bufferall() },
+        { "k", mycomp_collect_keywords() },
+        }
     for _, v in ipairs(comps_list) do
         local source, comps = v[1], v[2]
         for _, comp in pairs(comps) do
@@ -1163,10 +1189,11 @@ end -- }}}
 local mycomp_collect_keywords_cache = {}
 local mycomp_collect_keywords_extra = {
     javascript = {
-        "console.log",
+        "console.log", "console.error",
         "clearTimeout", "clearInterval", "setTimeout", "setInterval",
         "getContext",
         "addEventListener", "createElement",
+        "constructor",
         -- Array
         "map", "forEach", "filter", "reduce", "reduceRight", "every", "some", "indexOf", "lastIndexOf", "slice",
     },

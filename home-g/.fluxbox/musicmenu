@@ -66,6 +66,7 @@
 [exec] (東京メトロ千代田線 北千住駅 TY-FQTLa2Oo.webm) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ千代田線 北千住駅 TY-FQTLa2Oo.webm"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (東京メトロ半蔵門線・銀座線 表参道駅 kW4ef8WbInY.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ半蔵門線・銀座線 表参道駅 kW4ef8WbInY.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (東京メトロ東西線 大手町駅 aFDfW2TZE7o.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//東京メトロ東西線 大手町駅 aFDfW2TZE7o.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
+[exec] (相鉄8000系 IGBT 各停 横浜-湘南台 dNJxzfF7Vd8.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄8000系 IGBT 各停 横浜-湘南台 dNJxzfF7Vd8.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (相鉄8000系 各停 横浜-海老名 wB4pbj21fKU.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄8000系 各停 横浜-海老名 wB4pbj21fKU.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (相鉄8000系 快速 海老名-横浜 sm29850257.mp4.m4a) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄8000系 快速 海老名-横浜 sm29850257.mp4.m4a"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
 [exec] (相鉄・JR直通線関連ATOS放送集-jsZmzKuWAH8.webm) {mocp -Q "" || mocp -S; mocp -l "/home/tpa4/media/music/trainsound//相鉄・JR直通線関連ATOS放送集-jsZmzKuWAH8.webm"; sleep .1; pactl set-sink-mute @DEFAULT_SINK@ 0}
