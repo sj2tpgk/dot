@@ -1,6 +1,7 @@
 # Path
 set -xg PATH $HOME/bin $PATH
 set -xg PATH $HOME/localbin $PATH
+set -xg PATH $HOME/.local/bin $PATH
 
 # Keyboard
 if [ (cat /etc/machine-id | md5sum | cut -c1-4) = f63a ]

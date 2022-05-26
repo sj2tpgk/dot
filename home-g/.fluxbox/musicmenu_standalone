@@ -1,6 +1,7 @@
 [begin] (Music)
   [encoding] {UTF-8}
-  [include] (~/.fluxbox/musicmenu)
-  [exec] (** Rescan musics **) {~/.fluxbox/musicmenugen}
+  [include] (~/script/fluxbox/musicmenu)
+  [exec] (**  Pkill mocp   **) {pkill mocp}
+  [exec] (** Rescan musics **) {~/script/fluxbox/musicmenugen}
   [endencoding]
 [end]

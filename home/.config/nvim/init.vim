@@ -1,10 +1,14 @@
 " vim: fdm=marker
+"
+" Standalone neovim config with lsp support via nvim-lspconfig (optional)
+"
 " TODO update encoding (let format not precompiled)
 " TODO auto 16color
 " TODO surround ys( ys) etc.
 " TODO common english words
 " TODO enter key behavior on line-end??
 " TODO snippet (for statement)
+" TODO scrach buffer of type
 
 " Charcode at cursor
 " :echo char2nr(matchstr(getline('.'), '\%'.col('.').'c.'))
@@ -30,7 +34,7 @@ let g:loaded_python3_provider=1
 
 " Plugin {{{
 " TODO: nv0 = no plugin, nv = yes plugin etc.
-if 0
+if 1
 
     " Install vim-plug
     let autoload_plug_path = stdpath('data') . '/site/autoload/plug.vim'
@@ -51,7 +55,8 @@ if 0
                 \ 'white',
                 \ 'cyan',
                 \ ]
-    Plug 'frazrepo/vim-rainbow'
+    " Plug 'frazrepo/vim-rainbow'
+    Plug 'neovim/nvim-lspconfig'
     " set cmdheight=2
     " let g:echodoc_enable_at_startup = 1
     " let g:echodoc#type = 'floating'
@@ -66,6 +71,61 @@ if 0
     autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
                 \| PlugInstall --sync | source $MYVIMRC
                 \| endif
+
+    if has_key(g:plugs, "nvim-lspconfig")
+
+        " Toggle diagnostic
+        let g:myLspDiag = 1
+        fu! MyLspDiagToggle()
+            if g:myLspDiag
+                lua vim.diagnostic.hide()
+            else
+                lua vim.diagnostic.enable()
+                lua vim.diagnostic.show()
+            endif
+            let g:myLspDiag = !g:myLspDiag
+        endfu
+
+        " Toggle diagnostic level
+        let g:myLspDiagLevels = [ "HINT", "INFO" ]
+        let g:myLspDiagLevel  = 0
+        fu! MyLspDiagLevel()
+            lua vim.diagnostic.enable()
+            lua vim.diagnostic.show()
+            let g:myLspDiagLevel = (g:myLspDiagLevel + 1) % len(g:myLspDiagLevels)
+            let g:myLspDiagLevelName = g:myLspDiagLevels[g:myLspDiagLevel]
+            " lua (function(x) vim.diagnostic.config({ underline=x, virtual_text=x }) end)({severity={min=vim.diagnostic.severity[vim.g.myLspDiagLevelName]}})
+            lua (function(x) vim.diagnostic.config({ virtual_text=x }) end)({severity={min=vim.diagnostic.severity[vim.g.myLspDiagLevelName]}})
+        endfu
+        call MyLspDiagLevel()
+
+        " Custom commands
+        com! LspToggleDiag      call MyLspDiagToggle()
+        com! LspToggleDiagLevel call MyLspDiagLevel()
+        com! LspLocList         lua vim.diagnostic.setloclist()
+        com! LspQuickFix        lua vim.diagnostic.setqflist()
+
+        " Config
+        lua <<EOFLUA
+        function on_attach(client, bufnr)
+            vim.diagnostic[vim.g.myLspDiag == 1 and "enable" or "disable"]()
+            vim.cmd [[
+                setl omnifunc=v:lua.vim.lsp.omnifunc
+                setl signcolumn=number
+                nnore <buffer> <enter> :lua vim.lsp.buf.hover()<cr>
+                nnore <buffer> <leader>dd :LspToggleDiag<cr>
+                nnore <buffer> <leader>dl :LspToggleDiagLevel<cr>
+                nnore <buffer> <leader>ll :LspLocList<cr>
+                nnore <buffer> <leader>lq :LspQuickFix<cr>
+                nnore <buffer> <leader>lr :lua vim.lsp.buf.rename()<cr>
+            ]]
+            vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+        end
+        require'lspconfig'.pyright.setup  { on_attach = on_attach }
+        require'lspconfig'.bashls.setup   { on_attach = on_attach }
+        require'lspconfig'.tsserver.setup { on_attach = on_attach, single_file_support = true }
+EOFLUA
+    endif
 
     " Treesitter
     if has_key(g:plugs, "nvim-treesitter")
@@ -147,7 +207,13 @@ set splitright
 set confirm           " Ask on :q :wq etc.
 
 " Status line: show encoding
-set statusline=%f\ %h%w%m%r\ \ \ (%{&fileencoding})\ %=%-14.(%l,%c%V%)\ %P
+fu! StlDirName()
+    return substitute(substitute(expand('%:p:h'), $HOME, '~', ''), '\(\.[^/]\|[^/]\)[^/]*/', '\1/', 'g')
+endfu
+fu! StlFileTypeEnc()
+    return join(filter([&ft, &fenc], 'len(v:val) > 0'), ', ')
+endfu
+set statusline=%h%w%m%r\ \ %t\ \ \ [%{StlDirName()}]\ \ \ (%{StlFileTypeEnc()})\ %=%-14.(%l,%c%V%)\ %P
 set laststatus=2
 
 if exists("&ttymouse")
@@ -308,8 +374,8 @@ nnore <silent> <home> :lua smartHome()<cr>
 inore <silent> <home> <c-o>:lua smartHome(true)<cr>
 nnore ( <c-o>
 nnore ) <c-i>
-nnore <expr> f (reg_recording() . reg_executing()) != "" ? "f" : ":lua smartf(1)\<cr>"
-nnore <expr> F (reg_recording() . reg_executing()) != "" ? "F" : ":lua smartf(-1)\<cr>"
+nnore <silent> <expr> f (reg_recording() . reg_executing()) != "" ? "f" : ":lua smartf(1)\<cr>"
+nnore <silent> <expr> F (reg_recording() . reg_executing()) != "" ? "F" : ":lua smartf(-1)\<cr>"
 
 " edit
 nnore D dd
@@ -330,7 +396,9 @@ nnore > >>
 
 " window, buffer, tab
 nnore Q :q<cr>
-nnore - <C-w>w
+nnore <silent> q :lua smartq()<cr>
+nnore <silent> - :call NextWindow()<cr>
+" nnore <s--> <C-w>w
 nnore so <c-w>o
 nnore sd <c-w>c
 nnore ss :sp<cr>
@@ -406,6 +474,15 @@ fu! AddHighlight()
     norm! n
 endfu
 
+fu! NextWindow()
+    let curWin = winnr()
+    exec "norm! \<c-w>w"
+    while (!buflisted(bufnr())) " skip windows with this condition
+        if winnr() == curWin | exec "norm! \<c-w>w" | return | endif
+        exec "norm! \<c-w>w"
+    endwh
+endfu
+
 " }}}
 
 " Completion {{{
@@ -420,6 +497,7 @@ inore <expr> <c-f> pumvisible() ? "\<c-n>" : "\<c-x>\<c-f>"
 set shortmess+=c                           " No message like "Pattern not found"
 set completeopt+=menuone,noinsert,noselect " Needed for auto completion
 set completeopt+=longest
+set completeopt-=menu,preview
 set infercase
 "set omnifunc=syntaxcomplete#Complete
 
@@ -583,14 +661,18 @@ fu! MyHighlight()
   hi Question     ctermfg=green   " not applied when opening in-use file (since vimrc is not loaded yet)
   hi MoreMsg      ctermfg=cyan
   hi WarningMsg   ctermfg=red
-  hi ErrorMsg     ctermfg=255 ctermbg=red cterm=bold
+  hi ErrorMsg     ctermfg=white ctermbg=red cterm=bold
   hi Directory    ctermfg=magenta " "ctermfg=" etc in :hi
 
   hi MatchParen   ctermbg=blue
 
   " Pmenu (completion popup menu)
-  hi Pmenu        ctermfg=magenta ctermbg=black cterm=bold
-  hi PmenuSel     ctermfg=magenta ctermbg=black cterm=bold,reverse
+  " hi Pmenu        ctermfg=magenta ctermbg=237 cterm=bold
+  " hi PmenuSel     ctermfg=magenta ctermbg=black cterm=bold,reverse
+  " hi Pmenu        ctermfg=236 ctermbg=blue cterm=bold
+  " hi PmenuSel     ctermfg=236 ctermbg=blue cterm=bold,reverse
+  hi Pmenu        ctermfg=blue ctermbg=238 cterm=bold
+  hi PmenuSel     ctermfg=blue ctermbg=black cterm=bold,reverse
 
   " Filetype specific
   " === HTML ===
@@ -724,9 +806,81 @@ com! -bar       FzfBuffers call Fzf(map(filter(range(1, bufnr("$")), "buflisted(
 com! -bar -bang FzfFiles   call Fzf(expand("<bang>" == "" ? "*" : "**", 0, 1),                               { sel -> execute("edit " . sel . "") })
 " }}}
 
-" Repl
+" Repl {{{
 " b:terminal_job_id
-" jobsend(3, join(getline(1,"$"), "\n") . "\n")
+" jobsend(34, join(getline(1,"$"), "\n") . "\n")
+            " \ "scheme": { "cmd": "gosh -fno-read-edit", "newl": "\r", "newlMore": 0 },
+            " \ "scheme": { "cmd": "rlwrap -pgreen gosh -fno-read-edit", "cmdBase": "gosh", "newl": "\r", "newlMore": 0 },
+let g:ReplData = {
+            \ "scheme": { "cmd": "gosh", "newl": "\r", "newlMore": 0 },
+            \ "python": { "cmd": "python", "newl": "\r\n", "newlMore": 1 },
+            \ } " cl, lua, node
+fu! ReplGetOpenTermBuf(cmd) " (cmd)
+    " Get (or open) repl term buffer for filetype (and return bufnr)
+    " Also ensure there is a window for the repl
+
+    let termBufPattern = "term://.*" . a:cmd
+    let termBufURL     = "term://"   . a:cmd
+
+    " Get repl bufnr
+    for b in range(1, bufnr("$"))
+        if buflisted(b) && bufname(b) =~ termBufPattern
+            let running = jobwait([getbufvar(b, "&channel")], 0)[0] == -1
+            if running
+                " If there's no window for repl, open one
+                if bufwinid(b) == -1 | call luaeval('smartSp("' . b . '", true)') | endif
+                " Return bufnr
+                return b
+            endif
+        endif
+    endfor
+    " Or open repl
+    return luaeval('smartSp("' . termBufURL . '")')
+
+endfu
+fu! ReplSend(str, ft=&ft)
+    let [bufSave, winSave] = [bufnr(), winnr()]
+    let data = g:ReplData[a:ft]
+    let bufRepl = ReplGetOpenTermBuf(data.cmd)
+
+    if bufRepl
+        " Get job id of repl
+        exec "b" bufRepl
+        let chan = b:terminal_job_id
+
+        " Remove empty lines, and ensure newline characters are added appropriately so the repl executes.
+        " (newline characters and its counts may differ for each repl)
+        let lines = filter(split(a:str, "[\r\n]", 1), 'len(v:val) > 0')
+        let strWithNewline = join(lines, data.newl) . data.newl . ((data.newlMore && len(lines) >= 2) ? data.newl : "")
+        call jobsend(chan, strWithNewline)
+
+        " Scroll repl to bottom
+        for win in win_findbuf(bufRepl) | call win_execute(win, "norm! G", 1) | endfor
+
+        " Restore window focus etc.
+        exec "norm! \<c-w>" . winSave . "w"
+        exec "b" bufSave
+
+    endif
+endfu
+fu! ReplSend_evalIfVim(str)
+    let str = a:str
+    if &ft == "vim" | exec str | else | call ReplSend(str) | endif
+endfu
+" command ReplOpen " open or switch to win
+" command ReplSend " noarg = curline or visual, arg = send it
+" FIXME too early to send text when launching repl
+nnore <bar> :call          ReplSend_evalIfVim(getline("."))<cr>
+nnore ,b    ggVG:<c-u>call ReplSend_evalIfVim(GetVisualSelection())<cr>
+nnore ,e    :call          ReplSend_evalIfVim(luaeval("getDefunByIndent()"))<cr>
+vnore <bar> :<c-u>call     ReplSend_evalIfVim(GetVisualSelection())<cr>
+
+aug vimrc_repl
+    au!
+    au TermOpen * syn match myTermSyn "^gosh\S*[$>]"
+    au TermOpen * hi myTermSyn ctermfg=black ctermbg=green cterm=bold
+aug END
+" }}}
 
 " Filetype specific {{{
 
@@ -768,6 +922,7 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     set ft=org cms=#\ %s
     setl fdm=expr fde=OrgLevel()
     sil! syn clear orgProperty orgComment orgHeading1 orgHeading2 orgHeading3 orgMathInline orgBold orgTex
+    syn keyword orgKeyword   begin_src,end_src,macro,title,options,noexport,begin_quote,end_quote
     syn region orgProperty   matchgroup=Special start=/^#+\S*/ end=/$/ oneline
     syn region orgComment    start=/^\s*#[^+]/ end=/$/   oneline
     syn region orgHeading1   start=/^\* /      end=/$/   oneline
@@ -801,6 +956,7 @@ aug vimrc_ft_org
     au!
     au BufNewFile,BufRead *.org call MyOrgSyntaxHighlight()
 aug END
+
 " }}}
 
 
@@ -857,14 +1013,22 @@ do -- Keys (keyboard layout specific) {{{
 
 end -- }}}
 
-function smartSp(file) -- {{{
+function smartSp(file, isBufNr) -- Split or VSplit and return new bufnr {{{
     local w = vim.fn.winwidth(0)
     local h = vim.fn.winheight(0)
     vim.cmd((w/h < 3) and "sp" or "vsp")
-    if file then vim.cmd("e " .. file) end
+    if file then
+        if isBufNr then
+            vim.cmd("b" .. tostring(file))
+            return file
+        else
+            vim.cmd("e " .. file)
+            return vim.fn.bufnr()
+        end
+    end
 end -- }}}
 
-local smartf_last_time, smartf_last_char = 0, nil
+local smartf_last_time, smartf_last_char, smartf_rev = 0, nil, nil
 function smartf(direction) -- {{{
     local function regEscape(s) return (s:gsub("([^%w])", "%%%1")) end
     local function revfind(str, char, init)
@@ -876,11 +1040,19 @@ function smartf(direction) -- {{{
     local reg  = regEscape(char:lower())
     local line = vim.fn.getline("."):lower()
     local col  = vim.fn.col(".")
+    -- 'F' followed by 'f' should be a backward jump
+    local rev
+    if time - smartf_last_time <= 1 then
+        rev = (smartf_rev and (direction == 1)) or ((not smartf_rev) and (direction == -1))
+    else
+        rev = (direction == -1)
+        smartf_rev = rev
+    end
     -- Do not use ternary here (if direction==1 and line:find is falsy, then revfind gets called!)
     -- local col2 = (direction == 1) and line:find(reg, col+1) or revfind(line, reg, col-1)
     -- Need 6 lines!?
     local col2
-    if direction == 1 then
+    if not rev then
         col2 = line:find(reg, col+1)
     else
         col2 = revfind(line, reg, col-1)
@@ -888,6 +1060,29 @@ function smartf(direction) -- {{{
     if col2 then vim.fn.setpos(".", { 0, vim.fn.line("."), col2 }) end
     smartf_last_time = time
     smartf_last_char = char
+end -- }}}
+
+function smartq() -- Close temporary window or act as q key (recording) {{{
+
+    local function shouldBufBeClosed(name, ft)
+        return ft == "help" or ft == "qf"
+    end
+
+    -- Try closing temporary window
+    for i = 1, vim.fn.winnr("$") do
+        local bufnr   = vim.fn.winbufnr(i)
+        local bufname = vim.fn.bufname(bufnr)
+        local ft      = vim.fn.getbufvar(bufnr, "&ft")
+        if shouldBufBeClosed(bufname, ft) then
+            print("Close", bufname, ft)
+            vim.fn.win_execute(vim.fn.win_getid(i), "close", 1)
+            return
+        end
+    end
+
+    -- Call vim's q
+    vim.api.nvim_feedkeys("q", "n", false)
+
 end -- }}}
 
 function toggleCmt(visual) -- {{{
@@ -974,6 +1169,23 @@ function smartHome(insert) -- {{{
     if c == vim.fn.col(".") then vim.cmd("norm! 0") end
 end -- }}}
 
+function getDefunByIndent() -- Get current block in lisps, python etc. {{{
+    -- Assuming indent is correct
+    local l = vim.fn.line(".")
+    local l1 = l
+    local lE = vim.fn.line("$")
+    while l1 >= 2 and vim.fn.getline(l1):match("^%s*$") or vim.fn.indent(l1) > 0 do l1 = l1 - 1 end
+    local l2 = l + 1
+    while l2 < lE and vim.fn.getline(l2):match("^%s*$") or vim.fn.indent(l2) > 0 do l2 = l2 + 1 end
+    if l1 == l2 - 1 then
+        return vim.fn.getline(l1)
+    elseif l2 == lE and vim.fn.indent(l2) > 0 then
+        return vim.fn.join(vim.fn.getline(l1, l2), "\n")
+    else
+        return vim.fn.join(vim.fn.getline(l1, l2 - 1), "\n")
+    end
+end -- }}}
+
 function browseDoc(visual, text) -- {{{
     text = visual and vim.fn.GetVisualSelection() or (text or vim.fn.expand("<cword>"))
     local ft    = vim.bo.ft
@@ -1040,7 +1252,13 @@ end -- }}}
 function mycomp_word_reg() -- Make regexp that match chars in 'iskeyword' {{{
     -- See https://vi.stackexchange.com/questions/31478
     -- return something like "[abc]+"
-    return "[" .. vim.fn.substitute(vim.fn.join(vim.fn.map(vim.fn.range(256), 'nr2char(v:val)'), ''), '[^[:keyword:]]', '', 'g') .. "]+"
+
+    -- Note: We limit to "usual" ascii chars (0x21 '!' to 0x7e '~')
+    --       to prevent garbage code like <80> in completion.
+    --       (happens when buffer contains multibyte characters)
+    --       Multibyte strings are not welcome in VimL/Lua5.1
+
+    return "[" .. vim.fn.substitute(vim.fn.join(vim.fn.map(vim.fn.range(0x21, 0x7e), 'nr2char(v:val)'), ''), '[^[:keyword:]]', '', 'g') .. "]+"
 end -- }}}
 
 function mycomp_compword(comp) -- (1) { word=w } => w, (2) 'str' => 'str' {{{
@@ -1093,10 +1311,15 @@ end -- }}}
 
 function mycomp_collect() -- Collect words {{{
 --    vim.cmd("sleep 1")
+    local function copyTable(t)
+        local t2 = {}
+        for k, v in pairs(t) do t2[k] = v end
+        return t2
+    end
     local res, seen = {}, {}
     local comps_list = { -- TODO Keep history as first source, but with info from omni.
-        { "h", mycomp_collect_history() },
         { "o", mycomp_collect_omni() },
+        { "h", mycomp_collect_history() },
         { "b", mycomp_collect_bufferall() },
         { "k", mycomp_collect_keywords() },
         }
@@ -1106,7 +1329,10 @@ function mycomp_collect() -- Collect words {{{
             -- when dupe occurs, first source is kept
             local w = mycomp_compword(comp)
             if (not seen[w]) then
-                table.insert(res, { word = w, menu = source .. " " .. (comp.menu or ""), kind = comp.kind })
+                local item = (type(comp) == "table") and copyTable(comp) or {}
+                item.word = w
+                item.menu = source .. " " .. (comp.menu or "")
+                table.insert(res, item)
                 seen[w] = true
             end
         end
@@ -1171,12 +1397,22 @@ function mycomp_collect_omni() -- Collect from omnifunc {{{
     if (not vim.bo.omnifunc) or (vim.bo.omnifunc == "") then
         return {}
     end
+    local function callOmnifunc(findstart, base)
+        local ofu = vim.bo.omnifunc
+        if ofu == "v:lua.vim.lsp.omnifunc" then
+            -- how to programatically call ofu that starts with "v:lua" ?
+            -- return vim.lsp.omnifunc(findstart, base)
+            return mycomp_lsp_omnifunc_sync(findstart, base)
+        else
+            return vim.call(ofu, findstart, base)
+        end
+    end
     -- Emulate first call of omnifunc (a:findstart = 1)
-    local col = vim.call(vim.bo.omnifunc, 1, nil)
+    local col = callOmnifunc(1, nil)
     if col >= 0 then
         -- Emulate second call of omnifunc (a:findstart = 0, a:base = the word being typed)
         local ofu_base = vim.fn.getline("."):sub(col + 1)
-        local omnicomps = vim.call(vim.bo.omnifunc, 0, ofu_base)
+        local omnicomps = callOmnifunc(0, ofu_base)
         mycomp_collect_omni_cache = omnicomps
         return omnicomps
     else
@@ -1186,8 +1422,55 @@ function mycomp_collect_omni() -- Collect from omnifunc {{{
     end
 end -- }}}
 
+mycomp_lsp_omnifunc_cache = nil
+function mycomp_lsp_omnifunc_sync(findstart, base) -- synchronous lsp omnifunc (https://github.com/neovim/neovim/issues/12390) {{{
+    local pos = vim.api.nvim_win_get_cursor(0)
+    local line = vim.api.nvim_get_current_line()
+
+    if findstart == 1 then
+        -- Cache state of cursor line and position due to the fact that it will
+        -- change at the second call to this function (with `findstart = 0`). See:
+        -- https://github.com/vim/vim/issues/8510.
+        -- This is needed because request to LSP server is made on second call.
+        -- If not done, server's completion mechanics will operate on different
+        -- document and position.
+        mycomp_lsp_omnifunc_cache = {pos = pos, line = line}
+
+        -- On first call return column of completion start
+        local line_to_cursor = line:sub(1, pos[2])
+        return vim.fn.match(line_to_cursor, '\\k*$')
+    end
+
+    -- Restore cursor line and position to the state of first call
+    vim.api.nvim_set_current_line(mycomp_lsp_omnifunc_cache.line)
+    vim.api.nvim_win_set_cursor(0, mycomp_lsp_omnifunc_cache.pos)
+
+    -- Make request
+    local bufnr = vim.api.nvim_get_current_buf()
+    local params = vim.lsp.util.make_position_params()
+    local result = vim.lsp.buf_request_sync(bufnr, 'textDocument/completion', params, 2000)
+    if not result then return {} end
+
+    -- Transform request answer to list of completion matches
+    local items = {}
+    for _, item in pairs(result) do
+        if not item.err then
+            local matches = vim.lsp.util.text_document_completion_list_to_complete_items(item.result, base)
+            vim.list_extend(items, matches)
+        end
+    end
+
+    -- Restore back cursor line and position to the state of this call's start
+    -- (avoids outcomes of Vim's internal line postprocessing)
+    vim.api.nvim_set_current_line(line)
+    vim.api.nvim_win_set_cursor(0, pos)
+
+    return items
+end
+-- }}}
+
 local mycomp_collect_keywords_cache = {}
-local mycomp_collect_keywords_extra = {
+local mycomp_collect_keywords_extra = { -- extra keywords for mycomp_collect_keywords {{{
     javascript = {
         "console.log", "console.error",
         "clearTimeout", "clearInterval", "setTimeout", "setInterval",
@@ -1197,7 +1480,7 @@ local mycomp_collect_keywords_extra = {
         -- Array
         "map", "forEach", "filter", "reduce", "reduceRight", "every", "some", "indexOf", "lastIndexOf", "slice",
     },
-}
+} -- }}}
 function mycomp_collect_keywords() -- Collect from (1) keyword file and (2) syntaxcomplete TODO: split 1 and 2 {{{
     local ft = vim.bo.ft
     if mycomp_collect_keywords_cache[ft] then

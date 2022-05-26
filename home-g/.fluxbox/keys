@@ -71,17 +71,17 @@ Mod4 6 :Exec ~/script/fluxbox/tilev.sh 75 24
 # }}}
 ## Focusing windows {{{
 # Right click on the titlebar (or grip or bottom) to lower and focus next window
-OnTitlebar     Mouse3 :MacroCmd {Lower} {NextWindow {groups} (workspace=[current])}
-OnWindowBorder Mouse3 :MacroCmd {Lower} {NextWindow {groups} (workspace=[current])}
-OnLeftGrip     Mouse3 :MacroCmd {Lower} {NextWindow {groups} (workspace=[current])}
-OnRightGrip    Mouse3 :MacroCmd {Lower} {NextWindow {groups} (workspace=[current])}
+OnTitlebar     Mouse3 :MacroCmd {Lower} {NextWindow {groups} (workspace=[current]) (layer!=AboveDock) (layer!=Dock) (layer!=Desktop)}
+OnWindowBorder Mouse3 :MacroCmd {Lower} {NextWindow {groups} (workspace=[current]) (layer!=AboveDock) (layer!=Dock) (layer!=Desktop)}
+OnLeftGrip     Mouse3 :MacroCmd {Lower} {NextWindow {groups} (workspace=[current]) (layer!=AboveDock) (layer!=Dock) (layer!=Desktop)}
+OnRightGrip    Mouse3 :MacroCmd {Lower} {NextWindow {groups} (workspace=[current]) (layer!=AboveDock) (layer!=Dock) (layer!=Desktop)}
 
 # Alt+Tab equivalents
 # Temporarily disable Alt+Tab for use with VNC
 # Mod1 Tab        :NextWindow {groups} (workspace=[current])
 # Mod1 Shift Tab  :PrevWindow {groups} (workspace=[current])
 #
-# exclude windows in extreme layers (video etc. are placed in those layers)
+# exclude windows in extreme layers (I place video etc. in those layers)
 Mod1 4          :Exec fluxbox-remote "NextWindow {groups} (workspace=[current]) (layer!=AboveDock) (layer!=Dock) (layer!=Desktop)"; sleep 0.05; xdotool key a
 #
 # Mod1 4          :Exec ~/script/nextwindow.pl; sleep 0.05; xdotool key a
@@ -243,6 +243,7 @@ F9 y       :Exec XMODIFIERS="" alacritty
 F9 F5      :Reconfigure
 F9 F6      :Restart
 
+# AzPainter
 Mod4 x :Exec sh -c "sleep .4; xvkbd -text '\Cs\D3\r\D3\Af\D1x'"
 
 F9 b     :Exec ~/script/guisel/session
@@ -267,4 +268,13 @@ F9 F9 l  :Exec ~/script/guisel/wallpaper
 # F9 F1 F1 l :Exec emacsclient -a mousepad -c   ~/script/rofi/cheat/linux
 # }}}
 
-# vim:fdm=marker:ft=fbkeys:cms=#%s
+
+F9 F8 :Exec ~/script/kbd/fix-stuck-modifiers.sh
+# space :Exec ~/ax86test.sh
+# k     :Exec xdotool keyup k;     sleep 0.01; xdotool key r e
+# run setxkbmap if a modifier gets stuck
+# t     :Exec xdotool keyup t;     sleep 0.01; xdotool key r e
+# f     :Exec xdotool keyup f;     sleep 0.01; xdotool key r e
+# space :Exec xdotool keyup space; sleep 0.01; xdotool key r e
+
+# vim:fdm=marker:ft=fbkeys:cms=#%s:syntax=conf

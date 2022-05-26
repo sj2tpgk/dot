@@ -10,7 +10,7 @@ bb='\e[44m' bm='\e[45m' bc='\e[46m' bw='\e[47m'
 bold='\e[1m' none='\e[0m'
 
 time=$(date +%H:%M)
-dir=$(pwd | sed 's/\/home\/[^/]*/~/; s/\([^/]\)[^/]*\//\1\//g')
+dir=$(pwd | sed 's#/home/[^/]*#~#; s#\(\.*[^/]\)[^/]*/#\1/#g')
 git=$(gitprompt-rs 2>/dev/null)
 
 s="$bk"

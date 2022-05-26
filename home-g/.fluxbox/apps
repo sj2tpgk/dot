@@ -17,6 +17,9 @@
   [Deco]	{0x4}
   [Alpha]	{255}
 [end]
+[app] (name=chromium)
+  [Deco]	{NORMAL}
+[end]
 [app] (title=MOC)
   [Position]	(CENTER)	{0% 0%}
   [Alpha]	{232}

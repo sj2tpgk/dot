@@ -3,6 +3,7 @@
   [MacroCmd {ResizeTo 49% 100%} {MoveTo 0% 0% TopLeft}]  ([[]  ])
   [MacroCmd {ResizeTo 49% 100%} {MoveTo 0% 0% TopRight}] ([  []])
   [maximize]                                             ([[  ]])
+  [SetLayer Dock]   (Layer Dock)
   [SetLayer Top]    (Layer Top)
   [SetLayer Normal] (Layer Normal)
 

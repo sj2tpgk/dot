@@ -3,6 +3,8 @@
 
 # Environment variables {{{
 PATH=$PATH:~/bin
+PATH=$PATH:~/localbin
+PATH=$PATH:~/.local/bin
 if command -v vim > /dev/null; then
     export EDITOR=vim
     export VISUAL=vim
@@ -11,7 +13,7 @@ else
     export VISUAL=nano
 fi
 
-RLWRAP_HOME=~/.rlwrap
+export RLWRAP_HOME=~/.rlwrap
 
 
 # Keyboard
@@ -151,7 +153,7 @@ if command -v nnn > /dev/null; then
 
   nn () {
     # Block nesting of nnn in subshells
-    if [ -n $NNNLVL ] && [ "${NNNLVL:-0}" -ge 1 ]; then
+    if [ -n "$NNNLVL" ] && [ "${NNNLVL:-0}" -ge 1 ]; then
       echo "nnn is already running"
       return
     else

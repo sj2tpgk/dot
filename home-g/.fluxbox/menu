@@ -53,7 +53,7 @@
       [exec] (Mocp)       {~/script/term/mocp}        <~/media/pict/icons/player16.png>
       # [exec] (Rescan musics) {~/.fluxbox/musicmenugen}
       [submenu] (Music)
-        [include] (~/.fluxbox/musicmenu)
+        [include] (~/.fluxbox/musicmenu_standalone)
       [end]
     [end]
     [submenu] (Games)
@@ -61,6 +61,7 @@
       [exec] (Minecraft)  {~/script/minecraft.sh}     <~/media/pict/icons/minecraft16.png>
       [exec] (MultiMC)    {multimc}                   <~/media/pict/icons/minecraft16.png>
       [exec] (Mgba)       {mgba-qt}                   <~/media/pict/icons/mgba16.png>
+      [exec] (Desmume)    {desmume}                   <~/media/pict/icons/desmume16.png>
       [exec] (PCSX2)      {PCSX2}                     <~/media/pict/icons/playstation16.png>
       [exec] (PPPSSPP)    {PPSSPPQt}                  <~/media/pict/icons/playstation16.png>
       [exec] (Pingus)     {pingus}
@@ -81,6 +82,10 @@
       [reconfig] (Reload config)
       [restart] (Restart)
       [exec] (About) {(fluxbox -v; fluxbox -info | sed 1d) | xmessage -file - -center}
+      [separator]
+      [exec] (Screen Normal) {xrandr --output eDP-1 --rotate normal}
+      [exec] (Screen Right)  {xrandr --output eDP-1 --rotate right}
+      [exec] (Fix stuck keys) {~/script/kbd/fix-stuck-modifiers.sh}
       [separator]
       [exit] (Exit)
     [end]
