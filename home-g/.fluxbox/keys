@@ -180,7 +180,7 @@ Mod4 d :ToggleDecor
 Control Mod1 Delete :Exit
 
 # Screenshot
-None Print :Exec ~/script/screenshot --root
+None Print       :Exec ~/script/screenshot --root
 None Shift Print :Exec ~/script/screenshot
 
 # Volume control keys (alsa || pulseaudio)
@@ -226,7 +226,6 @@ F9 a       :Exec pavucontrol
 F9 c       :Exec ~/script/term/mocp
 F9 d       :Exec sh ~/drawio_export.sh
 F9 e       :Exec running emacs && wmctrl -x -a emacs || ~/script/emacsgui.sh
-# F9 f       :Exec running palemoon && wmctrl -x -a 'pale moon' || sh -c 'MOZ_USE_OMTC=1; palemoon'
 F9 f       :Exec running firefox && wmctrl -x -a 'firefox' || firefox
 F9 shift f :Exec GTK_THEME=Vertex:light firefox --private-window
 F9 g       :Exec geeqie
@@ -249,32 +248,13 @@ Mod4 x :Exec sh -c "sleep .4; xvkbd -text '\Cs\D3\r\D3\Af\D1x'"
 F9 b     :Exec ~/script/guisel/session
 F9 s     :Exec ~/script/guisel/misc
 F9 k     :Exec ~/script/guisel/kbdlayout
-# F9 n     :Exec ~/script/rofi/niconico
-# F9 F9 n  :Exec ~/script/rofi/niconico -b
 F9 p     :Exec ~/script/guisel/pass
 F9 F4    :Exec ~/script/guisel/apps
 
-# 78  :Exec rofi -show window
-
 F9 F9 l  :Exec ~/script/guisel/wallpaper
-# F9 F9 w  :Exec ~/script/rofi/rofi-wifi-menu
-
-# F9 F9 b  :Exec ~/script/rofi/bluetooth.fish
-
-# Cheat sheet
-# F9 F1    p :Exec ~/script/rofi/cheatsheet.sh  ~/script/rofi/cheat/perl-1liner "Perl5 cheat sheet"
-# F9 F1 F1 p :Exec emacsclient -a mousepad -c   ~/script/rofi/cheat/perl-1liner
-# F9 F1    l :Exec ~/script/rofi/cheatsheet.sh  ~/script/rofi/cheat/linux "Linux cheat sheet"
-# F9 F1 F1 l :Exec emacsclient -a mousepad -c   ~/script/rofi/cheat/linux
 # }}}
 
 
 F9 F8 :Exec ~/script/kbd/fix-stuck-modifiers.sh
-# space :Exec ~/ax86test.sh
-# k     :Exec xdotool keyup k;     sleep 0.01; xdotool key r e
-# run setxkbmap if a modifier gets stuck
-# t     :Exec xdotool keyup t;     sleep 0.01; xdotool key r e
-# f     :Exec xdotool keyup f;     sleep 0.01; xdotool key r e
-# space :Exec xdotool keyup space; sleep 0.01; xdotool key r e
 
 # vim:fdm=marker:ft=fbkeys:cms=#%s:syntax=conf

@@ -10,7 +10,6 @@ end
 
 # Alias
 alias cp 'cp -i'
-alias vim nvim
 if command -v nvim > /dev/null
     alias nv nvim
 end

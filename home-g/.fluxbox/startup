@@ -4,18 +4,9 @@
 #
 # Lines starting with a '#' are ignored.
 
-# export GTK_IM_MODULE='uim'
-# export QT_IM_MODULE='uim'
-# uim-xim &
-# export XMODIFIERS='@im=uim'
-# uim-toolbar-gtk-systray &
-
-# sh ~/scripts/wminit.sh
-
 # And last but not least we start fluxbox.
 # Because it is the last app you have to run it with ''exec'' before it.
 
 exec fluxbox
 
 # or if you want to keep a log:
-# exec fluxbox -log "/home/tpmj2/.fluxbox/log"

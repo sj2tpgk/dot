@@ -236,6 +236,7 @@ set smartindent
 set shiftwidth=4            " Tab = N spaces in << >> etc.
 set softtabstop=4           " Insert N spaces as a tab
 set tabstop=4               " A tab shows as N spaces
+set shiftround              " Indents to next multiple of 'shiftwidth'
 " }}}
 
 " Folding {{{
