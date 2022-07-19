@@ -9,9 +9,20 @@
 " TODO enter key behavior on line-end??
 " TODO snippet (for statement)
 " TODO scrach buffer of type
+" TODO Lisp folding
 
 " Charcode at cursor
 " :echo char2nr(matchstr(getline('.'), '\%'.col('.').'c.'))
+
+" Auto pair {{{
+"inore " ""<left>
+"inore ' ''<left>
+"inore ( ()<left>
+"inore [ []<left>
+"inore { {}<left>
+"inore {<CR> {<CR>}<ESC>O
+"inore {;<CR> {<CR>};<ESC>O
+" }}}
 
 lua if not vim.cmd then vim.cmd = vim.api.nvim_command end
 mapclear | imapclear
@@ -124,6 +135,7 @@ if 1
         require'lspconfig'.pyright.setup  { on_attach = on_attach }
         require'lspconfig'.bashls.setup   { on_attach = on_attach }
         require'lspconfig'.tsserver.setup { on_attach = on_attach, single_file_support = true }
+        -- Place libaries in node_modules/ to let LSP recognize it.
 EOFLUA
     endif
 
@@ -206,16 +218,6 @@ set splitbelow
 set splitright
 set confirm           " Ask on :q :wq etc.
 
-" Status line: show encoding
-fu! StlDirName()
-    return substitute(substitute(expand('%:p:h'), $HOME, '~', ''), '\(\.[^/]\|[^/]\)[^/]*/', '\1/', 'g')
-endfu
-fu! StlFileTypeEnc()
-    return join(filter([&ft, &fenc], 'len(v:val) > 0'), ', ')
-endfu
-set statusline=%h%w%m%r\ \ %t\ \ \ [%{StlDirName()}]\ \ \ (%{StlFileTypeEnc()})\ %=%-14.(%l,%c%V%)\ %P
-set laststatus=2
-
 if exists("&ttymouse")
     set ttymouse=xterm2   " Mouse drag to resize windows
 endif
@@ -225,6 +227,16 @@ set clipboard=unnamedplus
 " Japanese encodings
 " don't use modeline(comment at the end of a file) to set enc (vim:enc=euc-jp etc.)
 set fileencodings=ucs-bom,utf-8,iso-2022-jp,sjis,cp932,euc-jp,cp20932
+
+" Status line: show directory name, filetype, encoding
+fu! StlDirName()
+    return substitute(substitute(expand('%:p:h'), $HOME, '~', ''), '\(\.[^/]\|[^/]\)[^/]*/', '\1/', 'g')
+endfu
+fu! StlFileTypeEnc()
+    return join(filter([&ft, &fenc], 'len(v:val) > 0'), ', ')
+endfu
+set statusline=%h%w%m%r\ \ %t\ \ \ [%{StlDirName()}]\ \ \ (%{StlFileTypeEnc()})\ %=%-14.(%l,%c%V%)\ %P
+set laststatus=2
 " }}}
 
 " Indent {{{
@@ -319,7 +331,7 @@ aug END
 
 fu! MyFolding()
     let ft = &ft
-    if ft == "lua" || ft == "javascript" || ft == "html"
+    if index(["lua", "javascript", "html", "perl"], ft) != -1
         setl fdm=expr fde=MyFold(v:lnum,0)
     elseif ft == "python"
         setl fdm=expr fde=MyFold(v:lnum,1)
@@ -351,6 +363,16 @@ set hlsearch
 
 " Esc {{{
 set ttimeoutlen=8
+
+" If popup window is open, close it
+fu! SmartEsc()
+    let nr = 1 + index(map(range(1, winnr("$")), "win_gettype(v:val)"), 'popup')
+    if nr >= 1 | exe nr .. "wincmd q" | endif
+    exe "norm! \<escape>"
+endfu
+nnore <silent> <escape> :call SmartEsc()<cr>
+
+" Do not move cursor position on leaving insert mode
 augroup vimrc_myesc
   autocmd!
   " Two autocmds needed (for when cursor is at beginning or end of line)
@@ -565,6 +587,10 @@ fu! MySyntax()
     if ft == "javascript" || ft == "html"
         for i in ["jsVarDef", "jsVarDefName", "jsFuncDefName", "jsFuncDefArgs", "jsVarDefWrap"] | exe "sil! syn clear " . i | endfor
 
+        " bigint
+        sil! syn clear javaScriptBigInt
+        syn match javaScriptBigInt /-\=\<\d\+\%(_\d\+\)*n\>/
+
         " TODO this fails for multiline string e.g. "const str = `aa\nbb\ncc`;" (\n means really newline)
         " workaround: put "=" and the string literal in the next line.
 
@@ -577,7 +603,7 @@ fu! MySyntax()
         syn keyword javascriptStatement yield yield*
 
         " now define region
-        syn region jsVarDef matchgroup=jsVarDefType start=/const/ start=/let/ start=/var/ matchgroup=NONE end=/;/ keepend end=/[^,;]$/ transparent containedin=javaScript contains=javaScript[a-zA-Z].*,jsVarDefName,jsVarDefWrap
+        syn region jsVarDef matchgroup=jsVarDefType start=/\<const\>/ start=/\<let\>/ start=/\<var\>/ matchgroup=NONE end=/;/ keepend end=/[^,;]$/ transparent containedin=javaScript contains=javaScript[a-zA-Z].*,jsVarDefName,jsVarDefWrap
         " symbols inside function calls, arrays and objects are not varname (except destructuring assignment)
         syn region jsVarDefWrap start=/\(\(const\|let\|var\)\_s*\)\@<![[({]/ end=/[])}]/ keepend transparent contained contains=javaScript[a-zA-Z].*
 
@@ -677,6 +703,7 @@ fu! MyHighlight()
 
   " Filetype specific
   " === HTML ===
+  hi link javaScriptBigInt   Special
   hi link javaScript         Normal
   hi      javaScriptParens   ctermfg=magenta
   hi link javaScriptBraces   javaScriptParens
@@ -813,8 +840,9 @@ com! -bar -bang FzfFiles   call Fzf(expand("<bang>" == "" ? "*" : "**", 0, 1),  
             " \ "scheme": { "cmd": "gosh -fno-read-edit", "newl": "\r", "newlMore": 0 },
             " \ "scheme": { "cmd": "rlwrap -pgreen gosh -fno-read-edit", "cmdBase": "gosh", "newl": "\r", "newlMore": 0 },
 let g:ReplData = {
-            \ "scheme": { "cmd": "gosh", "newl": "\r", "newlMore": 0 },
-            \ "python": { "cmd": "python", "newl": "\r\n", "newlMore": 1 },
+            \ "scheme":     { "cmd": "gosh", "newl": "\r", "newlMore": 0 },
+            \ "python":     { "cmd": "python", "newl": "\r\n", "newlMore": 1 },
+            \ "javascript": { "cmd": "node", "newl": "\r\n", "newlMore": 1 },
             \ } " cl, lua, node
 fu! ReplGetOpenTermBuf(cmd) " (cmd)
     " Get (or open) repl term buffer for filetype (and return bufnr)
@@ -871,15 +899,64 @@ endfu
 " command ReplOpen " open or switch to win
 " command ReplSend " noarg = curline or visual, arg = send it
 " FIXME too early to send text when launching repl
-nnore <bar> :call          ReplSend_evalIfVim(getline("."))<cr>
-nnore ,b    ggVG:<c-u>call ReplSend_evalIfVim(GetVisualSelection())<cr>
-nnore ,e    :call          ReplSend_evalIfVim(luaeval("getDefunByIndent()"))<cr>
-vnore <bar> :<c-u>call     ReplSend_evalIfVim(GetVisualSelection())<cr>
+" FIXME do not move cursor
+nnore <silent> <bar> :call          ReplSend_evalIfVim(getline("."))<cr>
+nnore <silent> ,b    ggVG:<c-u>call ReplSend_evalIfVim(GetVisualSelection())<cr>
+nnore <silent> ,e    :call          ReplSend_evalIfVim(luaeval("getDefunByIndent()"))<cr>
+vnore <silent> <bar> :<c-u>call     ReplSend_evalIfVim(GetVisualSelection())<cr>
 
 aug vimrc_repl
     au!
-    au TermOpen * syn match myTermSyn "^gosh\S*[$>]"
-    au TermOpen * hi myTermSyn ctermfg=black ctermbg=green cterm=bold
+    au TermOpen * syn match myTermPrompt "^gosh\S*[$>]" " gauche
+    au TermOpen * syn match myTermPrompt "^>"           " node
+    au TermOpen * hi myTermPrompt ctermfg=black ctermbg=green cterm=bold
+aug END
+" }}}
+
+" Eldoc {{{
+set updatetime=1200
+
+" TODO use info from lsp hover
+" TODO function argument info
+fu! MyEldoc()
+
+    echohl ModeMsg
+    echon ">>  "
+
+    " Find nearest line to show in eldoc (start of function, org-mode heading etc.)
+
+    if &ft == "org"
+        " TODO show heading hierarchy (e.g. "* Diary > ** 06 > *** dinner")
+        let lnum = search('^\*\+ ', "bWn")
+    else
+        let lnum = search("^[^ \t#/]\\{2}.*[^:]\s*$", "bWn")
+    endif
+
+    " Scan each character and show it in its syntax-highlighted color.
+
+    let text     = getline(lnum)[:winwidth(".")-20] " TODO escape sequences and hiragana ==> width 2
+    let namePrev = ""
+    let start    = 0
+
+    for i in range(len(text))
+        let stack = synstack(lnum, i+1)
+        let name  = len(stack) == 0 ? "None" : synIDattr(stack[-1], "name")
+        if name != namePrev
+            if i > 0 | echon text[start:i-1] | endif
+            exe "echohl " . name
+            let namePrev = name
+            let start    = i
+        endif
+    endfor
+
+    echon text[start:]
+    echohl None
+
+endfu
+
+aug vimrc_eldoc
+    au!
+    " au CursorHold,CursorHoldI * call MyEldoc()
 aug END
 " }}}
 
@@ -919,9 +996,13 @@ fu! OrgLevel()
     " otherwise use previous line
     return "="
 endfu
+fu! MyOrgIndent()
+    return -1
+endfu
 fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     set ft=org cms=#\ %s
     setl fdm=expr fde=OrgLevel()
+    setl inde=MyOrgIndent()
     sil! syn clear orgProperty orgComment orgHeading1 orgHeading2 orgHeading3 orgMathInline orgBold orgTex
     syn keyword orgKeyword   begin_src,end_src,macro,title,options,noexport,begin_quote,end_quote
     syn region orgProperty   matchgroup=Special start=/^#+\S*/ end=/$/ oneline
@@ -929,6 +1010,7 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     syn region orgHeading1   start=/^\* /      end=/$/   oneline
     syn region orgHeading2   start=/^\*\{2} /  end=/$/   oneline
     syn region orgHeading3   start=/^\*\{3} /  end=/$/   oneline
+    syn region orgHeading4   start=/^\*\{4} /  end=/$/   oneline
     syn region orgMathInline start=/\$/        end=/\$/  oneline
     syn region orgBold       start=/\*[^* ]/   end=/\*/  oneline
     syn region orgMonospace  start=/\~[^ ]/    end=/\~/  oneline
@@ -944,6 +1026,7 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     hi      orgHeading1   ctermfg=cyan cterm=bold,underline
     hi      orgHeading2   ctermfg=cyan
     hi      orgHeading3   ctermfg=green
+    hi      orgHeading4   ctermfg=magenta
     hi      orgMathInline ctermfg=blue
     hi link orgBold       Statement
     hi link orgMonospace  String
@@ -956,6 +1039,12 @@ endfu
 aug vimrc_ft_org
     au!
     au BufNewFile,BufRead *.org call MyOrgSyntaxHighlight()
+aug END
+
+" === Scheme ===
+aug vimrc_ft_scheme
+    au!
+    au BufNewFile,BufRead *.scm setl formatoptions+=rol
 aug END
 
 " }}}
@@ -1015,6 +1104,10 @@ do -- Keys (keyboard layout specific) {{{
 end -- }}}
 
 function smartSp(file, isBufNr) -- Split or VSplit and return new bufnr {{{
+    if vim.fn.bufname(".") == "" then
+        vim.cmd("e " .. file)
+        return file
+    end
     local w = vim.fn.winwidth(0)
     local h = vim.fn.winheight(0)
     vim.cmd((w/h < 3) and "sp" or "vsp")
@@ -1065,16 +1158,18 @@ end -- }}}
 
 function smartq() -- Close temporary window or act as q key (recording) {{{
 
-    local function shouldBufBeClosed(name, ft)
-        return ft == "help" or ft == "qf"
+    local function shouldBufBeClosed(wintype, name, ft)
+        -- return ft == "help" or ft == "qf"
+        return wintype == "popup" or ft == "help" or ft == "qf"
     end
 
     -- Try closing temporary window
     for i = 1, vim.fn.winnr("$") do
+        local wintype = vim.fn.win_gettype(i)
         local bufnr   = vim.fn.winbufnr(i)
         local bufname = vim.fn.bufname(bufnr)
         local ft      = vim.fn.getbufvar(bufnr, "&ft")
-        if shouldBufBeClosed(bufname, ft) then
+        if shouldBufBeClosed(wintype, bufname, ft) then
             print("Close", bufname, ft)
             vim.fn.win_execute(vim.fn.win_getid(i), "close", 1)
             return
@@ -1116,7 +1211,10 @@ function toggleCmt(visual) -- {{{
 
     -- Helper functions
     local p1     = "^(%s*)" .. regEscape(x) .. "(.*)" .. regEscape(z)
-    local function isCommented(line) return line:match(p1) and true or false end
+    local function isCommented(line)
+        if vim.bo.ft == "org" then return line:match(p1) and (not line:match("^#%+")) end
+        return line:match(p1) and true or false
+    end
     local function comment(line, indTo)
         -- Optionally indent to indTo'th column
         local indCur,text = line:match("^(%s*)(.*)") -- note that %s* is greedy
@@ -1311,34 +1409,53 @@ function mycomp_filter(base, list) -- {{{
 end -- }}}
 
 function mycomp_collect() -- Collect words {{{
---    vim.cmd("sleep 1")
+    -- vim.cmd("sleep 1")
     local function copyTable(t)
         local t2 = {}
         for k, v in pairs(t) do t2[k] = v end
         return t2
     end
-    local res, seen = {}, {}
-    local comps_list = { -- TODO Keep history as first source, but with info from omni.
-        { "o", mycomp_collect_omni() },
+
+    local comps_list = { -- defines order of words
         { "h", mycomp_collect_history() },
+        { "o", mycomp_collect_omni() },
         { "b", mycomp_collect_bufferall() },
         { "k", mycomp_collect_keywords() },
         }
+    local priority = { o=1, k=2, b=3, h=4 } -- which source has priority for extra info of word
+
+    local result, items = {}, {}
+
     for _, v in ipairs(comps_list) do
         local source, comps = v[1], v[2]
         for _, comp in pairs(comps) do
-            -- when dupe occurs, first source is kept
             local w = mycomp_compword(comp)
-            if (not seen[w]) then
-                local item = (type(comp) == "table") and copyTable(comp) or {}
-                item.word = w
-                item.menu = source .. " " .. (comp.menu or "")
-                table.insert(res, item)
-                seen[w] = true
+
+            if not items[w] then
+
+                -- Add new word
+                local item   = (type(comp) == "table") and copyTable(comp) or {}
+                item.word    = w
+                item.menu    = source .. " " .. (comp.menu or "")
+                item._source = source
+                table.insert(result, item)
+                items[w] = item
+
+            elseif priority[items[w]._source] > priority[source] then
+
+                -- Override existing word's extra info by that of another source
+                local item = items[w]
+                if type(comp) == "table" then
+                    for k, v in pairs(comp) do item[k] = v end
+                end
+                item.menu    = source .. " " .. (comp.menu or "")
+                item._source = source
+
             end
         end
     end
-    return res
+
+    return result
 end -- }}}
 
 local mycomp_history, mycomp_history_max = {}, 300

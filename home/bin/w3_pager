@@ -1,7 +1,3 @@
 #!/bin/sh
 
-# raw w3m and w3mman command doesn't allow mouse
-# so set TERM
-
-TERM=xterm
-w3m "$@"
+w3 __W3_PAGER__ "$@"

@@ -6,6 +6,10 @@
 [app] (name=tint2)
   [Layer]	{12}
 [end]
+[app] (name=xfce4-panel)
+  [Hidden]	{yes}
+  [Sticky]	{yes}
+[end]
 [app] (name=urxvt) (title!=MOC|mounter|AlsaMixer) (@WM_COMMAND!=.*FM.*)
   [Deco]	{0x6}
   [Alpha]	{255}

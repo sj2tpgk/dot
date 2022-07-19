@@ -1,7 +1,28 @@
 #!/bin/sh
 
+# Can view pdf
+# Set sxiv for image view
+# Help page (at search.html?, set homepage as search.html, add it to bookmark)
+
 # raw w3m and w3mman command doesn't allow mouse
 # so set TERM
 
-TERM=xterm
-w3m "$@" ~/.w3m/search.html
+arg1=$1
+
+export WWW_HOME=~/.w3m/search.html
+export TERM=xterm
+
+[ "$MYKBD" = colemakdh ] && keymap_file=keymap_colemakdh || keymap_file=keymap_qwerty
+conf="-o keymap_file=$keymap_file"
+
+case "$arg1" in
+    __W3_MAN__)   shift; w3mman "$@" ;; # omitting $conf (not very correct)
+    __W3_PAGER__) shift; w3m $conf "$@" ;;
+    localhost:*)  shift; w3m $conf "$@" "http://$arg1" ;;
+    *.pdf)
+        command -v ls >/dev/null || { echo "pdftohtml not available!"; exit 1; }
+        shift
+        pdftohtml -q -s -i -p -stdout "$arg1" | w3m $conf -T text/html "$@" -
+        ;;
+    *) w3m $conf "$@" ~/.w3m/search.html ;;
+esac

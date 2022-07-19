@@ -224,13 +224,13 @@ F9 F10 :Exec ~/script/speak.sh
 
 F9 a       :Exec pavucontrol
 F9 c       :Exec ~/script/term/mocp
-F9 d       :Exec sh ~/drawio_export.sh
+F9 d       :Exec sh ~/script/drawio_export.sh
 F9 e       :Exec running emacs && wmctrl -x -a emacs || ~/script/emacsgui.sh
 F9 f       :Exec running firefox && wmctrl -x -a 'firefox' || firefox
 F9 shift f :Exec GTK_THEME=Vertex:light firefox --private-window
 F9 g       :Exec geeqie
 F9 m       :Exec claws-mail
-F9 r       :Exec ~/script/term/ranger
+F9 r       :Exec ~/script/terminal sh -c rg # must be sh, NOT fish, for correct dir on split
 F9 shift s :Exec ~/script/emacsgui.sh
 F9 t       :Exec ~/script/terminal
 F9 T       :Exec ~/script/urxvtclient

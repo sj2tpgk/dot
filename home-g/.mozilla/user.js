@@ -25,10 +25,12 @@ user_pref("extensions.pocket.enabled", false);
 user_pref("full-screen-api.warning.timeout", 0);
 user_pref("general.smoothScroll", false);
 user_pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
+user_pref("pointer-lock-api.warning.timeout", 0);
 user_pref("privacy.file_unique_origin", false); // Allow local script access local iframe's document
 user_pref("security.dialog_enable_delay", 0);
 user_pref("sidebar.position_start", false);
 user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
+user_pref("toolkit.tabbox.switchByScrolling", true);
 user_pref("ui.key.menuAccessKeyFocuses", false);
 user_pref("xpinstall.whitelist.required", false);
 
