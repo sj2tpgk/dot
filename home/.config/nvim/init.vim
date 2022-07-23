@@ -1098,9 +1098,18 @@ do -- Keys (keyboard layout specific) {{{
         end
     end
 
-    vim.cmd("nnore <expr> " .. (mykbd and "k" or "h") .. " (getcurpos()[2] == 1) && (foldlevel('.') != 0) ? 'zc' : 'h'")
-    vim.cmd("nnore <expr> " .. (mykbd and "i" or "l") .. " (foldclosed('.') != -1) ? 'zo' : 'l'")
+    vim.cmd("nnore <silent> " .. (mykbd and "k" or "h") .. " :lua smarth()<cr>")
+    vim.cmd("nnore <expr> "   .. (mykbd and "i" or "l") .. " (foldclosed('.') != -1) ? 'zo' : 'l'")
 
+end -- }}}
+
+function myTime() return vim.fn.str2float(vim.fn.reltimestr(vim.fn.reltime())) end -- Get time in seconds (with milliseconds precision)
+
+local smarth_last_time = 0
+function smarth() -- Go left and optionally close a fold {{{
+    local time = myTime()
+    vim.cmd("norm! " .. ((time - smarth_last_time > .18 and vim.fn.getcurpos()[3] == 1 and vim.fn.foldlevel(".") ~= 0) and "zc" or "h"))
+    smarth_last_time = time
 end -- }}}
 
 function smartSp(file, isBufNr) -- Split or VSplit and return new bufnr {{{
@@ -1129,7 +1138,7 @@ function smartf(direction) -- {{{
         local n = str:reverse():find(char, #str + 1 - init)
         return n and (#str + 1 - n)
     end
-    local time = os.time()
+    local time = myTime()
     local char = (time - smartf_last_time <= 1) and smartf_last_char or vim.fn.nr2char(vim.fn.getchar())
     local reg  = regEscape(char:lower())
     local line = vim.fn.getline("."):lower()

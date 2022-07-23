@@ -8,6 +8,7 @@
 
 /* Hide tab bar */
 #TabsToolbar { visibility: collapse !important; }
+#titlebar { visibility: collapse !important; } /* windows? */
 
 /* No white flash */
 #tabbrowser-tabpanels { background: #111111 !important; }
