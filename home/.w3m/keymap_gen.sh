@@ -64,7 +64,7 @@ keymap -     PREV_TAB
 
 ### Misc
 keymap U     GOTO
-keymap r     REDRAW
+keymap r     RESHAPE
 keymap o     GOTO_HOME
 keymap c-h   HELP
 keymap ?     HELP

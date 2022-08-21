@@ -81,7 +81,7 @@ urimethodmap ~/.w3m/urimethodmap, /usr/etc/w3m/urimethodmap
 editor /usr/bin/vim
 mailto_options 1
 mailer /usr/bin/mail
-extbrowser /usr/bin/palemoon
+extbrowser ~/.w3m/ext-browser
 extbrowser2 
 extbrowser3 
 extbrowser4 

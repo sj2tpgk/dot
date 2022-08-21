@@ -17,6 +17,7 @@
 [app] (name=myselector)
   [Deco]	{0x4}
   [Alpha]	{255}
+  [Layer]	{2}
 [end]
 [app] (name=chromium)
   [Deco]	{NORMAL}

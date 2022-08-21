@@ -10,6 +10,7 @@
 " TODO snippet (for statement)
 " TODO scrach buffer of type
 " TODO Lisp folding
+" TODO BUG: fzf long file name truncated (when very nested directory?)
 
 " Charcode at cursor
 " :echo char2nr(matchstr(getline('.'), '\%'.col('.').'c.'))
@@ -30,6 +31,13 @@ mapclear | imapclear
 " Easy lua debug. Use L! to print nested table. Example ":L 123,456"
 command! -nargs=* -bang -complete=lua L lua pp(<q-args>, true, ("<bang>" == "") and 1 or 99, <args>)
 
+" Environment info (vim or neovim, keyboard layout, terminal emulator, os, wsl, embedded in sublime or vscode etc.) {{{
+let g:env = {
+            \ "vscode": exists("g:vscode"),
+            \ "git":    executable("git"),
+            \ }
+" }}}
+
 " Fast startup {{{
 let g:python_host_skip_check=1
 let g:loaded_python3_provider=1
@@ -45,7 +53,7 @@ let g:loaded_python3_provider=1
 
 " Plugin {{{
 " TODO: nv0 = no plugin, nv = yes plugin etc.
-if 1
+if env.git
 
     " Install vim-plug
     let autoload_plug_path = stdpath('data') . '/site/autoload/plug.vim'
@@ -66,7 +74,7 @@ if 1
                 \ 'white',
                 \ 'cyan',
                 \ ]
-    " Plug 'frazrepo/vim-rainbow'
+    Plug 'frazrepo/vim-rainbow'
     Plug 'neovim/nvim-lspconfig'
     " set cmdheight=2
     " let g:echodoc_enable_at_startup = 1
@@ -76,6 +84,7 @@ if 1
     " Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
     " Plug 'nvim-treesitter/playground'
     " Plug 'jelera/vim-javascript-syntax'
+    Plug 'udalov/kotlin-vim'
     call plug#end()
 
     " Install missing plugins
@@ -135,6 +144,7 @@ if 1
         require'lspconfig'.pyright.setup  { on_attach = on_attach }
         require'lspconfig'.bashls.setup   { on_attach = on_attach }
         require'lspconfig'.tsserver.setup { on_attach = on_attach, single_file_support = true }
+        require'lspconfig'.kotlin_language_server.setup { on_attach = on_attach }
         -- Place libaries in node_modules/ to let LSP recognize it.
 EOFLUA
     endif
@@ -217,6 +227,8 @@ set number            " Line number
 set splitbelow
 set splitright
 set confirm           " Ask on :q :wq etc.
+set autochdir         " Auto change working directory to current files' like in emacs
+set wildignorecase    " Case-insensitive filename completion
 
 if exists("&ttymouse")
     set ttymouse=xterm2   " Mouse drag to resize windows
@@ -364,13 +376,15 @@ set hlsearch
 " Esc {{{
 set ttimeoutlen=8
 
-" If popup window is open, close it
-fu! SmartEsc()
-    let nr = 1 + index(map(range(1, winnr("$")), "win_gettype(v:val)"), 'popup')
-    if nr >= 1 | exe nr .. "wincmd q" | endif
-    exe "norm! \<escape>"
-endfu
-nnore <silent> <escape> :call SmartEsc()<cr>
+if !env.vscode
+    " If popup window is open, close it
+    fu! SmartEsc()
+        let nr = 1 + index(map(range(1, winnr("$")), "win_gettype(v:val)"), 'popup')
+        if nr >= 1 | exe nr .. "wincmd q" | endif
+        exe "norm! \<escape>"
+    endfu
+    nnore <silent> <escape> :call SmartEsc()<cr>
+endif
 
 " Do not move cursor position on leaving insert mode
 augroup vimrc_myesc
@@ -506,6 +520,14 @@ fu! NextWindow()
     endwh
 endfu
 
+fu! GoUp(dir="up")
+    if g:env.vscode " default command is too fast
+        call VSCodeCall("cursorMove", { "by": "line", "value": 20, "to": a:dir == "down" ? "down" : "up" })
+    else
+        exe a:dir == "down" ? "norm! \<c-d>" : "norm! \<c-u>"
+    endif
+endfu
+
 " }}}
 
 " Completion {{{
@@ -552,7 +574,7 @@ aug vimrc_complete
   " Auto complete (https://stackoverflow.com/questions/35837990)
   fu! OpenCompletion()
     " check (menu visible && inserting alphabet && at least comp_minlen chars)
-    if !pumvisible() && ((v:char >= 'a' && v:char <= 'z') || (v:char >= 'A' && v:char <= 'Z')) && (g:comp_minlen == 1 || (col(".") >= (g:comp_minlen-1) && matchstr(getline("."), '\%' . (col('.')-(g:comp_minlen-1)) . 'c[a-zA-Z_]\{' . (g:comp_minlen-1) . '\}') != ""))
+    if !pumvisible() && (('a' <= v:char && v:char <= 'z') || ('A' <= v:char && v:char <= 'Z') || (v:char == '_')) && (g:comp_minlen == 1 || (col(".") >= (g:comp_minlen-1) && matchstr(getline("."), '\%' . (col('.')-(g:comp_minlen-1)) . 'c[a-zA-Z_]\{' . (g:comp_minlen-1) . '\}') != ""))
       call feedkeys("\<plug>MyTab", "")
 "      call feedkeys("\<c-x>\<c-u>", "n") " this will mess up repeating (.)
     endif
@@ -631,6 +653,13 @@ fu! MySyntax()
 
     elseif ft == "org"
         call MyOrgSyntaxHighlight()
+
+    elseif ft == "kotlin"
+        " syn match myKtFuncName /\<\w\+\>\_s*\ze(/
+        syn match myKtFuncUse  /\<\w\+\>\_s*\ze(/
+        syn match myKtFuncName /\(fun\s_*\)\@<=\<\w\+\>\_s*\ze(/
+        syn match myKtType     /\(:\s_*\)\@<=\<\w\+\>/
+
     endif
 endfu
 nnore <f6> :call MySyntax()<cr>
@@ -640,7 +669,8 @@ nnore <f6> :call MySyntax()<cr>
 aug vimrc_syn
   au!
   au Syntax,FileType javascript,html call MySyntax()
-  au BufNewFile,BufRead *.js,*.html call MySyntax()
+  au BufNewFile,BufRead *.js,*.html  call MySyntax()
+  au Syntax,FileType kotlin          call MySyntax()
 aug END
 
 "hi myVarName ctermfg=blue cterm=bold
@@ -716,6 +746,12 @@ fu! MyHighlight()
   hi link htmlSpecialTagName htmlTagName
   hi      Title              ctermfg=none cterm=bold
   hi link htmlTitle          Title
+
+  " === Kotlin ===
+  hi link myKtFuncName       myFuncName
+  hi link myKtFuncUse        Statement
+  hi link myKtType           Type
+
 endfu
 call MyHighlight()
 aug vimrc_hi " :hi need to be in autocmd on first run??
@@ -804,6 +840,7 @@ fu! FzfExists()
     return executable("fzf")
 endfu
 let s:fzf_callback = 0
+let s:fzf_list = 0
 fu! Fzf(list, callback)
     if !FzfExists() | echo "fzf not installed" | return 0 | endif
     " Fzf in new window (or else original win will be lost)
@@ -815,10 +852,15 @@ fu! Fzf(list, callback)
     au TermClose * ++once call timer_start(10, { -> FzfOnExit(getline(1, line("$"))) })
     " Need to use callback (or some other mechanism), as :exe "term ..." doesn't wait until exit
     let s:fzf_callback = a:callback
-    " Print a:list to tmpfile then pipe to fzf
-    " (Can I pipe a:list directly to :term ? (it's possible if :! instead of :term))
+    " Save a:list
+    " I initially captured the output of fzf as the selected item, but due to line-wrapping of :term, it's not accurate when a very long string in a:list is selected.
+    " So I now feed string like "0 aaa\n1 bbb\n..." to fzf, and extract the index number from fzf's output.
+    let s:fzf_list = a:list
+    let fzf_stdin = map(a:list, 'v:key . " " . v:val')
+    " Print input for fzf to a tmpfile, then pipe to fzf
+    " (Can I pipe directly to :term ? (it's possible if :! instead of :term))
     let tmpfile = tempname()
-    call writefile(a:list, tmpfile)
+    call writefile(fzf_stdin, tmpfile)
     " Can't use termopen() here, as it *replaces* current buf with :term buf (thus lose the current buf)
     exe "term sh -c 'cat " . tmpfile . " | fzf'"
 endfu
@@ -827,8 +869,12 @@ fu! FzfOnExit(stdout) " stdout = list of strings
     bd!
     " Do nothing if user cancelled fzf
     if -1 == index(a:stdout, "[Process exited 0]") | return | endif
-    " Call callback with selected string (first line of stdout)
-    call s:fzf_callback(a:stdout[0])
+    " Call callback with selected string
+    " (get first line of stdout, extract index number, and get s:fzf_list[index])
+    let firstline = a:stdout[0]
+    let index = matchstr(firstline, '^[0-9]\+')
+    let item = matchstr(s:fzf_list[index], '[^0-9 ].*')
+    call s:fzf_callback(item)
 endfu
 com! -bar       FzfBuffers call Fzf(map(filter(range(1, bufnr("$")), "buflisted(v:val)"), "bufname(v:val)"), { sel -> execute("edit " . sel . "") })
 com! -bar -bang FzfFiles   call Fzf(expand("<bang>" == "" ? "*" : "**", 0, 1),                               { sel -> execute("edit " . sel . "") })
@@ -1063,11 +1109,13 @@ do -- Keys (keyboard layout specific) {{{
         "nv  k  e  gk",
         "nv  gj gn j",
         "nv  gk ge k",
-        "nv  J  N  <c-d>",
-        "nv  K  E  <c-u>",
+        -- "nvS J  N  :call GoUp('down')<cr>",
+        -- "nvS K  E  :call GoUp('up')<cr>",
+        "nvS J  N  <c-d>",
+        "nvS K  E  <c-u>",
         "v   h  k  h",
         "v   l  i  l",
-        "nv  gh gk :lua smartHome()<cr>",
+        "nvS gh gk :lua smartHome()<cr>",
         "nv  gl gi <end>",
         "nv  i  l  i",
         "nv  I  L  I",
@@ -1091,10 +1139,11 @@ do -- Keys (keyboard layout specific) {{{
     }
 
     for _, entry in ipairs(mappings) do
-        local a1,a2,a3,a4
-        for i1,i2,i3,i4 in entry:gmatch("(%S+)%s+(%S+)%s+(%S+)%s+(.+)") do a1,a2,a3,a4=i1,i2,i3,i4 break end
-        for mode in a1:gmatch("%S") do
-            vim.cmd(mode .. "nore " .. (mykbd and a3 or a2) .. " " .. a4)
+        local a0,a1,a2,a3,a4
+        for i0,i1,i2,i3,i4 in entry:gmatch("([nvo]+)([S]*)%s+(%S+)%s+(%S+)%s+(.+)") do a0,a1,a2,a3,a4=i0,i1,i2,i3,i4 break end
+        local sil = string.len(a1) > 0
+        for mode in a0:gmatch("%S") do
+            vim.cmd(mode .. "nore " .. (sil and "<silent> " or "") .. (mykbd and a3 or a2) .. " " .. a4)
         end
     end
 

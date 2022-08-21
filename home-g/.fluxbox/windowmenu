@@ -15,12 +15,16 @@
   [sendto]          # Submenu: send window to another workspace
   [alpha]           # Submenu: Change window's transparency
   [extramenus]      # Submenu: "remember ..." (記憶)
+
   [submenu] (Resize)
-    [ResizeTo 1280 795]  (Resize to 1280x795)
-    [ResizeTo 1664 1043] (Resize to 1664x1043)
+    [MacroCmd {ResizeTo 1280 795}  {Exec xrandr --output eDP-1 --rotate right} {MoveTo -130 598}]  (1280x795 (right\))
+    [MacroCmd {ResizeTo 1664 1043} {Exec xrandr --output eDP-1 --rotate normal} {MoveTo 90 0}] (1664x1043 (normal\))
+    [ResizeTo 1664 1043] (1664x1043)
+    [ResizeTo 1280 795]  (1280x795)
+    # AND rotate???
     # 500x500   => 502x502
     # 1280x795  => 1282x797  (qemu inner resolution 1280x768)
-    # 1664x1043 => 1666x1045 (qemu inner resolution 1664x1014)
+    # 1664x1043 => 1666x1045 (qemu inner resolution 1664x1014) <-- isn't it 1016?
   [end]
 
   [separator]       # Horizontal line

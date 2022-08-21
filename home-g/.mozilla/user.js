@@ -5,6 +5,7 @@
 
 user_pref("browser.aboutConfig.showWarning", false);
 user_pref("browser.compactmode.show", true);
+user_pref("browser.ctrlTab.sortByRecentlyUsed", false);
 user_pref("browser.download.autohideButton", true);
 user_pref("browser.download.alwaysOpenPanel", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
