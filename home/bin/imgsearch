@@ -1,0 +1,5 @@
+#!/bin/sh
+
+input=$*
+# echo "[$input]"
+rclip -f -t 30 "$input" 2>/dev/null | grep -v TensorList | sxiv -t -i -
