@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Prints machine unique string, truncated to 4 chars.
+
+if [ -e /etc/machine-id ]; then
+    cat /etc/machine-id | cut -c1-4
+else
+    echo 0000
+fi

@@ -10,13 +10,19 @@ bb='\e[44m' bm='\e[45m' bc='\e[46m' bw='\e[47m'
 bold='\e[1m' none='\e[0m'
 
 time=$(date +%H:%M)
-dir=$(pwd | sed 's#/home/[^/]*#~#; s#\(\.*[^/]\)[^/]*/#\1/#g')
-git=$(gitprompt-rs 2>/dev/null)
+dir=$(pwd | sed 's#^/home/[^/]*#~#; s#\(\.*[^/]\)[^/]*/#\1/#g')
+
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    git='('
+    git+=$(git rev-parse --abbrev-ref HEAD)
+    [ -n "$(git status -s)" ] && git+='+'
+    git+=')'
+fi
 
 s="$bk"
 s+="$c$time "
+[ -n "$git" ] && s+="$m$git "
 s+="$g$dir"
-[ ! -z "$git" ] && s+=" $m$git"
 s+=" $bold"
 case $1 in
   # fish)         s+="$r>$b<$g($y'$r>" ;;

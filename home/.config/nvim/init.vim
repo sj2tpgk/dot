@@ -10,7 +10,6 @@
 " TODO snippet (for statement)
 " TODO scrach buffer of type
 " TODO Lisp folding
-" TODO BUG: fzf long file name truncated (when very nested directory?)
 
 " Charcode at cursor
 " :echo char2nr(matchstr(getline('.'), '\%'.col('.').'c.'))
@@ -249,6 +248,12 @@ fu! StlFileTypeEnc()
 endfu
 set statusline=%h%w%m%r\ \ %t\ \ \ [%{StlDirName()}]\ \ \ (%{StlFileTypeEnc()})\ %=%-14.(%l,%c%V%)\ %P
 set laststatus=2
+
+" Completely disable automatic line break at certain column ON ALL FILES
+aug vimrc_disable_auto_line_break
+    au!
+    au FileType * set tw=0 fo-=t
+aug END
 " }}}
 
 " Indent {{{
@@ -452,6 +457,8 @@ nnore + :tabnext<cr>
 nnore <silent> su :vsplit<bar>wincmd l<bar>exe "norm! Ljz<c-v><cr>"<cr>:set scb<cr>:wincmd h<cr>:set scb<cr>
 
 " misc
+nnore * :call SearchQF()<cr>
+nnore sc :copen<cr>
 nnore s/ :noh<cr>:let @/ = ""<cr>
 nnore s* :call AddHighlight()<cr>
 nnore :<cr> :<up><cr>
@@ -526,6 +533,18 @@ fu! GoUp(dir="up")
     else
         exe a:dir == "down" ? "norm! \<c-d>" : "norm! \<c-u>"
     endif
+endfu
+
+fu! SearchQF()
+    " search <cword> with vimgrep (so you can :copen later)
+    let word = expand("<cword>")
+    let pos = getcurpos()
+    exe "vimgrep " . word . " %"
+    call setpos('.', pos)
+    " go to beginning of word (but don't move when already at beginning of word)
+    exe "norm! viwo\<esc>"
+    " set search word
+    let @/ = word
 endfu
 
 " }}}

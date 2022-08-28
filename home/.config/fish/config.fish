@@ -4,7 +4,7 @@ set -xg PATH $HOME/localbin $PATH
 set -xg PATH $HOME/.local/bin $PATH
 
 # Keyboard
-if [ (cat /etc/machine-id | md5sum | cut -c1-4) = f63a ]
+if [ (machineid) = c0c2 ]
     set -xg MYKBD "colemakdh"
 end
 
@@ -47,7 +47,7 @@ set -xg RLWRAP_HOME ~/.rlwrap/
 
 # Binding (binding for sudo is builtin)
 
-fzf_key_bindings
+type -q fzf_key_bindings && fzf_key_bindings
 
 bind \eg "commandline -r (commandline -b | sed 's/\s*\$/ | grep -i /')"
 bind \eh "commandline -r (commandline -b | sed 's/\s*\$/ --help/')"
