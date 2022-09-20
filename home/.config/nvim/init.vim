@@ -34,6 +34,7 @@ command! -nargs=* -bang -complete=lua L lua pp(<q-args>, true, ("<bang>" == "") 
 let g:env = {
             \ "vscode": exists("g:vscode"),
             \ "git":    executable("git"),
+            \ "curl":   executable("curl"),
             \ }
 " }}}
 
@@ -52,10 +53,10 @@ let g:loaded_python3_provider=1
 
 " Plugin {{{
 " TODO: nv0 = no plugin, nv = yes plugin etc.
-if env.git
+let autoload_plug_path = stdpath('data') . '/site/autoload/plug.vim'
+if env.git && (filereadable(autoload_plug_path) || env.curl) " has git && (has vim-plug or curl)
 
     " Install vim-plug
-    let autoload_plug_path = stdpath('data') . '/site/autoload/plug.vim'
     if !filereadable(autoload_plug_path)
         silent execute '!curl -fLo ' . autoload_plug_path . '  --create-dirs 
                     \ "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"'
@@ -234,6 +235,16 @@ if exists("&ttymouse")
 endif
 
 set clipboard=unnamedplus
+" If my clipboard wrapper is available, use it.
+if executable("xcopy") && executable("xpaste")
+    let g:clipboard = {
+                \ 'name': 'my',
+                \ 'copy': { '+': 'xcopy', '*': 'xcopy', },
+                \ 'paste': { '+': 'xpaste', '*': 'xpaste', },
+                \ 'cache_enabled': 0,
+                \ }
+endif
+
 
 " Japanese encodings
 " don't use modeline(comment at the end of a file) to set enc (vim:enc=euc-jp etc.)

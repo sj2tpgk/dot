@@ -1,3 +1,9 @@
 #!/bin/sh
 
-xclip -selection clipboard -o
+if command -v xclip >/dev/null; then #xorg
+    xclip -selection clipboard -o
+
+elif command -v powershell.exe >/dev/null; then # wsl
+    powershell.exe -command 'Get-Clipboard' | tr -d ''
+
+fi
