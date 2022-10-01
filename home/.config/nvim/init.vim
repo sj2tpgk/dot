@@ -140,10 +140,11 @@ if env.git
             ]]
             vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
         end
-        require'lspconfig'.pyright.setup  { on_attach = on_attach }
         require'lspconfig'.bashls.setup   { on_attach = on_attach }
-        require'lspconfig'.tsserver.setup { on_attach = on_attach, single_file_support = true }
+        require'lspconfig'.ccls.setup     { on_attach = on_attach }
         require'lspconfig'.kotlin_language_server.setup { on_attach = on_attach }
+        require'lspconfig'.pyright.setup  { on_attach = on_attach }
+        require'lspconfig'.tsserver.setup { on_attach = on_attach, single_file_support = true }
         -- Place libaries in node_modules/ to let LSP recognize it.
 EOFLUA
     endif

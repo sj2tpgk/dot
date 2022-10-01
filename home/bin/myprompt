@@ -14,7 +14,7 @@ dir=$(pwd | sed 's#^/home/[^/]*#~#; s#\(\.*[^/]\)[^/]*/#\1/#g')
 
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     git='('
-    git+=$(git rev-parse --abbrev-ref HEAD)
+    git+=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
     [ -n "$(git status -s)" ] && git+='+'
     git+=')'
 fi
