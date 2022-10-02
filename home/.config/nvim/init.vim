@@ -231,6 +231,10 @@ set confirm           " Ask on :q :wq etc.
 set autochdir         " Auto change working directory to current files' like in emacs
 set wildignorecase    " Case-insensitive filename completion
 
+if exists("&mousescroll")
+    set mousescroll=ver:5,hor:6
+endif
+
 if exists("&ttymouse")
     set ttymouse=xterm2   " Mouse drag to resize windows
 endif
@@ -360,7 +364,7 @@ aug END
 
 fu! MyFolding()
     let ft = &ft
-    if index(["lua", "javascript", "html", "perl"], ft) != -1
+    if index(["lua", "javascript", "html", "perl", "c", "cpp"], ft) != -1
         setl fdm=expr fde=MyFold(v:lnum,0)
     elseif ft == "python"
         setl fdm=expr fde=MyFold(v:lnum,1)
@@ -551,12 +555,12 @@ fu! SearchQF()
     " search <cword> with vimgrep (so you can :copen later)
     let word = expand("<cword>")
     let pos = getcurpos()
-    exe "vimgrep " . word . " %"
+    exe "vimgrep /\\<" . word . "\\>/ %"
     call setpos('.', pos)
     " go to beginning of word (but don't move when already at beginning of word)
     exe "norm! viwo\<esc>"
     " set search word
-    let @/ = word
+    let @/ = "\\<" . word . "\\>"
 endfu
 
 " }}}
@@ -1287,6 +1291,8 @@ function toggleCmt(visual) -- {{{
             return "//%s"
         elseif vim.bo.ft == "html" and hasSyntax("cssStyle") then
             return "/*%s*/"
+        elseif vim.bo.ft == "c" or vim.bo.ft == "cpp" then
+            return "//%s"
         else
             local cms = vim.bo.cms
             return (cms and cms:len() >= 1) and cms or "#%s" -- fallback to #%s when no cms
@@ -1649,7 +1655,7 @@ function mycomp_lsp_omnifunc_sync(findstart, base) -- synchronous lsp omnifunc (
     end
 
     -- Restore cursor line and position to the state of first call
-    vim.api.nvim_set_current_line(mycomp_lsp_omnifunc_cache.line)
+    -- vim.api.nvim_set_current_line(mycomp_lsp_omnifunc_cache.line) -- temporarily disabled (neovim 0.8, now textlock is set, E565)
     vim.api.nvim_win_set_cursor(0, mycomp_lsp_omnifunc_cache.pos)
 
     -- Make request
@@ -1669,7 +1675,7 @@ function mycomp_lsp_omnifunc_sync(findstart, base) -- synchronous lsp omnifunc (
 
     -- Restore back cursor line and position to the state of this call's start
     -- (avoids outcomes of Vim's internal line postprocessing)
-    vim.api.nvim_set_current_line(line)
+    -- vim.api.nvim_set_current_line(line) -- temporarily disabled (neovim 0.8, now textlock is set, E565)
     vim.api.nvim_win_set_cursor(0, pos)
 
     return items
