@@ -1,3 +1,7 @@
+# TODO keybinding: right arrow to complete next word or forward-char, go to beginning or end of prev word (example: !echo! !yes! !no! (! is cursor positions)).
+
+# Misc {{{
+
 # Path
 set -xg PATH $HOME/bin $PATH
 set -xg PATH $HOME/localbin $PATH
@@ -8,36 +12,42 @@ if [ (machineid) = c0c2 ]
     set -xg MYKBD "colemakdh"
 end
 
+# Helpers
+function has; command -v $argv[1] >/dev/null 2>&1; end
+
 # Alias
-alias cp 'cp -i'
-if command -v nvim > /dev/null
-    alias nv nvim
-end
+function aliasif; has $argv[2] && alias $argv[1] $argv[2]; end
+alias   cp   'cp -i'
+aliasif gstd gst-discoverer-1.0
+aliasif gsti gst-inspect-1.0
+aliasif gstl gst-launch-1.0
+aliasif nv   nvim
+aliasif rg   ranger
 
 # Completion
 # "quiet" : completion like "if" or "sudo" (followed by another commands)
 complete -c quiet -xa '(__fish_complete_subcommand)'
 
 # Pager ( -x (--export) is necessary )
-if command -v vimpager > /dev/null
+if has vimpager
     set -xg PAGER vimpager
     set -xg VIMPAGER_RC ~/.vimpagerrc
-else if command -v w3mman > /dev/null
+else if has w3mman -v w3mman
     set -xg PAGER w3_pager
     alias man w3_man
 end
 
 # Editor
-# if command -v emacs > /dev/null
+# if has emacs
 #     set -xg EDITOR ec
 #     set -xg VISUAL ec
-if command -v vim > /dev/null
-    set -xg EDITOR vim
-    set -xg VISUAL vim
-else if command -v nvim > /dev/null
+if has nvim
     set -xg EDITOR nvim
     set -xg VISUAL nvim
-else
+else if has vim
+    set -xg EDITOR vim
+    set -xg VISUAL vim
+else if has nano
     set -xg EDITOR nano
     set -xg VISUAL nano
 end
@@ -45,22 +55,18 @@ end
 # Rlwrap
 set -xg RLWRAP_HOME ~/.rlwrap/
 
-# Binding (binding for sudo is builtin)
+# }}}
+
+# Key bindings {{{
 
 type -q fzf_key_bindings && fzf_key_bindings
 
+# \es for sudo is builtin
 bind \eg "commandline -r (commandline -b | sed 's/\s*\$/ | grep -i /')"
 bind \eh "commandline -r (commandline -b | sed 's/\s*\$/ --help/')"
-# bind \ed "commandline -r (find . -type d -iname '*(commandline -b | sed s/\///g)*' | fzy)"
 bind -k ppage prevd-or-backward-word
 bind -k npage nextd-or-forward-word
 bind -k btab  nextd-or-forward-word # shift+tab
-
-source ~/.config/fish/smart_jump.fish
-# bind \cf forward-jump
-# bind \ef backward-jump
-# bind \ct repeat-jump
-# bind \et repeat-jump-reverse
 
 # bind \ed my_fish_fzy
 # bind \ef "commandline -r hello"
@@ -73,16 +79,59 @@ source ~/.config/fish/smart_jump.fish
 #   commandline -f repaint
 # end
 
-# Git prompt: use ascii chars
-set __fish_git_prompt_char_cleanstate       'cln'  # (Variable: ✔)
-set __fish_git_prompt_char_conflictedstate  'x_x'  # (Variable: ✖)
-set __fish_git_prompt_char_dirtystate       'chg'  # (Variable: ✚)
-set __fish_git_prompt_char_stagedstate      'stg'  # (Variable: ●)
-set __fish_git_prompt_char_untrackedfiles   'utr'  # (Variable: …)
-set __fish_git_prompt_char_upstream_ahead   '+'    # (Variable: ↑)
-set __fish_git_prompt_char_upstream_behind  '-'    # (Variable: ↓)
-set __fish_git_prompt_char_upstream_prefix  ''     # (Variable: '')
+# }}}
 
+# Smart jump (alternative for forward-jump etc.) {{{
+
+# Get time in milli seconds
+function jump_gettime; set s (date +%s%N); echo (string sub -l (math (string length $s) - 6) $s); end
+
+# If called within cooldown, run repeat command
+set jump_cooldown 1600
+# The time smart_jump was last used.
+set jump_lasttime (math (jump_gettime) - $jump_cooldown)
+# Last jump was forward or backward?
+set jump_cmd none
+
+function smart_jump -d 'Jump like vim-snipe.'
+    set -l now (jump_gettime)
+    set -l cmd $argv[1]
+    commandline -f backward-char
+    if [ (math $now - $jump_lasttime) -le $jump_cooldown ]
+        if [ $jump_cmd = $cmd ]
+            # \cf \cf => non-reverse
+            # \ef \ef => non-reverse
+            commandline -f repeat-jump
+        else
+            # \cf \ef => reverse
+            # \ef \cf => reverse
+            commandline -f repeat-jump-reverse
+        end
+    else
+        commandline -f $cmd # forward-jump or backward-jump
+        set jump_cmd $cmd
+    end
+    commandline -f forward-char
+    set jump_lasttime $now
+end
+
+bind \cf "smart_jump backward-jump"
+bind \ef "smart_jump forward-jump"
+
+# }}}
+
+# Git prompt: use ascii chars {{{
+set __fish_git_prompt_char_cleanstate       ''     # (Variable: ✔)
+set __fish_git_prompt_char_conflictedstate  '?'    # (Variable: ✖)
+set __fish_git_prompt_char_dirtystate       '+'    # (Variable: ✚)
+set __fish_git_prompt_char_stagedstate      ' stg' # (Variable: ●)
+set __fish_git_prompt_char_untrackedfiles   ' utr' # (Variable: …)
+set __fish_git_prompt_char_upstream_ahead   '^'    # (Variable: ↑)
+set __fish_git_prompt_char_upstream_behind  'v'    # (Variable: ↓)
+set __fish_git_prompt_char_upstream_prefix  ''     # (Variable: '')
+# }}}
+
+# Colors {{{
 
 set fish_color_autosuggestion 'magenta'
 # set fish_color_cancel:\x2dr
@@ -108,3 +157,53 @@ set fish_color_redirection    'cyan'
 # set fish_color_status:red
 # set fish_color_user:brgreen
 set fish_color_valid_path     '--underline' # (underline if file exist (color is set in _operator and _param)
+
+# }}}
+
+# Extra commands {{{
+
+function mkcd -d 'mkdir plus cd'
+  set dirname $argv[1]
+  mkdir -p $dirname
+  eval "cd" $dirname
+end
+
+function tmuxcd -d 'cd to pwd of tmux last-pane'
+  cd (tmux last-pane; tmux-path getpanepath; tmux last-pane)
+end
+
+# }}}
+
+# Greeting {{{
+
+function fish_greeting
+  switch (date "+%a")
+    case 土
+      echo -n (set_color yellow)(date "+%Y-%m-%d") (set_color green)\((set_color blue)(date "+%a")(set_color green)\) (set_color cyan)(date "+%H:%M:%S")(set_color white)
+    case 日
+      echo -n (set_color yellow)(date "+%Y-%m-%d") (set_color green)\((set_color red)(date "+%a")(set_color green)\) (set_color cyan)(date "+%H:%M:%S")(set_color white)
+    case '*'
+      echo -n (set_color yellow)(date "+%Y-%m-%d") (set_color green)\((set_color white)(date "+%a")(set_color green)\) (set_color cyan)(date "+%H:%M:%S")(set_color white)
+  end
+
+  echo "  Welcome to" (set_color cyan)fish (set_color blue)'<\'))><'(set_color white)
+end
+
+# }}}
+
+# Prompt {{{
+
+function fish_prompt
+  set laststatus $status
+  set lastkillsig $fish_kill_signal
+  if test -n "$fish_private_mode"
+    myprompt fish_private $laststatus $lastkillsig
+  else
+    myprompt fish         $laststatus $lastkillsig
+  end
+end
+
+# }}}
+
+
+# vim: set fdm=marker cms=#%s

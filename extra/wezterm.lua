@@ -1,4 +1,6 @@
 -- should be in "C:\Users\XXXXXX\.config\wezterm"
+-- In vim:
+--   :!yes | cp % /mnt/c/Users/XXXXXX/.config/wezterm/wezterm.lua
 
 local wezterm = require "wezterm"
 
@@ -62,8 +64,12 @@ return {
   -- color_scheme = "Solar Flare (base16)",
   -- color_scheme = "Solar Flare Light (base16)",
   colors = {
-      foreground="#111", background="rgba(245,245,245,91%)", cursor_fg="#fff", cursor_bg="#000",
+      foreground="#111", background="rgba(245,245,245,91%)",
+      cursor_fg="#fff", cursor_bg="#000",
       ansi=ansi, brights=brights,
+      indexed = { [238] = "#d0cccc", [236] = "#c0bcbc" },
+      -- indexed = { [238] = "#444444", [236] = "#303030" },
+      -- compose_cursor = c.col_bdg,
   },
 
   hide_tab_bar_if_only_one_tab = true,
