@@ -66,7 +66,7 @@ if env.git && (filereadable(autoload_plug_path) || env.curl) " has git && (has v
 
     " Plugin declaration
     call plug#begin(stdpath('data') . '/plugged')
-    let g:rainbow_active = 1
+    let g:rainbow_active = 0
     let g:rainbow_ctermfgs = [
                 \ 'red',
                 \ 'yellow',
@@ -471,6 +471,10 @@ nnore <expr> sf FzfExists() ? ":FzfFiles\<cr>"   : ":e\<space>"
 nnore <expr> sF FzfExists() ? ":FzfFiles!\<cr>"  : ":e\<space>"
 nnore + :tabnext<cr>
 nnore <silent> su :vsplit<bar>wincmd l<bar>exe "norm! Ljz<c-v><cr>"<cr>:set scb<cr>:wincmd h<cr>:set scb<cr>
+
+" do not insert function key names
+inore <S-F13> <nop>
+inore <C-F14> <nop>
 
 " misc
 nnore * :call SearchQF()<cr>

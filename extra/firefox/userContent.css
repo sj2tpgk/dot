@@ -1,0 +1,31 @@
+@-moz-document url("about:newtab") { .logo-and-wordmark, .search-wrapper { display: none !important } }
+@-moz-document url("about:privatebrowsing") { .showPrivate { display: none } }
+
+@-moz-document domain("reddit.com") {
+  /* hide logo */
+  #header-img { display: none !important; }
+
+  /* comment box */
+  .commentsignupbar { display: none !important; }
+
+  /* clean sidebar */
+  .side > .spacer > *:not(.titlebox) { display: none !important; }
+
+  /* become a redditor banner */
+  .listingsignupbar { display: none !important }
+
+  /* list of related posts inserted between comments */
+  .seo-comments, .seo-comments-recommendations, #bottom-comments { display: none }
+  /* related post banner at bottom-right */
+  .read-next-container { display: none !important }
+
+  /* comments */
+  .entry > ul > li:not(:first-child), .midcol { display: none !important }
+  .entry > form { margin: .65em 0 }
+  .entry .buttons li a { font-weight: normal !important }
+}
+
+@-moz-document domain("google.com") {
+  .AUiS2, .ULSxyf
+  { display: none !important }
+}

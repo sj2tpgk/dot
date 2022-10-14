@@ -1,0 +1,49 @@
+@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
+
+/* UI font */
+* { font-family: Droid Sans Japanese !important; }
+
+/* Thin Scrollbar */
+.scroller { overflow-y: scroll; scrollbar-color: #0A4C95 #C2D2E4; }
+
+/* Hide tab bar */
+#TabsToolbar { visibility: collapse !important; }
+#titlebar { visibility: collapse !important; } /* windows? */
+
+/* No white flash */
+#tabbrowser-tabpanels { background: #111111 !important; }
+.browserContainer { background-color: #111111 !important; }
+
+/* Sidebar width */
+#sidebar { width: 12em !important; min-width: 2em !important; }
+
+/* Hide sidebar title */
+#sidebar-header { visibility: collapse !important; }
+
+/* Disable fullscreen animation (about:config not working?) */
+#navigator-toolbox[fullscreenShouldAnimate] { transition: none !important; }
+
+/* Disable slide effect for "Search xxx directly from the address bar" */
+.urlbarView-results > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title:not(:empty) ~ .urlbarView-action[slide-in] { animation-name: unset !important; animation-duration: unset !important; animation-timing-function: unset !important; }
+
+/* NOT WORKING WHY? No "Firefox Suggest" in urlbar popup */
+.urlbarView-row[label="Firefox Suggest"] { display: none !important; font-size: 100px !important; }
+
+/* Disable sound icon on tabs */
+.tab-icon-overlay[soundplaying][pinned],
+.tab-icon-overlay[muted][pinned],
+.tab-icon-overlay[activemedia-blocked][pinned] { display: none !important; }
+.tab-icon-sound[pinned] { display: none !important; }
+
+/* Tab Sidebar CSS
+:root { --item-height: 2.4em }
+* { font-family: Droid Sans Japanese }
+
+[data-theme=dark] { background: #28282d }
+
+[data-ctl=items] > [data-item] { border-bottom: solid #ddd 1px; padding-left: 0.5em }
+[data-theme=dark] [data-ctl=items] > [data-item] { border-botom-color: #393939 }
+
+[data-ctl=items] > [data-active] { background: #eee; font-weight: bold }
+[data-theme=dark] [data-ctl=items] > [data-active] { background: #38383d }
+*/
