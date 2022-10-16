@@ -125,62 +125,11 @@ if env.git && (filereadable(autoload_plug_path) || env.curl) " has git && (has v
         com! LspLocList         lua vim.diagnostic.setloclist()
         com! LspQuickFix        lua vim.diagnostic.setqflist()
 
-        " Config
-        lua <<EOFLUA
-        function on_attach(client, bufnr)
-            vim.diagnostic[vim.g.myLspDiag == 1 and "enable" or "disable"]()
-            vim.cmd [[
-                setl omnifunc=v:lua.vim.lsp.omnifunc
-                setl signcolumn=number
-                nnore <buffer> <enter> :lua vim.lsp.buf.hover()<cr>
-                nnore <buffer> <leader>dd :LspToggleDiag<cr>
-                nnore <buffer> <leader>dl :LspToggleDiagLevel<cr>
-                nnore <buffer> <leader>ll :LspLocList<cr>
-                nnore <buffer> <leader>lq :LspQuickFix<cr>
-                nnore <buffer> <leader>lr :lua vim.lsp.buf.rename()<cr>
-            ]]
-            vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-        end
-        require'lspconfig'.bashls.setup   { on_attach = on_attach }
-        require'lspconfig'.ccls.setup     { on_attach = on_attach }
-        require'lspconfig'.kotlin_language_server.setup { on_attach = on_attach }
-        require'lspconfig'.pyright.setup  { on_attach = on_attach }
-        require'lspconfig'.tsserver.setup { on_attach = on_attach, single_file_support = true }
-        -- Place libaries in node_modules/ to let LSP recognize it.
-EOFLUA
+        " Config ==> Lua
     endif
 
-    " Treesitter
+    " Treesitter config ==> Lua
     if has_key(g:plugs, "nvim-treesitter")
-        lua <<EOFLUA
-        require'nvim-treesitter.configs'.setup {
-            highlight = {
-                enable = true,
-                custom_captures = {
-                    -- Highlight the @foo.bar capture group with the "Identifier" highlight group.
-                    ["foo.bar"]  = "Identifier",
-                    ["keyword"]  = "Identifier",
-                    ["function"] = "myFuncName",
-                    ["variable"] = "myVarName",
-                },
-                -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
-                -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
-                -- Using this option may slow down your editor, and you may see some duplicate highlights.
-                -- Instead of true it can also be a list of languages
-                additional_vim_regex_highlighting = false,
-            },
-            incremental_selection = {
-                enable = true,
-                keymaps = {
-                    init_selection = "gnn",
-                    node_incremental = "grn",
-                    scope_incremental = "grc",
-                    node_decremental = "grm",
-                },
-            },
-            -- indent = { enable = true },
-        }
-EOFLUA
     endif
 
     " Treesitter playground
@@ -1132,10 +1081,38 @@ aug vimrc_ft_scheme
     au BufNewFile,BufRead *.scm setl formatoptions+=rol
 aug END
 
+" === Awk ===
+fu! MyAwkFixIndent()
+    set inde=GetAwkIndent2()
+endfu
+fu! GetAwkIndent2() " Same as GetAwkIndent(), except for the indent after '} else {'
+    let prev_lineno = Get_prev_line2(v:lnum)
+    if prev_lineno == 0 | return 0 | endif
+    let prev_data = getline(prev_lineno)
+    let ind = indent( prev_lineno )
+    if match(trim(prev_data), "^}.*{$") != -1 | return ind + shiftwidth() | end
+    return GetAwkIndent()
+endfu
+fu! Get_prev_line2( lineno ) " Same as Get_prev_line, just not script local
+    let lnum = a:lineno - 1
+    let data = getline( lnum )
+    while lnum > 0 && (data =~ '^\s*#' || data =~ '^\s*$')
+        let lnum = lnum - 1
+        let data = getline( lnum )
+    endwhile
+    return lnum
+endfu
+aug vimrc_ft_awk
+    au!
+    au BufNewFile,BufRead *.awk call MyAwkFixIndent()
+aug END
+
 " }}}
 
 
 " Lua part
+
+" (from neovim 0.8? lua inside vimscript can confuse syntax highlighting, so we put all lua codes at the bottom of this file.)
 
 lua << EOFLUA
 
@@ -1801,48 +1778,63 @@ function pp1(...)
     pp(false, false, 99, {...})
 end -- }}}
 
+-- LSP configuration (lua part) {{{
+if vim.fn.has_key(vim.g.plugs, "nvim-lspconfig") == 1 then
+    function on_attach(client, bufnr)
+        vim.diagnostic[vim.g.myLspDiag == 1 and "enable" or "disable"]()
+        vim.cmd [[
+        setl omnifunc=v:lua.vim.lsp.omnifunc
+        setl signcolumn=number
+        nnore <buffer> <enter> :lua vim.lsp.buf.hover()<cr>
+        nnore <buffer> <leader>dd :LspToggleDiag<cr>
+        nnore <buffer> <leader>dl :LspToggleDiagLevel<cr>
+        nnore <buffer> <leader>ll :LspLocList<cr>
+        nnore <buffer> <leader>lq :LspQuickFix<cr>
+        nnore <buffer> <leader>lr :lua vim.lsp.buf.rename()<cr>
+        ]]
+    vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+    end
+    local lspconfig = require'lspconfig'
+    require'lspconfig'.bashls.setup   { on_attach = on_attach }
+    require'lspconfig'.ccls.setup     { on_attach = on_attach }
+    require'lspconfig'.kotlin_language_server.setup { on_attach = on_attach }
+    require'lspconfig'.pyright.setup  { on_attach = on_attach }
+    require'lspconfig'.tsserver.setup { on_attach = on_attach, single_file_support = true }
+    -- Place libaries in node_modules/ to let LSP recognize it.
+end
+-- }}}
+
+-- TreeSitter configuration (lua part) {{{
+if vim.fn.has_key(vim.g.plugs, "nvim-treesitter") == 1 then
+    require'nvim-treesitter.configs'.setup {
+        highlight = {
+            enable = true,
+            custom_captures = {
+                -- Highlight the @foo.bar capture group with the "Identifier" highlight group.
+                ["foo.bar"]  = "Identifier",
+                ["keyword"]  = "Identifier",
+                ["function"] = "myFuncName",
+                ["variable"] = "myVarName",
+            },
+            -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
+            -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
+            -- Using this option may slow down your editor, and you may see some duplicate highlights.
+            -- Instead of true it can also be a list of languages
+            additional_vim_regex_highlighting = false,
+        },
+        incremental_selection = {
+            enable = true,
+            keymaps = {
+                init_selection = "gnn",
+                node_incremental = "grn",
+                scope_incremental = "grc",
+                node_decremental = "grm",
+            },
+        },
+        -- indent = { enable = true },
+    }
+end
+-- }}}
+
 EOFLUA
-
-
-" Wiimote
-finish
-lua <<EOFLUA
---dirs = { "<left>", "<up>", "<right>", "<down>" }
--- 1 2 11 22
--- l r u d ll rr uu dd
--- 1 2 11 22
-strs = { "arx?", "nmf!", "sdg'", "ybpq", "tcz.", "ihj,", "elk@", "ouvw" }
---b1 = { "d", "r", "u", "l", "dd", "rr", "uu", "ll" }
-dirs = { "d", "r", "u", "l" }
-arr = {}
-for i, s in ipairs(strs) do
-    local one = (i%2 == 1) and "1" or "11"
-    local two = (i%2 == 1) and "2" or "22"
-    local d = dirs[math.floor((i-1) / 2) + 1]
-    arr[#arr+1] = { one ..d          , s:sub(1, 1) }
-    arr[#arr+1] = { one ..d..d       , s:sub(2, 2) }
-    arr[#arr+1] = { one ..d..d..d    , s:sub(3, 3) }
-    arr[#arr+1] = { one ..d..d..d..d , s:sub(4, 4) }
-    arr[#arr+1] = { two ..d          , s:sub(1, 1):upper() }
-    arr[#arr+1] = { two ..d..d       , s:sub(2, 2):upper() }
-    arr[#arr+1] = { two ..d..d..d    , s:sub(3, 3):upper() }
-    arr[#arr+1] = { two ..d..d..d..d , s:sub(4, 4):upper() }
-end
-
-function wiidef(from, to)
---    local from2 = from:gsub("r", "<right>"):gsub("u", "<up>"):gsub("l", "<left>"):gsub("d", "<down>")
-    local from2 = from:gsub("d", "<down>"):gsub("r", "<right>"):gsub("u", "<up>"):gsub("l", "<left>")
-    vim.cmd("inore " .. from2 .. " " .. to)
-end
-
-for _, v in ipairs(arr) do
-    wiidef(v[1], v[2])
-end
-
-EOFLUA
-
-inore b<down>   <space>
-inore b<right> <esc>
-inore b<up>       <backspace>
-imap  b<left>   <tab>
 
