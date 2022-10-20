@@ -16,7 +16,7 @@ bold='\e[1m' none='\e[0m'
 # user, time and directory
 uandh="$USER@$(uname -n | sed 's/.*.\(.....\)$/…\1/')" # hostname at most 5 chars
 time=$(date +%H:%M)
-dir=$(pwd | sed 's#^/home/[^/]*#~#; s#\(\.*[^/]\)[^/]*/#\1/#g')
+dir=$(pwd | sed 's#^'"$HOME"'/*#~/#; s#/$##; s#\(\.*[^/]\)[^/]*/#\1/#g')
 
 # git
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then

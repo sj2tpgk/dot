@@ -1,0 +1,12 @@
+#!/data/data/com.termux/files/usr/bin/sh
+
+in=$1
+out=$in
+out=$(echo "$out" | sed 's/https:..www.google.com.url.q=\([^&]*\).*/\1/')
+out=$(echo "$out" | sed 's/www.reddit.com/teddit.net/')
+out=$(echo "$out" | sed 's/old.reddit.com/teddit.net/')
+out=$(echo "$out" | sed 's/\(mobile.\)*twitter.com/nitter.pussthecat.org/')
+#[ "$in" = "$out" ] && out='https://en.m.wiktionary.org/w/index.php?search='"$in"
+echo "IN:  $in"  >> ~/openlog.txt
+echo "OUT: $out" >> ~/openlog.txt
+termux-open-url "$out"
