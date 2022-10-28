@@ -13,6 +13,9 @@ user_pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", 
 user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
 user_pref("browser.tabs.closeWindowWithLastTab", false);
 user_pref("browser.tabs.warnOnClose", false);
+user_pref("browser.theme.dark-private-windows", false);
+user_pref("browser.privatebrowsing.enable-new-indicator", false);
+user_pref("browser.privatebrowsing.enable-new-logo", false);
 user_pref("browser.quitShortcut.disabled", true);
 user_pref("browser.toolbars.bookmarks.visibility", "never");
 user_pref("browser.urlbar.groupLabels.enabled", false);
