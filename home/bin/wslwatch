@@ -1,0 +1,25 @@
+#!/bin/sh
+
+[ $# -eq 0 ] && { echo "Usage: ./wslwatch file cmd ..."; exit; }
+
+[ "$1" = -z ] && { zflag=yes; shift; } || zflag=no
+
+# read -r f
+# echo "FILE=$f"
+# exit
+
+in=$1
+shift
+
+trap ctrl_c INT
+ctrl_c() { exit 0; }
+
+time=$(stat -c %y "$in")
+while sleep 1; do
+    newtime=$(stat -c %y "$in")
+    if [ "$time" != "$newtime" ]; then
+        "$@"
+        [ "$zflag" = yes ] && exit 0
+        time=$newtime
+    fi
+done
