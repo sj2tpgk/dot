@@ -223,8 +223,26 @@ URxvt.color15: col_dbw
 ! URxvt.font: xft:Comic Mono:size=13,xft:azuki_font:size=13
 ! URxvt.font: xft:Unifont\\-JP:style=Regular:size=24
 ! URxvt.font: xft:Dina-9
-URxvt.font: xft:UnifontMy
+! [221020] Bold font looks blurry for some reason. As a workaround I set boldFont separately. (size=12 and antialias=false seems to be both necessary for both .font and .boldFont)
+! [221106] Broken again... I noticed (in zoomed screenshot) subpixel rendering in enabled. rgba=none seems to fix.
+URxvt.font: xft:UnifontMy:size=12:rgba=none
+! URxvt.font: xft:UnifontMy:size=12:antialias=false
+URxvt.boldFont: xft:UnifontMy:style=Bold:size=12:rgba=none
+! URxvt.boldFont: xft:UnifontMy:style=Bold:pixelsize=16:rgba=none
+! URxvt.boldFont: xft:UnifontMy:style=Bold:size=12:antialias=false
 
+! Xft.dpi:       96
+! Xft.antialias: 1
+! Xft.rgba:      rgb
+! Xft.autohint:  0
+! Xft.lcdfilter: lcddefault
+! Xft.hinting:   1
+! Xft.hintstyle: hintfull
+
+! Xft.hintstyle: hintnone
+! Xft.hinting: 0
+! Xft.antialias: 0
+! Xft.rgba: none
 
 ! No scroll bar
 URxvt.scrollBar: false
@@ -234,7 +252,7 @@ URxvt.geometry: 84x29
 
 ! Spacing
 URxvt.letterSpace: 0
-URxvt.lineSpace: -5
+URxvt.lineSpace: -9
 
 ! Disable popup on the left-bottom corner on Ctrl+Shift
 URxvt.iso14755: false
@@ -242,6 +260,7 @@ URxvt.iso14755_52: false
 
 ! IME popup position (Only 'OnTheSpot' and 'Root' are usable)
 URxvt.preeditType: OnTheSpot
+URxvt.inputMethod: uim
 
 ! Perl extensions
 ! URxvt.perl-ext-common: font-size,font-family,xim-onthespot

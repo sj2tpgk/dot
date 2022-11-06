@@ -313,7 +313,7 @@ aug END
 
 fu! MyFolding()
     let ft = &ft
-    if index(["lua", "javascript", "html", "perl", "c", "cpp"], ft) != -1
+    if index(["lua", "javascript", "html", "perl", "c", "cpp", "awk"], ft) != -1
         setl fdm=expr fde=MyFold(v:lnum,0)
     elseif ft == "python"
         setl fdm=expr fde=MyFold(v:lnum,1)
@@ -558,6 +558,7 @@ aug vimrc_complete
   " " call AddCompSource("javascript", "node")
 
   au FileType lua setl iskeyword+=.
+  au FileType sh  setl iskeyword+=.,-
 
   " Auto complete (https://stackoverflow.com/questions/35837990)
   fu! OpenCompletion()
