@@ -716,8 +716,12 @@ fu! MyHighlight()
   " hi PmenuSel     ctermfg=magenta ctermbg=black cterm=bold,reverse
   " hi Pmenu        ctermfg=236 ctermbg=blue cterm=bold
   " hi PmenuSel     ctermfg=236 ctermbg=blue cterm=bold,reverse
-  hi Pmenu        ctermfg=blue ctermbg=238 cterm=bold
+  hi Pmenu        ctermfg=blue ctermbg=black
   hi PmenuSel     ctermfg=blue ctermbg=black cterm=bold,reverse
+  if $MYKBD == "colemakdh"
+    hi Pmenu        ctermfg=blue ctermbg=238 cterm=bold
+  endif
+
 
   " Filetype specific
   " === HTML ===
@@ -1046,8 +1050,14 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     syn region orgHeading3   start=/^\*\{3} /  end=/$/   oneline
     syn region orgHeading4   start=/^\*\{4} /  end=/$/   oneline
     syn region orgMathInline start=/\$/        end=/\$/  oneline
+
     syn region orgBold       start=/\*[^* ]/   end=/\*/  oneline
-    syn region orgMonospace  start=/\~[^ ]/    end=/\~/  oneline
+    syn region orgItalic     start=/\/[^/ ]/   end=/\//  oneline
+    syn region orgUnder      start=/_[^_ ]/    end=/_/   oneline
+    syn region orgStrike     start=/+[^+ ]/    end=/+/   oneline
+    syn region orgMonospace  start=/\~[^~ ]/   end=/\~/  oneline
+    syn region orgVerbatim   start=/=[^= ]/    end=/=/   oneline
+
     syn region orgMacro      start=/{{{/       end=/}}}/ oneline contains=orgMacroComma,orgMacroName
     syn match  orgTex        /\\\S\+/
     syn match  orgMacroComma /\\\@<!,/         contained
@@ -1062,8 +1072,14 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     hi      orgHeading3   ctermfg=green
     hi      orgHeading4   ctermfg=magenta
     hi      orgMathInline ctermfg=blue
+
     hi link orgBold       Statement
+    hi      orgItalic     ctermfg=blue cterm=italic
+    hi      orgUnder      ctermfg=cyan cterm=underline
+    hi      orgStrike     ctermfg=green
     hi link orgMonospace  String
+    hi      orgVerbatim   ctermfg=magenta
+
     hi link orgTex        Preproc
     hi link orgMacro      Special
     hi      orgMacroComma ctermfg=green ctermbg=black cterm=reverse,bold
@@ -1834,6 +1850,40 @@ if vim.fn.has_key(vim.g.plugs, "nvim-treesitter") == 1 then
         -- indent = { enable = true },
     }
 end
+-- }}}
+
+-- Misc lua function {{{
+function map(f, tbl)
+    if type(f) == "string" then f = stof(f) end
+    local tbl2 = {}
+    for i, v in ipairs(tbl) do tbl2[i] = f(v) end
+    return tbl2
+end
+function fold(f, knil, tbl)
+    -- if type(f) == "string" then f = stof(f) end
+    for _, v in ipairs(tbl) do knil = f(v, knil) end
+    return knil
+end
+function stof(s)
+    -- definition
+    local ops = {}
+    ops["+"] = function(x, y) return x + y end
+    ops["-"] = function(x, y) return x - y end
+    ops["*"] = function(x, y) return x * y end
+    ops["/"] = function(x, y) return x / y end
+    ops["^"] = function(x, y) return x ^ y end
+    -- compilation
+    local op = s:match("[^a-zA-Z0-9]*")
+    local opf = ops[op]
+    if not opf then return error("No operator found") end
+    local arg = tonumber(string.sub(s, string.len(op)+1))
+    return function(x) return opf(x, arg) end
+end
+-- map("^2", {10, 20, 30})            -- (x)     => x^2
+-- fold("+", 0, {10, 20, 30})         -- (x,y)   => x+y
+-- fold("$2+$1*$3", 0, {10, 20, 30})  -- (x,y,z) => y+x*z
+-- "sqrt" or "sqrt$1" or "sqrt($1)"   -- (x)     => math.sqrt(x)
+-- stof("*#1")(a)                     -- (x)     => x*a
 -- }}}
 
 EOFLUA
