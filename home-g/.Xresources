@@ -111,7 +111,7 @@ URxvt*inheritPixmap: false
 #define col_dbw bwhite
 
 ! light
-#define col_bb #f4f0f0
+#define col_bb #f4f2f2
 #define col_bf #443
 #define col_bc #333
 #define col_bo 94
