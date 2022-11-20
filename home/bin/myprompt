@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # TODO bash vs sh, dash speed?
+# TODO use printf, s=${s}xxx instead of s+=xxx, $SHELL as $shell fallback value
 
 shell=$1
 laststatus=${2:-0}

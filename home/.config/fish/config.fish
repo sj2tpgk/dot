@@ -22,7 +22,7 @@ aliasif gstd gst-discoverer-1.0
 aliasif gsti gst-inspect-1.0
 aliasif gstl gst-launch-1.0
 aliasif nv   nvim
-# aliasif rg   ranger
+aliasif ra   ranger
 
 # Completion
 # "quiet" : completion like "if" or "sudo" (followed by another commands)

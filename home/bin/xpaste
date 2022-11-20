@@ -42,7 +42,7 @@ wsl_paste() {
     else
         echo -n > "$wsl_out"      # erase $wsl_out contents
         echo > "/proc/$pid/fd/0"  # tell daemon to output clipboard content
-        sleep .001                # wait until daemon finishes writing
+        sleep .1                  # wait until daemon finishes writing
         # read from "$wsl_out" (but ignore first two lines)
         tail -n +3 "$wsl_out" | wsl_tr | wsl_enc
     fi
