@@ -15,7 +15,9 @@
 .browserContainer { background-color: #111111 !important; }
 
 /* Sidebar width */
-#sidebar { width: 12em !important; min-width: 2em !important; }
+/* #sidebar { width: 12em !important; min-width: 2em !important; } */
+/* FF 107: #sidebar is now contained in #sidebar-box, and setting #sidebar width will make unnecessary space on the right of the sidebar content. */
+#sidebar-box { min-width: 2em !important; max-width: 100em !important; }
 
 /* Hide sidebar title */
 #sidebar-header { visibility: collapse !important; }
