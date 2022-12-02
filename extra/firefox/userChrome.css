@@ -37,6 +37,9 @@
 .tab-icon-overlay[activemedia-blocked][pinned] { display: none !important; }
 .tab-icon-sound[pinned] { display: none !important; }
 
+/* Disable firefox update notification (2022/12, v107) */
+#appMenu-update-restart-notification, #appMenu-update-manual-notification, .toolbarbutton-badge { display: none !important; }
+
 /* Tab Sidebar CSS
 :root { --item-height: 2.4em }
 * { font-family: Droid Sans Japanese }
