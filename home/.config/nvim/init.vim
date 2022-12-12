@@ -693,7 +693,7 @@ fu! MyHighlight()
   hi Folded       ctermfg=magenta ctermbg=black cterm=bold,underline
 "  hi Folded       ctermfg=magenta ctermbg=none cterm=bold
   if $MYKBD == "colemakdh"
-    hi Pmenu        ctermfg=blue ctermbg=236 cterm=bold
+    hi Folded       ctermfg=magenta ctermbg=236 cterm=bold
   endif
   hi Visual       ctermfg=black ctermbg=blue
 "  hi Statement    ctermfg=green cterm=bold
@@ -1017,6 +1017,8 @@ aug vimrc_ft_html
     au!
     au BufNewFile,BufRead *.html setl tabstop=4 shiftwidth=4
     au BufNewFile,BufRead *.html call HtmlIndent_CheckUserSettings()
+    au FileType             html setl tabstop=4 shiftwidth=4
+    au FileType             html call HtmlIndent_CheckUserSettings()
 aug END
 
 " === Org mode ===
@@ -1098,12 +1100,28 @@ endfu
 aug vimrc_ft_org
     au!
     au BufNewFile,BufRead *.org call MyOrgSyntaxHighlight()
+    au FileType             org call MyOrgSyntaxHighlight()
 aug END
 
 " === Scheme ===
 aug vimrc_ft_scheme
     au!
     au BufNewFile,BufRead *.scm setl formatoptions+=rol
+    au FileType             scm setl formatoptions+=rol
+aug END
+
+" === D ===
+aug vimrc_ft_d
+    au!
+    au BufNewFile,BufRead *.d setl cms=//%s
+    au FileType             d setl cms=//%s
+aug END
+
+" === C, C++ ===
+aug vimrc_ft_c
+    au!
+    au BufNewFile,BufRead *.c,*.h,*.cpp,*.hpp setl cms=//%s
+    au FileType           c,cpp               setl cms=//%s
 aug END
 
 " === Awk ===
@@ -1130,6 +1148,7 @@ endfu
 aug vimrc_ft_awk
     au!
     au BufNewFile,BufRead *.awk call MyAwkFixIndent()
+    au FileType             awk call MyAwkFixIndent()
 aug END
 
 " }}}
@@ -1826,11 +1845,12 @@ if vim.fn.has_key(vim.g.plugs, "nvim-lspconfig") == 1 then
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
     end
     local lspconfig = require'lspconfig'
-    require'lspconfig'.bashls.setup   { on_attach = on_attach }
-    require'lspconfig'.ccls.setup     { on_attach = on_attach }
-    require'lspconfig'.kotlin_language_server.setup { on_attach = on_attach }
-    require'lspconfig'.pyright.setup  { on_attach = on_attach }
-    require'lspconfig'.tsserver.setup { on_attach = on_attach, single_file_support = true }
+    lspconfig.bashls.setup   { on_attach = on_attach }
+    -- lspconfig.ccls.setup     { on_attach = on_attach }
+    lspconfig.kotlin_language_server.setup { on_attach = on_attach }
+    lspconfig.pyright.setup  { on_attach = on_attach }
+    lspconfig.tsserver.setup { on_attach = on_attach, single_file_support = true }
+    -- lspconfig.serve_d.setup  { on_attach = on_attach, single_file_support = true }
     -- Place libaries in node_modules/ to let LSP recognize it.
 end
 -- }}}

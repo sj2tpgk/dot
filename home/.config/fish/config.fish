@@ -6,6 +6,7 @@
 set -xg PATH $HOME/bin $PATH
 set -xg PATH $HOME/localbin $PATH
 set -xg PATH $HOME/.local/bin $PATH
+set -xg SHELL /usr/bin/fish
 
 # Keyboard
 if [ (machineid) = c0c2 ]
@@ -22,7 +23,32 @@ aliasif gstd gst-discoverer-1.0
 aliasif gsti gst-inspect-1.0
 aliasif gstl gst-launch-1.0
 aliasif nv   nvim
-aliasif ra   ranger
+has ranger && alias ra 'TERM=xterm ranger'
+has rlwrap && alias sh 'rlwrap -p"3;34" sh' # Dash has no history, arrow keys etc.
+
+# Abbr
+if has sudo
+    abbr s    sudo
+end
+if has pacman
+    abbr p         pacman
+    abbr pqi       pacman -Qi
+    abbr pql       pacman -Ql
+    abbr pqs       pacman -Qs
+    abbr pi   sudo pacman -S
+    abbr pss       pacman -Ss
+    abbr psu  sudo pacman -Su
+    abbr psy  sudo pacman -Sy
+    abbr pr   sudo pacman -Rs
+end
+if has git
+    abbr ga   git add .
+    abbr gc   git commit -m
+    abbr gd   git diff
+    abbr gps  git push origin master
+    abbr gpu  git pull origin master
+    abbr gs   git status
+end
 
 # Completion
 # "quiet" : completion like "if" or "sudo" (followed by another commands)

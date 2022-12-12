@@ -126,29 +126,29 @@ Mod4 Mouse5   :TakeToPrevWorkspace
 Mod4 Mouse4   :TakeToNextWorkspace
 
 # Change workspace (skipping empty workspaces)
-F2                    :Exec ~/script/changews.pl -nks
-Shift F2              :Exec ~/script/changews.pl -pks
+F2                    :Exec ~/script/changews -- -nzs
+Shift F2              :Exec ~/script/changews -- -pzs
 Mod1 F2               :Workspace 1
 F9 F2                 :Workspace 1
 
 # OnDesktop Mouse5      :NextWorkspace
 # OnDesktop Mouse4      :PrevWorkspace
-OnDesktop Mouse5      :Exec ~/script/changews.pl -nks   # scroll up
-OnDesktop Mouse4      :Exec ~/script/changews.pl -pks   # scroll down
+OnDesktop Mouse5      :Exec ~/script/changews -- -nzs   # scroll up
+OnDesktop Mouse4      :Exec ~/script/changews -- -pzs   # scroll down
 
-OnWindowBorder Mouse5 :Exec ~/script/changews.pl -nks
-OnWindowBorder Mouse4 :Exec ~/script/changews.pl -pks
-OnLeftGrip     Mouse5 :Exec ~/script/changews.pl -nks
+OnWindowBorder Mouse5 :Exec ~/script/changews -- -nzs
+OnWindowBorder Mouse4 :Exec ~/script/changews -- -pzs
+OnLeftGrip     Mouse5 :Exec ~/script/changews -- -nzs
 
-OnDesktop Mouse5      :Exec ~/script/changews.pl -nks   # scroll up
-OnDesktop Mouse4      :Exec ~/script/changews.pl -pks   # scroll down
+OnDesktop Mouse5      :Exec ~/script/changews -- -nzs   # scroll up
+OnDesktop Mouse4      :Exec ~/script/changews -- -pzs   # scroll down
 
-OnWindowBorder Mouse5 :Exec ~/script/changews.pl -nks
-OnWindowBorder Mouse4 :Exec ~/script/changews.pl -pks
-OnLeftGrip     Mouse5 :Exec ~/script/changews.pl -nks
-OnLeftGrip     Mouse4 :Exec ~/script/changews.pl -pks
-OnRightGrip    Mouse5 :Exec ~/script/changews.pl -nks
-OnRightGrip    Mouse4 :Exec ~/script/changews.pl -pks
+OnWindowBorder Mouse5 :Exec ~/script/changews -- -nzs
+OnWindowBorder Mouse4 :Exec ~/script/changews -- -pzs
+OnLeftGrip     Mouse5 :Exec ~/script/changews -- -nzs
+OnLeftGrip     Mouse4 :Exec ~/script/changews -- -pzs
+OnRightGrip    Mouse5 :Exec ~/script/changews -- -nzs
+OnRightGrip    Mouse4 :Exec ~/script/changews -- -pzs
 # }}}
 
 ## Misc {{{

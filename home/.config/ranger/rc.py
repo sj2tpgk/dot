@@ -14,6 +14,9 @@ def rc_py_main():
     orig_shell = os.environ["SHELL"]
     os.environ["SHELL"] = "/bin/sh"
 
+    # Force 16 colors for preview scripts etc.
+    # os.environ["TERM"] = "xterm" # not work; currently doing in fish config
+
     # Fast executable listing
     import ranger.ext.get_executables
     advice_add(ranger.ext.get_executables, "get_executables_uncached", "override", my_get_executables)
@@ -44,7 +47,7 @@ def rc_py_main():
     map <f5>   reload_config
     map cw     smart_rename
 
-    map <f8>   console trash
+    map <f8>   shell -s mv %s /home/${USER}/.trash
     map d<f8>  console delete
     map zd     console delete
     map zt     console touch%space
@@ -57,6 +60,28 @@ def rc_py_main():
     map '<any> enter_bookmark %any
     map '<bg>  draw_bookmarks
     ''')
+
+    # Keys (depends on keyboard layout)
+    k = lambda x, y: y if "MYKBD" in os.environ and os.environ["MYKBD"] == "colemakdh" else x
+    execute(f"""
+    map {k("h", "k")}  move left=1
+    map {k("j", "n")}  move down=1
+    map {k("k", "e")}  move up=1
+    map {k("l", "i")}  move right=1
+
+    map {k("H", "K")}  history_go -1
+    map {k("L", "I")}  history_go +1
+
+    map {k("J", "N")}  move down=0.5 pages=True
+    map {k("K", "E")}  move up=0.5   pages=True
+
+    map {k("n", "j")}  search_next
+    map {k("N", "J")}  search_next forward=False
+
+    map {k("I", "L")}  eval fm.open_console('rename ' + fm.thisfile.relative_path.replace("%", "%%"), position=7)
+
+    map {k("e", "h")}n open_with nano -- "$@"
+    """)
 
     from ranger.ext.get_executables import get_executables
     executables = get_executables()
