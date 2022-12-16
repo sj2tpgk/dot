@@ -246,7 +246,7 @@ nnore <leader>z :set fdm=marker<cr>zm
 "set nofoldenable
 
 set foldminlines=3
-set fillchars=fold:\  foldtext='==\ '.substitute(getline(v:foldstart),'{{{','','g').'\ \ '.(v:foldend-v:foldstart).'\ '
+set fillchars=fold:\  foldtext='\ '.substitute(getline(v:foldstart),'{{{','','g').'\ \ '.(v:foldend-v:foldstart).'\ '
 " }}} <- dummy
 
 " Better indent-based folding; alto take 'fdn' into account
@@ -650,6 +650,16 @@ fu! MySyntax()
         syn match myKtFuncName /\(fun\s_*\)\@<=\<\w\+\>\_s*\ze(/
         syn match myKtType     /\(:\s_*\)\@<=\<\w\+\>/
 
+    elseif ft == "go"
+        syn match  myGoType         /\v(\[\])+<\w+>/ " Array type
+        syn match  myGoFuncName     /\v(func\s*(\(([ \[\]]|\w)+\))?\s*)@<=<\w+>/ skipwhite nextgroup=myGoFuncArgs
+
+        syn region myGoFuncArgs     start=/(/ end=/)/ contained contains=myGoFuncArg,myGoFuncArgType
+        syn match  myGoFuncArg      /\v([(,]\s*)@<=<\w+>/       contained " var name
+        syn match  myGoFuncArgType  /\v(\w\s*)@<=[\[\]]*<\w+>/  contained " var type
+        syn match  myGoVar1         /\v(<\w+>(\,\s*)?)+\ze\s*\:\=/        " aaa := 123
+        syn match  myGoVar2         /\v(<var>\s*)@<=<\w+>/                " var aaa
+
     endif
 endfu
 nnore <f6> :call MySyntax()<cr>
@@ -661,6 +671,7 @@ aug vimrc_syn
   au Syntax,FileType javascript,html call MySyntax()
   au BufNewFile,BufRead *.js,*.html  call MySyntax()
   au Syntax,FileType kotlin          call MySyntax()
+  au Syntax,FileType go              call MySyntax()
 aug END
 
 "hi myVarName ctermfg=blue cterm=bold
@@ -715,6 +726,8 @@ fu! MyHighlight()
 
   hi MatchParen   ctermbg=blue
 
+  hi TypeSubtle   ctermfg=magenta
+
   " Pmenu (completion popup menu)
   " hi Pmenu        ctermfg=magenta ctermbg=237 cterm=bold
   " hi PmenuSel     ctermfg=magenta ctermbg=black cterm=bold,reverse
@@ -752,6 +765,17 @@ fu! MyHighlight()
   hi link xmlTag             Special
   hi link xmlTagName         Type
   hi link xmlEndTag          xmlTag
+
+  " === Go ===
+  hi link myGoFuncName       myFuncName
+  hi link myGoType           TypeSubtle
+  hi link goType             myGoType
+  hi link goSignedInts       myGoType
+  hi link goUnsignedInts     myGoType
+  hi link myGoFuncArg        myVarName
+  hi link myGoFuncArgType    myGoType
+  hi link myGoVar1           myVarName
+  hi link myGoVar2           myVarName
 
 endfu
 call MyHighlight()
@@ -1696,6 +1720,8 @@ local mycomp_collect_keywords_extra = { -- extra keywords for mycomp_collect_key
         "getContext",
         "addEventListener", "createElement",
         "constructor",
+        "process.argv",
+        "import", "require",
         -- Array
         "map", "forEach", "filter", "reduce", "reduceRight", "every", "some", "indexOf", "lastIndexOf", "slice",
     },
@@ -1831,6 +1857,7 @@ if vim.fn.has_key(vim.g.plugs, "nvim-lspconfig") == 1 then
     require'lspconfig'.kotlin_language_server.setup { on_attach = on_attach }
     require'lspconfig'.pyright.setup  { on_attach = on_attach }
     require'lspconfig'.tsserver.setup { on_attach = on_attach, single_file_support = true }
+    require'lspconfig'.gopls.setup    { on_attach = on_attach, single_file_support = true }
     -- Place libaries in node_modules/ to let LSP recognize it.
 end
 -- }}}
