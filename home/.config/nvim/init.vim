@@ -1058,6 +1058,15 @@ aug vimrc_ft_html
     au FileType             html call HtmlIndent_CheckUserSettings()
 aug END
 
+" === JavaScript ===
+aug vimrc_ft_javascript
+    au!
+    au BufNewFile,BufRead *.js ab cs const
+    au FileType javascript     ab cs const
+    au BufNewFile,BufRead *.js ab ts this
+    au FileType javascript     ab ts this
+aug END
+
 " === Org mode ===
 fu! OrgLevel()
     let l  = getline(v:lnum)
