@@ -3,6 +3,7 @@
 --   :!yes | cp % /mnt/c/Users/XXXXXX/.config/wezterm/wezterm.lua
 
 local wezterm = require "wezterm"
+local act = wezterm.action
 
 local launch_menu = {}
 
@@ -50,31 +51,42 @@ local c = {
 local ansi    = { c.col_bdk, c.col_bdr, c.col_bdg, c.col_bdy, c.col_bdb, c.col_bdm, c.col_bdc, c.col_bdw }
 local brights = { c.col_bdk, c.col_bdr, c.col_bdg, c.col_bdy, c.col_bdb, c.col_bdm, c.col_bdc, c.col_bdw }
 
+local mycolors = {
+    foreground="#444", background="rgba(245,245,245,91%)",
+    cursor_fg="#fff", cursor_bg="#000",
+    ansi=ansi, brights=brights,
+    indexed = { [238] = "#d0cccc", [236] = "#c0bcbc" },
+    -- indexed = { [238] = "#444444", [236] = "#303030" },
+    -- compose_cursor = c.col_bdg,
+}
+
 return {
   -- font = wezterm.font "Droid Sans Mono",
-  font_size = 10.5,
-  cell_width = 0.9,
-  line_height = 1.06,
+  font_size = 10.5, cell_width = 0.9, line_height = 1.06,
+  -- font_size = 10.5, cell_width = 0.55, line_height = 1,
   font = wezterm.font_with_fallback {
+    -- "UnifontMyTheBold",
     "Droid Sans Mono",
     "Droid Sans Japanese",
     -- "Yu Gothic Medium",
   },
 
-  -- color_scheme = "Solar Flare (base16)",
+  -- color_scheme = "Solar Flare (base16)", colors = { background="rgba(10,15,20,83%)" },
   -- color_scheme = "Solar Flare Light (base16)",
-  colors = {
-      foreground="#111", background="rgba(245,245,245,91%)",
-      cursor_fg="#fff", cursor_bg="#000",
-      ansi=ansi, brights=brights,
-      indexed = { [238] = "#d0cccc", [236] = "#c0bcbc" },
-      -- indexed = { [238] = "#444444", [236] = "#303030" },
-      -- compose_cursor = c.col_bdg,
-  },
+  colors = mycolors,
 
   hide_tab_bar_if_only_one_tab = true,
 
-  default_prog = { "wsl.exe", "--distribution", "Arch" },
+  default_prog = { "wsl.exe", "--distribution", "Arch", "--cd", "~" },
   launch_menu = launch_menu,
+
+  keys = {
+      { key = "t",   mods = "SHIFT|CTRL", action = "ShowLauncher" },
+      { key = "Tab", mods = "SHIFT|CTRL", action = act.ActivateTabRelative(1) },
+  },
+
+  check_for_updates = false,
+  window_close_confirmation = "NeverPrompt",
+
 }
 
