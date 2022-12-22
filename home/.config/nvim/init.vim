@@ -613,6 +613,7 @@ fu! MySyntax()
         syn keyword javaScriptIdentifier this arguments
         syn keyword javaScriptReserved long transient float int async synchronized protected static interface private final implements import goto export volatile class double short boolean char throws native enum public byte debugger package abstract extends super
         syn keyword javascriptStatement yield yield*
+        syn keyword javascriptRepeat of
 
         " now define region
         syn region jsVarDef matchgroup=jsVarDefType start=/\<const\>/ start=/\<let\>/ start=/\<var\>/ matchgroup=NONE end=/;/ keepend end=/[^,;]$/ transparent containedin=javaScript contains=javaScript[a-zA-Z].*,jsVarDefName,jsVarDefWrap
