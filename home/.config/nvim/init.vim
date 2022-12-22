@@ -86,6 +86,7 @@ if env.git && (filereadable(autoload_plug_path) || env.curl) " has git && (has v
     " Plug 'nvim-treesitter/playground'
     " Plug 'jelera/vim-javascript-syntax'
     Plug 'udalov/kotlin-vim'
+    " Plug 'kchmck/vim-coffee-script'
     call plug#end()
 
     " Install missing plugins
@@ -246,7 +247,7 @@ nnore <leader>z :set fdm=marker<cr>zm
 "set nofoldenable
 
 set foldminlines=3
-set fillchars=fold:\  foldtext='==\ '.substitute(getline(v:foldstart),'{{{','','g').'\ \ '.(v:foldend-v:foldstart).'\ '
+set fillchars=fold:\  foldtext='\ '.substitute(getline(v:foldstart),'{{{','','g').'\ \ '.(v:foldend-v:foldstart).'\ '
 " }}} <- dummy
 
 " Better indent-based folding; alto take 'fdn' into account
@@ -351,7 +352,11 @@ if !env.vscode
     " If popup window is open, close it
     fu! SmartEsc()
         let nr = 1 + index(map(range(1, winnr("$")), "win_gettype(v:val)"), 'popup')
-        if nr >= 1 | exe nr .. "wincmd q" | endif
+        if nr >= 1
+            " ':{nr}wincmd q' asks to save file when closing some lsp's popup windows. use ':{count}close' command
+            " exe nr .. "wincmd q"
+            exe nr .. "close"
+        endif
         exe "norm! \<escape>"
     endfu
     nnore <silent> <escape> :call SmartEsc()<cr>
@@ -650,6 +655,16 @@ fu! MySyntax()
         syn match myKtFuncName /\(fun\s_*\)\@<=\<\w\+\>\_s*\ze(/
         syn match myKtType     /\(:\s_*\)\@<=\<\w\+\>/
 
+    elseif ft == "go"
+        syn match  myGoType         /\v(\[\])+<\w+>/ " Array type
+        syn match  myGoFuncName     /\v(func\s*(\(([ \[\]]|\w)+\))?\s*)@<=<\w+>/ skipwhite nextgroup=myGoFuncArgs
+
+        syn region myGoFuncArgs     start=/(/ end=/)/ contained contains=myGoFuncArg,myGoFuncArgType
+        syn match  myGoFuncArg      /\v([(,]\s*)@<=<\w+>/       contained " var name
+        syn match  myGoFuncArgType  /\v(\w\s*)@<=[\[\]]*<\w+>/  contained " var type
+        syn match  myGoVar1         /\v(<\w+>(\,\s*)?)+\ze\s*\:\=/        " aaa := 123
+        syn match  myGoVar2         /\v(<var>\s*)@<=<\w+>/                " var aaa
+
     endif
 endfu
 nnore <f6> :call MySyntax()<cr>
@@ -661,6 +676,7 @@ aug vimrc_syn
   au Syntax,FileType javascript,html call MySyntax()
   au BufNewFile,BufRead *.js,*.html  call MySyntax()
   au Syntax,FileType kotlin          call MySyntax()
+  au Syntax,FileType go              call MySyntax()
 aug END
 
 "hi myVarName ctermfg=blue cterm=bold
@@ -715,6 +731,8 @@ fu! MyHighlight()
 
   hi MatchParen   ctermbg=blue
 
+  hi TypeSubtle   ctermfg=magenta
+
   " Pmenu (completion popup menu)
   " hi Pmenu        ctermfg=magenta ctermbg=237 cterm=bold
   " hi PmenuSel     ctermfg=magenta ctermbg=black cterm=bold,reverse
@@ -752,6 +770,17 @@ fu! MyHighlight()
   hi link xmlTag             Special
   hi link xmlTagName         Type
   hi link xmlEndTag          xmlTag
+
+  " === Go ===
+  hi link myGoFuncName       myFuncName
+  hi link myGoType           TypeSubtle
+  hi link goType             myGoType
+  hi link goSignedInts       myGoType
+  hi link goUnsignedInts     myGoType
+  hi link myGoFuncArg        myVarName
+  hi link myGoFuncArgType    myGoType
+  hi link myGoVar1           myVarName
+  hi link myGoVar2           myVarName
 
 endfu
 call MyHighlight()
@@ -881,7 +910,7 @@ com! -bar       FzfBuffers call Fzf(map(filter(range(1, bufnr("$")), "buflisted(
 com! -bar -bang FzfFiles   call Fzf(expand("<bang>" == "" ? "*" : "**", 0, 1),                               { sel -> execute("edit " . sel . "") })
 " }}}
 
-" Repl {{{
+" Repl/Eval {{{
 " b:terminal_job_id
 " jobsend(34, join(getline(1,"$"), "\n") . "\n")
             " \ "scheme": { "cmd": "gosh -fno-read-edit", "newl": "\r", "newlMore": 0 },
@@ -958,6 +987,14 @@ aug vimrc_repl
     au TermOpen * syn match myTermPrompt "^>"           " node
     au TermOpen * hi myTermPrompt ctermfg=black ctermbg=green cterm=bold
 aug END
+
+
+fu! EvalLuaBuffer() " eval lua file in neovim context
+    let code = GetVisualSelection()
+    call execute(["lua <<EOFLUA"] + getline(1, "$") + ["EOFLUA"])
+endfu
+nnore ,l :call EvalLuaBuffer()<cr>
+
 " }}}
 
 " Eldoc {{{
@@ -1415,6 +1452,95 @@ function browseDoc(visual, text) -- {{{
     vim.cmd(cmd)
 end -- }}}
 
+-- Tabular (:T command and :lua tabular(...)) {{{
+vim.api.nvim_exec([[
+command! -nargs=* -range -bang -complete=lua T lua tabularDwim(("<bang>" == "!"), {<f-args>})
+vnore T :T<space>
+]], false)
+function tabularDwim(bang, args)
+    local function help()
+        print "Usage"
+        print "  :lua tabular(pat, patAtStart, count, l1, l2)"
+        print "Dwim"
+        print "  :T  :          ==>  tabular(\":\", false, 99)"
+        print "  :T  ,          ==>  tabular(\",\", false, 99)"
+        print "  :T  =          ==>  tabular(\"=\", true,  2)"
+        print "Manual"
+        print "  :T! , 2        ==>  tabular(\",\", false, 2)"
+        print "  :T! $ 99 true  ==>  tabular(\"$\", true,  99)"
+    end
+    local a1, a2, a3 = args[1], args[2], args[3]
+    if not a1 then
+        help()
+    elseif bang then
+        tabular(a1, a3 == "true", a2)
+    elseif a1 == "=" or a1 == ":" then
+        tabular(a1, true, 2)
+    elseif a1 == "," then
+        tabular(",", false, 9999)
+    else
+        print "Sorry, dwim could not guess what you mean."
+        help()
+    end
+end
+function tabular(pat, patAtStart, count, l1, l2)
+    local function regEscape(s) return s:gsub("([^%w])", "%%%1") end
+    pat   = regEscape(pat)
+    l1    = l1 or vim.fn.getpos("'<")[2]
+    l2    = l2 or vim.fn.getpos("'>")[2]
+    count = tonumber(count or 9999)
+    local lines   = vim.fn.getline(l1, l2)
+    local inits   = {}
+    local toksTbl = {}
+    local maxTok  = {}
+    for i, line in ipairs(lines) do
+        -- inits = math.max(inits, #line:match("^%s*"))
+        inits[i] = line:match("^%s*")
+        toksTbl[i] = getTokens(line, pat, patAtStart, count)
+        for j, tok in ipairs(toksTbl[i]) do maxTok[j] = math.max(#tok, maxTok[j] or 0) end
+    end
+    for i, toks in ipairs(toksTbl) do
+        -- lines[i] = (" "):rep(inits)
+        lines[i] = inits[i]
+        local col = #lines[i]
+        for j, tok in ipairs(toks) do
+            lines[i] = lines[i] .. (" "):rep(col - #lines[i]) .. tok
+            col = col + maxTok[j] + 1
+        end
+    end
+    for i, line in ipairs(lines) do
+        vim.fn.setline(l1+i-1, line)
+    end
+end
+function getTokens(s, pat, patAtStart, count)
+    local trim   = function(s) return s:match("^%s*(.*%S)") or "" end
+    local a      = {}
+    local iUnTok = 0
+    local iSrch  = 1
+    local patStart, patEnd, tok
+    while iUnTok <= #s do
+        local patStart, patEnd = s:find(pat, iSrch)
+        if not patStart then
+            tok    = s:sub(iUnTok)
+            iUnTok = #s + 1
+        elseif patAtStart then
+            tok    = s:sub(iUnTok, patStart - 1)
+            iUnTok = patStart
+            iSrch  = patStart + 1
+        else
+            tok    = s:sub(iUnTok, patEnd)
+            iUnTok = patEnd + 1
+            iSrch  = patEnd + 1
+        end
+        tok = trim(tok)
+        if #tok == 0 then break end
+        a[#a+1] = tok
+        if #a >= count then break end
+    end
+    return a
+end
+-- }}}
+
 -- My completefunc {{{
 
 -- TODO: abstract memoization, should use prefix for performance?, async syntaxcomplete, too slow on first call
@@ -1715,6 +1841,8 @@ local mycomp_collect_keywords_extra = { -- extra keywords for mycomp_collect_key
         "getContext",
         "addEventListener", "createElement",
         "constructor",
+        "process.argv",
+        "import", "require",
         -- Array
         "map", "forEach", "filter", "reduce", "reduceRight", "every", "some", "indexOf", "lastIndexOf", "slice",
     },
@@ -1825,32 +1953,40 @@ function pp(input, doprint, maxdepth, ...) -- Pretty print lua {{{
     return allstr
 end
 function pp1(...)
-    pp(false, false, 99, {...})
+    return pp("?", true, 99, {...})
 end -- }}}
 
 -- LSP configuration (lua part) {{{
 if vim.fn.has_key(vim.g.plugs, "nvim-lspconfig") == 1 then
-    function on_attach(client, bufnr)
+    local function on_attach(client, bufnr)
         vim.diagnostic[vim.g.myLspDiag == 1 and "enable" or "disable"]()
         vim.cmd [[
-        setl omnifunc=v:lua.vim.lsp.omnifunc
-        setl signcolumn=number
-        nnore <buffer> <enter> :lua vim.lsp.buf.hover()<cr>
-        nnore <buffer> <leader>dd :LspToggleDiag<cr>
-        nnore <buffer> <leader>dl :LspToggleDiagLevel<cr>
-        nnore <buffer> <leader>ll :LspLocList<cr>
-        nnore <buffer> <leader>lq :LspQuickFix<cr>
-        nnore <buffer> <leader>lr :lua vim.lsp.buf.rename()<cr>
+            setl omnifunc=v:lua.vim.lsp.omnifunc
+            setl signcolumn=number
+            nnore <buffer> <enter> :lua vim.lsp.buf.hover()<cr>
+            nnore <buffer> <leader>dd :LspToggleDiag<cr>
+            nnore <buffer> <leader>dl :LspToggleDiagLevel<cr>
+            nnore <buffer> <leader>ll :LspLocList<cr>
+            nnore <buffer> <leader>lq :LspQuickFix<cr>
+            nnore <buffer> <leader>lr :lua vim.lsp.buf.rename()<cr>
         ]]
-    vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+        vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
     end
-    local lspconfig = require'lspconfig'
-    lspconfig.bashls.setup   { on_attach = on_attach }
-    -- lspconfig.ccls.setup     { on_attach = on_attach }
-    lspconfig.kotlin_language_server.setup { on_attach = on_attach }
-    lspconfig.pyright.setup  { on_attach = on_attach }
-    lspconfig.tsserver.setup { on_attach = on_attach, single_file_support = true }
-    -- lspconfig.serve_d.setup  { on_attach = on_attach, single_file_support = true }
+    local function setup(lsname, cmd, arg)
+        -- call language server setup function if server program is present
+        if vim.fn.executable(cmd or lsname) == 1 then
+            require'lspconfig'[lsname]["setup"](arg)
+        end
+    end
+    setup("bashls",                 "bash-language-server",   { on_attach = on_attach })
+    --setup("ccls",                   nil,                      { on_attach = on_attach, single_file_support = true })
+    setup("clangd",                 nil,                      { on_attach = on_attach, single_file_support = true })
+    setup("kotlin_language_server", "kotlin-language-server", { on_attach = on_attach })
+    setup("pyright",                nil,                      { on_attach = on_attach })
+    setup("tsserver",               nil,                      { on_attach = on_attach, single_file_support = true })
+    setup("serve_d",                "serve-d",                { on_attach = on_attach, single_file_support = true })
+    setup("gopls",                  nil,                      { on_attach = on_attach, single_file_support = true })
+    -- end
     -- Place libaries in node_modules/ to let LSP recognize it.
 end
 -- }}}

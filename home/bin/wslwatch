@@ -1,25 +1,57 @@
 #!/bin/sh
 
-[ $# -eq 0 ] && { echo "Usage: ./wslwatch file cmd ..."; exit; }
+help() {
+    echo "Usage: ./wslwatch [-m] [-r] [-t TIME] file cmd ..."
+    # echo "   -m         ? multiple files to watch (supplied from stdin)"
+    echo "   -r         Reload a persistent child process"
+    echo "   -t TIME    Check file update on each TIME seconds (default: 1)"
+    echo "   -T         Show timestamp when cmd runs"
+    echo "   -z         Exit after cmd exits"
+}
 
-[ "$1" = -z ] && { zflag=yes; shift; } || zflag=no
-
-# read -r f
-# echo "FILE=$f"
-# exit
+## Parse opts (TODO -- flag (option separator))
+[ $# -eq 0 ] && { help; exit; }
+rflag=no zflag=no
+tval=1
+while true; do
+    case "$1" in
+        -r) rflag=yes; shift;;
+        -t) tval="$2"; shift; shift;;
+        -T) Tflag=yes; shift;;
+        -z) zflag=yes; shift;;
+        *)  break;;
+    esac
+done
 
 in=$1
 shift
 
+timestamp() { echo; date; }
+
 trap ctrl_c INT
 ctrl_c() { exit 0; }
 
-time=$(stat -c %y "$in")
-while sleep 1; do
+
+## Main program
+force=1
+
+while true; do
+
     newtime=$(stat -c %y "$in")
-    if [ "$time" != "$newtime" ]; then
-        "$@"
-        [ "$zflag" = yes ] && exit 0
+    if [ "$time" != "$newtime" ] || [ "$force" -eq 1 ]; then
+
+        [ $rflag = yes ] && [ -n "$pid" ] && { kill "$pid" 2>/dev/null; }
+
         time=$newtime
+        [ $Tflag = yes ] && timestamp
+        "$@" &
+        pid=$!
+        [ $zflag = yes ] && exit 0
+
     fi
+
+    force=0
+
+    sleep "$tval"
+
 done
