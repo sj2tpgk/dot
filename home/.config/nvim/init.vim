@@ -67,7 +67,7 @@ if env.git && (filereadable(autoload_plug_path) || env.curl) " has git && (has v
 
     " Plugin declaration
     call plug#begin(stdpath('data') . '/plugged')
-    let g:rainbow_active = 0
+    let g:rainbow_active = 1
     let g:rainbow_ctermfgs = [
                 \ 'red',
                 \ 'yellow',
@@ -1061,10 +1061,10 @@ aug END
 " === JavaScript ===
 aug vimrc_ft_javascript
     au!
-    au BufNewFile,BufRead *.js ab cs const
-    au FileType javascript     ab cs const
-    au BufNewFile,BufRead *.js ab ts this
-    au FileType javascript     ab ts this
+    au BufNewFile,BufRead *.js iabbr cs const
+    au FileType javascript     iabbr cs const
+    au BufNewFile,BufRead *.js iabbr ts this
+    au FileType javascript     iabbr ts this
 aug END
 
 " === Org mode ===

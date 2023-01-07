@@ -35,12 +35,15 @@ export XMODIFIERS='@im=uim'
 # }}}
 
 ## Environment variables (mustn't be set in wminit.sh ???)
+# Now we set QT_QPA_PLATFORMTHEME when launching each application. Only set a fallback here.
 # qt5
-export QT_QPA_PLATFORMTHEME=qt5ct
+# export QT_QPA_PLATFORMTHEME=qt5ct
+# export QT_STYLE_OVERRIDE=adwaita
 # qt6; need aur/qt6gtk2;
 # export QT_QPA_PLATFORMTHEME=qt6gtk2
 # export DESKTOP_SESSION=gnome
-export QT_QPA_PLATFORMTHEME=gtk2
+# export QT_QPA_PLATFORMTHEME=gtk2
+export QT_QPA_PLATFORMTHEME=qt5ct
 export TZ=Asia/Tokyo
 export EDITOR='vim'
 
@@ -70,7 +73,7 @@ udiskie &
 # exec openbox
 # exec icewm-session
 # exec icewm
-exec startfluxbox    # ~/.fluxbox/startup  will be executed
+MYKBD=colemakdh SHELL=/bin/sh exec startfluxbox    # ~/.fluxbox/startup  will be executed
 # exec pekwm
 # setxkbmap -layout "us,jp" && exec awesome
 # exec i3 -V >> ~/.config/i3/i3log-$(date +'%F-%k-%M-%S') 2>&1

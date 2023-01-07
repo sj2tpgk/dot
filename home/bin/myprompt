@@ -1,30 +1,27 @@
-#!/bin/bash
-
-# TODO bash vs sh, dash speed?
-# TODO use printf, s=${s}xxx instead of s+=xxx, $SHELL as $shell fallback value
+#!/bin/sh
 
 shell=$1
 laststatus=${2:-0}
 lastkillsig=${3:-0}
 
-k='\e[30m'  r='\e[31m'  g='\e[32m'  y='\e[33m'
-b='\e[34m'  m='\e[35m'  c='\e[36m'  w='\e[37m'
-bk='\e[40m' br='\e[41m' bg='\e[42m' by='\e[43m'
-bb='\e[44m' bm='\e[45m' bc='\e[46m' bw='\e[47m'
+k='\033[30m'  r='\033[31m'  g='\033[32m'  y='\033[33m'
+b='\033[34m'  m='\033[35m'  c='\033[36m'  w='\033[37m'
+bk='\033[40m' br='\033[41m' bg='\033[42m' by='\033[43m'
+bb='\033[44m' bm='\033[45m' bc='\033[46m' bw='\033[47m'
 
-bold='\e[1m' none='\e[0m'
+bold='\033[1m' none='\033[0m'
 
 # user, time and directory
 uandh="$USER@$(uname -n | sed 's/.*.\(.....\)$/…\1/')" # hostname at most 5 chars
-time=$(date +%H:%M)
+# time=$(date +%H:%M)
 dir=$(pwd | sed 's#^'"$HOME"'/*#~/#; s#/$##; s#\(\.*[^/]\)[^/]*/#\1/#g')
 
 # git
 if command -v git >/dev/null && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     git='('
-    git+=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-    [ -n "$(git status -s)" ] && git+='+'
-    git+=')'
+    git="$git"$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+    [ -n "$(git status -s)" ] && git="$git"'+'
+    git="$git"')'
 fi
 
 # last status and signal when given
@@ -32,30 +29,33 @@ if [ "$laststatus" -ne 0 ]; then
     status="[$laststatus"
     if [ "$lastkillsig" -ne 0 ]; then
         sig=$(kill -l "$lastkillsig")
-        status+="|SIG$sig"
+        status="$status""|SIG$sig"
     fi
-    status+="]"
+    status="$status""]"
 fi
 
 # prompt arrows
 case "$shell" in
-    # fish)         arrows+="$r>$b<$g($y'$r>" ;;
-    fish)         arrows+="$r>$y>"; [ -z "$RANGER_LEVEL" ] && arrows+="$b>" || arrows+="$g>" ;;
-    fish_private) arrows+="$m>>$b>" ;;
-    bash)         arrows+="$y>>$r>" ;;
-    nu)           arrows+="$m>$r>$y>" ;;
-    *)            arrows+="$w>>>" ;;
+    # fish)         arrows="$r>$b<$g($y'$r>" ;;
+    fish)         arrows="$r>$y>"; [ -z "$RANGER_LEVEL" ] && arrows="$arrows""$b>" || arrows="$arrows""$g>" ;;
+    fish_private) arrows="$m>>$b>" ;;
+    bash)         arrows="$y>>$r>" ;;
+    nu)           arrows="$m>$r>$y>" ;;
+    *)            arrows="$w>>>" ;;
 esac
 
 # combine strings
-s="$bk"
-s+="$c$uandh "
-# s+="$c$time "
-[ -n "$git" ] && s+="$m$git "
-s+="$g$dir "
-[ -n "$status" ] && s+="$m$r$status "
-s+="$bold$arrows$none "
+# s="$none"
+s="$s""$c$uandh "
+# s="$s""$c$time "
+[ -n "$git" ] && s="$s""$m$git "
+s="$s""$g$dir "
+[ -n "$status" ] && s="$s""$m$r$status "
+s="$s""$bold$arrows$none "
 
 # write output
-echo -ne "$s"
+echo "$s" | tr -d '\n'
+# echo -ne "$s"      # not posix
+# printf "$s"        # potentially misinterpret % in $s as format specifier
+# printf '%s' "$s"   # no color
 
