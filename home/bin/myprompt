@@ -41,6 +41,7 @@ case "$shell" in
     fish_private) arrows="$m>>$b>" ;;
     bash)         arrows="$y>>$r>" ;;
     nu)           arrows="$m>$r>$y>" ;;
+    elvish)       arrows="$bm$w>>>$none" ;;
     *)            arrows="$w>>>" ;;
 esac
 

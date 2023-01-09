@@ -782,6 +782,9 @@ fu! MyHighlight()
   hi link myGoVar1           myVarName
   hi link myGoVar2           myVarName
 
+  " === C ===
+  hi link cFormat            Type
+
 endfu
 call MyHighlight()
 aug vimrc_hi " :hi need to be in autocmd on first run??

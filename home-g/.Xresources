@@ -280,10 +280,11 @@ URxvt.matcher.rend.0: Uline
 URxvt.keysym.C-Page_Up:   font-size:increase
 URxvt.keysym.C-Page_Down: font-size:decrease
 ! URxvt.keysym.M-Page_Up:   command:\033]710;xft:Droid Sans Mono Dotted-12,xft:TakaoExGothic-12:antialias=true\007
-URxvt.keysym.M-Page_Up:   command:\033]710;xft:Droid Sans Mono Dotted:style=Regular:size=11,xft:TakaoExGothic:style=Regular:size=12\007
+URxvt.keysym.M-Page_Up:   command:\033]710;xft:Droid Sans Mono Dotted:style=Regular:size=11,xft:TakaoExGothic:style=Regular:size=12\007\033]711;xft:Droid Sans Mono Dotted:weight=Bold:size=11,xft:TakaoExGothic:weight=Bold:size=12\007
 ! URxvt.keysym.M-Page_Down: command:\033]710;xft:Dina-9,xft:dinamplus gothic Wide:style=Regular:pixelsize=14\007
 ! URxvt.keysym.M-Page_Down: command:\033]710;xft:Comic Mono:size=13,xft:TakaoExGothic:style=Regular:size=13\007
-URxvt.keysym.M-Page_Down: command:\033]710;xft:UnifontMy:size=12:rgba=none\007
+URxvt.keysym.M-Page_Down: command:\033]710;xft:UnifontMy:size=12:rgba=none\007\033]711;xft:UnifontMy:style=Bold:size=12:rgba=none\007
+! 710=normal, 711=bold, 712=italic, 713=bolditalic
 
 ! transparency: see https://gist.github.com/ehegnes/e68ca87e7623d58cfa19
 ! to change colors above 15, for example add "4;238;#d0cccc"
