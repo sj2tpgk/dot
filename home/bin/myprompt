@@ -55,8 +55,12 @@ s="$s""$g$dir "
 s="$s""$bold$arrows$none "
 
 # write output
-echo "$s" | tr -d '\n'
-# echo -ne "$s"      # not posix
-# printf "$s"        # potentially misinterpret % in $s as format specifier
-# printf '%s' "$s"   # no color
+s2=$(echo "$s" | sed 's/%/%%/g')
+printf "$s2" # it's ok here to pass variable as printf format, because % is already escaped
+
+# Wrong ways to write output:
+# echo "$s" | tr -d '\n'  # no color if your echo supports -e
+# echo -ne "$s"           # not posix
+# printf "$s"             # potentially misinterpret % in $s as format specifier
+# printf '%s' "$s"        # no color
 
