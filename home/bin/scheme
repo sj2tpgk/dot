@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 libs_small=(
     # R7RS small (except scheme.r5rs)
@@ -26,8 +26,8 @@ libs_srfi=(
 )
 
 importstr="(import"
-for l in ${libs_small[@]}; do importstr+=" (scheme $l)"; done
-for l in ${libs_srfi[@]}; do importstr+=" (srfi $l)"; done
+for l in "${libs_small[@]}"; do importstr+=" (scheme $l)"; done
+for l in "${libs_srfi[@]}"; do importstr+=" (srfi $l)"; done
 importstr+=")"
 
-gosh -fno-read-edit -r7 -e "$importstr" $@
+gosh -fno-read-edit -r7 -e "$importstr" "$@"

@@ -1,0 +1,33 @@
+#!/bin/sh
+
+if [ $# -ne 1 ]; then
+    echo "Usage: nvimhl <file>    read file and write syntax-highlighted html"
+    echo "       nvimhl -         read stdin instead of file"
+    exit
+fi
+
+in=$1
+
+cmds='
+set number
+set nofoldenable
+
+syntax on
+colorscheme morning
+hi Normal ctermfg=black ctermbg=white
+
+let g:html_no_progress=1
+runtime! syntax/2html.vim
+w! /dev/stdout
+qa!
+'
+
+head='
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>pre{overflow-wrap:anywhere;line-break:anywhere}</style>
+'
+
+nvim -u NONE --headless -c "$cmds" "$in" 2>/dev/null \
+    | awk -v x="$head" '{ print } /<head>/ { print x }'
+

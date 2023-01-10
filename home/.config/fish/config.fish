@@ -6,11 +6,12 @@
 set -xg PATH $HOME/bin $PATH
 set -xg PATH $HOME/localbin $PATH
 set -xg PATH $HOME/.local/bin $PATH
+set -xg SHELL /usr/bin/fish
 
 # Keyboard
-if [ (machineid) = c0c2 ]
-    set -xg MYKBD "colemakdh"
-end
+# if [ (machineid) = c0c2 ]
+#     set -xg MYKBD "colemakdh"
+# end
 
 # Helpers
 function has; command -v $argv[1] >/dev/null 2>&1; end
@@ -22,19 +23,47 @@ aliasif gstd gst-discoverer-1.0
 aliasif gsti gst-inspect-1.0
 aliasif gstl gst-launch-1.0
 aliasif nv   nvim
-aliasif ra   ranger
+has ranger && alias ra 'TERM=xterm ranger'
+has rlwrap && alias sh 'rlwrap -p"3;34" sh' # Dash has no history, arrow keys etc.
+
+# Abbr
+if has sudo
+    abbr s    sudo
+end
+if has pacman
+    abbr p         pacman
+    abbr pqi       pacman -Qi
+    abbr pql       pacman -Ql
+    abbr pqs       pacman -Qs
+    abbr pi   sudo pacman -S
+    abbr pss       pacman -Ss
+    abbr psu  sudo pacman -Su
+    abbr psy  sudo pacman -Sy
+    abbr pr   sudo pacman -Rs
+end
+if has git
+    abbr ga   git add .
+    abbr gc   git commit -m
+    abbr gd   git diff
+    abbr gps  git push origin master
+    abbr gpu  git pull origin master
+    abbr gs   git status
+end
 
 # Completion
 # "quiet" : completion like "if" or "sudo" (followed by another commands)
 complete -c quiet -xa '(__fish_complete_subcommand)'
 
-# Pager ( -x (--export) is necessary )
+# Pager and Man ( -x (--export) is necessary )
 if has vimpager
     set -xg PAGER vimpager
     set -xg VIMPAGER_RC ~/.vimpagerrc
-else if has w3mman -v w3mman
+else if has w3_pager && has w3_man
     set -xg PAGER w3_pager
     alias man w3_man
+else if has w3m && has w3mman
+    set -xg PAGER w3m
+    alias man w3mman
 end
 
 # Editor
@@ -61,9 +90,11 @@ set -xg RLWRAP_HOME ~/.rlwrap/
 
 type -q fzf_key_bindings && fzf_key_bindings
 
-# \es for sudo is builtin
-bind \eg "commandline -r (commandline -b | sed 's/\s*\$/ | grep -i /')"
-bind \eh "commandline -r (commandline -b | sed 's/\s*\$/ --help/')"
+# \es for sudo is builtin, but I enhance it
+bind \es "commandline -r (commandline -b | sed 's#\s*\$##; s#^\s*#sudo #; s#pacman -Ss#pacman -S#')"
+bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
+bind \eh "commandline -r (commandline -b | sed 's#\s*\$# --help#')"
+bind \em popup_help_man
 bind -k ppage prevd-or-backward-word
 bind -k npage nextd-or-forward-word
 bind -k btab  nextd-or-forward-word # shift+tab
@@ -163,13 +194,38 @@ set fish_color_valid_path     '--underline' # (underline if file exist (color is
 # Extra commands {{{
 
 function mkcd -d 'mkdir plus cd'
-  set dirname $argv[1]
+  set -l dirname $argv[1]
   mkdir -p $dirname
   eval "cd" $dirname
 end
 
 function tmuxcd -d 'cd to pwd of tmux last-pane'
-  cd (tmux last-pane; tmux-path getpanepath; tmux last-pane)
+  # cd (tmux last-pane; tmux-path getpanepath; tmux last-pane)
+  set -l dir (tmux display -p '#{TMUX_LAST_PATH}')
+  # [ -z $dir ] && set -l dir (tmux last-pane; tmux display -p '#{pane_current_path}'; tmux last-pane)
+  cd $dir
+end
+
+function rcd -d 'cd using ranger'
+  set -l tmp (mktemp)
+  ranger \
+    --cmd "map q chain shell echo %d > '$tmp'; quitall" \
+    --cmd "map Q chain shell echo %d > '$tmp'; quitall"
+  cat $tmp | read -l dir
+  [ -d $dir ] && cd $dir
+end
+alias rangercd rcd
+
+function popup_help_man
+  set -l cmd (commandline -b | sed "s/ .*//")
+  [ -z $popup_help_man_last_cmd ] && set -g popup_help_man_last_cmd $cmd
+  [ -z $cmd ] && return
+  if [ $cmd != $popup_help_man_last_cmd ]
+    tmux popup -E -h 80% -b heavy -s fg=green sh -c "{ $SHELL -c '$cmd --help' || $SHELL -c '$cmd -h'; } 2>&1 | $PAGER"
+  else
+    tmux popup -E -h 80% -b heavy -s fg=green man $cmd
+  end
+  set -g popup_help_man_last_cmd $cmd
 end
 
 # }}}

@@ -51,7 +51,8 @@
 [end]
 [app] (name=xvkbd)
   [Dimensions]	{23% 26%}
-  [Position]	(UPPERLEFT)	{76% 74%}
+  #[Position]	(UPPERLEFT)	{76% 74%}
+  [Position]	(BottomRight) {0% 0%}
   [Deco]	{NORMAL}
   [Sticky]	{yes}
   [Layer]	{6}
