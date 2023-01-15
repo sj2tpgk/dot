@@ -251,21 +251,21 @@ end
 
 begin
   set __myfish_myprompt (command -v myprompt)
-  if test -n "$__myfish_myprompt"
+  if test -n "$__myfish_myprompt" # quoting is important here
     set __myfish_mawk (command -v mawk)
     function fish_prompt
       set -l laststatus  $status
       set -l lastkillsig $fish_kill_signal
-      if test -n "$fish_private_mode" # quoting "$fish_private_mode" is important
+      if test -n "$fish_private_mode" # quoting is important here
         # myprompt.sh fish_private $laststatus $lastkillsig
-        if test -n $__myfish_mawk
+        if test -n "$__myfish_mawk" # quoting is important here
           $__myfish_mawk -f $__myfish_myprompt fish_private $laststatus $lastkillsig
         else
           $__myfish_myprompt                   fish_private $laststatus $lastkillsig
         end
       else
         # myprompt.sh fish         $laststatus $lastkillsig
-        if test -n $__myfish_mawk
+        if test -n "$__myfish_mawk" # quoting is important here
           $__myfish_mawk -f $__myfish_myprompt fish         $laststatus $lastkillsig
         else
           $__myfish_myprompt                   fish         $laststatus $lastkillsig
