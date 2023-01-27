@@ -86,6 +86,7 @@ if env.git && (filereadable(autoload_plug_path) || env.curl) " has git && (has v
     " Plug 'nvim-treesitter/playground'
     " Plug 'jelera/vim-javascript-syntax'
     Plug 'udalov/kotlin-vim'
+    Plug 'dmix/elvish.vim'
     " Plug 'kchmck/vim-coffee-script'
     call plug#end()
 
@@ -666,6 +667,9 @@ fu! MySyntax()
         syn match  myGoVar1         /\v(<\w+>(\,\s*)?)+\ze\s*\:\=/        " aaa := 123
         syn match  myGoVar2         /\v(<var>\s*)@<=<\w+>/                " var aaa
 
+    elseif ft == "elvish"
+        syn match  myElvVar        /\v((\s*^\=|<set>|<var>)\s*)@<=<\w+>/
+
     endif
 endfu
 nnore <f6> :call MySyntax()<cr>
@@ -785,6 +789,9 @@ fu! MyHighlight()
 
   " === C ===
   hi link cFormat            Type
+
+  " === Elvish
+  hi link myElvVar           myVarName
 
 endfu
 call MyHighlight()
@@ -1172,6 +1179,8 @@ aug vimrc_ft_c
     au!
     au BufNewFile,BufRead *.c,*.h,*.cpp,*.hpp setl cms=//%s
     au FileType           c,cpp               setl cms=//%s
+    au BufNewFile,BufRead *.c,*.h,*.cpp,*.hpp setl cino+=(0
+    au FileType           c,cpp               setl cino+=(0
 aug END
 
 " === Awk ===

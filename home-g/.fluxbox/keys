@@ -126,6 +126,7 @@ Mod4 Mouse5   :TakeToPrevWorkspace
 Mod4 Mouse4   :TakeToNextWorkspace
 
 # Change workspace (skipping empty workspaces)
+F1                    :Exec ~/script/changews -- -pzs
 F2                    :Exec ~/script/changews -- -nzs
 Shift F2              :Exec ~/script/changews -- -pzs
 Mod1 F2               :Workspace 1

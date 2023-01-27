@@ -15,6 +15,9 @@ fi
 
 export RLWRAP_HOME=~/.rlwrap
 
+export GOPATH=~/.go
+PATH=$PATH:$GOPATH/bin
+
 
 # Keyboard
 if [ $(cat /etc/machine-id | md5sum | cut -c1-4) = f63a ]; then

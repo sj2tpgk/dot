@@ -221,6 +221,7 @@ URxvt.color15: col_dbw
 ! URxvt.font: xft:Droid Sans Mono Dotted:style=Regular:size=12,xft:azuki_font:size=13
 ! URxvt.font: xft:Comic Mono:size=13,xft:TakaoExGothic:style=Regular:size=13
 ! URxvt.font: xft:Comic Mono:size=13,xft:azuki_font:size=13
+! URxvt.font: xft:Comic Relief:size=11,xft:azuki_font:size=11:weight=Bold
 ! URxvt.font: xft:Unifont\\-JP:style=Regular:size=24
 ! URxvt.font: xft:Dina-9
 ! [221020] Bold font looks blurry for some reason. As a workaround I set boldFont separately. (size=12 and antialias=false seems to be both necessary for both .font and .boldFont)
