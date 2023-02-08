@@ -84,6 +84,9 @@ if env.git && (filereadable(autoload_plug_path) || env.curl) " has git && (has v
     " Plug 'Shougo/echodoc'
     " Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
     " Plug 'nvim-treesitter/playground'
+    " Plug 'nvim-treesitter/nvim-treesitter-refactor'
+    " Plug 'p00f/nvim-ts-rainbow'
+    " Plug 'yioneko/nvim-yati', { 'tag': '*' }
     " Plug 'jelera/vim-javascript-syntax'
     Plug 'udalov/kotlin-vim'
     Plug 'dmix/elvish.vim'
@@ -228,7 +231,7 @@ aug END
 set expandtab               " Use spaces instead of tab
 set autoindent
 filetype plugin indent on   " This triggers filetype.vim (slow)
-set smartindent
+" set smartindent
 
 set shiftwidth=4            " Tab = N spaces in << >> etc.
 set softtabstop=4           " Insert N spaces as a tab
@@ -444,6 +447,9 @@ nnore <c-k> :lua browseDoc(false)<cr>
 vnore <c-k> :lua browseDoc(true)<cr>
 command! -nargs=* BD lua browseDoc(false, "<args>")
 nnore <c-l> :call RecenterTopBottom()<cr>
+"   commandline completion: <up> to prev candidate
+cnore <up>   <c-p>
+cnore <down> <c-n>
 
 fu! SaveExcursion(normcmd)
     let l:w = winsaveview()
@@ -1789,6 +1795,7 @@ function mycomp_collect_omni() -- Collect from omnifunc {{{
             -- how to programatically call ofu that starts with "v:lua" ?
             -- return vim.lsp.omnifunc(findstart, base)
             return mycomp_lsp_omnifunc_sync(findstart, base)
+            -- return mycomp_lsp_dummy(findstart, base)
         else
             return vim.call(ofu, findstart, base)
         end
@@ -1854,6 +1861,14 @@ function mycomp_lsp_omnifunc_sync(findstart, base) -- synchronous lsp omnifunc (
     return items
 end
 -- }}}
+
+function mycomp_lsp_dummy(findstart, base) -- {{{
+    if findstart == 1 then
+        return -1
+    else
+        return {}
+    end
+end -- }}}
 
 local mycomp_collect_keywords_cache = {}
 local mycomp_collect_keywords_extra = { -- extra keywords for mycomp_collect_keywords {{{
@@ -2016,6 +2031,7 @@ end
 -- TreeSitter configuration (lua part) {{{
 if vim.fn.has_key(vim.g.plugs, "nvim-treesitter") == 1 then
     require'nvim-treesitter.configs'.setup {
+        ensure_installed = { "c", "lua", "vim", "elvish" },
         highlight = {
             enable = true,
             custom_captures = {
@@ -2030,6 +2046,7 @@ if vim.fn.has_key(vim.g.plugs, "nvim-treesitter") == 1 then
             -- Using this option may slow down your editor, and you may see some duplicate highlights.
             -- Instead of true it can also be a list of languages
             additional_vim_regex_highlighting = false,
+            -- additional_vim_regex_highlighting = true,
         },
         incremental_selection = {
             enable = true,
@@ -2040,43 +2057,87 @@ if vim.fn.has_key(vim.g.plugs, "nvim-treesitter") == 1 then
                 node_decremental = "grm",
             },
         },
-        -- indent = { enable = true },
+        indent = { enable = true },
+        --indent = { enable = false },
+        --yati = {
+        --    enable = true,
+        --    -- Disable by languages, see `Supported languages`
+        --    disable = { "python" },
+
+        --    -- Whether to enable lazy mode (recommend to enable this if bad indent happens frequently)
+        --    default_lazy = true,
+
+        --    -- Determine the fallback method used when we cannot calculate indent by tree-sitter
+        --    --   "auto": fallback to vim auto indent
+        --    --   "asis": use current indent as-is
+        --    --   "cindent": see `:h cindent()`
+        --    -- Or a custom function return the final indent result.
+        --    default_fallback = "auto"
+        --},
+        rainbow = {
+            enable = true,
+            -- disable = { "jsx", "cpp" }, list of languages you want to disable the plugin for
+            extended_mode = true, -- Also highlight non-bracket delimiters like html tags, boolean or table: lang -> boolean
+            max_file_lines = nil, -- Do not enable for files with more than n lines, int
+            -- colors = {}, -- table of hex strings
+            -- termcolors = {} -- table of colour name strings
+        },
+        refactor = {
+            highlight_definitions = {
+                enable = true,
+                -- Set to false if you have an `updatetime` of ~100.
+                clear_on_cursor_move = true,
+            },
+            highlight_current_scope = { enable = true },
+            smart_rename = {
+                enable = true,
+                keymaps = {
+                    smart_rename = "grr",
+                },
+            },
+            navigation = {
+                enable = true,
+                keymaps = {
+                    goto_definition = "gnd",
+                    list_definitions = "gnD",
+                    list_definitions_toc = "gO",
+                    goto_next_usage = "<a-*>",
+                    goto_previous_usage = "<a-#>",
+                },
+            },
+        },
     }
 end
--- }}}
-
--- Misc lua function {{{
-function map(f, tbl)
-    if type(f) == "string" then f = stof(f) end
-    local tbl2 = {}
-    for i, v in ipairs(tbl) do tbl2[i] = f(v) end
-    return tbl2
+function ts_node_info()
+    local ms = {}
+    for _, x in ipairs(require'nvim-treesitter-playground.hl-info'.get_treesitter_hl()) do
+        print(x)
+        local a2 = {}
+        for y in x:gmatch('@?%a+') do
+            table.insert(a2, y)
+        end
+        table.insert(ms, a2)
+    end
+    return ms
 end
-function fold(f, knil, tbl)
-    -- if type(f) == "string" then f = stof(f) end
-    for _, v in ipairs(tbl) do knil = f(v, knil) end
-    return knil
-end
-function stof(s)
-    -- definition
-    local ops = {}
-    ops["+"] = function(x, y) return x + y end
-    ops["-"] = function(x, y) return x - y end
-    ops["*"] = function(x, y) return x * y end
-    ops["/"] = function(x, y) return x / y end
-    ops["^"] = function(x, y) return x ^ y end
-    -- compilation
-    local op = s:match("[^a-zA-Z0-9]*")
-    local opf = ops[op]
-    if not opf then return error("No operator found") end
-    local arg = tonumber(string.sub(s, string.len(op)+1))
-    return function(x) return opf(x, arg) end
-end
--- map("^2", {10, 20, 30})            -- (x)     => x^2
--- fold("+", 0, {10, 20, 30})         -- (x,y)   => x+y
--- fold("$2+$1*$3", 0, {10, 20, 30})  -- (x,y,z) => y+x*z
--- "sqrt" or "sqrt$1" or "sqrt($1)"   -- (x)     => math.sqrt(x)
--- stof("*#1")(a)                     -- (x)     => x*a
+        -- fu! TSDescribeFace()
+        --     " let matches = [['@variable', 'javascriptTSVariable', 'TSVariable'], ['@function', 'javascriptTSFunction', 'TSFunction']]
+        --     let matches = luaeval("(function () local ms = {} for _, x in ipairs(require'nvim-treesitter-playground.hl-info'.get_treesitter_hl()) do local a2 = {} for y in x:gmatch('@?%a+') do table.insert(a2, y) end table.insert(ms, a2) end return ms end)()")
+        --     if len(matches) > 0
+        --         let first1 = 1
+        --         for lis in matches
+        --             if first1 == 1 | let first1 = 0 | else | echo "" | endif
+        --             let first = 1
+        --             for name in lis
+        --                 if first == 1 | let first = 0 | else | echon " > " | endif
+        --                 let nameTrans = synIDattr(synIDtrans(hlID(name)), "name")
+        --                 exe "echohl " . name | echon name . ((name != nameTrans && name == lis[-1]) ? "(" . nameTrans . ")" : "") | echohl None
+        --             endfor
+        --         endfor
+        --         return 1
+        --     endif
+        --     return 0
+        -- endfu
 -- }}}
 
 EOFLUA
