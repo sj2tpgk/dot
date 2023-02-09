@@ -8,6 +8,10 @@ set -xg PATH $HOME/localbin $PATH
 set -xg PATH $HOME/.local/bin $PATH
 set -xg SHELL /usr/bin/fish
 
+# Golang
+set -xg GOPATH $HOME/.go
+set -xg PATH   $GOPATH/bin $PATH
+
 # Keyboard
 # if [ (machineid) = c0c2 ]
 #     set -xg MYKBD "colemakdh"

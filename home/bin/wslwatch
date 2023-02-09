@@ -1,30 +1,43 @@
-#!/bin/sh
+#!/bin/bash
+
 
 help() {
-    echo "Usage: ./wslwatch [-m] [-r] [-t TIME] file cmd ..."
-    # echo "   -m         ? multiple files to watch (supplied from stdin)"
+    echo "Usage: wslwatch [option ...] file ... -- cmd ..."
+    echo "       cmd1 | wslwatch [option ...] -- cmd ..."
+    echo "Options:"
+    echo "   -h         Help"
     echo "   -r         Reload a persistent child process"
-    echo "   -t TIME    Check file update on each TIME seconds (default: 1)"
+    echo "   -t TIME    Check file update on each TIME seconds (default: 2)"
     echo "   -T         Show timestamp when cmd runs"
     echo "   -z         Exit after cmd exits"
 }
 
+
+
 ## Parse opts (TODO -- flag (option separator))
+
 [ $# -eq 0 ] && { help; exit; }
-rflag=no zflag=no
-tval=1
+rflag= tval=2 Tflag= zflag=
+files=()
 while true; do
     case "$1" in
-        -r) rflag=yes; shift;;
+        -h|--help) help; exit;;
+        -r) rflag=1;   shift;;
         -t) tval="$2"; shift; shift;;
-        -T) Tflag=yes; shift;;
-        -z) zflag=yes; shift;;
-        *)  break;;
+        -T) Tflag=1;   shift;;
+        -z) zflag=1;   shift;;
+        --) shift; break;;
+        *) files+=("$1"); shift;;
     esac
 done
+[ ! -t 0 ] && { while read -r f; do files+=("$f"); done; }
+[ $#             -eq 0 ] && { echo "ERR: No command" >&2; help; exit 1; }
+[ "${#files[@]}" -eq 0 ] && { echo "ERR: No files"   >&2; help; exit 1; }
+# echo "r=$rflag,t=$tval,T=$Tflag,z=$zflag"; echo "files: ${files[@]}"; echo "cmd: $@"; exit
 
-in=$1
-shift
+
+
+## Misc
 
 timestamp() { echo; date; }
 
@@ -32,25 +45,35 @@ trap ctrl_c INT
 ctrl_c() { exit 0; }
 
 
+
 ## Main program
-force=1
+
+time=0
 
 while true; do
 
-    newtime=$(stat -c %y "$in")
-    if [ "$time" != "$newtime" ] || [ "$force" -eq 1 ]; then
+    # get newest mtime of files
+    newtime=$(stat -c %Y "${files[@]}" | sort -n | tail -n 1)
 
-        [ $rflag = yes ] && [ -n "$pid" ] && { kill "$pid" 2>/dev/null; }
+    if [ "$time" != "$newtime" ]; then
 
-        time=$newtime
-        [ $Tflag = yes ] && timestamp
+        # (-r flag) kill persistent process
+        [ $rflag ] && [ -n "$pid" ] && { kill "$pid" 2>/dev/null; }
+
+        # (-T flag) show timestamp
+        [ $Tflag ] && timestamp
+
+        # run command and save pid
         "$@" &
         pid=$!
-        [ $zflag = yes ] && exit 0
+
+        # (-z flag) wait after cmd exits
+        [ $zflag ] && { wait "$pid" && exit 0; }
+        
+        # update timestamp data
+        time=$newtime
 
     fi
-
-    force=0
 
     sleep "$tval"
 

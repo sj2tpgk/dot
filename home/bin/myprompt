@@ -31,7 +31,8 @@ BEGIN {
     arrow = get_arrow()
 
     # Write output
-    print uandh " " C["m"] (git ? git " " : "") C["g"] dir " " C["r"] (codes ? codes " " : "") C["bold"] arrow " " C["none"]
+    output = uandh " " C["m"] (git ? git " " : "") C["g"] dir " " C["r"] (codes ? codes " " : "") C["bold"] arrow " " C["none"]
+    printf "%s", output # no newline
 
     # Must explicitly exit, otherwise awk waits stdin
     exit

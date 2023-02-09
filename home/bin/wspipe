@@ -1,0 +1,197 @@
+#!/usr/bin/env python
+
+import argparse, asyncio, re, sys, traceback
+import websockets, websockets.exceptions
+
+parser = argparse.ArgumentParser()
+parser.add_argument("role", choices=["c", "client", "s", "server"], help="role: client or server")
+parser.add_argument("mode", choices=["s", "send", "r", "receive", "b", "bridge"], help="mode: send, receive or bridge")
+parser.add_argument("url", type=str, default="ws://localhost:8000/", help="url")
+parser.add_argument("-v", "--verbose", action="store_true")
+args = parser.parse_args()
+
+# decompose url into protocol host, port, path
+#   "ws://localhost:8000/ws" => ("ws://", "localhost", "8000", "ws")
+pat = r'(\w+://)?([^:/]*):?([^/]*)/?(.*)'
+protocol, args.HOST, args.PORT, args.PATH = re.match(pat, args.url).groups()
+if args.verbose:
+    print("args:", args)
+if protocol and protocol.lower() != "ws://":
+    print(f"Invalid protocol: {protocol}", file=sys.stderr)
+    parser.print_usage(sys.stderr)
+    exit(1)
+
+
+# ===== Log =====
+
+def log(place, *args1, **kwargs):
+    if args.verbose:
+        print(f"{place}:", *args1, **kwargs)
+
+def error(place, *args):
+    print(f"ERROR: {place}:", *args, file=sys.stderr)
+
+
+# ===== Server =====
+
+async def serverInput(q, bridge=False):
+    # If bridge=False, pops q and send to all clients.
+    # If bridge=True, mirror messages from each client to all clients.
+    # If no clients if connected, wait until at least one connection is available
+
+    conns = set() # the set of wsserverprotocol
+    connectNotification = asyncio.Queue() # onClientConnect puts something in this queue
+    msgs = asyncio.Queue()
+
+    async def onClientConnect(wsserverprotocol, unknownArg=None):
+        log("serverInput", "client connected", wsserverprotocol.local_address, wsserverprotocol.remote_address)
+        if unknownArg: log("serverInput", "unknownArg given", unknownArg)
+        conns.add(wsserverprotocol)
+        connectNotification.put_nowait(1)
+        try:
+            async for x in wsserverprotocol:
+                await msgs.put(x)
+            # await wsserverprotocol.wait_closed()
+        finally:
+            conns.remove(wsserverprotocol)
+
+    async def broadcast():
+        while True:
+            if bridge:
+                x = await msgs.get()
+            else:
+                x = await q.get()
+            if x is None: break # "if not x:" is wrong (for empty strings)
+            # if no connections, wait until at least one is established
+            if not conns:
+                # before waiting, clear connectNotification WITH blocking
+                while not connectNotification.empty():
+                    connectNotification.get_nowait()
+                # wait for notification
+                await connectNotification.get()
+            # now at least one connection
+            for wsserverprotocol in conns.copy(): # copy() is important; conns may change during "await wsserverprotocol.send(x)"
+                try:
+                    await wsserverprotocol.send(x)
+                except websockets.exceptions.ConnectionClosed:
+                    # it's possible that connection closes during "await wsserverprotocol.send(x)"
+                    # in this case it is possible that x will be sent to NO client, but I'll permit it.
+                    conns.remove(wsserverprotocol) # remove wsserverprotocol from the set of connections
+
+    loop = asyncio.get_running_loop()
+    async with websockets.serve(onClientConnect, args.HOST, args.PORT) as wsserver:
+        await loop.create_task(broadcast()) # asyncio.run(broadcast()) is error; only one event loop can exist in a thread
+    # wsserver = await websockets.serve(onClientConnect, args.HOST, args.PORT)
+    # loop = asyncio.get_running_loop()
+    # await loop.create_task(broadcast()) # asyncio.run(broadcast()) is error; only one event loop can exist in a thread
+    log("serverInput", "end")
+
+async def serverBridge(q):
+    await serverInput(q, bridge=True)
+
+async def serverOutput():
+    async def onClientConnect(wsserverprotocol, unknownArg=None):
+        print(wsserverprotocol.path)
+        log("serverOutput", "client connected", wsserverprotocol.local_address, wsserverprotocol.remote_address)
+        if unknownArg: log("serverOutput", "unknownArg given", unknownArg)
+        async for x in wsserverprotocol:
+            sys.stdout.write(x)
+    async with websockets.serve(onClientConnect, args.HOST, args.PORT) as wsserver:
+        await asyncio.Future()
+
+
+# ===== Client =====
+
+async def clientInput(q):
+    # headers = { "x-id": args.X_ID }
+    headers = {}
+    async with websockets.connect(f"ws://{args.HOST}:{args.PORT}/{args.PATH}", extra_headers=headers) as wsclientprotocol:
+        log("clientInput", "connected")
+        while True:
+            x = await q.get()
+            if not x:
+                log("clientInput", "queue end")
+                break
+            await wsclientprotocol.send(x)
+    log("clientInput", "end")
+
+async def clientOutput():
+    # headers = { "x-id": args.X_ID }
+    headers = {}
+    async with websockets.connect(f"ws://{args.HOST}:{args.PORT}/{args.PATH}", extra_headers=headers) as wsclientprotocol:
+        log("clientOutput", "connected")
+        while True:
+            x = await wsclientprotocol.recv()
+            sys.stdout.write(x)
+    log("clientOutput", "end")
+
+
+# ===== Utils =====
+
+async def stdinToQueue(q):
+    loop = asyncio.get_running_loop()
+    while True:
+        x = await loop.run_in_executor(None, sys.stdin.readline)
+        if not x: break
+        await q.put(x)
+    log("stdinToQueue", "end")
+    await q.put(None)
+
+def className(obj):
+    module = obj.__class__.__module__
+    if module is None or module == str.__class__.__module__:
+        return obj.__class__.__name__
+    return module + '.' + obj.__class__.__name__
+
+async def gatherFirst(*coroutines):
+    # similar to gather, but returns when one of coroutines ends
+    await asyncio.wait([asyncio.create_task(c) for c in coroutines], return_when=asyncio.FIRST_COMPLETED)
+
+
+# ===== Main =====
+
+async def main():
+
+    q = asyncio.Queue()
+
+    role = { "s": "server", "c": "client"                 }[args.role[0]]
+    mode = { "s": "send",   "r": "receive", "b": "bridge" }[args.mode[0]]
+
+    if args.PATH and not (role == "client" and mode == "send"):
+        error("main", "path is only available in client-send")
+        exit(1)
+
+    if role != "server" and mode == "bridge":
+        error("main", "a bridge must be a server")
+        exit(1)
+
+    if mode == "send":
+        if role == "client":
+            await asyncio.gather(clientInput(q), stdinToQueue(q))
+        else:
+            await asyncio.gather(serverInput(q), stdinToQueue(q))
+
+    elif mode == "bridge":
+        await asyncio.gather(serverBridge(q))
+
+    elif mode == "receive":
+        if role == "client":
+            await asyncio.gather(clientOutput())
+        else:
+            await asyncio.gather(serverOutput())
+
+    else:
+        error("main", "unexpected mode", mode)
+        exit(1)
+
+try:
+    asyncio.run(main())
+    # catch all exceptions here.
+except (ConnectionRefusedError, websockets.exceptions.ConnectionClosedError) as e:
+    error("main", className(e))
+    if args.verbose:
+        traceback.print_exc()
+except websockets.exceptions.ConnectionClosedOK as e:
+    log("main", "stream end")
+except KeyboardInterrupt:
+    pass
