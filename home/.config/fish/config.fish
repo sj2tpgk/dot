@@ -27,7 +27,7 @@ aliasif gstd gst-discoverer-1.0
 aliasif gsti gst-inspect-1.0
 aliasif gstl gst-launch-1.0
 aliasif nv   nvim
-has ranger && alias ra 'TERM=xterm ranger'
+has ranger && alias ra 'ranger'
 has rlwrap && alias sh 'rlwrap -p"3;34" sh' # Dash has no history, arrow keys etc.
 
 # Abbr

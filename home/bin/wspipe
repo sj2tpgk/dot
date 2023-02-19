@@ -157,8 +157,8 @@ async def main():
     role = { "s": "server", "c": "client"                 }[args.role[0]]
     mode = { "s": "send",   "r": "receive", "b": "bridge" }[args.mode[0]]
 
-    if args.PATH and not (role == "client" and mode == "send"):
-        error("main", "path is only available in client-send")
+    if args.PATH and not (role == "client"):
+        error("main", "path is only available in client")
         exit(1)
 
     if role != "server" and mode == "bridge":
