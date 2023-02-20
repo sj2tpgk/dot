@@ -29,3 +29,7 @@
   .AUiS2, .ULSxyf
   { display: none !important }
 }
+
+@-moz-document domain("docs.python.org") {
+    :not(.sig) > em, .sig-param .n span { color: #d22 }
+}
