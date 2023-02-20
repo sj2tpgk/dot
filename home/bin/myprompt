@@ -76,7 +76,7 @@ function get_dir(    pwd, i, a, n) {
     # keep only first char of each path component except the last one
     n = split(pwd, a, "/")
     for (i=1; i<n; i++)
-        a[i] = substr(a[i], 1, 1)
+        a[i] = substr(a[i], 1, match(a[i], "[^._-\\[\\]]"))
 
     # join path components
     pwd = a[1]

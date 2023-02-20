@@ -40,6 +40,42 @@
 /* Disable firefox update notification (2022/12, v107) */
 #appMenu-update-restart-notification, #appMenu-update-manual-notification, #appMenu-update-available-notification, .toolbarbutton-badge { display: none !important; }
 
+
+/* ---- FF 109 "Extensions" button in toolbar ---- */
+
+/* Sort/hide addons in #unified-extensions-area */
+#unified-extensions-area { display: flex; flex-flow: column }
+.unified-extensions-item[label="Greasemonkey"]
+{ order: 1 }
+.unified-extensions-item[label="Stylus"]
+{ order: 2 }
+.unified-extensions-item[label="Open With"]
+{ display: none }
+.unified-extensions-item[label="Vimium"]
+{ order: 3 }
+
+/* Sort/hide addons in .unified-extensions-list */
+.unified-extensions-list { display: flex; flex-flow: column }
+.unified-extensions-item-action-button[data-extensionid*="dragselectlinktext"],
+.unified-extensions-item-action-button[data-extensionid*="dragselectlinktext"] + *
+{ display: none !important }
+.unified-extensions-item-action-button[data-extensionid*="9b8ce341"],
+.unified-extensions-item-action-button[data-extensionid*="9b8ce341"] + *
+{ display: none !important }
+
+/* Hide permission msg */
+.unified-extensions-item-message-deck { display: none }
+
+/* Hide panel title */
+#unified-extensions-view .panel-header { display: none !important }
+
+/* Make them thinner */
+.unified-extensions-item-action-button { max-height: 20px }
+.unified-extensions-item-action-button .toolbarbutton-badge-stack, .unified-extensions-item-icon { transform: scale(0.7) }
+
+/* -------- */
+
+
 /* Tab Sidebar CSS
 :root { --item-height: 2.4em }
 * { font-family: Droid Sans Japanese }
