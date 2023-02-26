@@ -946,10 +946,12 @@ aug END
 " === JavaScript ===
 aug vimrc_ft_javascript
 au!
-au BufNewFile,BufRead *.js iabbr cs const
-au FileType javascript     iabbr cs const
-au BufNewFile,BufRead *.js iabbr ts this
-au FileType javascript     iabbr ts this
+au BufNewFile,BufRead *.js iabbr <buffer> cs const
+au FileType javascript     iabbr <buffer> cs const
+au BufNewFile,BufRead *.js iabbr <buffer> ts this
+au FileType javascript     iabbr <buffer> ts this
+au BufNewFile,BufRead *.js inore <buffer> /** /**<space><space>*/<left><left><left>
+au FileType javascript     inore <buffer> /** /**<space><space>*/<left><left><left>
 aug END
 
 " === Org mode ===
@@ -1312,17 +1314,18 @@ if can_require"lspconfig" then -- ElDoc (lsp signatureHelp) <<<
             local sig    = result.signatures[1+actSig]
             local sigLbl = sig.label
             local params = sig.parameters
+            local actPar = sig.activeParameter or result.activeParameter
             local s = 1
             lspsig = "ERROR!"
 
-            if #params == 0 or #params <= result.activeParameter then -- no params (functions with no args etc.), or active param index is more than param count
+            if #params == 0 or #params <= actPar then -- no params (functions with no args etc.), or active param index is more than param count
                 local chunks = { { " ", "None" }, { sigLbl, "LspSig" } }
                 nvim_echo_no_hitenter(chunks, true, {})
                 return
             end
 
-            if type(params[1+result.activeParameter].label) == 'table' then -- param label is not string
-                local lbl = params[1+result.activeParameter].label -- { start, end }
+            if type(params[1+actPar].label) == 'table' then -- param label is not string
+                local lbl = params[1+actPar].label -- { start, end }
                 local chunks = {
                     { " ", "None" },
                     { sigLbl:sub(1, lbl[1]),        "LspSig"    },
@@ -1337,7 +1340,7 @@ if can_require"lspconfig" then -- ElDoc (lsp signatureHelp) <<<
                 local parLbl = params[i].label
                 local ss, se = sigLbl:find(parLbl, s, true) -- find parLbl in sigLbl
                 if not ss then error("param " .. parLbl .. " not found") end
-                if i == 1 + result.activeParameter then
+                if i == 1 + actPar then
                     -- update lspsig
                     lspsig = "%#LspSig# " .. sigLbl:sub(1, ss-1) .. "%#LspSigCur#" .. parLbl .. "%#LspSig#" .. sigLbl:sub(se+1) .. " %#None#"
                     -- show
@@ -1558,6 +1561,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
 
     add_query('python', 'highlights', [[
 (function_definition (identifier) @functiondef)
+(class_definition (identifier) @functiondef)
 ;(function_definition (parameters (identifier) @variabledef))
 ;(function_definition (parameters (default_parameter . (identifier) @variabledef)))
     ]])
