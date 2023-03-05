@@ -24,6 +24,8 @@ user_pref("devtools.chrome.enabled", true);
 user_pref("devtools.debugger.prompt-connection", false);
 user_pref("devtools.debugger.remote-enabled", true);
 user_pref("devtools.netmonitor.responseBodyLimit", 0);
+user_pref("dom.event.clipboardevents.enabled", false);
+user_pref("dom.event.contextmenu.enabled", false);
 user_pref("extensions.pocket.enabled", false);
 user_pref("full-screen-api.warning.timeout", 0);
 user_pref("general.smoothScroll", false);
