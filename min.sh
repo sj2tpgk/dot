@@ -24,7 +24,7 @@ f() {
     [ "$permission" = x ] && chmod +x "$ofile"
 }
 
-f - home/.config/nvim/init.vim    ~/.config/nvim/init.vim
+f - home/.config/nvim/init.lua    ~/.config/nvim/init.lua
 f - home/.config/fish/config.fish ~/.config/fish/config.fish
 f - home/.config/ranger/rc.conf   ~/.config/ranger/rc.conf
 f x home/bin/myprompt             ~/bin/myprompt
