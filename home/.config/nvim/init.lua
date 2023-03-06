@@ -85,16 +85,16 @@ do -- Plugins <<<
 
     plug "nvim-treesitter/nvim-treesitter"
     -- plug "https://github.com/nvim-treesitter/playground"
+    -- plug "https://github.com/p00f/nvim-ts-rainbow"
 
     plug "neovim/nvim-lspconfig"
 
-    -- -- plug "https://github.com/p00f/nvim-ts-rainbow"
-    -- plug 'lukas-reineke/cmp-rg'
-    -- plug "hrsh7th/cmp-nvim-lsp"
-    -- plug "hrsh7th/cmp-buffer"
+    -- -- plug 'lukas-reineke/cmp-rg'
     -- -- plug "hrsh7th/cmp-path"
     -- -- plug "hrsh7th/cmp-cmdline"
-    -- plug "hrsh7th/cmp-nvim-lua"
+    -- -- plug "hrsh7th/cmp-nvim-lua"
+    -- plug "hrsh7th/cmp-nvim-lsp"
+    -- plug "hrsh7th/cmp-buffer"
     -- plug "hrsh7th/cmp-omni"
     -- plug "andersevenrud/cmp-tmux"
     -- plug "hrsh7th/nvim-cmp"
@@ -597,13 +597,15 @@ nnore <f6> :call MySyntax()<cr>
 "let firstbuf = bufnr("%")
 "bufdo call MySyntax()
 "exec "b" firstbuf
-aug vimrc_syn
-au!
-au Syntax,FileType javascript,html call MySyntax()
-au BufNewFile,BufRead *.js,*.html  call MySyntax()
-au Syntax,FileType kotlin          call MySyntax()
-au Syntax,FileType go              call MySyntax()
-aug END
+
+" Disable when using treesitter
+" aug vimrc_syn
+" au!
+" au Syntax,FileType javascript,html call MySyntax()
+" au BufNewFile,BufRead *.js,*.html  call MySyntax()
+" au Syntax,FileType kotlin          call MySyntax()
+" au Syntax,FileType go              call MySyntax()
+" aug END
 
 " >>>
 
@@ -713,9 +715,11 @@ fu! MyHighlight()
     hi link @property             None
     hi      @variabledef          ctermfg=cyan    cterm=bold
     hi      @functiondef          ctermfg=yellow  cterm=bold
+    hi      @typestrong           cterm=bold
     hi      @keyword              ctermfg=green
     hi      @keyword.return       ctermfg=red     cterm=bold
     hi      @keyword.break        ctermfg=red     cterm=bold
+    hi link @variable.builtin     @keyword
     hi link @parameter            @variabledef
     hi      @function.call        ctermfg=none    cterm=NONE
     hi link @constructor          @function.call
@@ -946,10 +950,12 @@ aug END
 " === JavaScript ===
 aug vimrc_ft_javascript
 au!
-au BufNewFile,BufRead *.js iabbr cs const
-au FileType javascript     iabbr cs const
-au BufNewFile,BufRead *.js iabbr ts this
-au FileType javascript     iabbr ts this
+au BufNewFile,BufRead *.js iabbr <buffer> cs const
+au FileType javascript     iabbr <buffer> cs const
+au BufNewFile,BufRead *.js iabbr <buffer> ts this
+au FileType javascript     iabbr <buffer> ts this
+au BufNewFile,BufRead *.js inore <buffer> /** /**<space><space>*/<left><left><left>
+au FileType javascript     inore <buffer> /** /**<space><space>*/<left><left><left>
 aug END
 
 " === Org mode ===
@@ -1157,33 +1163,26 @@ if can_require"cmp" then -- Completion (nvim-cmp) <<<
             ["<s-tab>"] = cmp.mapping.select_prev_item(),
         }),
         sources = cmp.config.sources({
-            -- { name = "omni" },
+            { name = "omni" },
             -- { name = "rg", keyword_length = 3 },
             { name = "nvim_lsp" },
             -- { name = "path", trailing_slash = true },
-            -- {
-            --     name = "buffer",
-            --     option = {
-            --         get_bufnrs = function()
-            --             return vim.api.nvim_list_bufs()
-            --         end
-            --     }
-            -- },
+            {
+                name = "buffer",
+                option = { get_bufnrs = function() return vim.api.nvim_list_bufs() end },
+            },
             {
                 name = 'tmux',
-                option = {
-                    all_panes = true,
-                    label = '[tmux]',
-                }
+                option = { all_panes = true, label = '[tmux]', },
             }
         }, {}),
         formatting = {
             fields = { "abbr", "kind", },
 
-    format = function(_, vim_item)
-      vim_item.kind = (vim_item.kind or '') .. vim.inspect(vim_item.kind)
-      return vim_item
-    end,
+            format = function(_, vim_item)
+                vim_item.kind = (vim_item.kind or '') .. vim.inspect(vim_item.kind)
+                return vim_item
+            end,
         },
         -- formatting = { fields = { "kind", "abbr", }, },
     })
@@ -1247,6 +1246,9 @@ if can_require"lspconfig" then -- Lsp <<<
         nnore <buffer> <leader>lr :lua vim.lsp.buf.rename()<cr>
         ]]
         --vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+        local cap = client.server_capabilities
+        lastcap = cap
+        cap.semanticTokensProvider = false -- prevent my highlighting gettting overridden
     end
 
     local function setup(lsname, cmd, arg)
@@ -1312,17 +1314,18 @@ if can_require"lspconfig" then -- ElDoc (lsp signatureHelp) <<<
             local sig    = result.signatures[1+actSig]
             local sigLbl = sig.label
             local params = sig.parameters
+            local actPar = sig.activeParameter or result.activeParameter
             local s = 1
             lspsig = "ERROR!"
 
-            if #params == 0 or #params <= result.activeParameter then -- no params (functions with no args etc.), or active param index is more than param count
+            if #params == 0 or #params <= actPar then -- no params (functions with no args etc.), or active param index is more than param count
                 local chunks = { { " ", "None" }, { sigLbl, "LspSig" } }
                 nvim_echo_no_hitenter(chunks, true, {})
                 return
             end
 
-            if type(params[1+result.activeParameter].label) == 'table' then -- param label is not string
-                local lbl = params[1+result.activeParameter].label -- { start, end }
+            if type(params[1+actPar].label) == 'table' then -- param label is not string
+                local lbl = params[1+actPar].label -- { start, end }
                 local chunks = {
                     { " ", "None" },
                     { sigLbl:sub(1, lbl[1]),        "LspSig"    },
@@ -1337,7 +1340,7 @@ if can_require"lspconfig" then -- ElDoc (lsp signatureHelp) <<<
                 local parLbl = params[i].label
                 local ss, se = sigLbl:find(parLbl, s, true) -- find parLbl in sigLbl
                 if not ss then error("param " .. parLbl .. " not found") end
-                if i == 1 + result.activeParameter then
+                if i == 1 + actPar then
                     -- update lspsig
                     lspsig = "%#LspSig# " .. sigLbl:sub(1, ss-1) .. "%#LspSigCur#" .. parLbl .. "%#LspSig#" .. sigLbl:sub(se+1) .. " %#None#"
                     -- show
@@ -1558,14 +1561,18 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
 
     add_query('python', 'highlights', [[
 (function_definition (identifier) @functiondef)
+(class_definition (identifier) @functiondef)
 ;(function_definition (parameters (identifier) @variabledef))
 ;(function_definition (parameters (default_parameter . (identifier) @variabledef)))
     ]])
 
     add_query('javascript', 'highlights', [[
 (function_declaration (identifier) @functiondef)
+(method_definition (property_identifier) @functiondef)
 (variable_declarator (identifier) @variabledef)
+(variable_declarator (object_pattern (shorthand_property_identifier_pattern) @variabledef))
 (class_declaration (identifier) @functiondef)
+(class_heritage (identifier) @typestrong)
 "break" @keyword.break
     ]])
 
@@ -1846,10 +1853,10 @@ au FileType sh  setl iskeyword+=.,-
 fu! OpenCompletion()
 
     " prefetch lsp completion asynchronously
-    let minlen = g:comp_minlen - 1
-    if !pumvisible() && (('a' <= v:char && v:char <= 'z') || ('A' <= v:char && v:char <= 'Z') || (v:char == '_')) && (minlen == 1 || (col(".") >= (minlen-1) && matchstr(getline("."), '\%' . (col('.')-(minlen-1)) . 'c[a-zA-Z_]\{' . (minlen-1) . '\}') != ""))
-        lua mycomp_lsp_omnifunc_prefetch()
-    endif
+    " let minlen = g:comp_minlen - 1
+    " if !pumvisible() && (('a' <= v:char && v:char <= 'z') || ('A' <= v:char && v:char <= 'Z') || (v:char == '_')) && (minlen == 1 || (col(".") >= (minlen-1) && matchstr(getline("."), '\%' . (col('.')-(minlen-1)) . 'c[a-zA-Z_]\{' . (minlen-1) . '\}') != ""))
+    "     lua mycomp_lsp_omnifunc_prefetch()
+    " endif
 
     " check (menu visible && inserting alphabet && at least comp_minlen chars)
     let minlen = g:comp_minlen
@@ -1958,7 +1965,13 @@ function mycomp_word_reg() -- Make regexp that match chars in 'iskeyword' <<<
 end -- >>>
 
 function mycomp_compword(comp) -- (1) { word=w } => w, (2) 'str' => 'str' <<<
-    return (type(comp) == "table" and comp.word) and comp.word or ((type(comp) == "string") and comp or nil)
+    local wd = (type(comp) == "table" and comp.word) and comp.word or ((type(comp) == "string") and comp or nil)
+    if wd and wd:sub(1, 1) == "." then -- temporary fix: prevent js props completed with beginning dot
+      return wd:sub(2)
+    else
+      return wd
+    end
+    -- return (type(comp) == "table" and comp.word) and comp.word or ((type(comp) == "string") and comp or nil)
 end -- >>>
 
 function mycomp_filter(base, list) -- <<<
@@ -2015,7 +2028,7 @@ function mycomp_collect() -- Collect words <<<
 
     local comps_list = { -- defines order of words
         { "h", mycomp_collect_history() },
-        { "o", mycomp_collect_omni() },
+        -- { "o", mycomp_collect_omni() },
         { "b", mycomp_collect_bufferall() },
         { "k", mycomp_collect_keywords() },
         }
@@ -2045,6 +2058,7 @@ function mycomp_collect() -- Collect words <<<
                 if type(comp) == "table" then
                     for k, v in pairs(comp) do item[k] = v end
                 end
+                item.word    = w -- needed because mycomp_compword may modify word???
                 item.menu    = source .. " " .. (comp.menu or "")
                 item._source = source
 
@@ -2130,6 +2144,7 @@ function mycomp_collect_omni() -- Collect from omnifunc <<<
         local ofu_base = vim.fn.getline("."):sub(col + 1)
         local omnicomps = callOmnifunc(0, ofu_base)
         mycomp_collect_omni_cache = omnicomps
+        lastcomps = omnicomps
         return omnicomps
     else
         -- No omni completion at cursor

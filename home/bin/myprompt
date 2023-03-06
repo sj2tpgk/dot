@@ -97,10 +97,14 @@ function get_git(    cmd, out, out2) {
     }
 }
 
-function get_codes(    killsig) {
+function get_codes(    cmd, killsig) {
     if (LASTSTATUS != 0) {
         if (LASTKILLSIG != 0) {
-            "kill -l " LASTKILLSIG | getline killsig
+            cmd = "kill -l " LASTKILLSIG
+            cmd | getline killsig
+            # For some reason, following does not work.
+            #    "kill -l " LASTKILLSIG | getline killsig
+            # It shows "/bin/sh: 1: 2: not found" when LASTKILLSIG is 2.
             killsig = "|SIG" killsig
         }
         return "[" LASTSTATUS killsig "]"
