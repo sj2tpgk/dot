@@ -25,6 +25,9 @@
 /* Disable fullscreen animation (about:config not working?) */
 #navigator-toolbox[fullscreenShouldAnimate] { transition: none !important; }
 
+/* Hide pointer-lock notification */
+#fullscreen-and-pointerlock-wrapper { display: none !important }
+
 /* Disable slide effect for "Search xxx directly from the address bar" */
 .urlbarView-results > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title:not(:empty) ~ .urlbarView-action[slide-in] { animation-name: unset !important; animation-duration: unset !important; animation-timing-function: unset !important; }
 

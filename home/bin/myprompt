@@ -15,6 +15,7 @@ BEGIN {
     SHELL       = ARGV[1] ? ARGV[1] : ENVIRON["SHELL"]
     LASTSTATUS  = ARGV[2]
     LASTKILLSIG = ARGV[3]
+    FORTMUX     = ARGV[4]
 
     # Color table
     C[0] = C["k"] = "\033[30m"; C[1] = C["r"] = "\033[31m"
@@ -22,6 +23,15 @@ BEGIN {
     C[4] = C["b"] = "\033[34m"; C[5] = C["m"] = "\033[35m"
     C[6] = C["c"] = "\033[36m"; C[7] = C["w"] = "\033[37m"
     C["bold"] = "\033[1m"; C["none"] = "\033[0m"
+
+    # Color table (for tmux output)
+    if (FORTMUX == "1") {
+        C[0] = C["k"] = "#[fg=black]"; C[1] = C["r"] = "#[fg=red]"
+        C[2] = C["g"] = "#[fg=green]"; C[3] = C["y"] = "#[fg=yellow]"
+        C[4] = C["b"] = "#[fg=blue]";  C[5] = C["m"] = "#[fg=magenta]"
+        C[6] = C["c"] = "#[fg=cyan]";  C[7] = C["w"] = "#[fg=white]"
+        C["bold"] = "\033[1m"; C["none"] = "#[default]"
+    }
 
     # Components
     uandh = get_uandh()
@@ -31,7 +41,7 @@ BEGIN {
     arrow = get_arrow()
 
     # Write output
-    output = uandh " " C["m"] (git ? git " " : "") C["g"] dir " " C["r"] (codes ? codes " " : "") C["bold"] arrow " " C["none"]
+    output = uandh C["none"] " " C["m"] (git ? git " " : "") C["g"] dir " " C["r"] (codes ? codes " " : "") C["bold"] arrow " " C["none"]
     printf "%s", output # no newline
 
     # Must explicitly exit, otherwise awk waits stdin

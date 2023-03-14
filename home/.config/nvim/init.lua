@@ -954,8 +954,10 @@ au BufNewFile,BufRead *.js iabbr <buffer> cs const
 au FileType javascript     iabbr <buffer> cs const
 au BufNewFile,BufRead *.js iabbr <buffer> ts this
 au FileType javascript     iabbr <buffer> ts this
-au BufNewFile,BufRead *.js inore <buffer> /** /**<space><space>*/<left><left><left>
-au FileType javascript     inore <buffer> /** /**<space><space>*/<left><left><left>
+au BufNewFile,BufRead *.js inore <buffer> /// /**<space><space>*/<left><left><left>
+au FileType javascript     inore <buffer> /// /**<space><space>*/<left><left><left>
+au BufNewFile,BufRead *.js inore <buffer> >>> <space>=><space>
+au FileType javascript     inore <buffer> >>> <space>=><space>
 aug END
 
 " === Org mode ===
