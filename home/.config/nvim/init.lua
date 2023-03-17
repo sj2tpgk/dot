@@ -956,8 +956,12 @@ au BufNewFile,BufRead *.js iabbr <buffer> ts this
 au FileType javascript     iabbr <buffer> ts this
 au BufNewFile,BufRead *.js inore <buffer> /// /**<space><space>*/<left><left><left>
 au FileType javascript     inore <buffer> /// /**<space><space>*/<left><left><left>
-au BufNewFile,BufRead *.js inore <buffer> >>> <space>=><space>
-au FileType javascript     inore <buffer> >>> <space>=><space>
+au BufNewFile,BufRead *.js inore <buffer> $$ <space>=><space>
+au FileType javascript     inore <buffer> $$ <space>=><space>
+au BufNewFile,BufRead *.js inore <buffer> clog console.log()<left>
+au FileType javascript     inore <buffer> clog console.log()<left>
+au BufNewFile,BufRead *.js setl iskeyword+=#
+au FileType javascript     setl iskeyword+=#
 aug END
 
 " === Org mode ===
@@ -1609,7 +1613,7 @@ function smarth() -- Go left and optionally close a fold <<<
 end -- >>>
 
 function smartSp(file, isBufNr) -- Split or VSplit and return new bufnr <<<
-    if vim.fn.bufname(".") == "" then
+    if vim.fn.bufname() == "" then
         vim.cmd("e " .. file)
         return file
     end

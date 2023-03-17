@@ -265,16 +265,20 @@ begin
       if test -n "$fish_private_mode" # quoting is important here
         # myprompt.sh fish_private $laststatus $lastkillsig
         if test -n "$__myfish_mawk" # quoting is important here
-          $__myfish_mawk -f $__myfish_myprompt fish_private $laststatus $lastkillsig
+          $__myfish_mawk -f $__myfish_myprompt -- --shell fish_private \
+                         --last-status $laststatus --last-signal $lastkillsig
         else
-          $__myfish_myprompt                   fish_private $laststatus $lastkillsig
+          $__myfish_myprompt                   -- --shell fish_private \
+                         --last-status $laststatus --last-signal $lastkillsig
         end
       else
         # myprompt.sh fish         $laststatus $lastkillsig
         if test -n "$__myfish_mawk" # quoting is important here
-          $__myfish_mawk -f $__myfish_myprompt fish         $laststatus $lastkillsig
+          $__myfish_mawk -f $__myfish_myprompt -- --shell fish \
+                         --last-status $laststatus --last-signal $lastkillsig
         else
-          $__myfish_myprompt                   fish         $laststatus $lastkillsig
+          $__myfish_myprompt                   -- --shell fish \
+                         --last-status $laststatus --last-signal $lastkillsig
         end
       end
     end
