@@ -7,8 +7,11 @@
 
 vim.cmd [[ " Early <<<
 
-" Clear 
+" Clear
 mapclear | imapclear | cmapclear | tmapclear
+
+" Easy lua debug. Use L! to print nested table. Example ":L 123,456"
+command! -nargs=* -bang -complete=lua L lua pp(<q-args>, true, ("<bang>" == "") and 1 or 99, <args>)
 
 " Fast startup
 let g:python_host_skip_check=1
@@ -82,6 +85,8 @@ end
 -- >>>
 
 do -- Plugins <<<
+
+    -- plug "pangloss/vim-javascript"
 
     plug "nvim-treesitter/nvim-treesitter"
     -- plug "https://github.com/nvim-treesitter/playground"
@@ -240,6 +245,7 @@ fu! MyFold_NextLine(lnum, dir)
 endfu
 
 fu! IsFirstCharInString(lnum)
+    if exists("*TSIsFirstCharInString") | return TSIsFirstCharInString(a:lnum) | endif
     " Maybe true  if and only if  inside a multiline string.
     let synNames = map(synstack(a:lnum, 1), "synIDattr(synIDtrans(v:val), 'name')")
     return len(synNames) > 0 && synNames[-1] == "String"
@@ -405,9 +411,9 @@ nnore <c-k> :lua browseDoc(false)<cr>
 vnore <c-k> :lua browseDoc(true)<cr>
 command! -nargs=* BD lua browseDoc(false, "<args>")
 nnore <c-l> :call RecenterTopBottom()<cr>
-"   commandline completion: <up> to prev candidate
-cnore <up>   <c-p>
-cnore <down> <c-n>
+"   commandline: <up> to prev candidate when completion popup menu in visible, otherwise go to previous history item with prefix matching
+cnore <expr> <up>   pumvisible() ? "\<c-p>" : "\<up>"
+cnore <expr> <down> pumvisible() ? "\<c-n>" : "\<down>"
 vnore T :T<space>/
 nnore zr zR
 nnore zm zM
@@ -738,10 +744,96 @@ fu! MyHighlight()
     hi link jsFuncDefName myFuncName
 
 endfu
-call MyHighlight()
+fu! MyHighlight2()
+    hi      Normal                ctermfg=white   cterm=none
+    hi      Bold                  ctermfg=white   cterm=none
+    hi      Comment               ctermfg=blue    cterm=none
+    hi      String                ctermfg=yellow  cterm=none
+    hi      Number                ctermfg=white   cterm=none
+    hi      FuncDef               ctermfg=white   cterm=bold
+    hi link VarDef                FuncDef
+    hi      Type                  ctermfg=white   cterm=none
+    hi      Flow                  ctermfg=red     cterm=none
+    hi      Special               ctermfg=red     cterm=none
+    hi      PreProc               ctermfg=white   cterm=none
+
+    hi link @constructor          FuncDef
+    hi link @functiondef          FuncDef
+    hi link @variabledef          VarDef
+    hi link @parameter            VarDef
+    hi link @string               String
+    hi link @keyword.return       Flow
+    hi link @keyword.break        Flow
+    hi link @number               Number
+    hi link @boolean              Number
+
+    hi link @operator             Special
+    hi link @punctuation          @operator
+    hi link @punctuation.special  Flow " braces inside template string etc
+
+    hi link @conditional          Bold
+    hi link @constant             Bold
+    hi link @exception            Bold
+    hi link @function.builtin     Bold
+    hi link @keyword              Bold
+    hi link @repeat               Bold
+    hi link @type.vim             Bold
+
+    hi link @constant.builtin     Normal
+    hi link @constructor          Normal
+    hi link @field                Normal
+    hi link @function             Normal
+    hi link @method               Normal
+    hi link @property             Normal
+    hi link @variable             Normal
+
+    " python
+    hi link @type.python          Normal
+    hi link @type.builtin.python  Normal
+
+    " javascirpt
+    hi link @constructor.javascript VarDef
+    hi link @functiondef.javascript VarDef
+
+    " sh
+    hi link @function.builtin.bash    Special
+    hi      @keyword.break.bash       ctermfg=red cterm=bold
+    hi link @keyword.return.bash      @keyword.break.bash
+    hi link @parameter.bash           Normal
+    hi link @operator.bash            Normal
+    hi link @punctuation.bracket.bash @operator.bash
+    hi link @punctuation.special.bash @variable.bash
+    hi      @variable.bash            ctermfg=cyan
+    hi link @variabledef.bash         Normal
+
+    " Popup menu
+    hi Pmenu        ctermfg=blue ctermbg=black
+    hi PmenuSel     ctermfg=blue ctermbg=black cterm=bold,reverse
+    if $MYKBD == "colemakdh"
+        hi Pmenu        ctermfg=blue ctermbg=238 cterm=bold
+    endif
+
+    " Folding
+    hi Folded       ctermfg=magenta ctermbg=black cterm=bold,underline
+    "  hi Folded       ctermfg=magenta ctermbg=none cterm=bold
+    if $MYKBD == "colemakdh"
+        hi Folded       ctermfg=magenta ctermbg=236 cterm=bold
+    endif
+
+    " Visual
+    hi Visual       ctermfg=black ctermbg=blue
+
+    " Diagnostics
+    hi DiagnosticError ctermfg=red
+    hi DiagnosticWarn  ctermfg=yellow
+    hi DiagnosticInfo  ctermfg=blue
+    hi DiagnosticHint  ctermfg=blue
+
+endfu
+call MyHighlight2()
 aug vimrc_hi " :hi need to be in autocmd on first run??
 au!
-au VimEnter * :call MyHighlight()
+au VimEnter * :call MyHighlight2()
 aug END
 
 " >>>
@@ -1198,6 +1290,13 @@ end -- >>>
 if can_require"lspconfig" then -- Lsp <<<
     local lspconfig = require"lspconfig"
 
+    vim.cmd [[ let g:diaglength = 30 ]]
+    function rightAlignFormatFunction(diagnostic)
+        local line = diagnostic.lnum -- 0-based
+        local space = string.rep(" ", vim.o.columns - vim.fn.getline(1+line):len() - 11 - vim.g.diaglength)
+        return string.format("%s* %s", space, diagnostic.message)
+    end
+
     vim.cmd [[
     " Toggle diagnostic
     let g:myLspDiag = 1
@@ -1220,7 +1319,7 @@ if can_require"lspconfig" then -- Lsp <<<
         let g:myLspDiagLevel = (g:myLspDiagLevel + 1) % len(g:myLspDiagLevels)
         let g:myLspDiagLevelName = g:myLspDiagLevels[g:myLspDiagLevel]
         " lua (function(x) vim.diagnostic.config({ underline=x, virtual_text=x }) end)({severity={min=vim.diagnostic.severity[vim.g.myLspDiagLevelName]}})
-        lua (function(x) vim.diagnostic.config({ virtual_text=x }) end)({severity={min=vim.diagnostic.severity[vim.g.myLspDiagLevelName]}})
+        lua (function(x) vim.diagnostic.config({ virtual_text=x }) end)({severity={min=vim.diagnostic.severity[vim.g.myLspDiagLevelName]},prefix="",format=rightAlignFormatFunction})
     endfu
     call MyLspDiagLevel()
 
@@ -1430,7 +1529,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
 
     vim.cmd [[
     fu! TSDescribeFace()
-        lua tsdescribe()
+        return luaeval("tsdescribe()")
     endfu
     ]]
 
@@ -1441,11 +1540,14 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
         local highlighter = require "vim.treesitter.highlighter"
         local bufnr = vim.api.nvim_get_current_buf()
         local cursor = vim.api.nvim_win_get_cursor(0)
-        local line = cursor[1] - 1
-        local col = cursor[2]
+        local line = cursor[1] - 1  -- cursor[1] is 1-based
+        local col = cursor[2]       -- cursor[2] is 0-based
+
+        -- show parsed tree
         local root_lang_tree = parsers.get_parser(bufnr)
+        if not root_lang_tree then return false end
         local lang_tree = root_lang_tree:language_for_range { line, col, line, col }
-        print(root_lang_tree:lang(), lang_tree:lang())
+        print("Lang: root=" .. root_lang_tree:lang() .. " here=" .. lang_tree:lang())
         local function child_in_range(node, line, col)
             for child in node:iter_children() do
                 if ts_utils.is_in_node_range(child, line, col) then
@@ -1466,23 +1568,71 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
             end
         end
         for i, tree in ipairs(lang_tree:trees()) do
-            print("Tree #" .. i)
+            print("Tree #" .. i .. " (" .. lang_tree:lang() .. ")")
             local node = tree:root()
             rec(node, "")
         end
+
+        -- show syntax highlighting
+        local hlslist = queryHlsList(line + 1, col + 1)
+        for _, hls in ipairs(hlslist) do
+            showSyn(hls)
+        end
+    end
+
+    function ts_isFirstCharInString(lnum)
+        local hlslist = queryHlsList(lnum, 1)
+        for _, hls in ipairs(hlslist) do
+            for _, hl in ipairs(hls) do
+                if vim.fn.synIDattr(vim.fn.synIDtrans(hl), "name") == "String" then
+                    return true
+                end
+            end
+        end
+        return false
+    end
+
+    vim.cmd [[
+    fu! TSIsFirstCharInString(lnum)
+        return luaeval("ts_isFirstCharInString(" . a:lnum . ")")
+    endfu
+    ]]
+
+    function TSGetLangAtCursor()
+        local ts_utils = require "nvim-treesitter.ts_utils"
+        local parsers = require "nvim-treesitter.parsers"
+        local highlighter = require "vim.treesitter.highlighter"
+        local bufnr = vim.api.nvim_get_current_buf()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local line = cursor[1] - 1  -- cursor[1] is 1-based
+        local col = cursor[2]       -- cursor[2] is 0-based
+
+        -- show parsed tree
+        local root_lang_tree = parsers.get_parser(bufnr)
+        local lang_tree = root_lang_tree:language_for_range { line, col, line, col }
+        return lang_tree:lang()
+    end
+
+    function queryHlsList(lnum, col) -- lnum and col are 1-based
+        local lnum0 = lnum - 1 -- 0-based
+        local col0  = col  - 1 -- 0-based
+        local highlighter = require "vim.treesitter.highlighter"
+        local ts_utils = require "nvim-treesitter.ts_utils"
+        local hlslist = {}
         local buf_highlighter = highlighter.active[vim.api.nvim_get_current_buf()]
         buf_highlighter.tree:for_each_tree(function(tstree, langtree)
             local query = buf_highlighter:get_query(langtree:lang())
-            local iter = query:query():iter_captures(tstree:root(), buf_highlighter.bufnr, line, line + 1)
+            local iter = query:query():iter_captures(tstree:root(), buf_highlighter.bufnr, lnum0, lnum0 + 1)
             local hls = {}
             for capture, node, metadata in iter do
                 local hl = query.hl_cache[capture]
-                if hl and ts_utils.is_in_node_range(node, line, col) then
+                if hl and ts_utils.is_in_node_range(node, lnum0, col0) then
                     table.insert(hls, hl)
                 end
             end
-            showSyn(hls)
+            table.insert(hlslist, hls)
         end)
+        return hlslist
     end
 
     function showSyn(syns)
@@ -1492,7 +1642,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
             local name  = vim.fn.synIDattr(id,  "name")
             local trans = vim.fn.synIDattr(idt, "name")
             if i >= 2 then table.insert(chunks, { "> ", "None" }) end
-            table.insert(chunks, { name .. " " .. id .. " " .. (id ~= idt and ("(" .. trans .. " " .. idt .. ") ")), trans })
+            table.insert(chunks, { name .. " " .. id .. " " .. (id ~= idt and ("(" .. trans .. " " .. idt .. ") ") or ""), trans })
         end
         if #chunks >= 1 then vim.api.nvim_echo(chunks, true, {}) end
     end
@@ -1529,6 +1679,33 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
         local query = read_query_files(vim.treesitter.query.get_query_files(lang, query_name))
         set_query(lang, query_name, query .. "\n" .. text)
     end
+
+    -- Captures for indents.scm
+    -- https://github.com/nvim-treesitter/nvim-treesitter/blob/master/CONTRIBUTING.md#indents
+    -- @indent         ; indent children when matching this node
+    -- @indent_end     ; marks the end of indented block
+    -- @aligned_indent ; behaves like python aligned/hanging indent
+    -- @dedent         ; dedent children when matching this node
+    -- @branch         ; dedent itself when matching this node
+    -- @ignore         ; do not indent in this node
+    -- @auto           ; behaves like 'autoindent' buffer option
+    -- @zero_indent    ; sets this node at position 0 (no indent)
+
+    add_query('javascript', 'indents', [[
+; queries here overrides default ones
+
+[
+ (for_in_statement)
+ (for_statement)
+ (if_statement)
+ (while_statement)
+] @indent ; do indent on brace-less blocks
+
+[
+  (comment)
+  (template_string)
+] @auto ; manual indent
+    ]])
 
     set_query('vim', 'indents', [[
 [
@@ -1579,7 +1756,20 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
 (variable_declarator (object_pattern (shorthand_property_identifier_pattern) @variabledef))
 (class_declaration (identifier) @functiondef)
 (class_heritage (identifier) @typestrong)
+(class_body (field_definition (private_property_identifier) @variabledef))
+(class_body (field_definition (property_identifier) @variabledef))
 "break" @keyword.break
+"continue" @keyword.break
+    ]])
+
+    add_query('bash', 'highlights', [[
+(variable_assignment (variable_name) @variabledef.bash)
+;(function_definition (word) @functiondef)
+((command_name (word) @keyword.break)
+ (#any-of? @keyword.break "break" "continue"))
+((command_name (word) @keyword.return)
+ (#any-of? @keyword.break "exit" "return"))
+;(command_name (word) @functiondef)
     ]])
 
 end -- >>>
@@ -1700,12 +1890,17 @@ function toggleCmt(visual) -- <<<
         end
         return false
     end
+    local function tslang(lang) -- check current treesitter tree has given lang
+        return TSGetLangAtCursor and (TSGetLangAtCursor() == lang)
+    end
     local function getCMSHere()
-        if vim.bo.ft == "vim" and hasSyntax("vimLuaRegion") then
+        if vim.bo.ft == "vim" and (hasSyntax("vimLuaRegion") or tslang("lua")) then
             return "--%s"
-        elseif vim.bo.ft == "html" and hasSyntax("javaScript") then
+        elseif vim.bo.ft == "lua" and tslang("vim") then
+            return "\"%s"
+        elseif vim.bo.ft == "html" and (hasSyntax("javaScript") or tslang("javascript")) then
             return "//%s"
-        elseif vim.bo.ft == "html" and hasSyntax("cssStyle") then
+        elseif vim.bo.ft == "html" and (hasSyntax("cssStyle") or tslang("css")) then
             return "/*%s*/"
         elseif vim.bo.ft == "c" or vim.bo.ft == "cpp" then
             return "//%s"
@@ -1822,6 +2017,30 @@ function nvim_echo_no_hitenter(chunks, history, opts) -- <<<
     vim.api.nvim_echo(chunks2, history, opts)
 end -- >>>
 
+function pp(input, doprint, maxdepth, ...) -- <<<
+    local strs = {}
+    for _, x in pairs({...}) do
+        table.insert(strs, vim.inspect(x))
+    end
+    local allstr = table.concat(strs, "\n")
+    if doprint then
+        print(allstr)
+        -- Create *Messages* buffer if not present
+        local b = "*Messages*"
+        if vim.fn.bufexists(b) == 0 then
+            vim.fn.bufadd(b)
+            vim.fn.bufload(b)
+            vim.fn.setbufvar(b, "&swapfile", 0)
+            vim.fn.setbufvar(b, "&buflisted", true)
+            vim.fn.setbufvar(b, "&buftype", "nofile")
+        end
+        -- Print to *Messages* buffer like repl
+        vim.fn.appendbufline(b, vim.fn.getbufinfo(b)[1].linecount, "> " .. input)
+        vim.fn.appendbufline(b, vim.fn.getbufinfo(b)[1].linecount, strs) -- \n not allowed; use list
+    end
+    return allstr
+end -- >>>
+
 -- >>>
 
 
@@ -1833,7 +2052,7 @@ inore <expr> <c-f>       pumvisible() ? "\<c-n>" : "\<c-x>\<c-f>"
 
 set shortmess+=c                           " No message like "Pattern not found"
 set completeopt+=menuone,noinsert,noselect " Needed for auto completion
-set completeopt+=longest
+set completeopt-=longest                   " -=longest is needed otherwise first candidate appears and then disappears before menu is created, looks weird
 set completeopt-=menu,preview
 set infercase
 
@@ -1917,7 +2136,8 @@ function mycomp(findstart, base) -- <<<
                     { menu="B", word="table", },
                     { menu="B", word="string", },
                     { menu="B", word="math", },
-                }
+                },
+                refresh = "always"
             }
         end
         -- Simple version

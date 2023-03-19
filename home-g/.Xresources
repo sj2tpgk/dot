@@ -107,8 +107,10 @@ URxvt*inheritPixmap: false
 #define col_dbm bmagenta
 #define col_ddc dcyan
 #define col_dbc bcyan
-#define col_ddw dwhite
-#define col_dbw bwhite
+! #define col_ddw dwhite
+! #define col_dbw bwhite
+#define col_ddw col_df
+#define col_dbw col_df
 
 ! light
 #define col_bb #f4f2f2
@@ -130,8 +132,10 @@ URxvt*inheritPixmap: false
 #define col_bbm #b6a
 #define col_bdc #088
 #define col_bbc #0aa
-#define col_bdw #111
-#define col_bbw #111
+! #define col_bdw #111
+! #define col_bbw #111
+#define col_bdw col_bf
+#define col_bbw col_bf
 
 ! color for tests
 ! #define col_bdk #333
