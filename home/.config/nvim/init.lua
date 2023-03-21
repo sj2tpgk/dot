@@ -92,7 +92,7 @@ do -- Plugins <<<
     -- plug "https://github.com/nvim-treesitter/playground"
     -- plug "https://github.com/p00f/nvim-ts-rainbow"
 
-    plug "neovim/nvim-lspconfig"
+    -- plug "neovim/nvim-lspconfig"
 
     -- -- plug 'lukas-reineke/cmp-rg'
     -- -- plug "hrsh7th/cmp-path"
@@ -1556,11 +1556,11 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
             end
         end
         local function rec(node, ind)
-            for child in node:iter_children() do
+            for child, name in node:iter_children() do
                 if ts_utils.is_in_node_range(child, line, col) then
-                    print(ind, "*node:", child, child:type(), child:named(), child:has_error())
+                    print(ind, "*", child, name, child:has_error() and "ERROR" or "")
                 else
-                    print(ind, " node:", child, child:type(), child:named(), child:has_error())
+                    print(ind, " ", child, name, child:has_error() and "ERROR" or "")
                 end
                 if ts_utils.is_in_node_range(child, line, col) then
                     rec(child, ind .. "  ")
@@ -1670,17 +1670,55 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
         vim.treesitter.query.set_query(lang, query_name, text)
     end
 
-    -- local function reset_query(lang, query_name)
-    --     local query = read_query_files(vim.treesitter.query.get_query_files(lang, query_name))
-    --     set_query(lang, query_name, query)
-    -- end
-
     local function add_query(lang, query_name, text) -- will RESET query
         local query = read_query_files(vim.treesitter.query.get_query_files(lang, query_name))
         set_query(lang, query_name, query .. "\n" .. text)
     end
 
-    -- Captures for indents.scm
+
+    -- Customize highlights.scm
+
+    add_query("bash", "highlights", [[
+(variable_assignment (variable_name) @variabledef.bash)
+;(function_definition (word) @functiondef)
+((command_name (word) @keyword.break)
+ (#any-of? @keyword.break "break" "continue"))
+((command_name (word) @keyword.return)
+ (#any-of? @keyword.break "exit" "return"))
+;(command_name (word) @functiondef)
+    ]])
+
+    add_query("javascript", "highlights", [[
+(function_declaration (identifier) @functiondef)
+(method_definition (property_identifier) @functiondef)
+(variable_declarator (identifier) @variabledef)
+(variable_declarator (object_pattern (shorthand_property_identifier_pattern) @variabledef))
+(class_declaration (identifier) @functiondef)
+(class_heritage (identifier) @typestrong)
+(class_body (field_definition (private_property_identifier) @variabledef))
+(class_body (field_definition (property_identifier) @variabledef))
+"break" @keyword.break
+"continue" @keyword.break
+    ]])
+
+    add_query("lua", "highlights", [[
+(function_declaration (identifier) @functiondef)
+(variable_declaration (assignment_statement (variable_list (identifier) @variabledef)))
+(variable_declaration (variable_list (identifier) @variabledef))
+(break_statement) @keyword.break
+    ]])
+
+    add_query("python", "highlights", [[
+(function_definition (identifier) @functiondef)
+(class_definition (identifier) @functiondef)
+;(function_definition (parameters (identifier) @variabledef))
+;(function_definition (parameters (default_parameter . (identifier) @variabledef)))
+    ]])
+
+
+    -- Customize indents.scm
+
+    -- Available captures:
     -- https://github.com/nvim-treesitter/nvim-treesitter/blob/master/CONTRIBUTING.md#indents
     -- @indent         ; indent children when matching this node
     -- @indent_end     ; marks the end of indented block
@@ -1691,23 +1729,46 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
     -- @auto           ; behaves like 'autoindent' buffer option
     -- @zero_indent    ; sets this node at position 0 (no indent)
 
-    add_query('javascript', 'indents', [[
+    add_query("javascript", "indents", [[
 ; queries here overrides default ones
+
+; ===== brace-less blocks =====
 
 [
  (for_in_statement)
  (for_statement)
- (if_statement)
  (while_statement)
 ] @indent ; do indent on brace-less blocks
 
+
+; ===== if block =====
+
+; Tree structure of "if(x)...else if(y)...else if(z)...else..." is like:
+; (if_statement (else_clause (if_statement (else_clause (if_statement (else_clause))))))
+
+(if_statement (_)) @indent   ; (1) indent children of a if_statement
+(else_clause "else" @branch) ; (2) if we're indented N levels; dedent "else" to N-1 but children are at N
+
+(else_clause (if_statement) @dedent) ; (3) prevent children of else-if from double-indented by (1)
+(else_clause (if_statement (statement_block) @dedent)) ; (4) somehow needed
+
+(else_clause (statement_block) @dedent) ; (5) do the same as (3) for last else clause
+
+; (6) Add following if you don't use default indents.scm:
+; "}" @branch
+; (statement_block) @indent
+
+
+; ===== manual indent for comments and multiline string =====
+
 [
-  (comment)
-  (template_string)
+ (comment)
+ (template_string)
 ] @auto ; manual indent
+
     ]])
 
-    set_query('vim', 'indents', [[
+    set_query("vim", "indents", [[
 [
  (if_statement)
  (function_definition)
@@ -1733,43 +1794,6 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
  (else_statement)
  (elseif_statement)
 ] @branch
-    ]])
-
-    add_query('lua', 'highlights', [[
-(function_declaration (identifier) @functiondef)
-(variable_declaration (assignment_statement (variable_list (identifier) @variabledef)))
-(variable_declaration (variable_list (identifier) @variabledef))
-(break_statement) @keyword.break
-    ]])
-
-    add_query('python', 'highlights', [[
-(function_definition (identifier) @functiondef)
-(class_definition (identifier) @functiondef)
-;(function_definition (parameters (identifier) @variabledef))
-;(function_definition (parameters (default_parameter . (identifier) @variabledef)))
-    ]])
-
-    add_query('javascript', 'highlights', [[
-(function_declaration (identifier) @functiondef)
-(method_definition (property_identifier) @functiondef)
-(variable_declarator (identifier) @variabledef)
-(variable_declarator (object_pattern (shorthand_property_identifier_pattern) @variabledef))
-(class_declaration (identifier) @functiondef)
-(class_heritage (identifier) @typestrong)
-(class_body (field_definition (private_property_identifier) @variabledef))
-(class_body (field_definition (property_identifier) @variabledef))
-"break" @keyword.break
-"continue" @keyword.break
-    ]])
-
-    add_query('bash', 'highlights', [[
-(variable_assignment (variable_name) @variabledef.bash)
-;(function_definition (word) @functiondef)
-((command_name (word) @keyword.break)
- (#any-of? @keyword.break "break" "continue"))
-((command_name (word) @keyword.return)
- (#any-of? @keyword.break "exit" "return"))
-;(command_name (word) @functiondef)
     ]])
 
 end -- >>>
