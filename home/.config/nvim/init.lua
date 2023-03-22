@@ -92,7 +92,7 @@ do -- Plugins <<<
     -- plug "https://github.com/nvim-treesitter/playground"
     -- plug "https://github.com/p00f/nvim-ts-rainbow"
 
-    -- plug "neovim/nvim-lspconfig"
+    plug "neovim/nvim-lspconfig"
 
     -- -- plug 'lukas-reineke/cmp-rg'
     -- -- plug "hrsh7th/cmp-path"
@@ -1027,6 +1027,49 @@ nnore ,l :call EvalLuaBuffer()<cr>
 
 " Filetype specific configs <<<
 
+" === Awk ===
+fu! MyAwkFixIndent()
+    set inde=GetAwkIndent2()
+endfu
+fu! GetAwkIndent2() " Same as GetAwkIndent(), except for the indent after '} else {'
+    let prev_lineno = Get_prev_line2(v:lnum)
+    if prev_lineno == 0 | return 0 | endif
+    let prev_data = getline(prev_lineno)
+    let ind = indent( prev_lineno )
+    if match(trim(prev_data), "^}.*{$") != -1 | return ind + shiftwidth() | end
+    return GetAwkIndent()
+endfu
+fu! Get_prev_line2( lineno ) " Same as Get_prev_line, just not script local
+    let lnum = a:lineno - 1
+    let data = getline( lnum )
+    while lnum > 0 && (data =~ '^\s*#' || data =~ '^\s*$')
+        let lnum = lnum - 1
+        let data = getline( lnum )
+    endwhile
+    return lnum
+endfu
+aug vimrc_ft_awk
+au!
+au BufNewFile,BufRead *.awk call MyAwkFixIndent()
+au FileType             awk call MyAwkFixIndent()
+aug END
+
+" === C, C++ ===
+aug vimrc_ft_c
+au!
+au BufNewFile,BufRead *.c,*.h,*.cpp,*.hpp setl cms=//%s
+au FileType           c,cpp               setl cms=//%s
+au BufNewFile,BufRead *.c,*.h,*.cpp,*.hpp setl cino+=(0
+au FileType           c,cpp               setl cino+=(0
+aug END
+
+" === D ===
+aug vimrc_ft_d
+au!
+au BufNewFile,BufRead *.d setl cms=//%s
+au FileType             d setl cms=//%s
+aug END
+
 " === HTML ===
 let g:html_indent_autotags="html,head,body,style" " no indent for these tags
 let g:html_indent_script1="zero"
@@ -1037,6 +1080,15 @@ au BufNewFile,BufRead *.html setl tabstop=4 shiftwidth=4
 au BufNewFile,BufRead *.html call HtmlIndent_CheckUserSettings()
 au FileType             html setl tabstop=4 shiftwidth=4
 au FileType             html call HtmlIndent_CheckUserSettings()
+aug END
+
+" === Lua ===
+aug vimrc_ft_javascript
+au!
+au BufNewFile,BufRead *.lua iabbr <buffer> ll local
+au FileType lua             iabbr <buffer> ll local
+au BufNewFile,BufRead *.lua iabbr <buffer> fn function
+au FileType lua             iabbr <buffer> fn function
 aug END
 
 " === JavaScript ===
@@ -1143,49 +1195,6 @@ aug vimrc_ft_scheme
 au!
 au BufNewFile,BufRead *.scm setl formatoptions+=rol
 au FileType             scm setl formatoptions+=rol
-aug END
-
-" === D ===
-aug vimrc_ft_d
-au!
-au BufNewFile,BufRead *.d setl cms=//%s
-au FileType             d setl cms=//%s
-aug END
-
-" === C, C++ ===
-aug vimrc_ft_c
-au!
-au BufNewFile,BufRead *.c,*.h,*.cpp,*.hpp setl cms=//%s
-au FileType           c,cpp               setl cms=//%s
-au BufNewFile,BufRead *.c,*.h,*.cpp,*.hpp setl cino+=(0
-au FileType           c,cpp               setl cino+=(0
-aug END
-
-" === Awk ===
-fu! MyAwkFixIndent()
-    set inde=GetAwkIndent2()
-endfu
-fu! GetAwkIndent2() " Same as GetAwkIndent(), except for the indent after '} else {'
-    let prev_lineno = Get_prev_line2(v:lnum)
-    if prev_lineno == 0 | return 0 | endif
-    let prev_data = getline(prev_lineno)
-    let ind = indent( prev_lineno )
-    if match(trim(prev_data), "^}.*{$") != -1 | return ind + shiftwidth() | end
-    return GetAwkIndent()
-endfu
-fu! Get_prev_line2( lineno ) " Same as Get_prev_line, just not script local
-    let lnum = a:lineno - 1
-    let data = getline( lnum )
-    while lnum > 0 && (data =~ '^\s*#' || data =~ '^\s*$')
-        let lnum = lnum - 1
-        let data = getline( lnum )
-    endwhile
-    return lnum
-endfu
-aug vimrc_ft_awk
-au!
-au BufNewFile,BufRead *.awk call MyAwkFixIndent()
-au FileType             awk call MyAwkFixIndent()
 aug END
 
 " >>>
@@ -1534,14 +1543,13 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
     ]]
 
     function tsdescribe()
-        -- local utils = require "nvim-treesitter-playground.utils"
-        local ts_utils = require "nvim-treesitter.ts_utils"
-        local parsers = require "nvim-treesitter.parsers"
+        local parsers     = require "nvim-treesitter.parsers"
         local highlighter = require "vim.treesitter.highlighter"
-        local bufnr = vim.api.nvim_get_current_buf()
+        local treesitter  = require "vim.treesitter"
+        local bufnr  = vim.api.nvim_get_current_buf()
         local cursor = vim.api.nvim_win_get_cursor(0)
-        local line = cursor[1] - 1  -- cursor[1] is 1-based
-        local col = cursor[2]       -- cursor[2] is 0-based
+        local line   = cursor[1] - 1  -- cursor[1] is 1-based
+        local col    = cursor[2]       -- cursor[2] is 0-based
 
         -- show parsed tree
         local root_lang_tree = parsers.get_parser(bufnr)
@@ -1550,19 +1558,20 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
         print("Lang: root=" .. root_lang_tree:lang() .. " here=" .. lang_tree:lang())
         local function child_in_range(node, line, col)
             for child in node:iter_children() do
-                if ts_utils.is_in_node_range(child, line, col) then
+                if treesitter.is_in_node_range(child, line, col) then
                     return child
                 end
             end
         end
         local function rec(node, ind)
             for child, name in node:iter_children() do
-                if ts_utils.is_in_node_range(child, line, col) then
-                    print(ind, "*", child, name, child:has_error() and "ERROR" or "")
-                else
-                    print(ind, " ", child, name, child:has_error() and "ERROR" or "")
-                end
-                if ts_utils.is_in_node_range(child, line, col) then
+                local s_line = string.format("%4d|", (child:start()))
+                local s_sign = treesitter.is_in_node_range(child, line, col) and "*" or " "
+                local s_node = child
+                local s_name = name and (":" .. name) or ""
+                local s_err  = child:has_error() and "ERROR" or ""
+                print(s_line, ind, s_sign, s_node, s_name, s_err)
+                if treesitter.is_in_node_range(child, line, col) then
                     rec(child, ind .. "  ")
                 end
             end
@@ -1599,13 +1608,12 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
     ]]
 
     function TSGetLangAtCursor()
-        local ts_utils = require "nvim-treesitter.ts_utils"
-        local parsers = require "nvim-treesitter.parsers"
+        local parsers     = require "nvim-treesitter.parsers"
         local highlighter = require "vim.treesitter.highlighter"
-        local bufnr = vim.api.nvim_get_current_buf()
+        local bufnr  = vim.api.nvim_get_current_buf()
         local cursor = vim.api.nvim_win_get_cursor(0)
-        local line = cursor[1] - 1  -- cursor[1] is 1-based
-        local col = cursor[2]       -- cursor[2] is 0-based
+        local line   = cursor[1] - 1  -- cursor[1] is 1-based
+        local col    = cursor[2]       -- cursor[2] is 0-based
 
         -- show parsed tree
         local root_lang_tree = parsers.get_parser(bufnr)
@@ -1617,7 +1625,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
         local lnum0 = lnum - 1 -- 0-based
         local col0  = col  - 1 -- 0-based
         local highlighter = require "vim.treesitter.highlighter"
-        local ts_utils = require "nvim-treesitter.ts_utils"
+        local treesitter  = require "vim.treesitter"
         local hlslist = {}
         local buf_highlighter = highlighter.active[vim.api.nvim_get_current_buf()]
         buf_highlighter.tree:for_each_tree(function(tstree, langtree)
@@ -1626,7 +1634,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
             local hls = {}
             for capture, node, metadata in iter do
                 local hl = query.hl_cache[capture]
-                if hl and ts_utils.is_in_node_range(node, lnum0, col0) then
+                if hl and treesitter.is_in_node_range(node, lnum0, col0) then
                     table.insert(hls, hl)
                 end
             end
