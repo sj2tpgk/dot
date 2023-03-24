@@ -1565,7 +1565,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
         end
         local function rec(node, ind)
             for child, name in node:iter_children() do
-                local s_line = string.format("%4d|", (child:start()))
+                local s_line = string.format("%4d ", (child:start()))
                 local s_sign = treesitter.is_in_node_range(child, line, col) and "*" or " "
                 local s_node = child
                 local s_name = name and (":" .. name) or ""
@@ -1736,6 +1736,10 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
     -- @ignore         ; do not indent in this node
     -- @auto           ; behaves like 'autoindent' buffer option
     -- @zero_indent    ; sets this node at position 0 (no indent)
+
+    add_query("html", "indents", [[
+(element (start_tag (tag_name) @_no_indent_tag (#any-of? @_no_indent_tag "html" "head" "body" "script" "style"))) @dedent
+    ]])
 
     add_query("javascript", "indents", [[
 ; queries here overrides default ones
