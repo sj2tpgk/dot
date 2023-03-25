@@ -2,29 +2,74 @@
 
 text=$*
 
-if [ -n "${IS_WSL}${WSL_DISTRO_NAME}${WSL_INTEROP}${WSL_ENV}" ]; then # wsl
-    cd / # might fail if pwd is network shared directory etc. so always cd to /
-    # explicitly saving to a sjis file (\\wsl$\ cannot be read by cmd.exe)
-    # how to make something like this work?: cmd.exe /c "echo ??? | clip.exe"
-    tmp=xcopytmp.txt
-    rm "/mnt/c/$tmp"
-    { [ -z "$text" ] && cat || echo "$text"; } \
-        > "/mnt/c/$tmp"
-        # | iconv -t shift-jis > "/mnt/c/$tmp"
-    cmd.exe /c "clip.exe < c:\\$tmp" >/dev/null 2>&1
-    # < "$tmp3" sh -c "clip.exe" &
-    # | iconv -f utf-8 -t shift-jis | sh -c "clip.exe" &
-    # cat | sh -c "clip.exe" &
-    # clip.exe < /dev/stdin & # not work from nvim
-    # cat | clip.exe & # works, but sometimes slow
-    # cat | sh -c "clip.exe" & # works and fast (why?)
-    # Also, must give shift-jis text to clip.exe (otherwise garbage when pasting on windows)
-    # { [ -z "$text" ] && cat || echo "$text"; } \
-    #     | wsl_enc | sh -c "clip.exe" &
+wsl_copy() {
+    # win32yank -i; return
+    cd /
 
-elif command -v xclip >/dev/null; then # xorg
-    { [ -z "$text" ] && cat || echo "$text"; } \
+    magic=ac7i6ma0
+    tmpdir=/tmp/wslclip
+    [ ! -d "$tmpdir" ] && mkdir -p "$tmpdir"
+    pidfile="$tmpdir/copy_pid"
+    inputfile="$tmpdir/copy_input"
+    oninitfile="$tmpdir/copy_oninit"
+
+    # if "pidfile cannot be read" or "pid written in pidfile no longer exists", start new daemon
+    if ! read -r pid < "$pidfile" 2>/dev/null || [ ! -e "/proc/$pid/fd/0" ]; then
+
+        # shellcheck disable=SC2016
+        pwsh='
+        # '$magic' wsl-xcopy-pwsh # For pgrep purpose
+        $wslroot="//wsl$/'"$WSL_DISTRO_NAME"'"
+        echo a > "$wslroot/'"$oninitfile"'"
+        while(1){
+            $got = Read-Host
+
+            # Assumes base64 encoded UTF-8 data is in $inputfile
+            #$b64 = Get-Content "$wslroot/'"$inputfile"'"
+            #$bin = [System.Convert]::FromBase64String($b64)
+            #$str = [System.Text.Encoding]::UTF8.GetString($bin)
+            #Set-Clipboard $str
+            # echo "b64=$b64,str=$str"
+
+            $str = (Get-Content -Raw -Encoding utf8 "$wslroot/'"$inputfile"'")
+            Set-Clipboard $str
+        }
+        '
+
+        mkdir -p "$tmpdir"
+        touch "$inputfile"
+        rm "$oninitfile" 2>/dev/null
+
+        # Run powershell and save pid
+        # This reads $inputfile and save it to clipboard whenever something is written in stdin.
+        # An alternative is clip.exe, but has encoding problem, not works on some directories, slower than this background-powershell method etc.
+        # A dummy process is piped to powershell.exe, otherwise we cannot write to its stdin with /proc/$pid/fd/0.
+        # Also powershell.exe must be piped to something other than stdout, otherwise it does not persist when not launched from terminal (e.g. from vim).
+        # Replacing "while ..." with "cat" works in terminal, but not in script (infinite loop)
+        while true; do sleep 100000; done | powershell.exe "$pwsh" > /dev/null &
+        pid=$!
+        echo $pid > "$pidfile"
+
+        # wait until $oninitfile is created (powershell startup is slow)
+        i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$oninitfile" ]; do sleep .01; done
+
+    fi
+
+    # { [ -z "$text" ] && cat || printf "%s" "$text"; } | base64 > "$inputfile"
+    # echo > "/proc/$pid/fd/0"
+    { [ -z "$text" ] && cat || printf "%s" "$text"; } > "$inputfile"
+    echo > "/proc/$pid/fd/0"
+
+}
+
+
+## Main program
+
+if [ -n "${IS_WSL}${WSL_DISTRO_NAME}${WSL_INTEROP}${WSL_ENV}" ]; then # wsl
+    wsl_copy
+
+elif command -v xclip > /dev/null; then # xorg
+    { [ -z "$text" ] && cat || printf "%s" "$text"; } \
         | xclip -selection clipboard -i
 
 fi
-
