@@ -33,6 +33,7 @@ wsl_copy() {
 
             $str = (Get-Content -Raw -Encoding utf8 "$wslroot/'"$inputfile"'")
             Set-Clipboard $str
+
         }
         '
 

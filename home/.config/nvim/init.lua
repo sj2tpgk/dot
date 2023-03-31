@@ -87,6 +87,7 @@ end
 do -- Plugins <<<
 
     -- plug "pangloss/vim-javascript"
+    plug "Vimjas/vim-python-pep8-indent"
 
     plug "nvim-treesitter/nvim-treesitter"
     -- plug "https://github.com/nvim-treesitter/playground"
@@ -187,6 +188,36 @@ endfu
 set statusline=%h%w%m%r\ \ %t\ \ \ [%{StlDirName()}]\ \ \ (%{StlFileTypeEnc()})%=%-14.(%l,%c%V%)\ %P%3@StlClose@\ \ [X]%X
 
 set laststatus=2
+" >>>
+
+" Tabline <<<
+fu! Tabline() abort
+    let l:line = ''
+    let l:current = tabpagenr()
+
+    for l:i in range(1, tabpagenr('$'))
+        if l:i == l:current
+            let l:line .= '%#TabLineSel#'
+        else
+            let l:line .= '%#TabLine#'
+        endif
+
+        let l:label = fnamemodify(
+            \ bufname(tabpagebuflist(l:i)[tabpagewinnr(l:i) - 1]),
+            \ ':t'
+            \ )
+
+        let l:line .= '%' . i . 'T' " Starts mouse click target region.
+        let l:line .= '  ' . l:label . '  '
+    endfor
+
+    let l:line .= '%#TabLineFill#'
+    let l:line .= '%T' " Ends mouse click target region(s).
+
+    return l:line
+endfu
+
+set tabline=%!Tabline()
 " >>>
 
 " Indent <<<
@@ -1556,13 +1587,6 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
         if not root_lang_tree then return false end
         local lang_tree = root_lang_tree:language_for_range { line, col, line, col }
         print("Lang: root=" .. root_lang_tree:lang() .. " here=" .. lang_tree:lang())
-        local function child_in_range(node, line, col)
-            for child in node:iter_children() do
-                if treesitter.is_in_node_range(child, line, col) then
-                    return child
-                end
-            end
-        end
         local function rec(node, ind)
             for child, name in node:iter_children() do
                 local s_line = string.format("%4d ", (child:start()))
@@ -1705,8 +1729,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
 (class_heritage (identifier) @typestrong)
 (class_body (field_definition (private_property_identifier) @variabledef))
 (class_body (field_definition (property_identifier) @variabledef))
-"break" @keyword.break
-"continue" @keyword.break
+[ "break" "continue" "throw" ] @keyword.break
     ]])
 
     add_query("lua", "highlights", [[
@@ -2290,7 +2313,7 @@ function mycomp_collect() -- Collect words <<<
 
     local comps_list = { -- defines order of words
         { "h", mycomp_collect_history() },
-        -- { "o", mycomp_collect_omni() },
+        { "o", mycomp_collect_omni() },
         { "b", mycomp_collect_bufferall() },
         { "k", mycomp_collect_keywords() },
         }

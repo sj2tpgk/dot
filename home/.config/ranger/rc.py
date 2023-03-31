@@ -59,6 +59,8 @@ def rc_py_main():
     map "<any> chain tab_new ; enter_bookmark %any
     map '<any> enter_bookmark %any
     map '<bg>  draw_bookmarks
+
+    map R      eval fm.open_console("rename " + fm.thisfile.relative_path.replace("%", "%%"), position=7)
     ''')
 
     # Keys (depends on keyboard layout)

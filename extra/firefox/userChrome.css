@@ -42,6 +42,7 @@
 
 /* Disable firefox update notification (2022/12, v107) */
 #appMenu-update-restart-notification, #appMenu-update-manual-notification, #appMenu-update-available-notification, .toolbarbutton-badge { display: none !important; }
+.toolbarbutton-badge { display: none }
 
 
 /* ---- FF 109 "Extensions" button in toolbar ---- */

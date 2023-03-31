@@ -69,7 +69,7 @@ while true; do
 
         # (-z flag) wait after cmd exits
         [ $zflag ] && { wait "$pid" && exit 0; }
-        
+
         # update timestamp data
         time=$newtime
 
