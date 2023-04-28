@@ -86,10 +86,10 @@ end
 
 do -- Plugins <<<
 
-    -- plug "pangloss/vim-javascript"
+    plug "pangloss/vim-javascript"
     plug "Vimjas/vim-python-pep8-indent"
 
-    plug "nvim-treesitter/nvim-treesitter"
+    -- plug "nvim-treesitter/nvim-treesitter"
     -- plug "https://github.com/nvim-treesitter/playground"
     -- plug "https://github.com/p00f/nvim-ts-rainbow"
 
@@ -115,6 +115,7 @@ end -- >>>
 
 if can_require"nvim-autopairs" then require"nvim-autopairs".setup() end
 if can_require"pears" then require"pears".setup() end
+vim.cmd [[ let g:javascript_plugin_jsdoc = 1 ]]
 
 vim.cmd [[
 
@@ -1202,11 +1203,11 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     hi      orgHeading4   ctermfg=magenta
     hi      orgMathInline ctermfg=blue
 
-    hi link orgBold       Statement
+    hi      orgBold       ctermfg=red
     hi      orgItalic     ctermfg=blue cterm=italic
     hi      orgUnder      ctermfg=cyan cterm=underline
     hi      orgStrike     ctermfg=green
-    hi link orgMonospace  String
+    hi      orgMonospace  ctermfg=yellow
     hi      orgVerbatim   ctermfg=magenta
 
     hi link orgTex        Preproc
