@@ -1743,6 +1743,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
     add_query("python", "highlights", [[
 (function_definition (identifier) @functiondef)
 (class_definition (identifier) @functiondef)
+[ "continue" "raise" ] @keyword.break
 ;(function_definition (parameters (identifier) @variabledef))
 ;(function_definition (parameters (default_parameter . (identifier) @variabledef)))
     ]])
