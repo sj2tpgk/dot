@@ -33,3 +33,13 @@
 @-moz-document domain("docs.python.org") {
     :not(.sig) > em, .sig-param .n span { color: #d22 }
 }
+
+@-moz-document domain("news.ycombinator.com") {
+  td, #hnmain { background: transparent !important }
+  img { visibility: hidden }
+}
+
+@-moz-document domain("ekitan.com") {
+  .accordion-content.js-slide-toggle-content { display: unset !important }
+  .noscript-wrap, .header-inner.clearfix { display: none }
+}

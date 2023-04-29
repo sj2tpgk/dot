@@ -70,15 +70,17 @@ sub rgb_hex {
 # main
 my $dels=0;
 my $delv=0;
+my $delh=0;
 my @inrgb;
 for (@ARGV) {
-    if    (/s([-+][0-9]*)/) { $dels = $1 }
+    if    (/h([-+][0-9]*)/) { $delh = $1 }
+    elsif (/s([-+][0-9]*)/) { $dels = $1 }
     elsif (/v([-+][0-9]*)/) { $delv = $1 }
     elsif (/#.*/) { @inrgb = hex_rgb($&) }
 }
 
 my ($h,$s,$v) = rgb_hsv(@inrgb);
-my ($h2,$s2,$v2) = ($h,$s+$dels,$v+$delv);
+my ($h2,$s2,$v2) = ($h+$delh,$s+$dels,$v+$delv);
 my @outrgb = hsv_rgb($h2,$s2,$v2);
 my $outhex = rgb_hex(@outrgb);
 print $outhex, "\n";
