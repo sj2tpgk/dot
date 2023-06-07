@@ -861,13 +861,22 @@ fu! MyHighlight2()
     hi DiagnosticInfo  ctermfg=blue
     hi DiagnosticHint  ctermfg=blue
 
+    if &ft == "python"
+        hi Statement ctermfg=green
+        hi Identifier ctermfg=white cterm=bold
+        syn keyword pythonFlow return pass raise break continue
+        hi pythonFlow ctermfg=red
+        syn match pythonPunctations /[^[:keyword:]#"']/
+        hi pythonPunctations ctermfg=red
+    endif
+
 endfu
 call MyHighlight2()
 aug vimrc_hi " :hi need to be in autocmd on first run??
 au!
 au VimEnter * :call MyHighlight2()
 aug END
-
+nnore <f8> :call MyHighlight2()<cr>
 " >>>
 
 " Appearance <<<

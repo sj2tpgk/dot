@@ -1,5 +1,5 @@
 sh ~/script/x-setting.sh &
-command -v python > /dev/null && python ~/script/mouse-digio-fix.py &
+# command -v python > /dev/null && python ~/script/mouse-digio-fix.py &
 
 # # used in .tmux.conf .vimrc etc.
 # xrdb ~/.Xresources
