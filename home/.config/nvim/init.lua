@@ -89,9 +89,9 @@ do -- Plugins <<<
     plug "pangloss/vim-javascript"
     plug "Vimjas/vim-python-pep8-indent"
 
-    -- plug "nvim-treesitter/nvim-treesitter"
-    -- plug "https://github.com/nvim-treesitter/playground"
-    -- plug "https://github.com/p00f/nvim-ts-rainbow"
+    plug "nvim-treesitter/nvim-treesitter"
+    plug "https://github.com/nvim-treesitter/playground"
+    plug "https://github.com/p00f/nvim-ts-rainbow"
 
     plug "neovim/nvim-lspconfig"
 
@@ -1719,6 +1719,14 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
 ((command_name (word) @keyword.return)
  (#any-of? @keyword.break "exit" "return"))
 ;(command_name (word) @functiondef)
+    ]])
+
+    add_query("c", "highlights", [[
+(pointer_declarator (identifier) @variabledef) ; "arr" in "int (*arr)[]"
+[ "break" "continue" ] @keyword.break
+[ "goto" ] @keyword.return
+((call_expression (identifier) @keyword.return)
+ (#eq? @keyword.return "exit"))
     ]])
 
     add_query("javascript", "highlights", [[
