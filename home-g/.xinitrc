@@ -1,12 +1,15 @@
-# used in .tmux.conf .vimrc etc.
-xrdb ~/.Xresources
-setxkbmap -layout jp
-# xset r rate 210 38
-xset r rate 180 45
-xset b off
-xset s off -dpms          # Don't use dpms for screen timeout
-xset s 7200 7200          # Specify screen timeout here
-xset dpms 1800 2700 3600  # DPMS standby/suspend/off time (?)
+sh ~/script/x-setting.sh &
+# command -v python > /dev/null && python ~/script/mouse-digio-fix.py &
+
+# # used in .tmux.conf .vimrc etc.
+# xrdb ~/.Xresources
+# setxkbmap -layout jp
+# # xset r rate 210 38
+# xset r rate 180 45
+# xset b off
+# xset s off -dpms          # Don't use dpms for screen timeout
+# xset s 7200 7200          # Specify screen timeout here
+# xset dpms 1800 2700 3600  # DPMS standby/suspend/off time (?)
 
 dbus-update-activation-environment --systemd DBUS_SESSION_BUS_ADDRESS DISPLAY XAUTHORITY
 

@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-function usage {
+usage() {
     echo "Usage: randomstr [-n] <length> <spec>"
     echo "  Get a random string of length <length> using characters specified by <spec>,"
     echo "  and copy the string to clipboard using xclip if available."
@@ -22,7 +22,7 @@ if [ "$1" = -n ]; then nflag=1; shift; fi
 
 len=$1
 [ $# -eq 1 ] && options=xad || options=x$2
-[ $options = xw ] && options=xaAd_
+[ "$options" = xw ] && options=xaAd_
 
 charset=""
 
