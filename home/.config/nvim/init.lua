@@ -22,6 +22,7 @@ let g:env = {
     \ "vscode": exists("g:vscode"),
     \ "git":    executable("git"),
     \ "curl":   executable("curl"),
+    \ "dark":   !empty($MY_DARK) ? ($MY_DARK == "1") : ($MYKBD == "colemakdh"),
     \ }
 
 ]] -- >>>
@@ -666,7 +667,7 @@ fu! MyHighlight()
     hi Special      ctermfg=red
     hi Folded       ctermfg=magenta ctermbg=black cterm=bold,underline
     "  hi Folded       ctermfg=magenta ctermbg=none cterm=bold
-    if $MYKBD == "colemakdh"
+    if g:env.dark
         hi Folded       ctermfg=magenta ctermbg=236 cterm=bold
     endif
     hi Visual       ctermfg=black ctermbg=blue
@@ -698,7 +699,7 @@ fu! MyHighlight()
     " hi PmenuSel     ctermfg=236 ctermbg=blue cterm=bold,reverse
     hi Pmenu        ctermfg=blue ctermbg=black
     hi PmenuSel     ctermfg=blue ctermbg=black cterm=bold,reverse
-    if $MYKBD == "colemakdh"
+    if g:env.dark
         hi Pmenu        ctermfg=blue ctermbg=238 cterm=bold
     endif
 
@@ -841,14 +842,14 @@ fu! MyHighlight2()
     " Popup menu
     hi Pmenu        ctermfg=blue ctermbg=black
     hi PmenuSel     ctermfg=blue ctermbg=black cterm=bold,reverse
-    if $MYKBD == "colemakdh"
+    if g:env.dark
         hi Pmenu        ctermfg=blue ctermbg=238 cterm=bold
     endif
 
     " Folding
     hi Folded       ctermfg=magenta ctermbg=black cterm=bold,underline
     "  hi Folded       ctermfg=magenta ctermbg=none cterm=bold
-    if $MYKBD == "colemakdh"
+    if g:env.dark
         hi Folded       ctermfg=magenta ctermbg=236 cterm=bold
     endif
 
