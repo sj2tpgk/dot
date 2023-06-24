@@ -17,7 +17,7 @@ help() {
 ## Parse opts (TODO -- flag (option separator))
 
 [ $# -eq 0 ] && { help; exit; }
-rflag= tval=2 Tflag= zflag=
+rflag= tval=1 Tflag= zflag=
 files=()
 while true; do
     case "$1" in

@@ -105,6 +105,10 @@ bind -k ppage prevd-or-backward-word
 bind -k npage nextd-or-forward-word
 bind -k btab  nextd-or-forward-word # shift+tab
 
+# Unbind function keys (use fish_key_reader to find out key name)
+for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i ""; end
+for i in \e\[25\;2~ \e\[26\;5~; bind $i ""; end
+
 # bind \ed my_fish_fzy
 # bind \ef "commandline -r hello"
 # bind -k \cleft "commandline -r hello"

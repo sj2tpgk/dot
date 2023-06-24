@@ -94,7 +94,7 @@ do -- Plugins <<<
     plug "https://github.com/nvim-treesitter/playground"
     plug "https://github.com/p00f/nvim-ts-rainbow"
 
-    plug "neovim/nvim-lspconfig"
+    -- plug "neovim/nvim-lspconfig"
 
     -- -- plug 'lukas-reineke/cmp-rg'
     -- -- plug "hrsh7th/cmp-path"
