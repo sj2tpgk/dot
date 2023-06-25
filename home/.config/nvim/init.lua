@@ -90,11 +90,11 @@ do -- Plugins <<<
     plug "pangloss/vim-javascript"
     plug "Vimjas/vim-python-pep8-indent"
 
-    plug "nvim-treesitter/nvim-treesitter"
-    plug "https://github.com/nvim-treesitter/playground"
-    plug "https://github.com/p00f/nvim-ts-rainbow"
+    -- plug "nvim-treesitter/nvim-treesitter"
+    -- plug "https://github.com/nvim-treesitter/playground"
+    -- plug "https://github.com/p00f/nvim-ts-rainbow"
 
-    -- plug "neovim/nvim-lspconfig"
+    plug "neovim/nvim-lspconfig"
 
     -- -- plug 'lukas-reineke/cmp-rg'
     -- -- plug "hrsh7th/cmp-path"
@@ -862,13 +862,42 @@ fu! MyHighlight2()
     hi DiagnosticInfo  ctermfg=blue
     hi DiagnosticHint  ctermfg=blue
 
+    if &ft == "javascript"
+        hi link jsFunction    Bold
+        hi link jsRepeat      Bold
+        hi link jsConditional Bold
+        hi link jsTry         Bold
+        hi link jsFinally     Bold
+        hi link jsCatch       Bold
+        hi link jsFuncName    FuncDef
+        hi link jsFuncArgs    VarDef
+        hi link jsReturn      Flow
+        hi link jsException   Flow
+        hi link jsStatement   Flow
+    endif
+
     if &ft == "python"
-        hi Statement ctermfg=green
-        hi Identifier ctermfg=white cterm=bold
-        syn keyword pythonFlow return pass raise break continue
-        hi pythonFlow ctermfg=red
-        syn match pythonPunctations /[^[:keyword:]#"']/
-        hi pythonPunctations ctermfg=red
+        hi link pythonBuiltin     Normal
+        hi link pythonStatement   Bold
+        hi link pythonRepeat      Bold
+        hi link pythonOperator    Bold
+        hi link pythonConditional Bold
+        hi link Identifier        FuncDef
+        hi link pythonFunction    FuncDef
+
+        syn keyword MyPythonFlow return pass raise break continue
+        hi link MyPythonFlow     Flow
+
+        syn match MyPythonPunctations /[^[:keyword:]#"']/
+        hi link MyPythonPunctations Special
+
+        syn keyword MyPythonDef        def skipwhite nextgroup=MyPythonDefName
+        syn match   MyPythonDefName    /\<\w\+\>/ skipwhite contained nextgroup=MyPythonDefArgs
+        syn region  MyPythonDefArgs    start="(" end=")" keepend contained contains=python[a-zA-Z].*,MyPythonDefArgName,MyPythonPunctations
+        syn match   MyPythonDefArgName /\([(,*]\_s*\)\@5<=\<\w\+\>/ skipwhite contained
+        hi link MyPythonDef        Bold
+        hi link MyPythonDefName    FuncDef
+        hi link MyPythonDefArgName VarDef
     endif
 
 endfu
@@ -1345,7 +1374,8 @@ if can_require"lspconfig" then -- Lsp <<<
     function rightAlignFormatFunction(diagnostic)
         local line = diagnostic.lnum -- 0-based
         local space = string.rep(" ", vim.o.columns - vim.fn.getline(1+line):len() - 11 - vim.g.diaglength)
-        return string.format("%s* %s", space, diagnostic.message)
+        return ""
+        -- return string.format("%s* %s", space, diagnostic.message)
     end
 
     vim.cmd [[
