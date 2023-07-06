@@ -786,12 +786,16 @@ fu! MyHighlight2()
     hi      Comment               ctermfg=blue    cterm=none
     hi      String                ctermfg=yellow  cterm=none
     hi      Number                ctermfg=white   cterm=none
-    hi      FuncDef               ctermfg=white   cterm=bold
+    hi      FuncDef               ctermfg=cyan    cterm=none
     hi link VarDef                FuncDef
     hi      Type                  ctermfg=white   cterm=none
     hi      Flow                  ctermfg=red     cterm=none
     hi      Special               ctermfg=red     cterm=none
     hi      PreProc               ctermfg=green   cterm=none
+
+    if g:env.dark
+        hi FuncDef ctermfg=white   cterm=bold
+    endif
 
     hi link @constructor          FuncDef
     hi link @functiondef          FuncDef
@@ -866,17 +870,28 @@ fu! MyHighlight2()
     hi DiagnosticHint  ctermfg=blue
 
     if &ft == "javascript"
-        hi link jsFunction    Bold
-        hi link jsRepeat      Bold
-        hi link jsConditional Bold
-        hi link jsTry         Bold
-        hi link jsFinally     Bold
-        hi link jsCatch       Bold
-        hi link jsFuncName    FuncDef
-        hi link jsFuncArgs    VarDef
-        hi link jsReturn      Flow
-        hi link jsException   Flow
-        hi link jsStatement   Flow
+        hi link jsFuncCall       Normal
+        hi link jsFunction       Bold
+        hi link jsRepeat         Bold
+        hi link jsConditional    Bold
+        hi link jsTry            Bold
+        hi link jsFinally        Bold
+        hi link jsCatch          Bold
+        hi link jsOf             Bold
+        hi link jsStorageClass   Bold
+        hi link jsThis           Bold
+        hi link jsSuper          Bold
+        hi link jsBuiltins       Bold
+        hi link jsGlobalObjects  Bold
+        hi link jsFuncName       FuncDef
+        hi link jsClassProperty  FuncDef
+        hi link jsFuncArgs       VarDef
+        hi link jsReturn         Flow
+        hi link jsException      Flow
+        hi link jsStatement      Flow
+        hi link jsArrowFunction  Special
+        hi link Noise            Special
+        hi link jsOperator       Special
     endif
 
     if &ft == "python"
@@ -885,6 +900,8 @@ fu! MyHighlight2()
         hi link pythonRepeat      Bold
         hi link pythonOperator    Bold
         hi link pythonConditional Bold
+        hi link pythonAsync       Bold
+        hi link pythonException   Bold
         hi link Identifier        FuncDef
         hi link pythonFunction    FuncDef
 
@@ -901,6 +918,13 @@ fu! MyHighlight2()
         hi link MyPythonDef        Bold
         hi link MyPythonDefName    FuncDef
         hi link MyPythonDefArgName VarDef
+    endif
+
+    if &ft == "html"
+        hi link htmlTag            Special
+        hi link htmlEndTag         Special
+        hi link htmlSpecialTagName Bold
+        hi link htmlTagName        Bold
     endif
 
 endfu

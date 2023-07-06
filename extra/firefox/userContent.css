@@ -44,6 +44,10 @@
   .noscript-wrap, .header-inner.clearfix { display: none }
 }
 
-@-moz-document domain("askubuntu.com"), domain("stackexchange.com"), domain("stackoverflow.com"), domain("superuser.com") {
+@-moz-document domain("askubuntu.com"), domain("serverfault.com"), domain("stackexchange.com"), domain("stackoverflow.com"), domain("superuser.com") {
   .js-voting-container > button { visibility: hidden }
+  header, #question-header > div, #left-sidebar, #sidebar, #post-form, #post-form ~ *, footer, .bottom-notice, .post-signature { display: none !important }
+  #mainbar { width: 728px !important }
+  body { padding: 0 0 70px !important }
+  #content { border-left-width: 0 !important }
 }
