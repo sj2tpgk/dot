@@ -89,6 +89,9 @@ do -- Plugins <<<
 
     plug "pangloss/vim-javascript"
     plug "Vimjas/vim-python-pep8-indent"
+    plug "bfrg/vim-cpp-modern"
+    plug "gutenye/json5.vim"
+    plug "dmix/elvish.vim"
 
     -- plug "nvim-treesitter/nvim-treesitter"
     -- plug "https://github.com/nvim-treesitter/playground"
