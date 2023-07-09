@@ -927,6 +927,21 @@ fu! MyHighlight2()
         hi link htmlTagName        Bold
     endif
 
+    if &ft == "c"
+        hi link cUserFunction Normal
+        syn match MyCPunc /[][(){}+*=,;-]/
+        hi link MyCPunc Special
+    endif
+
+    if &ft == "perl"
+        hi link perlStatement        Normal
+        hi link perlStatementFlow    Flow
+        hi link perlStatementControl Flow
+        syn match MyPerlPunc /[][(){}<>:?!+*=,;-]/
+        hi link MyPerlPunc Special
+        hi link perlVarPlain Bold
+    endif
+
 endfu
 call MyHighlight2()
 aug vimrc_hi " :hi need to be in autocmd on first run??
