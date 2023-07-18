@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+import argparse, json, os, os.path, re, sys, time, urllib.error, urllib.request
+
+def parseSpec(spec):
+    m = re.match(r"(\w+)(\[(\w+)\])?", spec)
+    name = m[1]
+    extra = m[3]
+    expr = spec.split(";")[1].strip() if ";" in spec else "False"
+    return { "spec": spec, "name": name, "extra": extra, "expr": expr }
+
+# parseSpec("urllib3")
+# parseSpec("urllib3[secure]")
+# parseSpec("botocore[crt] (<2.0a0,>=1.21.0) ; extra == 'crt'")
+# exit()
+
+dlCacheEnabled = False
+dlCacheDir     = "__pdp_cache"
+dlCache        = {}
+if dlCacheEnabled:
+    if not os.path.exists(dlCacheDir):
+        os.mkdir(dlCacheDir)
+    for f1 in os.listdir(dlCacheDir):
+        with open(f"{dlCacheDir}/{f1}") as f:
+            dlCache[f1[:-5]] = json.load(f)
+def dl(name):
+    if name in dlCache:
+        return dlCache[name]
+    url = f"https://pypi.org/pypi/{name}/json"
+    req = urllib.request.Request(url)
+    try:
+        res = urllib.request.urlopen(req)
+    except urllib.error.HTTPError:
+        print("No such package:", name, file=sys.stderr)
+        return {}
+    dat = res.read().decode("utf-8")
+    jso = json.loads(dat)
+    dlCache[name] = jso
+    if dlCacheEnabled:
+        with open(f"{dlCacheDir}/{name}.json", "w") as f:
+            f.write(dat)
+    time.sleep(0.2)
+    return jso
+
+# print(dl("urllib3"))
+# exit()
+
+def rec(spec):
+    pkg = parseSpec(spec)
+    jso = dl(pkg["name"])
+
+    if not jso: return []
+
+    depSpecs = jso["info"]["requires_dist"] or []
+    g = {
+        "extra":                          pkg["extra"],
+        "implementation_name":            "CPython",
+        "platform_python_implementation": "CPython",
+        "python_version":                 "0",
+        "sys_platform":                   "win32",
+    }
+    deps = filter(lambda x: eval(x["expr"], g), map(parseSpec, depSpecs))
+
+    return sum([rec(dep["spec"]) for dep in deps], [pkg["name"]])
+
+def main(args):
+    spec = args.pkg
+    pkg = parseSpec(spec)
+    dic = dict(dl(pkg["name"]))
+
+    deps = sorted(list(set(rec(spec))))
+    size = sum([dl(x)["urls"][0]["size"] for x in deps if len(dl(x)["urls"]) > 0])
+
+    dic["info"]["total_deps"] = deps
+    dic["info"]["total_size"] = size
+
+    sizeTxt = size if size < 1024 else (f"{size//1024} KiB" if size < 1024**2 else f"{size//(1024**2)} MiB")
+
+    if args.json:
+        json.dump(dic, sys.stdout)
+    else:
+        print("Name       :", spec)
+        print("Summary    :", dic["info"]["summary"])
+        print("Total Size :", sizeTxt)
+        print("Total Deps :", " ".join(deps))
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-j", "--json", action="store_true")
+    ap.add_argument("pkg")
+    args = ap.parse_args()
+    main(args)
