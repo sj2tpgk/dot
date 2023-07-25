@@ -2,7 +2,7 @@
 import argparse, json, os, os.path, re, sys, time, urllib.error, urllib.request
 
 def parseSpec(spec):
-    m = re.match(r"(\w+)(\[(\w+)\])?", spec)
+    m = re.match(r"([-\w]+)(\[([-\w]+)\])?", spec)
     name = m[1]
     extra = m[3]
     expr = spec.split(";")[1].strip() if ";" in spec else "False"

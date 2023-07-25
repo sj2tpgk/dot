@@ -320,12 +320,14 @@ Emacs.lineSpacing: 4
 ! Sxiv, nsxiv {{{
 Sxiv.background: #000000
 Sxiv.foreground: #aaaaaa
-Sxiv.font: Migu 2M:size=13
+! Sxiv.font: Migu 2M:size=13
+Sxiv.font: UnifontMy:style=Bold:size=12:rgba=none
 Nsxiv.window.background: #000
 Nsxiv.window.foreground: #aaa
 Nsxiv.bar.background: #111
 Nsxiv.bar.foreground: #6f6
-Nsxiv.bar.font: Migu 2M:size=13
+! Nsxiv.bar.font: Migu 2M:size=13
+Nsxiv.bar.font: UnifontMy:style=Bold:size=12:rgba=none
 ! }}}
 
 xterm*faceName: Unifont\\-JP:style=Regular:size=12

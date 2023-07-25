@@ -92,6 +92,7 @@ do -- Plugins <<<
     plug "bfrg/vim-cpp-modern"
     plug "gutenye/json5.vim"
     plug "dmix/elvish.vim"
+    plug "udalov/kotlin-vim"
 
     -- plug "nvim-treesitter/nvim-treesitter"
     -- plug "https://github.com/nvim-treesitter/playground"
@@ -937,7 +938,7 @@ fu! MyHighlight2()
         hi link perlStatement        Normal
         hi link perlStatementFlow    Flow
         hi link perlStatementControl Flow
-        syn match MyPerlPunc /[][(){}<>:?!+*=,;-]/
+        syn match MyPerlPunc /[][(){}<>:?!+*=,;-\/]/
         hi link MyPerlPunc Special
         hi link perlVarPlain Bold
     endif
@@ -1538,7 +1539,8 @@ if can_require"lspconfig" then -- ElDoc (lsp signatureHelp) <<<
             end
 
             -- highlight current param and show
-            local actSig = result.activeSignature or 0
+            -- note: in some langs (kotlin) result.activeSignature might be -1
+            local actSig = math.max(0, result.activeSignature or 0)
             local sig    = result.signatures[1+actSig]
             local sigLbl = sig.label
             local params = sig.parameters
