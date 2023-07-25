@@ -51,3 +51,7 @@
   body { padding: 0 0 70px !important }
   #content { border-left-width: 0 !important }
 }
+
+@-moz-document domain("plantuml.com") {
+  #parallax { display: none }
+}
