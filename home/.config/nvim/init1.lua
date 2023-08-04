@@ -1,6 +1,7 @@
 -- vim: fdm=marker fmr=<<<,>>>
 -- default fold marker breaks indentation
--- if above modeline does not work, check ~/.local/state/nvim/view/ for cache
+
+-- TODO tmux source
 
 -- init.lua with treesitter indent has better stability over lua in init.vim
 
@@ -23,15 +24,6 @@ let g:env = {
     \ "curl":   executable("curl"),
     \ "dark":   !empty($MY_DARK) ? ($MY_DARK == "1") : ($MYKBD == "colemakdh"),
     \ }
-
-" Ignore function keys
-for i in range(1, 16)
-    for j in ["", "s-", "c-"]
-        for k in ["", "i", "c"]
-            exe k . "nore <" . j . "f" . i . "> <nop>"
-        endfor
-    endfor
-endfor
 
 ]] -- >>>
 
@@ -104,19 +96,23 @@ do -- Plugins <<<
 
     -- Treesitter
     plug "nvim-treesitter/nvim-treesitter"
-    -- plug "nvim-treesitter/playground"
-    -- plug "p00f/nvim-ts-rainbow"
+    -- plug "https://github.com/nvim-treesitter/playground"
+    -- plug "https://github.com/p00f/nvim-ts-rainbow"
 
     -- LSP
     plug "neovim/nvim-lspconfig"
 
     -- Editing commands
     plug "junegunn/vim-easy-align"
+    -- plug "godlygeek/tabular"
+    -- plug "smjonas/live-command.nvim"
     plug "windwp/nvim-autopairs"
+    -- plug "steelsojka/pears.nvim"
 
 end -- >>>
 
 if can_require"nvim-autopairs" then require"nvim-autopairs".setup() end
+if can_require"pears" then require"pears".setup() end
 vim.cmd [[ let g:javascript_plugin_jsdoc = 1 ]]
 
 vim.cmd [[
@@ -429,6 +425,11 @@ nnore <expr> sF FzfExists() ? ":FzfFiles!\<cr>"  : ":e\<space>"
 nnore + :tabnext<cr>
 nnore <silent> su :vsplit<bar>wincmd l<bar>exe "norm! Ljz<c-v><cr>"<cr>:set scb<cr>:wincmd h<cr>:set scb<cr>
 
+" do not insert function key names
+inore <F12>   <nop>
+inore <S-F13> <nop>
+inore <C-F14> <nop>
+
 " misc
 nnore * :call SearchQF()<cr>
 nnore sc :copen<cr>
@@ -540,42 +541,241 @@ endfu
 
 " >>>
 
+" Custom Syntax (not used when using treesitter) <<<
+
+fu! MySyntax()
+    let ft = &ft
+    if ft == "html"
+        " TODO command to replace &forall; etc. with unicode chars?
+        for i in [ "> gt", "< lt", "∀ forall", "∂ part", "∃ exist", "∅ empty", "∇ nabla", "∈ isin", "∉ notin", "∋ ni", "∏ prod", "∑ sum", "− minus", "∗ lowast", "√ radic", "∝ prop", "∞ infin", "∠ ang", "∧ and", "∨ or", "∩ cap", "∪ cup", "∫ int", "∴ there4", "∼ sim", "≅ cong", "≈ asymp", "≠ ne", "≡ equiv", "≤ le", "≥ ge", "⊂ sub", "⊃ sup", "⊄ nsub", "⊆ sube", "⊇ supe", "⊕ oplus", "⊗ otimes", "⊥ perp", "⋅ sdot", "∈ in" ]
+            let from = matchstr(i, "\\S*$")
+            let to   = matchstr(i, "^\\S*")
+            exe "syntax match MyHtml_" . from . " \"&" . from . ";\" conceal cchar=" . to
+        endfor
+        syntax match MyHtml_br "<br>" conceal cchar=⏎
+        sil! syntax clear MyHtml_span
+        syntax region MyHtml_span matchgroup=MyHtml_hidden start='<span\( class="\?[^>"]*"\?\)\?>' end='<\/span>' oneline concealends
+        hi MyHtml_span cterm=underline
+        hi Conceal ctermfg=7 ctermbg=8 cterm=bold
+        setlocal conceallevel=2 concealcursor=nc
+    endif
+    if ft == "javascript" || ft == "html"
+        for i in ["jsVarDef", "jsVarDefName", "jsFuncDefName", "jsFuncDefArgs", "jsVarDefWrap"] | exe "sil! syn clear " . i | endfor
+
+        " bigint
+        sil! syn clear javaScriptBigInt
+        syn match javaScriptBigInt /-\=\<\d\+\%(_\d\+\)*n\>/
+
+        " TODO this fails for multiline string e.g. "const str = `aa\nbb\ncc`;" (\n means really newline)
+        " workaround: put "=" and the string literal in the next line.
+
+        " Match variable definition statement e.g. "const x = 1, y = 2;"
+        " remove const/let/var from keywords
+        sil! syn clear javaScriptIdentifier
+        sil! syn clear javaScriptReserved
+        syn keyword javaScriptIdentifier this arguments
+        syn keyword javaScriptReserved long transient float int async synchronized protected static interface private final implements import goto export volatile class double short boolean char throws native enum public byte debugger package abstract extends super
+        syn keyword javascriptStatement yield yield*
+        syn keyword javascriptRepeat of
+
+        " now define region
+        syn region jsVarDef matchgroup=jsVarDefType start=/\<const\>/ start=/\<let\>/ start=/\<var\>/ matchgroup=NONE end=/;/ keepend end=/[^,;]$/ transparent containedin=javaScript contains=javaScript[a-zA-Z].*,jsVarDefName,jsVarDefWrap
+        " symbols inside function calls, arrays and objects are not varname (except destructuring assignment)
+        " syn region jsVarDefWrap start=/\(\(const\|let\|var\)\_s*\)\@<![\[({]/ end=/[])}]/ keepend transparent contained contains=javaScript[a-zA-Z].*
+        syn region jsVarDefWrap start=/\(\(const\|let\|var\)\_s*\)\@<![\[({]/ end=/[])}]/ keepend transparent contained contains=javaScript[a-zA-Z].*
+
+        " Match variable name in definitions e.g. "x" and "y" in "const x = 1, y = 2;" or "function f(x, y=2)"
+        "                                    (varname)
+        "        syn match jsVarDefName /\([-+=.&|<>*/]\_s*\)\@<!\<\h\w*\>/ contained containedin=jsFuncDefArgs,jsVarDef
+        syn match jsVarDefName /\([-+=.&|<>*/]\_s*\)\@<!\zs\<\h\w*\>\ze\_s*[])=,;]/ contained containedin=jsFuncDefArgs,jsVarDef
+        "        syn match jsVarDefName /[^ =]\_s*\<\h\w*\>/ contained containedin=jsFuncDefArgs,jsVarDef
+        "                                      ^^ varname don't start with 0-9
+        "                       ^^^^^^^^^ bad prefix (i.e. "=" (to exclude assignment rhs, default arg value etc.))
+        "                            "AAA\@<!BBB" matches BBB not after AAA
+
+        " Match function definition "function f(x, y=2)" (jsFuncDefName matches "f", jsFuncDefArgs matches "(x, y=2)")
+        " TODO arrow function, "var f = function()..."
+        syn iskeyword @,48-57,_,192-255,*
+        sil! syn clear javaScriptFunction
+        syn keyword javaScriptFunction function function* skipwhite nextgroup=jsFuncDefName
+        syn match jsFuncDefName /\<\w\+\>/ skipwhite contained nextgroup=jsFuncDefArgs
+        syn region jsFuncDefArgs start="(" end=")" keepend contained contains=javaScript[a-zA-Z].*,jsVarDefName
+
+        " Note: Cannot modify nextgroup of existing groups; we must use regexp lookback OR wrap everything in a region
+        "       Lookback example:                         ( "AAA\@<=BBB" matches BBB after AAA )
+        "         syn match jsFuncDefName /\(\(function\)\_s\+\)\@<=\<\w\+\>/ skipwhite
+        " Note: Keyword has precedence over match and region. If "const" is a keyword, a region with start=/const/ cannot start there.
+
+    elseif ft == "org"
+        call MyOrgSyntaxHighlight()
+
+    elseif ft == "kotlin"
+        " syn match myKtFuncName /\<\w\+\>\_s*\ze(/
+        syn match myKtFuncUse  /\<\w\+\>\_s*\ze(/
+        syn match myKtFuncName /\(fun\s_*\)\@<=\<\w\+\>\_s*\ze(/
+        syn match myKtType     /\(:\s_*\)\@<=\<\w\+\>/
+
+    elseif ft == "go"
+        syn match  myGoType         /\v(\[\])+<\w+>/ " Array type
+        syn match  myGoFuncName     /\v(func\s*(\(([] \[]|\w)+\))?\s*)@<=<\w+>/ skipwhite nextgroup=myGoFuncArgs
+
+        syn region myGoFuncArgs     start=/(/ end=/)/ contained contains=myGoFuncArg,myGoFuncArgType
+        syn match  myGoFuncArg      /\v([(,]\s*)@<=<\w+>/       contained " var name
+        syn match  myGoFuncArgType  /\v(\w\s*)@<=[]\[]*<\w+>/  contained " var type
+        syn match  myGoVar1         /\v(<\w+>(\,\s*)?)+\ze\s*\:\=/        " aaa := 123
+        syn match  myGoVar2         /\v(<var>\s*)@<=<\w+>/                " var aaa
+
+    elseif ft == "elvish"
+        syn match  myElvVar        /\v((\s*^\=|<set>|<var>)\s*)@<=<\w+>/
+
+    endif
+endfu
+nnore <f6> :call MySyntax()<cr>
+"let firstbuf = bufnr("%")
+"bufdo call MySyntax()
+"exec "b" firstbuf
+
+" Disable when using treesitter
+" aug vimrc_syn
+" au!
+" au Syntax,FileType javascript,html call MySyntax()
+" au BufNewFile,BufRead *.js,*.html  call MySyntax()
+" au Syntax,FileType kotlin          call MySyntax()
+" au Syntax,FileType go              call MySyntax()
+" aug END
+
+" >>>
+
 " Highlight (colors) <<<
 
-fu! MyHighlight_UI()
-    " Popup menu
+fu! MyHighlight()
+    "  hi Constant     ctermfg=green cterm=bold
+    hi Constant     ctermfg=blue
+    hi NonText      ctermfg=magenta
+    hi comment      ctermfg=blue
+    "  hi String       ctermfg=green
+    hi String       ctermfg=yellow
+    "  hi Type         ctermfg=cyan
+    hi Type         ctermfg=green
+    hi Conditional  ctermfg=green cterm=bold
+    hi Preproc      ctermfg=cyan
+    "  hi Identifier   ctermfg=red cterm=none
+    hi Identifier   ctermfg=green cterm=bold
+    "  hi Identifier   ctermfg=cyan cterm=none
+    hi Special      ctermfg=red
+    hi Folded       ctermfg=magenta ctermbg=black cterm=bold,underline
+    "  hi Folded       ctermfg=magenta ctermbg=none cterm=bold
+    if g:env.dark
+        hi Folded       ctermfg=magenta ctermbg=236 cterm=bold
+    endif
+    hi Visual       ctermfg=black ctermbg=blue
+    "  hi Statement    ctermfg=green cterm=bold
+    "  hi Statement    ctermfg=green cterm=none
+    "  hi Statement    ctermfg=cyan cterm=none
+    hi Statement    ctermfg=red cterm=none
+    "  hi Statement    ctermfg=red cterm=bold
+    "  hi Statement    ctermfg=magenta cterm=bold
+    "  hi Statement    ctermfg=yellow cterm=none
+    "  hi Identifier    ctermfg=yellow cterm=none
+    "  hi Identifier   ctermfg=green cterm=none
+    "  hi Identifier   ctermfg=green cterm=bold
+
+    hi Question     ctermfg=green   " not applied when opening in-use file (since vimrc is not loaded yet)
+    hi MoreMsg      ctermfg=cyan
+    hi WarningMsg   ctermfg=red
+    hi ErrorMsg     ctermfg=white ctermbg=red cterm=bold
+    hi Directory    ctermfg=magenta " "ctermfg=" etc in :hi
+
+    hi MatchParen   ctermbg=blue
+
+    hi TypeSubtle   ctermfg=magenta
+
+    " Pmenu (completion popup menu)
+    " hi Pmenu        ctermfg=magenta ctermbg=237 cterm=bold
+    " hi PmenuSel     ctermfg=magenta ctermbg=black cterm=bold,reverse
+    " hi Pmenu        ctermfg=236 ctermbg=blue cterm=bold
+    " hi PmenuSel     ctermfg=236 ctermbg=blue cterm=bold,reverse
     hi Pmenu        ctermfg=blue ctermbg=black
     hi PmenuSel     ctermfg=blue ctermbg=black cterm=bold,reverse
     if g:env.dark
         hi Pmenu        ctermfg=blue ctermbg=238 cterm=bold
     endif
 
-    " Folding
-    hi Folded       ctermfg=magenta ctermbg=black cterm=bold,underline
-    "  hi Folded       ctermfg=magenta ctermbg=none cterm=bold
-    if g:env.dark
-        hi Folded       ctermfg=magenta ctermbg=236 cterm=bold
-    endif
 
-    " Visual
-    hi Visual       ctermfg=black ctermbg=blue
+    " Filetype specific
+    " === HTML ===
+    hi link javaScriptBigInt   Special
+    hi link javaScript         Normal
+    hi      javaScriptParens   ctermfg=magenta
+    hi link javaScriptBraces   javaScriptParens
+    hi link javaScriptBrackets javaScriptParens
+    hi link javaScriptNumber   Number
+    hi link htmlEvent          Special
+    hi link htmlTag            Normal
+    hi link htmlEndTag         htmlTag
+    hi      htmlTagName        ctermfg=magenta
+    hi link htmlSpecialTagName htmlTagName
+    hi      Title              ctermfg=none cterm=bold
+    hi link htmlTitle          Title
 
-    " Diagnostics
-    hi DiagnosticError ctermfg=red
-    hi DiagnosticWarn  ctermfg=yellow
-    hi DiagnosticInfo  ctermfg=blue
-    hi DiagnosticHint  ctermfg=blue
+    " === Kotlin ===
+    hi link myKtFuncName       myFuncName
+    hi link myKtFuncUse        Statement
+    hi link myKtType           Type
 
-    " Misc
-    hi Directory ctermfg=cyan " "cterm=" in :hi command output etc.
-    hi MoreMsg   ctermfg=cyan " "Save and exit?" question etc.
-    hi Question  ctermfg=cyan " "Press ENTER or ..." etc.
+    " === XML ===
+    hi link xmlTag             Special
+    hi link xmlTagName         Type
+    hi link xmlEndTag          xmlTag
 
-    hi Error     ctermfg=white ctermbg=red
-    hi ErrorMsg  ctermfg=white ctermbg=red
+    " === Go ===
+    hi link myGoFuncName       myFuncName
+    hi link myGoType           TypeSubtle
+    hi link goType             myGoType
+    hi link goSignedInts       myGoType
+    hi link goUnsignedInts     myGoType
+    hi link myGoFuncArg        myVarName
+    hi link myGoFuncArgType    myGoType
+    hi link myGoVar1           myVarName
+    hi link myGoVar2           myVarName
+
+    " === C ===
+    hi link cFormat            Type
+
+    " === Elvish ===
+    hi link myElvVar           myVarName
+
+
+    " Treesitter
+    hi link @variable             None
+    hi link @field                None
+    hi link @property             None
+    hi      @variabledef          ctermfg=cyan    cterm=bold
+    hi      @functiondef          ctermfg=yellow  cterm=bold
+    hi      @typestrong           cterm=bold
+    hi      @keyword              ctermfg=green
+    hi      @keyword.return       ctermfg=red     cterm=bold
+    hi      @keyword.break        ctermfg=red     cterm=bold
+    hi link @variable.builtin     @keyword
+    hi link @parameter            @variabledef
+    hi      @function.call        ctermfg=none    cterm=NONE
+    hi link @constructor          @function.call
+    hi link @method.call          @function.call
+    hi      @keyword.vim          ctermfg=red
+    hi      @keyword.function.vim ctermfg=red
+    "hi      @function.call.python ctermfg=red cterm=NONE
+
+    hi myVarName ctermfg=cyan cterm=bold
+    hi link vimMapLhs    myVarName
+    hi link jsVarDefName myVarName
+    hi link jsVarDefType Type
+
+    hi myFuncName ctermfg=yellow cterm=bold
+    hi link vimFunction   myFuncName
+    hi link jsFuncDefName myFuncName
+
 endfu
-
-fu! MyHighlight_TS()
+fu! MyHighlight2()
     hi      Normal                ctermfg=white   cterm=none
     hi      Bold                  ctermfg=green   cterm=none
     hi      Comment               ctermfg=blue    cterm=none
@@ -587,7 +787,6 @@ fu! MyHighlight_TS()
     hi      Flow                  ctermfg=red     cterm=none
     hi      Special               ctermfg=red     cterm=none
     hi      PreProc               ctermfg=green   cterm=none
-    hi      Title                 ctermfg=red     cterm=none
 
     if g:env.dark
         hi FuncDef ctermfg=white   cterm=bold
@@ -642,19 +841,117 @@ fu! MyHighlight_TS()
     hi      @variable.bash            ctermfg=cyan
     hi link @variabledef.bash         Normal
 
-endfu
+    " Popup menu
+    hi Pmenu        ctermfg=blue ctermbg=black
+    hi PmenuSel     ctermfg=blue ctermbg=black cterm=bold,reverse
+    if g:env.dark
+        hi Pmenu        ctermfg=blue ctermbg=238 cterm=bold
+    endif
 
-fu! MyHighlight2()
-    call MyHighlight_UI()
-    call MyHighlight_TS()
-endfu
+    " Folding
+    hi Folded       ctermfg=magenta ctermbg=black cterm=bold,underline
+    "  hi Folded       ctermfg=magenta ctermbg=none cterm=bold
+    if g:env.dark
+        hi Folded       ctermfg=magenta ctermbg=236 cterm=bold
+    endif
 
+    " Visual
+    hi Visual       ctermfg=black ctermbg=blue
+
+    " Diagnostics
+    hi DiagnosticError ctermfg=red
+    hi DiagnosticWarn  ctermfg=yellow
+    hi DiagnosticInfo  ctermfg=blue
+    hi DiagnosticHint  ctermfg=blue
+
+    if &ft == "javascript"
+        hi link jsFuncCall       Normal
+        hi link jsFunction       Bold
+        hi link jsRepeat         Bold
+        hi link jsConditional    Bold
+        hi link jsTry            Bold
+        hi link jsFinally        Bold
+        hi link jsCatch          Bold
+        hi link jsOf             Bold
+        hi link jsStorageClass   Bold
+        hi link jsThis           Bold
+        hi link jsSuper          Bold
+        hi link jsBuiltins       Bold
+        hi link jsGlobalObjects  Bold
+        hi link jsFuncName       FuncDef
+        hi link jsClassProperty  FuncDef
+        hi link jsFuncArgs       VarDef
+        hi link jsReturn         Flow
+        hi link jsException      Flow
+        hi link jsStatement      Flow
+        hi link jsArrowFunction  Special
+        hi link Noise            Special
+        hi link jsOperator       Special
+    endif
+
+    if &ft == "python"
+        hi link pythonBuiltin     Normal
+        hi link pythonStatement   Bold
+        hi link pythonRepeat      Bold
+        hi link pythonOperator    Bold
+        hi link pythonConditional Bold
+        hi link pythonAsync       Bold
+        hi link pythonException   Bold
+        hi link Identifier        FuncDef
+        hi link pythonFunction    FuncDef
+
+        syn keyword MyPythonFlow return pass raise break continue
+        hi link MyPythonFlow     Flow
+
+        syn match MyPythonPunctations /[^[:keyword:]#"']/
+        hi link MyPythonPunctations Special
+
+        syn keyword MyPythonDef        def skipwhite nextgroup=MyPythonDefName
+        syn match   MyPythonDefName    /\<\w\+\>/ skipwhite contained nextgroup=MyPythonDefArgs
+        syn region  MyPythonDefArgs    start="(" end=")" keepend contained contains=python[a-zA-Z].*,MyPythonDefArgName,MyPythonPunctations
+        syn match   MyPythonDefArgName /\([(,*]\_s*\)\@5<=\<\w\+\>/ skipwhite contained
+        hi link MyPythonDef        Bold
+        hi link MyPythonDefName    FuncDef
+        hi link MyPythonDefArgName VarDef
+    endif
+
+    if &ft == "html"
+        hi link htmlTag            Special
+        hi link htmlEndTag         Special
+        hi link htmlSpecialTagName Bold
+        hi link htmlTagName        Bold
+    endif
+
+    if &ft == "c"
+        hi link cUserFunction Normal
+        syn match MyCPunc /[][(){}+*=,;-]/
+        hi link MyCPunc Special
+    endif
+
+    if &ft == "perl"
+        hi link perlStatement        Normal
+        hi link perlStatementFlow    Flow
+        hi link perlStatementControl Flow
+        syn match MyPerlPunc /[][(){}<>:?!+*=,;-]/
+        hi link MyPerlPunc Special
+        hi link perlVarPlain Bold
+    endif
+
+    if &ft == "html"
+        hi link htmlTitle Normal
+        hi link htmlH1    Normal
+        hi link htmlH2    Normal
+        hi link htmlH3    Normal
+        hi link htmlH4    Normal
+    endif
+
+endfu
 call MyHighlight2()
 aug vimrc_hi " :hi need to be in autocmd on first run??
 au!
 au VimEnter * :call MyHighlight2()
 aug END
-nnore <f6> :call MyHighlight2()<cr>
+nnore <f8> :call MyHighlight2()<cr>
 " >>>
 
 " Appearance <<<
@@ -845,12 +1142,6 @@ nnore ,l :call EvalLuaBuffer()<cr>
 " >>>
 
 " Filetype specific templates <<<
-" Usage:
-"   :Template tmpl_html5
-command! -nargs=1 -complete=var Template :call append(".", <args>)
-command! -nargs=1 -complete=var Tmpl     :call append(".", <args>)
-command! -nargs=1 -complete=var Temp     :call append(".", <args>)
-command! -nargs=1 -complete=var Tm       :call append(".", <args>)
 let tmpl_html5 = [
     \ '<!DOCTYPE html>',
     \ '<html lang="en">',
@@ -1094,6 +1385,49 @@ do -- Keys (keyboard layout specific) <<<
 
 end -- >>>
 
+if can_require"cmp" then -- Completion (nvim-cmp) <<<
+    local cmp = require"cmp"
+
+    cmp.setup({
+        completion = {
+            keyword_pattern = [[\k\+]],
+        },
+        mapping = cmp.mapping.preset.insert({
+            ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+            ["<C-f>"] = cmp.mapping.scroll_docs(4),
+            ["<C-Space>"] = cmp.mapping.complete(),
+            ["<C-e>"] = cmp.mapping.abort(),
+            ["<CR>"] = cmp.mapping.confirm({ select = false }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+            ["<tab>"] = cmp.mapping.select_next_item(),
+            ["<s-tab>"] = cmp.mapping.select_prev_item(),
+        }),
+        sources = cmp.config.sources({
+            { name = "omni" },
+            -- { name = "rg", keyword_length = 3 },
+            { name = "nvim_lsp" },
+            -- { name = "path", trailing_slash = true },
+            {
+                name = "buffer",
+                option = { get_bufnrs = function() return vim.api.nvim_list_bufs() end },
+            },
+            {
+                name = 'tmux',
+                option = { all_panes = true, label = '[tmux]', },
+            }
+        }, {}),
+        formatting = {
+            fields = { "abbr", "kind", },
+
+            format = function(_, vim_item)
+                vim_item.kind = (vim_item.kind or '') .. vim.inspect(vim_item.kind)
+                return vim_item
+            end,
+        },
+        -- formatting = { fields = { "kind", "abbr", }, },
+    })
+
+end -- >>>
+
 if can_require"lspconfig" then -- Lsp <<<
     local lspconfig = require"lspconfig"
 
@@ -1252,6 +1586,18 @@ if can_require"lspconfig" then -- ElDoc (lsp signatureHelp) <<<
                 end
                 addTok({ "suffix", sigLbl:sub(params[#params].label[2]+1) })
 
+                -- local lbl = params[1+actPar].label -- { start, end }
+                -- mySigPrefix =
+                -- local chunks = {
+                --     { " ", "None" },
+                --     { sigLbl:sub(1, lbl[1]),        "LspSig"    },
+                --     { sigLbl:sub(lbl[1]+1, lbl[2]), "LspSigCur" },
+                --     { sigLbl:sub(lbl[2]+1),         "LspSig"    },
+                -- }
+                -- nvim_echo_no_hitenter(chunks, true, {})
+                -- return
+                --
+
             else -- param label is string (e.g. tsserver)
 
                 local s = 1
@@ -1272,6 +1618,27 @@ if can_require"lspconfig" then -- ElDoc (lsp signatureHelp) <<<
                     s = ss
                     sePrev = se
                 end
+
+                -- local s = 1
+                -- for i = 1, #params do
+                --     local parLbl = params[i].label
+                --     local ss, se = sigLbl:find(parLbl, s, true) -- find parLbl in sigLbl
+                --     if not ss then error("param " .. parLbl .. " not found") end
+                --     if i == 1 + actPar then
+                --         -- update lspsig
+                --         lspsig = "%#LspSig# " .. sigLbl:sub(1, ss-1) .. "%#LspSigCur#" .. parLbl .. "%#LspSig#" .. sigLbl:sub(se+1) .. " %#None#"
+                --         -- show
+                --         local chunks = {
+                --             { " ",                 "None"      },
+                --             { sigLbl:sub(1, ss-1), "LspSig"    },
+                --             { parLbl,              "LspSigCur" },
+                --             { sigLbl:sub(se+1),    "LspSig"    },
+                --         }
+                --         nvim_echo_no_hitenter(chunks, true, {})
+                --         return
+                --     end
+                --     s = ss
+                -- end
 
             end
 
@@ -1358,25 +1725,135 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
         ensure_installed = { "bash", "c", "css", "cpp", "html", "javascript", "lua", "python", "vim", },
         highlight = {
             enable  = true,
+            -- disable = true,
+            -- disable = { "javascript", },
+            -- additional_vim_regex_highlighting = { "lua" },
         },
         indent = {
-            enable  = false,
-            disable = { "python", "html", "javascript", }
+            enable  = true,
+            disable = { "python", }
         },
         rainbow = {
-            enable = true,
-            extended_mode = false, -- Also highlight non-bracket delimiters like html tags, boolean or table: lang -> boolean
-            max_file_lines = 2000, -- Do not enable for files with more than n lines, int
+            enable = false,
+            -- disable = { "jsx", "cpp" }, list of languages you want to disable the plugin for
+            extended_mode = true, -- Also highlight non-bracket delimiters like html tags, boolean or table: lang -> boolean
+            max_file_lines = nil, -- Do not enable for files with more than n lines, int
             -- colors = {}, -- table of hex strings
             -- termcolors = {} -- table of colour name strings
         }
     }
 
-end -- >>>
+    vim.cmd [[
+    fu! TSDescribeFace()
+        return luaeval("tsdescribe()")
+    endfu
+    ]]
 
-if can_require"nvim-treesitter.configs" then -- TreeSitter custom queries <<<
+    function tsdescribe()
+        local parsers     = require "nvim-treesitter.parsers"
+        local highlighter = require "vim.treesitter.highlighter"
+        local treesitter  = require "vim.treesitter"
+        local bufnr  = vim.api.nvim_get_current_buf()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local line   = cursor[1] - 1  -- cursor[1] is 1-based
+        local col    = cursor[2]       -- cursor[2] is 0-based
 
-    -- Utilities to define/modify treesitter queries
+        -- show parsed tree
+        local root_lang_tree = parsers.get_parser(bufnr)
+        if not root_lang_tree then return false end
+        local lang_tree = root_lang_tree:language_for_range { line, col, line, col }
+        print("Lang: root=" .. root_lang_tree:lang() .. " here=" .. lang_tree:lang())
+        local function rec(node, ind)
+            for child, name in node:iter_children() do
+                local s_line = string.format("%4d ", (child:start()))
+                local s_sign = treesitter.is_in_node_range(child, line, col) and "*" or " "
+                local s_node = child
+                local s_name = name and (":" .. name) or ""
+                local s_err  = child:has_error() and "ERROR" or ""
+                print(s_line, ind, s_sign, s_node, s_name, s_err)
+                if treesitter.is_in_node_range(child, line, col) then
+                    rec(child, ind .. "  ")
+                end
+            end
+        end
+        for i, tree in ipairs(lang_tree:trees()) do
+            print("Tree #" .. i .. " (" .. lang_tree:lang() .. ")")
+            local node = tree:root()
+            rec(node, "")
+        end
+
+        -- show syntax highlighting
+        local hlslist = queryHlsList(line + 1, col + 1)
+        for _, hls in ipairs(hlslist) do
+            showSyn(hls)
+        end
+    end
+
+    function ts_isFirstCharInString(lnum)
+        local hlslist = queryHlsList(lnum, 1)
+        for _, hls in ipairs(hlslist) do
+            for _, hl in ipairs(hls) do
+                if vim.fn.synIDattr(vim.fn.synIDtrans(hl), "name") == "String" then
+                    return true
+                end
+            end
+        end
+        return false
+    end
+
+    vim.cmd [[
+    fu! TSIsFirstCharInString(lnum)
+        return luaeval("ts_isFirstCharInString(" . a:lnum . ")")
+    endfu
+    ]]
+
+    function TSGetLangAtCursor()
+        local parsers     = require "nvim-treesitter.parsers"
+        local highlighter = require "vim.treesitter.highlighter"
+        local bufnr  = vim.api.nvim_get_current_buf()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local line   = cursor[1] - 1  -- cursor[1] is 1-based
+        local col    = cursor[2]       -- cursor[2] is 0-based
+
+        -- show parsed tree
+        local root_lang_tree = parsers.get_parser(bufnr)
+        local lang_tree = root_lang_tree:language_for_range { line, col, line, col }
+        return lang_tree:lang()
+    end
+
+    function queryHlsList(lnum, col) -- lnum and col are 1-based
+        local lnum0 = lnum - 1 -- 0-based
+        local col0  = col  - 1 -- 0-based
+        local highlighter = require "vim.treesitter.highlighter"
+        local treesitter  = require "vim.treesitter"
+        local hlslist = {}
+        local buf_highlighter = highlighter.active[vim.api.nvim_get_current_buf()]
+        buf_highlighter.tree:for_each_tree(function(tstree, langtree)
+            local query = buf_highlighter:get_query(langtree:lang())
+            local iter = query:query():iter_captures(tstree:root(), buf_highlighter.bufnr, lnum0, lnum0 + 1)
+            local hls = {}
+            for capture, node, metadata in iter do
+                local hl = query.hl_cache[capture]
+                if hl and treesitter.is_in_node_range(node, lnum0, col0) then
+                    table.insert(hls, hl)
+                end
+            end
+            table.insert(hlslist, hls)
+        end)
+        return hlslist
+    end
+
+    function showSyn(syns)
+        local chunks = {}
+        for i, id in ipairs(syns) do
+            local idt   = vim.fn.synIDtrans(id)
+            local name  = vim.fn.synIDattr(id,  "name")
+            local trans = vim.fn.synIDattr(idt, "name")
+            if i >= 2 then table.insert(chunks, { "> ", "None" }) end
+            table.insert(chunks, { name .. " " .. id .. " " .. (id ~= idt and ("(" .. trans .. " " .. idt .. ") ") or ""), trans })
+        end
+        if #chunks >= 1 then vim.api.nvim_echo(chunks, true, {}) end
+    end
 
     -- based on https://github.com/nvim-treesitter/nvim-treesitter/issues/3058
     local function safe_read(filename, read_quantifier)
@@ -1541,147 +2018,21 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter custom queries <<<
 
 end -- >>>
 
-if can_require"nvim-treesitter.configs" then -- TreeSitter util funcs <<<
-
-    vim.cmd [[
-    fu! TSDescribeFace()
-        return luaeval("tsdescribe()")
-    endfu
-    ]]
-
-    function tsdescribe()
-        local parsers     = require "nvim-treesitter.parsers"
-        local highlighter = require "vim.treesitter.highlighter"
-        local treesitter  = require "vim.treesitter"
-        local bufnr  = vim.api.nvim_get_current_buf()
-        local cursor = vim.api.nvim_win_get_cursor(0)
-        local line   = cursor[1] - 1  -- cursor[1] is 1-based
-        local col    = cursor[2]       -- cursor[2] is 0-based
-
-        -- show parsed tree
-        local root_lang_tree = parsers.get_parser(bufnr)
-        if not root_lang_tree then return false end
-        local lang_tree = root_lang_tree:language_for_range { line, col, line, col }
-        print("Lang: root=" .. root_lang_tree:lang() .. " here=" .. lang_tree:lang())
-        local function rec(node, ind)
-            for child, name in node:iter_children() do
-                local child_row0, child_col0 = child:start() -- both 0-based
-                local s_line = string.format("%4d ", child_row0 + 1)
-                local s_sign = treesitter.is_in_node_range(child, line, col) and "*" or " "
-                local s_node = tostring(child)
-                local s_name = name and (":" .. name) or ""
-                local s_text = string.format("%-6s", vim.fn.getline(child_row0+1):sub(child_col0+1, child_col0+6))
-                local s_err  = child:has_error() and "ERROR" or ""
-
-                local function synNameAt(row1, col1) -- 1-based
-                    local hlslist1 = queryHlsList(row1, col1)
-                    return vim.fn.synIDattr(vim.fn.synIDtrans(hlslist1[1][#hlslist1[1]]), "name")
-                end
-
-                local sep = { " ", "None" }
-                local chunks = {
-                    { s_line, "None" }, sep,
-                    { s_text:sub(1, 1), synNameAt(child_row0+1, child_col0+1) },
-                    { s_text:sub(2, 2), synNameAt(child_row0+1, child_col0+2) },
-                    { s_text:sub(3, 3), synNameAt(child_row0+1, child_col0+3) },
-                    { s_text:sub(4, 4), synNameAt(child_row0+1, child_col0+4) },
-                    { s_text:sub(5, 5), synNameAt(child_row0+1, child_col0+5) },
-                    { s_text:sub(6, 6), synNameAt(child_row0+1, child_col0+6) },
-                    sep,
-                    { ind   , "None" }, sep,
-                    { s_sign, "None" }, sep,
-                    { s_node, "None" }, sep,
-                    { s_name, "None" }, sep,
-                    { s_err , "None" }, sep,
-                }
-
-                vim.api.nvim_echo(chunks, true, {})
-                -- print(s_line, s_text, ind, s_sign, s_node, s_name, s_text, s_err)
-
-                if treesitter.is_in_node_range(child, line, col) then
-                    rec(child, ind .. "  ")
-                end
-            end
-        end
-        for i, tree in ipairs(lang_tree:trees()) do
-            print("Tree #" .. i .. " (" .. lang_tree:lang() .. ")")
-            local node = tree:root()
-            rec(node, "")
-        end
-
-        -- show syntax highlighting
-        local hlslist = queryHlsList(line + 1, col + 1)
-        for _, hls in ipairs(hlslist) do
-            showSyn(hls)
-        end
-    end
-
-    vim.cmd [[
-    fu! TSIsFirstCharInString(lnum)
-        return luaeval("ts_isFirstCharInString(" . a:lnum . ")")
-    endfu
-    ]]
-
-    function ts_isFirstCharInString(lnum)
-        local hlslist = queryHlsList(lnum, 1)
-        for _, hls in ipairs(hlslist) do
-            for _, hl in ipairs(hls) do
-                if vim.fn.synIDattr(vim.fn.synIDtrans(hl), "name") == "String" then
-                    return true
-                end
-            end
-        end
-        return false
-    end
-
-    function TSGetLangAtCursor()
-        local parsers     = require "nvim-treesitter.parsers"
-        local highlighter = require "vim.treesitter.highlighter"
-        local bufnr  = vim.api.nvim_get_current_buf()
-        local cursor = vim.api.nvim_win_get_cursor(0)
-        local line   = cursor[1] - 1  -- cursor[1] is 1-based
-        local col    = cursor[2]       -- cursor[2] is 0-based
-
-        -- show parsed tree
-        local root_lang_tree = parsers.get_parser(bufnr)
-        local lang_tree = root_lang_tree:language_for_range { line, col, line, col }
-        return lang_tree:lang()
-    end
-
-    function queryHlsList(lnum, col) -- lnum and col are 1-based
-        local lnum0 = lnum - 1 -- 0-based
-        local col0  = col  - 1 -- 0-based
-        local highlighter = require "vim.treesitter.highlighter"
-        local treesitter  = require "vim.treesitter"
-        local hlslist = {}
-        local buf_highlighter = highlighter.active[vim.api.nvim_get_current_buf()]
-        buf_highlighter.tree:for_each_tree(function(tstree, langtree)
-            local query = buf_highlighter:get_query(langtree:lang())
-            local iter = query:query():iter_captures(tstree:root(), buf_highlighter.bufnr, lnum0, lnum0 + 1)
-            local hls = {}
-            for capture, node, metadata in iter do
-                local hl = query.hl_cache[capture]
-                if hl and treesitter.is_in_node_range(node, lnum0, col0) then
-                    table.insert(hls, hl)
-                end
-            end
-            table.insert(hlslist, hls)
-        end)
-        return hlslist
-    end
-
-    function showSyn(syns)
-        local chunks = {}
-        for i, id in ipairs(syns) do
-            local idt   = vim.fn.synIDtrans(id)
-            local name  = vim.fn.synIDattr(id,  "name")
-            local trans = vim.fn.synIDattr(idt, "name")
-            if i >= 2 then table.insert(chunks, { "> ", "None" }) end
-            table.insert(chunks, { name .. " " .. id .. " " .. (id ~= idt and ("(" .. trans .. " " .. idt .. ") ") or ""), trans })
-        end
-        if #chunks >= 1 then vim.api.nvim_echo(chunks, true, {}) end
-    end
-
+if can_require"live-command" then -- Live Command <<<
+    require"live-command".setup {
+        commands = {
+            -- T = { cmd = "Tabular" }, -- Switched to vim-easy-align, it has builtin interactive mode
+        },
+        defaults = {
+            enable_highlighting = false,
+            inline_highlighting = false,
+            hl_groups = {
+                insertion = "DiffAdd",
+                deletion = "DiffDelete",
+                change = "DiffChange",
+            },
+        },
+    }
 end -- >>>
 
 if vim.fn.match(vim.o.rtp, "vim-easy-align") ~= -1 then -- vim-easy-align <<<
@@ -1943,6 +2294,7 @@ function pp(input, doprint, maxdepth, ...) -- <<<
 end -- >>>
 
 -- >>>
+
 
 vim.cmd [[ " Completion setup <<<
 inore <expr> <tab>       pumvisible() ? "\<c-n>" : "\<c-x>\<c-u>"
