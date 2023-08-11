@@ -566,13 +566,15 @@ fu! MyHighlight_UI()
     hi DiagnosticInfo  ctermfg=blue
     hi DiagnosticHint  ctermfg=blue
 
-    " Misc
-    hi Directory ctermfg=cyan " "cterm=" in :hi command output etc.
-    hi MoreMsg   ctermfg=cyan " "Save and exit?" question etc.
-    hi Question  ctermfg=cyan " "Press ENTER or ..." etc.
-
+    " Error
     hi Error     ctermfg=white ctermbg=red
     hi ErrorMsg  ctermfg=white ctermbg=red
+
+    " Misc
+    hi Directory  ctermfg=cyan " "cterm=" in :hi command output etc.
+    hi MoreMsg    ctermfg=cyan " "Save and exit?" question etc.
+    hi Question   ctermfg=cyan " "Press ENTER or ..." etc.
+    hi SpecialKey ctermfg=red  " <Enter> etc.
 endfu
 
 fu! MyHighlight_TS()
@@ -1450,7 +1452,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter custom queries <<<
     add_query("python", "highlights", [[
 (function_definition (identifier) @functiondef)
 (class_definition (identifier) @functiondef)
-[ "continue" "raise" ] @keyword.break
+[ "break" "continue" "raise" ] @keyword.break
 ;(function_definition (parameters (identifier) @variabledef))
 ;(function_definition (parameters (default_parameter . (identifier) @variabledef)))
     ]])
