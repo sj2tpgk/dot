@@ -42,7 +42,10 @@ done
 timestamp() { echo; date; }
 
 trap ctrl_c INT
-ctrl_c() { exit 0; }
+ctrl_c() {
+    [ -n $pid ] && kill $pid  # ensure kill background process
+    exit 0                    # wslwatch exits successfully
+}
 
 
 
