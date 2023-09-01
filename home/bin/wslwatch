@@ -7,7 +7,7 @@ help() {
     echo "Options:"
     echo "   -h         Help"
     echo "   -r         Reload a persistent child process"
-    echo "   -t TIME    Check file update on each TIME seconds (default: 2)"
+    echo "   -t TIME    Check file update on each TIME seconds (default: 1)"
     echo "   -T         Show timestamp when cmd runs"
     echo "   -z         Exit after cmd exits"
 }
@@ -43,8 +43,9 @@ timestamp() { echo; date; }
 
 trap ctrl_c INT
 ctrl_c() {
-    [ -n $pid ] && kill $pid  # ensure kill background process
-    exit 0                    # wslwatch exits successfully
+    # ensure kill background process, and exit successfully
+    [ -n $pid ] && kill $pid 2>/dev/null
+    exit 0
 }
 
 

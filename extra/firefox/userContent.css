@@ -47,3 +47,21 @@
   body { padding: 0 0 70px !important }
   #content { border-left-width: 0 !important }
 }
+
+@-moz-document domain("qiita.com") {
+  [id^=GlobalHeader],
+  .style-yrmhnf, /* scores */
+  .style-i43zkt, /* user name */
+  .it-MdContent ~ *, /* footer 1 */
+  .p-items_main > *:nth-child(2), /* footer 2 */
+  footer /* footer 3 */
+  { display: none !important }
+  .p-items_main { width: 100% !important }
+  .p-items_options { display: none }
+}
+
+@-moz-document domain("developer.mozilla.org") {
+	.top-banner, .main-document-header-container { display: none }
+	#sidebar-quicklinks { top: 20px !important }
+	.toc-container      { top: 0    !important }
+}
