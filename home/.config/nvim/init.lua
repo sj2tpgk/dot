@@ -1453,7 +1453,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter custom queries <<<
     add_query("python", "highlights", [[
 (function_definition (identifier) @functiondef)
 (class_definition (identifier) @functiondef)
-[ "break" "continue" "raise" ] @keyword.break
+[ "break" "continue" "pass" "raise" ] @keyword.break
 ;(function_definition (parameters (identifier) @variabledef))
 ;(function_definition (parameters (default_parameter . (identifier) @variabledef)))
     ]])
@@ -2156,13 +2156,16 @@ function mycomp_collect() -- Collect words <<<
         return t2
     end
 
+    local ABBR_THRESHOLD = 40
+
     local comps_list = { -- defines order of words
         { "h", mycomp_collect_history() },
         { "o", mycomp_collect_omni() },
         { "b", mycomp_collect_bufferall() },
         { "k", mycomp_collect_keywords() },
-        }
-    local priority = { o=1, k=2, b=3, h=4 } -- which source has priority for extra info of word
+        { "t", mycomp_collect_tmux() },
+    }
+    local priority = { o=1, k=2, b=3, h=4, t=5 } -- which source has priority for extra info of word
 
     local result, items = {}, {}
 
@@ -2180,6 +2183,11 @@ function mycomp_collect() -- Collect words <<<
                 item._source = source
                 table.insert(result, item)
                 items[w] = item
+
+                -- Add abbreviation for too long word
+                if w:len() > ABBR_THRESHOLD then
+                    item.abbr = w:sub(1, ABBR_THRESHOLD) .. ".."
+                end
 
             elseif priority[items[w]._source] > priority[source] then
 
@@ -2227,6 +2235,29 @@ function mycomp_collect_bufferall() -- Collect from all bufs <<<
     return comps
 end -- >>>
 
+local mycomp_collect_tmux_cache = { res = {}, time = 0 }
+function mycomp_collect_tmux() -- Collect from tmux session <<<
+    local time = myTime()
+    if math.abs(time - mycomp_collect_tmux_cache.time) > 30 then
+        -- get all outputs of all panes in the session
+        local cmd = "for p in $(tmux list-panes -s -F '#{pane_id}'); do tmux capture-pane -p -J -t $p; done"
+        local out = vim.fn.system({ "sh", "-c", cmd })
+        -- extract all words by regex
+        local word_reg = mycomp_word_reg()
+        local res, seen = {}, {} -- use 2 tables to prevent dupes
+        for s in out:gmatch(word_reg) do
+            if (not seen[s]) then
+                seen[s] = true
+                table.insert(res, s)
+            end
+        end
+        -- update cache
+        mycomp_collect_tmux_cache.time = time
+        mycomp_collect_tmux_cache.res  = res
+    end
+    return mycomp_collect_tmux_cache.res
+end -- >>>
+
 local mycomp_collect_buffer_cache = {}
 function mycomp_collect_buffer(buf) -- Collect from a buf <<<
     -- TODO: better cache: rescan relevant parts of file (already good? seems lastused only change on comp start)
@@ -2257,12 +2288,16 @@ function mycomp_collect_omni() -- Collect from omnifunc <<<
         return {}
     end
     local function callOmnifunc(findstart, base)
+        local enableLSP = false
         local ofu = vim.bo.omnifunc
         if ofu == "v:lua.vim.lsp.omnifunc" then
             -- how to programatically call ofu that starts with "v:lua" ?
-            -- return vim.lsp.omnifunc(findstart, base)
-            return mycomp_lsp_omnifunc_sync(findstart, base)
-            -- return mycomp_lsp_dummy(findstart, base)
+            if enableLSP then
+                -- return vim.lsp.omnifunc(findstart, base)
+                return mycomp_lsp_omnifunc_sync(findstart, base)
+            else
+                return mycomp_lsp_dummy(findstart, base)
+            end
         else
             return vim.call(ofu, findstart, base)
         end
