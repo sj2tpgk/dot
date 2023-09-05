@@ -2210,8 +2210,8 @@ end -- >>>
 local mycomp_history, mycomp_history_max = {}, 300
 function mycomp_collect_history() -- Collect from completion history <<<
     return mycomp_history
-end -- >>>
-function mycomp_add_history(comp) -- <<<
+end
+function mycomp_add_history(comp)
     if mycomp_compword(comp) then
         table.insert(mycomp_history, 1, mycomp_compword(comp))
     end
@@ -2233,29 +2233,6 @@ function mycomp_collect_bufferall() -- Collect from all bufs <<<
         end
     end
     return comps
-end -- >>>
-
-local mycomp_collect_tmux_cache = { res = {}, time = 0 }
-function mycomp_collect_tmux() -- Collect from tmux session <<<
-    local time = myTime()
-    if math.abs(time - mycomp_collect_tmux_cache.time) > 30 then
-        -- get all outputs of all panes in the session
-        local cmd = "for p in $(tmux list-panes -s -F '#{pane_id}'); do tmux capture-pane -p -J -t $p; done"
-        local out = vim.fn.system({ "sh", "-c", cmd })
-        -- extract all words by regex
-        local word_reg = mycomp_word_reg()
-        local res, seen = {}, {} -- use 2 tables to prevent dupes
-        for s in out:gmatch(word_reg) do
-            if (not seen[s]) then
-                seen[s] = true
-                table.insert(res, s)
-            end
-        end
-        -- update cache
-        mycomp_collect_tmux_cache.time = time
-        mycomp_collect_tmux_cache.res  = res
-    end
-    return mycomp_collect_tmux_cache.res
 end -- >>>
 
 local mycomp_collect_buffer_cache = {}
@@ -2281,6 +2258,58 @@ function mycomp_collect_buffer(buf) -- Collect from a buf <<<
 --    vim.cmd("sleep 1") -- for cache test
     mycomp_collect_buffer_cache[buf] = { res = res, lastused = vim.fn.getbufinfo(buf)[1].lastused }
     return res
+end -- >>>
+
+local mycomp_collect_tmux_cache = { res = {}, time = 0 }
+function mycomp_collect_tmux() -- Collect from tmux session <<<
+    if not os.getenv("TMUX") then
+        return {}
+    end
+    local time = myTime()
+    if math.abs(time - mycomp_collect_tmux_cache.time) > 10 then
+        mycomp_collect_tmux_schedule_update(time)
+    end
+    return mycomp_collect_tmux_cache.res
+end
+function mycomp_collect_tmux_schedule_update(time)
+    -- Collect words from tmux panes and store them in mycomp_collect_tmux_cache
+    -- To avoid blocking user input, we use another thread via neovim's libuv.
+    -- Alternatively, we might use another process with job-control.
+    local function f(word_reg, time)
+        -- Get all outputs of all panes in the session (-s flag)
+        local cmd = [[
+            sh -c "for p in \$(tmux list-panes -s -F '#{pane_id}'); do tmux capture-pane -p -J -t \$p; done"
+        ]]
+        local handle = io.popen(cmd)
+        local out = handle:read("*a")
+        handle:close()
+        return out, word_reg, time -- cannot return tables here
+        -- Synchronous version
+        -- local cmd = "for p in $(tmux list-panes -s -F '#{pane_id}'); do tmux capture-pane -p -J -t $p; done"
+        -- return out = vim.fn.system({ "sh", "-c", cmd })
+    end
+    local function g(out, word_reg, time)
+        -- Extract all words by regex
+        local res, seen = {}, {} -- use 2 tables to prevent dupes
+        for s in out:gmatch(word_reg) do
+            if (not seen[s]) then
+                seen[s] = true
+                table.insert(res, s)
+            end
+        end
+        -- Update cache
+        mycomp_collect_tmux_cache.time = time
+        mycomp_collect_tmux_cache.res  = res
+    end
+    -- Get libuv and run function in background
+    local luv = vim.loop
+    local work = luv.new_work(f, g)
+    -- Note:
+    --   Callbacks for new_work can neither call vimscript functions nor capture values using closure.
+    --   We must pass necessary values as function args.
+    --   Also note that thread args cannot be tables.
+    local word_reg = mycomp_word_reg()
+    work:queue(word_reg, time) -- this calls f(word_reg, time) in another thread and when finished, call g with f's return values
 end -- >>>
 
 function mycomp_collect_omni() -- Collect from omnifunc <<<
