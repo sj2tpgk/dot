@@ -1195,7 +1195,7 @@ if can_require"lspconfig" then -- ElDoc (lsp signatureHelp) <<<
     au!
     au CursorHold,CursorHoldI,InsertEnter * lua lspsigUpdate()
     aug END
-    set updatetime=800
+    set updatetime=700
     set noshowmode
     ]]
 

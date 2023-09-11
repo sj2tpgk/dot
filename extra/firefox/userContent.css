@@ -65,3 +65,5 @@
 	#sidebar-quicklinks { top: 20px !important }
 	.toc-container      { top: 0    !important }
 }
+
+.scroll-hint-icon-wrap { display: none } /* disable horizontal scroll hint finger icon */
