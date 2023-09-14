@@ -38,6 +38,7 @@ def rc_py_main():
     set tilde_in_titlebar on
     set shorten_title     3
     set update_title      on
+    set preview_max_size  104857600
     ''')
 
     # Keys
