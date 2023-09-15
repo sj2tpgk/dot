@@ -69,7 +69,7 @@
   noscript, .js-consent-banner, #noscript-warning, .js-dismissable-hero, #announcement-banner, header, #question-header > div, #left-sidebar, #sidebar, #post-form, #post-form ~ *, footer, .bottom-notice, .post-signature { display: none !important }
   #mainbar { width: 728px !important }
   body { padding: 0 0 70px !important }
-  #content { border-left-width: 0 !important }
+  #content { border-left-width: 0 !important; border: none !important }
 }
 
 @-moz-document domain("qiita.com") {
