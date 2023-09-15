@@ -24,15 +24,6 @@ let g:env = {
     \ "dark":   !empty($MY_DARK) ? ($MY_DARK == "1") : ($MYKBD == "colemakdh"),
     \ }
 
-" Ignore function keys
-for i in range(1, 16)
-    for j in ["", "s-", "c-"]
-        for k in ["", "i", "c"]
-            exe k . "nore <" . j . "f" . i . "> <nop>"
-        endfor
-    endfor
-endfor
-
 ]] -- >>>
 
 function plug(url) -- Plugin manager <<<
@@ -448,6 +439,15 @@ cnore <expr> <down> pumvisible() ? "\<c-n>" : "\<down>"
 vnore T :T<space>/
 nnore zr zR
 nnore zm zM
+
+" Ignore function keys
+for i in range(1, 16)
+    for j in ["", "s-", "c-"]
+        for k in ["", "i", "c"]
+            exe k . "nore <" . j . "f" . i . "> <nop>"
+        endfor
+    endfor
+endfor
 
 fu! SaveExcursion(normcmd)
     let l:w = winsaveview()
