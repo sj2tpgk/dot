@@ -389,6 +389,7 @@ nnore <silent> <home> :lua smartHome()<cr>
 inore <silent> <home> <c-o>:lua smartHome(true)<cr>
 nnore ( <c-o>
 nnore ) <c-i>
+nnore <c-u> <c-i>
 nnore <silent> <expr> f (reg_recording() . reg_executing()) != "" ? "f" : ":lua smartf(1)\<cr>"
 nnore <silent> <expr> F (reg_recording() . reg_executing()) != "" ? "F" : ":lua smartf(-1)\<cr>"
 
@@ -1453,7 +1454,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter custom queries <<<
     add_query("python", "highlights", [[
 (function_definition (identifier) @functiondef)
 (class_definition (identifier) @functiondef)
-[ "break" "continue" "pass" "raise" ] @keyword.break
+[ "break" "continue" "pass" "raise" "assert" ] @keyword.break
 ;(function_definition (parameters (identifier) @variabledef))
 ;(function_definition (parameters (default_parameter . (identifier) @variabledef)))
     ]])
