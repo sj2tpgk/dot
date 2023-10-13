@@ -59,6 +59,15 @@
     }
 }
 
+@-moz-document domain("github.com") {
+	header { display: none !important }
+	main > div > nav { min-height: 0 !important }
+	.pt-3 { padding-top: 0 !important }
+	.mt-4 { margin-top: 0 !important }
+	.mb-3 { margin-bottom: 0 !important }
+	a { text-decoration: none !important }
+}
+
 @-moz-document domain("news.ycombinator.com") {
   td, #hnmain { background: transparent !important }
   img { visibility: hidden }
