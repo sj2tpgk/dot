@@ -88,6 +88,7 @@ do -- Plugins <<<
 
     -- Better syntax highlighting and indent for langs
     plug "Vimjas/vim-python-pep8-indent"
+    plug "udalov/kotlin-vim"
     -- plug "pangloss/vim-javascript"
     -- plug "bfrg/vim-cpp-modern"
     -- plug "gutenye/json5.vim"
@@ -587,7 +588,7 @@ fu! MyHighlight_TS()
     hi      Number                ctermfg=white   cterm=none
     hi      FuncDef               ctermfg=cyan    cterm=none
     hi link VarDef                FuncDef
-    hi      Type                  ctermfg=white   cterm=none
+    hi      Type                  ctermfg=magenta cterm=none
     hi      Flow                  ctermfg=red     cterm=none
     hi      Special               ctermfg=red     cterm=none
     hi      PreProc               ctermfg=green   cterm=none
@@ -627,13 +628,16 @@ fu! MyHighlight_TS()
     hi link @property             Normal
     hi link @variable             Normal
 
-    " python
-    hi link @type.python          Normal
-    hi link @type.builtin.python  Normal
-
     " javascirpt
     hi link @constructor.javascript VarDef
     hi link @functiondef.javascript VarDef
+
+    " kotlin
+    hi link @type.qualifier.kotlin Normal
+
+    " python
+    hi link @type.python          Normal
+    hi link @type.builtin.python  Normal
 
     " sh
     hi link @function.builtin.bash    Special
@@ -1360,7 +1364,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
     local nvim_treesitter_configs = require"nvim-treesitter.configs"
 
     nvim_treesitter_configs.setup {
-        ensure_installed = { "bash", "c", "css", "cpp", "html", "javascript", "lua", "python", "vim", },
+        ensure_installed = { "bash", "c", "css", "cpp", "html", "javascript", "kotlin", "lua", "python", "vim", },
         highlight = {
             enable  = true,
         },
