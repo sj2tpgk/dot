@@ -27,44 +27,44 @@ let g:env = {
 ]] -- >>>
 
 function plug(url) -- Plugin manager <<<
-    -- just git clone repo, windows compatible
-    -- using /site/pack/**/opt/ instead of /site/pack/**/start/ means packages are not automatically loaded
+    -- Example: plug "neovim/nvim-lspconfig"
+    -- Just git clone repo, windows compatible
+    -- Using /site/pack/**/opt/ instead of /site/pack/**/start/ to not automatically load packages
     -- "packadd! nvim-treesitter" to actually load
-    -- need "helpt ALL" to recognize doc
+    -- To remove package, remove the directory mentioned above
+    -- Limitations: need manual update or remove, no hooks, no async etc.
 
-    -- limitation cannot update or remove, no hooks, no async etc.
-
-    -- use github as default source
+    -- Use github as default source
     if url:find("http") ~= 1 then url = "https://github.com/" .. url end
 
     -- e.g. "nvim-lspconfig"
     local name = url:gsub("^.*/", ""):gsub("%.git$", "")
 
     -- e.g. "~/.local/share/nvim/site/pack/nvim-lspconfig/opt/"
-    -- using slash as path delimiter is ok on windows
+    -- Using slash as path delimiter is ok on windows
     local dir = vim.fn.stdpath("data") .. "/site/pack/" .. name .. "/opt/"
 
-    -- download package if not already installed
+    -- Download package if not already installed
     if 0 == vim.fn.isdirectory(dir .. "/" .. name) then
 
-        -- create containing directory and git clone
+        -- Create containing directory and git clone
         -- os.execute("[ -d '" .. dir .. "' ] || mkdir -p '" .. dir .. "'; git -C '" .. dir .. "' clone '" .. url .. "'")
 
-        -- check if git is available
+        -- Check if git is available
         if not vim.fn.executable("git") then print("plug: git is not available!") return end
 
-        -- create dir to clone git repo in
+        -- Create dir to clone git repo in
         vim.fn.mkdir(dir, "p")
 
-        -- run git clone
+        -- Run git clone
         vim.fn.system({ "git", "-C", dir, "clone", "--depth", 1, url })
 
-        -- regenerate help (after vim startup)
+        -- Regenerate help (after vim startup); needed for vim to recognize docs
         vim.cmd("aug plug \n au! \n au VimEnter * helpt ALL \n aug END")
 
     end
 
-    -- load package (not needed if you use /start instead of /opt)
+    -- Load package (not needed if you use /start instead of /opt)
     vim.cmd("packadd! " .. name)
 
 end
@@ -987,7 +987,7 @@ fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     sil! syn clear orgProperty orgComment orgHeading1 orgHeading2 orgHeading3 orgMathInline orgBold orgTex
     syn keyword orgKeyword   begin_src,end_src,macro,title,options,noexport,begin_quote,end_quote
     syn region orgProperty   matchgroup=Special start=/^#+\S*/ end=/$/ oneline
-    syn region orgComment    start=/^\s*#[^+]/ end=/$/   oneline
+    syn region orgComment    start=/^\s*#[^+]/ end=/$/   oneline contains=orgTODO
     syn region orgHeading1   start=/^\* /      end=/$/   oneline
     syn region orgHeading2   start=/^\*\{2} /  end=/$/   oneline
     syn region orgHeading3   start=/^\*\{3} /  end=/$/   oneline

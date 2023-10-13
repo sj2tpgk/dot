@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-import argparse, json, os, os.path, re, sys, time, urllib.error, urllib.request
+import argparse, json, os, os.path, platform, re, sys, time, urllib.error, urllib.request
 
 def parseSpec(spec):
     m = re.match(r"([-\w]+)(\[([-\w]+)\])?", spec)
     name = m[1]
     extra = m[3]
-    expr = spec.split(";")[1].strip() if ";" in spec else "False"
+    expr = spec.split(";")[1].strip() if ";" in spec else "True" # Empty spec => always required
     return { "spec": spec, "name": name, "extra": extra, "expr": expr }
 
-# parseSpec("urllib3")
-# parseSpec("urllib3[secure]")
-# parseSpec("botocore[crt] (<2.0a0,>=1.21.0) ; extra == 'crt'")
+# print(parseSpec("urllib3"))
+# print(parseSpec("urllib3[secure]"))
+# print(parseSpec("botocore[crt] (<2.0a0,>=1.21.0) ; extra == 'crt'"))
 # exit()
 
 dlCacheEnabled = False
@@ -28,6 +28,7 @@ def dl(name):
     url = f"https://pypi.org/pypi/{name}/json"
     req = urllib.request.Request(url)
     try:
+        # print(f"Downloading {url}")
         res = urllib.request.urlopen(req)
     except urllib.error.HTTPError:
         print("No such package:", name, file=sys.stderr)
@@ -38,27 +39,50 @@ def dl(name):
     if dlCacheEnabled:
         with open(f"{dlCacheDir}/{name}.json", "w") as f:
             f.write(dat)
-    time.sleep(0.2)
     return jso
 
-# print(dl("urllib3"))
-# exit()
+def get_implementation_version():
+    def format_full_version(info):
+        version = '{0.major}.{0.minor}.{0.micro}'.format(info)
+        kind = info.releaselevel
+        if kind != 'final':
+            version += kind[0] + str(info.serial)
+        return version
+
+    if hasattr(sys, 'implementation'):
+        return format_full_version(sys.implementation.version)
+    else:
+        return "0"
 
 def rec(spec):
     pkg = parseSpec(spec)
     jso = dl(pkg["name"])
 
     if not jso: return []
+    # json.dump(jso, open(f"debug-{pkg['name']}.json", "w"), indent=2)
 
-    depSpecs = jso["info"]["requires_dist"] or []
+    # See https://peps.python.org/pep-0508/
     g = {
+        "os_name":                        os.name,
+        "sys_platform":                   sys.platform,
+        "platform_machine":               platform.machine(),
+        "platform_python_implementation": platform.python_implementation(),
+        "platform_release":               platform.release(),
+        "platform_system":                platform.system(),
+        "platform_version":               platform.version(),
+        "python_version":                 '.'.join(platform.python_version_tuple()[:2]),
+        "python_full_version":            platform.python_version(),
+        "implementation_name":            sys.implementation.name,
+        "implementation_version":         get_implementation_version(),
         "extra":                          pkg["extra"],
-        "implementation_name":            "CPython",
-        "platform_python_implementation": "CPython",
-        "python_version":                 "0",
-        "sys_platform":                   "win32",
     }
-    deps = filter(lambda x: eval(x["expr"], g), map(parseSpec, depSpecs))
+    depSpecs = jso["info"]["requires_dist"] or []
+    parsedSpecs = map(parseSpec, depSpecs)
+    deps = [
+        parsedSpec for parsedSpec in parsedSpecs
+        if eval(parsedSpec["expr"], g)
+    ]
+    # deps = filter(lambda x: eval(x["expr"], g), map(parseSpec, depSpecs))
 
     return sum([rec(dep["spec"]) for dep in deps], [pkg["name"]])
 

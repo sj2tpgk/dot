@@ -25,11 +25,12 @@ user_pref("devtools.debugger.prompt-connection", false);
 user_pref("devtools.debugger.remote-enabled", true);
 user_pref("devtools.netmonitor.responseBodyLimit", 0);
 user_pref("dom.event.clipboardevents.enabled", false);
-user_pref("dom.event.contextmenu.enabled", false);
+// user_pref("dom.event.contextmenu.enabled", false);
 user_pref("extensions.pocket.enabled", false);
 user_pref("full-screen-api.warning.timeout", 0);
 user_pref("general.smoothScroll", false);
 user_pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
+user_pref("network.http.request.max-attempts", 2); // default 10, too many (possibly banned)
 user_pref("pointer-lock-api.warning.timeout", 0);
 user_pref("privacy.file_unique_origin", false); // Allow local script access local iframe's document
 user_pref("security.dialog_enable_delay", 0);
