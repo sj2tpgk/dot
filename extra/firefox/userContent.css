@@ -55,7 +55,19 @@
 @-moz-document domain("docs.python.org") {
     :not(.sig) > em, .sig-param .n span { color: #d22 }
     @media (prefers-color-scheme: dark) {
-        :not(.sig) > em, .sig-param .n span { color: #f44 }
+        :not(.sig) > em, .sig-param .n span { color: #ff4c4c }
+    }
+}
+
+@-moz-document regexp(".*//www.gnu.org/software/[^/]*/manual.*") {
+    code, samp, var { color: #d22 }
+    @media (prefers-color-scheme: dark) {
+        code, samp, var { color: #ff4c4c }
+		html, body { background: #222 !important }
+		body, h1, h2, h3, h4, h5, h6, .header { color: #ddd !important }
+		a[href] { color: #60b9fb !important }
+		a[href]:visited { color: #c9c !important }
+		div.example, pre.example { background: #444 !important; color: #eee !important }
     }
 }
 

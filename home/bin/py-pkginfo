@@ -104,6 +104,9 @@ def main(args):
     else:
         print("Name       :", spec)
         print("Summary    :", dic["info"]["summary"])
+        print("Version    :", dic["info"]["version"])
+        print("Uploaded   :", dic["releases"][dic["info"]["version"]][0]["upload_time"].replace("T", " "))
+        print("URL        :", dic["info"]["project_url"])
         print("Total Size :", sizeTxt)
         print("Total Deps :", " ".join(deps))
 
