@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 import argparse, json, os, os.path, platform, re, sys, time, urllib.error, urllib.request
 
+CONFIG = { "verbose": False }
+
+# TODO recursive dependencies
+
 def parseSpec(spec):
     m = re.match(r"([-\w]+)(\[([-\w]+)\])?", spec)
     name = m[1]
@@ -28,7 +32,7 @@ def dl(name):
     url = f"https://pypi.org/pypi/{name}/json"
     req = urllib.request.Request(url)
     try:
-        # print(f"Downloading {url}")
+        if CONFIG["verbose"]: print(f"Downloading {url}")
         res = urllib.request.urlopen(req)
     except urllib.error.HTTPError:
         print("No such package:", name, file=sys.stderr)
@@ -87,6 +91,8 @@ def rec(spec):
     return sum([rec(dep["spec"]) for dep in deps], [pkg["name"]])
 
 def main(args):
+    CONFIG["verbose"] = args.verbose
+
     spec = args.pkg
     pkg = parseSpec(spec)
     dic = dict(dl(pkg["name"]))
@@ -113,6 +119,7 @@ def main(args):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("-j", "--json", action="store_true")
+    ap.add_argument("-v", "--verbose", action="store_true")
     ap.add_argument("pkg")
     args = ap.parse_args()
     main(args)

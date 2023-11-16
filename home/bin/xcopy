@@ -12,17 +12,24 @@ wsl_copy() {
     pidfile="$tmpdir/copy_pid"
     inputfile="$tmpdir/copy_input"
     oninitfile="$tmpdir/copy_oninit"
+    logfile="$tmpdir/copy_log"
+    log() { printf "%s (sh) %s\n" "$(date +'%Y/%m/%d %H:%M:%S.%3N')" "$*" >> "$logfile"; }
+    printf "%s\n" "------" >> "$logfile"
 
     # if "pidfile cannot be read" or "pid written in pidfile no longer exists", start new daemon
     if ! read -r pid < "$pidfile" 2>/dev/null || [ ! -e "/proc/$pid/fd/0" ]; then
+        log "pid=[$pid], $([ -z "$pid" ] && printf "%s" "read $pidfile failed"), $([ -n "$pid" ] && [ ! -e "/proc/$pid/fd/0" ] && printf "%s" "/proc/$pid/fd/0 does not exist")"
 
         # shellcheck disable=SC2016
         pwsh='
         # '$magic' wsl-xcopy-pwsh # For pgrep purpose
         $wslroot="//wsl$/'"$WSL_DISTRO_NAME"'"
         echo a > "$wslroot/'"$oninitfile"'"
+        function log{ param($msg); $d=$(get-date -Format "yyyy/MM/dd HH:mm:ss.fff"); echo "$d (PS) $msg" >> "$wslroot/'"$logfile"'"}
+        log init
         while(1){
             $got = Read-Host
+            log "read-host done"
 
             # Assumes base64 encoded UTF-8 data is in $inputfile
             #$b64 = Get-Content "$wslroot/'"$inputfile"'"
@@ -32,7 +39,9 @@ wsl_copy() {
             # echo "b64=$b64,str=$str"
 
             $str = (Get-Content -Raw -Encoding utf8 "$wslroot/'"$inputfile"'")
+            log "get-content done, str is [$str]"
             Set-Clipboard $str
+            log "set-clipboard done"
 
         }
         '
@@ -47,18 +56,24 @@ wsl_copy() {
         # A dummy process is piped to powershell.exe, otherwise we cannot write to its stdin with /proc/$pid/fd/0.
         # Also powershell.exe must be piped to something other than stdout, otherwise it does not persist when not launched from terminal (e.g. from vim).
         # Replacing "while ..." with "cat" works in terminal, but not in script (infinite loop)
+        log "starting powershell"
         while true; do sleep 100000; done | powershell.exe "$pwsh" > /dev/null &
         pid=$!
         echo $pid > "$pidfile"
+        log "PID $pid is written to $pidfile"
 
         # wait until $oninitfile is created (powershell startup is slow)
-        i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$oninitfile" ]; do sleep .01; done
+        # i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$oninitfile" ]; do sleep .01; done
+        i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$oninitfile" ]; do sleep 0; done
+        log "$oninitfile created."
 
     fi
 
     # { [ -z "$text" ] && cat || printf "%s" "$text"; } | base64 > "$inputfile"
     # echo > "/proc/$pid/fd/0"
+    log "writing to $inputfile"
     { [ -z "$text" ] && cat || printf "%s" "$text"; } > "$inputfile"
+    log "writing to /proc/$pid/fd/0"
     echo > "/proc/$pid/fd/0"
 
 }

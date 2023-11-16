@@ -445,6 +445,7 @@ nnore zm zM
 for i in range(1, 16)
     for j in ["", "s-", "c-"]
         for k in ["", "i", "c"]
+            if j == "" && i == 5 | continue | endif
             exe k . "nore <" . j . "f" . i . "> <nop>"
         endfor
     endfor

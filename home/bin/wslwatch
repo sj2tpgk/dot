@@ -1,11 +1,17 @@
 #!/bin/bash
 
+shopt -s nullglob
 
 help() {
-    echo "Usage: wslwatch [option ...] file ... -- cmd ..."
-    echo "       cmd1 | wslwatch [option ...] -- cmd ..."
+    echo "Usage: wslwatch [option ...] FILE ... -- CMD ..."
+    echo "       cmd1 | wslwatch [option ...] -- CMD ..."
+    echo "Watch FILEs and run CMD on change."
+    echo "In the second form, read paths of FILEs from stdin."
+    echo "Similar to entr http://eradman.com/entrproject/"
+    echo
     echo "Options:"
     echo "   -h         Help"
+    echo "   -g         Interpret each FILE as bash glob pattern and dynamically update the list of files to watch."
     echo "   -r         Reload a persistent child process"
     echo "   -t TIME    Check file update on each TIME seconds (default: 1)"
     echo "   -T         Show timestamp when cmd runs"
@@ -14,26 +20,42 @@ help() {
 
 
 
+# Re-expand glob patterns
+
+redo_globs() {
+    # Accept globs as arguments and store result in the variable "files"
+    files=()
+    while [[ $# -ge 1 ]]; do
+        files+=($1) # this is ok if there is a glob-matching file with spaces
+        shift
+    done
+}
+
+
+
 ## Parse opts (TODO -- flag (option separator))
 
-[ $# -eq 0 ] && { help; exit; }
-rflag= tval=1 Tflag= zflag=
+[[ $# -eq 0 ]] && { help; exit; }
+gflag="" rflag="" tval=1 Tflag="" zflag=""
 files=()
+globs=()
 while true; do
     case "$1" in
         -h|--help) help; exit;;
+        -g) gflag=1;   shift;;
         -r) rflag=1;   shift;;
         -t) tval="$2"; shift; shift;;
         -T) Tflag=1;   shift;;
         -z) zflag=1;   shift;;
         --) shift; break;;
-        *) files+=("$1"); shift;;
+        *) [[ $gflag ]] && globs+=("$1") || files+=("$1"); shift;;
     esac
 done
 [ ! -t 0 ] && { while read -r f; do files+=("$f"); done; }
-[ $#             -eq 0 ] && { echo "ERR: No command" >&2; help; exit 1; }
-[ "${#files[@]}" -eq 0 ] && { echo "ERR: No files"   >&2; help; exit 1; }
-# echo "r=$rflag,t=$tval,T=$Tflag,z=$zflag"; echo "files: ${files[@]}"; echo "cmd: $@"; exit
+[[ $# -eq 0 ]] && { echo "ERR: No command" >&2; help; exit 1; }
+[[ "${#files[@]}" -eq 0 ]] && [[ "${#globs[@]}" -eq 0 ]] && { echo "ERR: No files"   >&2; help; exit 1; }
+# echo "r=$rflag,t=$tval,T=$Tflag,z=$zflag"; echo "files: ${files[*]}"; echo "globs: ${globs[*]}"; echo "cmd: $*"
+# exit
 
 
 
@@ -41,10 +63,10 @@ done
 
 timestamp() { echo; date; }
 
-trap ctrl_c INT
+trap ctrl_c INT TERM
 ctrl_c() {
     # ensure kill background process, and exit successfully
-    [ -n $pid ] && kill $pid 2>/dev/null
+    [[ -n "$pid" ]] && kill "$pid" 2>/dev/null
     exit 0
 }
 
@@ -57,28 +79,39 @@ time=0
 while true; do
 
     # get newest mtime of files
-    newtime=$(stat -c %Y "${files[@]}" | sort -n | tail -n 1)
+    [[ $gflag ]] && redo_globs "${globs[@]}"
 
-    if [ "$time" != "$newtime" ]; then
+    # (skip if glob expands to zero files)
+    if [[ "${#files[@]}" -ge 1 ]]; then
 
-        # (-r flag) kill persistent process
-        [ $rflag ] && [ -n "$pid" ] && { kill "$pid" 2>/dev/null; }
+        newtime=$(stat -c %Y "${files[@]}" | sort -n | tail -n 1)
 
-        # (-T flag) show timestamp
-        [ $Tflag ] && timestamp
+        if [[ "$time" != "$newtime" ]]; then
 
-        # run command and save pid
-        "$@" &
-        pid=$!
+            # (-r flag) kill persistent process
+            [[ $rflag ]] && [[ -n "$pid" ]] && { kill "$pid" 2>/dev/null; }
 
-        # (-z flag) wait after cmd exits
-        [ $zflag ] && { wait "$pid" && exit 0; }
+            # (-T flag) show timestamp
+            [[ $Tflag ]] && timestamp
 
-        # update timestamp data
-        time=$newtime
+            # run command and save pid
+            "$@" &
+            pid=$!
+
+            # (-z flag) wait after cmd exits
+            [[ $zflag ]] && { wait "$pid" && exit 0; }
+
+            # update timestamp data
+            time=$newtime
+
+        fi
 
     fi
 
     sleep "$tval"
 
 done
+
+# ex.
+# wslwatch -g '*.txt' -- date
+# # this prints datetime on (1) change in existing .txt file (2) new .txt file added (3) .txt file removed.

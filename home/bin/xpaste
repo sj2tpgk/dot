@@ -10,16 +10,23 @@ wsl_paste() {
     pidfile="$tmpdir/paste_pid"
     outputfile="$tmpdir/paste_output"
     readyfile="$tmpdir/paste_ready"
+    logfile="$tmpdir/paste_log"
+    log() { printf "%s (sh) %s\n" "$(date +'%Y/%m/%d %H:%M:%S.%3N')" "$*" >> "$logfile"; }
+    printf "%s\n" "------" >> "$logfile"
 
     # if "pidfile cannot be read" or "pid written in pidfile no longer exists", start new daemon
     if ! read -r pid < "$pidfile" 2>/dev/null || [ ! -e "/proc/$pid/fd/0" ]; then
+        log "pid=[$pid], $([ -z "$pid" ] && printf "%s" "read $pidfile failed"), $([ -n "$pid" ] && [ ! -e "/proc/$pid/fd/0" ] && printf "%s" "/proc/$pid/fd/0 does not exist")"
 
         # shellcheck disable=SC2016
         pwsh='
         # '$magic' wsl-xpaste-pwsh # For pgrep purpose
         $wslroot="//wsl$/'"$WSL_DISTRO_NAME"'"
+        function log{ param($msg); $d=$(get-date -Format "yyyy/MM/dd HH:mm:ss.fff"); echo "$d (PS) $msg" >> "$wslroot/'"$logfile"'"}
+        log "init"
         while(1){
             $got = Read-Host
+            log "read-host done"
 
             # Encode string as utf8 and then convert to base64
             #$str = Get-Clipboard -Raw # without -Raw we get an array of strings
@@ -29,8 +36,11 @@ wsl_paste() {
             #echo a > "$wslroot/'"$readyfile"'"
 
             $a = (gcb -Raw).Replace("`r`n", "`n")                   # CRLF to LF
+            log "a is [$a]"
             [IO.File]::WriteAllText("$wslroot/'"$outputfile"'", $a) # no trailing CRLF
+            log "written to '"$outputfile"'"
             echo a > "$wslroot/'"$readyfile"'"
+            log "written to '"$readyfile"'"
 
             # "Get-Clipboard -Raw > file" has an encoding problem (which can be fixed with out-file -encoding utf8), and it also adds some garbage leading/trailing bytes
             # $str = Get-Clipboard
@@ -45,19 +55,24 @@ wsl_paste() {
         # A dummy process is piped to powershell.exe, otherwise we cannot write to its stdin with /proc/$pid/fd/0.
         # Also powershell.exe must be piped to something other than stdout, otherwise it does not persist when not launched from terminal (e.g. from vim).
         # Replacing "while ..." with "cat" works in terminal, but not in script (infinite loop)
+        log "starting powershell"
         while true; do sleep 100000; done | powershell.exe "$pwsh" >/dev/null &
         pid=$!
         echo $pid > "$pidfile"
+        log "PID $pid is written to $pidfile"
 
     fi
 
 
+    log "removing $outputfile and $readyfile"
     rm "$outputfile" "$readyfile" 2>/dev/null
+    log "writing to /proc/$pid/fd/0"
     echo > "/proc/$pid/fd/0"
     # i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$readyfile" ]; do sleep .001; done
-    i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$readyfile" ]; do :; done
+    i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$readyfile" ]; do sleep 0; done
     # first tr removes non-base64 characters, second tr fixes CRLF
     #cat "$outputfile" | tr -c -d "[:alnum:][+/=]" | base64 -d | tr -d ''
+    log "$readyfile found, now cat'ing it"
     cat "$outputfile"
 
 }
