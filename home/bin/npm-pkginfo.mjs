@@ -41,7 +41,7 @@ function main() {
     let pkg, help;
     for (let i=0; i<args.length; i++) {
         if (args[i] == "-v") CONFIG.verbose = true;
-        if (args[i] == "-h" || args[i] == "--h") help = true;
+        if (args[i] == "-h" || args[i] == "--help") help = true;
         else pkg = args[i];
     }
     if (help || !pkg) {
