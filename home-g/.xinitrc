@@ -65,7 +65,7 @@ amixer set Master 40%
 
 # Cloud storage
 # /usr/bin/dropbox &
-/usr/bin/syncthing &
+# /usr/bin/syncthing & # use `systemctl --user enable --now syncthing`
 
 # Auto mount USB etc.
 udiskie &
