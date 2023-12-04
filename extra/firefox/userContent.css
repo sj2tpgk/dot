@@ -105,6 +105,11 @@
   .p-items_options { display: none }
 }
 
+@-moz-document domain("zenn.dev") {
+	header, aside, #share, #share ~ *, #discuss, footer { display: none !important }
+	section { margin: auto !important }
+}
+
 @-moz-document domain("developer.mozilla.org") {
 	.top-banner, .main-document-header-container { display: none }
 	#sidebar-quicklinks { top: 20px !important }

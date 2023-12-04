@@ -159,7 +159,7 @@ aug END
 
 " Status line <<<
 " show directory name, filetype, encoding
-fu! StlDirName()
+fu! StlDirName() " e.g. ~/.c/nvim when editing ~/.config/nvim/init.lua
     let x = substitute(expand('%:p:h'), $HOME, '~', '')
     " unix
     let x = substitute(x, '\([-._]*[^/]\|[^/]\)[^/]*/', '\1/', 'g')
@@ -167,21 +167,21 @@ fu! StlDirName()
     let x = substitute(x, '\(\a:\|[-._]*[^\\]\|[^\\]\)[^\\]*\\', '\1\\', 'g')
     return x
 endfu
-fu! StlFileTypeEnc()
+fu! StlFileTypeEnc() " e.g. (lua, utf-8)
     return join(filter([&ft, &fenc], 'len(v:val) > 0'), ', ')
 endfu
 fu! StlLspSigOrFtEnc()
     let lspsig = luaeval("lspsig")
     return len(lspsig) > 0 ? lspsig : ("(" . StlFileTypeEnc() . ")")
 endfu
-fu! StlClose(minwid, nclicks, btn, mod)
+fu! StlClose(minwid, nclicks, btn, mod) " when called, close buffer
     if len(filter(range(1, bufnr('$')), '! empty(bufname(v:val)) && buflisted(v:val)')) == 1
         q
     else
         bd
     endif
 endfu
-set statusline=%h%w%m%r\ \ %t\ \ \ [%{StlDirName()}]\ \ \ (%{StlFileTypeEnc()})%=%-14.(%l,%c%V%)\ %P%3@StlClose@\ \ [X]%X
+set statusline=%h%w%m%r\ \ %<%t\ \ \ [%{StlDirName()}]\ \ \ (%{StlFileTypeEnc()})%=%-14.(%l,%c%V%)\ %P%3@StlClose@\ \ [X]%X
 
 set laststatus=2
 " >>>
@@ -2458,6 +2458,7 @@ local mycomp_collect_keywords_extra = { -- extra keywords for mycomp_collect_key
     javascript = {
         "console.log", "console.error",
         "clearTimeout", "clearInterval", "setTimeout", "setInterval",
+        "querySelector", "querySelectorAll",
         "getContext",
         "addEventListener", "createElement",
         "constructor",
