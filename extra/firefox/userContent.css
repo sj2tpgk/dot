@@ -52,6 +52,12 @@
   { display: none !important }
 }
 
+@-moz-document domain("projecteuler.net") {
+	header, #footer { display: none !important }
+	nav { margin-top: 1em; border: none !important; filter: grayscale(1) }
+	#problem_icons { filter: grayscale(1) }
+}
+
 @-moz-document domain("docs.python.org") {
     :not(.sig) > em, .sig-param .n span { color: #d22 }
     @media (prefers-color-scheme: dark) {
@@ -116,6 +122,10 @@
 	#cmsSeriesList, #cmsSeriesList ~ *,
 	.subscription ~ *, #cmsBody ~ *
 	{ display: none }
+}
+
+@-moz-document domain("impress.co.jp") {
+	.to-top { display: none !important }
 }
 
 @-moz-document domain("developer.mozilla.org") {
