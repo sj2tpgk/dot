@@ -52,6 +52,12 @@
   { display: none !important }
 }
 
+@-moz-document domain("projecteuler.net") {
+	header, #footer { display: none !important }
+	nav { margin-top: 1em; border: none !important; filter: grayscale(1) }
+	#problem_icons { filter: grayscale(1) }
+}
+
 @-moz-document domain("docs.python.org") {
     :not(.sig) > em, .sig-param .n span { color: #d22 }
     @media (prefers-color-scheme: dark) {
@@ -110,10 +116,34 @@
 	section { margin: auto !important }
 }
 
+@-moz-document domain("atmarkit.itmedia.co.jp") {
+	#mediaFooter, #masterFooter, #masterSub, #g_nav,
+	.cmsBodyItmidSeriesButtonRegist, .cmsBodyItmidSeriesButtonRegist ~ *,
+	#cmsSeriesList, #cmsSeriesList ~ *,
+	.subscription ~ *, #cmsBody ~ *
+	{ display: none }
+}
+
+@-moz-document domain("impress.co.jp") {
+	.to-top { display: none !important }
+}
+
 @-moz-document domain("developer.mozilla.org") {
 	.top-banner, .main-document-header-container { display: none }
 	#sidebar-quicklinks { top: 20px !important }
 	.toc-container      { top: 0    !important }
+}
+
+@-moz-document domain("wikipedia.org") {
+	/* Disable toc folding */
+	.client-js .vector-toc .vector-toc-level-1 .vector-toc-list-item { display: block !important }
+	/* Toc panel */
+	#vector-toc-pinned-container, #vector-toc-pinned-container .vector-toc { padding: 0 !important }
+	.vector-feature-toc-pinned-clientpref-1 #vector-toc-pinned-container { margin-top: 0 !important }
+	/* Toc item */
+	.vector-toc .vector-toc-text { padding: 4px 0 !important; line-height: 1; font-size: x-small }
+	.vector-toc .vector-toc-list-item-active > .vector-toc-link, .vector-toc .vector-toc-level-1-active:not(.vector-toc-list-item-expanded) > .vector-toc-link, .vector-toc .vector-toc-list-item-active.vector-toc-level-1-active > .vector-toc-link { color: #000088 !important; font-weight: unset !important }
+	.vector-toc-toggle { display: none !important }
 }
 
 @-moz-document domain("chiebukuro.yahoo.co.jp") {
