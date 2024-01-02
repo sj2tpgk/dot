@@ -100,7 +100,7 @@ function fish_command_not_found --on-event fish_command_not_found
             # pacman -F $argv[1] | awk '/^[^ ]/{p=$0;sub(" .*","",p)}/^ /&&/bin/{cmd=$0;sub("^.*/","",cmd);print cmd "\t in " p}' >&2
             set reg (echo $argv[1] | awk '{s=$0;n=length($0);p=s;  for(i=1;i<=n;i++)p=p"|"substr(s,1,i-1)".?"substr(s,i+1,n-i);  for(i=0;i<=n;i++)p=p"|"substr(s,1,i)"."substr(s,i+1,n-i);  print "^("p")$"}')
             echo "pacman -Fx '$reg'" >&2
-            pacman -Fx $reg | awk '/^[^ ]/{p=$0;sub(" .*","",p)}/^ /&&/bin/{cmd=$0;sub("^.*/","",cmd);print cmd "\t in " p}' >&2
+            pacman -Fx $reg 2>/dev/null | awk '/^[^ ]/{p=$0;sub(" .*","",p)}/^ /&&/bin/{cmd=$0;sub("^.*/","",cmd);print cmd "\t in " p}' >&2
         end
     end
 end
