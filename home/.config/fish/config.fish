@@ -112,7 +112,8 @@ end
 type -q fzf_key_bindings && fzf_key_bindings
 
 # complete one WORD when end of line, otherwise forward-char
-bind \e\[C "if [ (commandline -C) = (commandline -b | string length) ]; commandline -f forward-bigword; commandline -f repaint; else; commandline -f forward-char; end"
+# "commandline -b" may print multiple numbers. "head -n 1" is a temporary workaround
+bind \e\[C "if [ (commandline -C) = (commandline -b | string length | head -n 1) ]; commandline -f forward-bigword; commandline -f repaint; else; commandline -f forward-char; end"
 
 # \es for sudo is builtin, but I enhance it
 bind \es "commandline -r (commandline -b | sed 's#\s*\$##; s#^\s*#sudo #; s#pacman -Ss#pacman -S#')"

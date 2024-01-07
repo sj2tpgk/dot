@@ -1993,7 +1993,7 @@ fu! OpenCompletion()
     "     lua mycomp_lsp_omnifunc_prefetch()
     " endif
 
-    " check (menu visible && inserting alphabet && at least comp_minlen chars)
+    " check (menu invisible && inserting alphabet && at least comp_minlen chars)
     let minlen = g:comp_minlen
     if !pumvisible() && (('a' <= v:char && v:char <= 'z') || ('A' <= v:char && v:char <= 'Z') || (v:char == '_')) && (minlen == 1 || (col(".") >= (minlen-1) && matchstr(getline("."), '\%' . (col('.')-(minlen-1)) . 'c[a-zA-Z_]\{' . (minlen-1) . '\}') != ""))
         call feedkeys("\<plug>MyTab", "")
