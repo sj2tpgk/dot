@@ -1,0 +1,74 @@
+#!/bin/python
+
+import argparse, base64, json, os, re
+
+def nonDupeFilename(basename, files):
+    file = basename
+    j = 0
+    while file in files:
+        j += 1
+        file = f"{basename}_{j}"
+    return file
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-f", "--format", type=str, default="{file}")
+parser.add_argument("-o", "--outdir", type=str, default="")
+parser.add_argument("infile")
+args = parser.parse_args()
+
+infile = args.infile
+outdir = args.outdir if len(args.outdir) else re.sub(r"[^][_.()a-zA-Z0-9-]", "_", infile)
+format = args.format
+fmtDictExample = {
+    "index":  True,
+    "file":   True,
+    "status": True,
+    "method": True,
+    "type":   True,
+    "time":   True,
+}
+
+try:
+    format.format(**fmtDictExample)
+except:
+    print("Invalid format:", format)
+    print("Valid keys are:", ", ".join(list(fmtDictExample.keys())))
+    exit(1)
+
+if os.path.exists(outdir):
+    if not os.path.isdir(outdir):
+        exit(1)
+else:
+    os.mkdir(outdir)
+
+with open(infile, "rb") as f:
+    har = json.load(f)
+
+outfiles = {}
+
+for i, e in enumerate(har["log"]["entries"]):
+    basename = re.sub(r".*/", "", e["request"]["url"]) #TODO format
+    fmtDict = {
+        "index":  i,
+        "file":   basename,
+        "status": e["response"]["status"],
+        "method": e["request"]["method"],
+        "type":   e["response"]["content"]["mimeType"].replace("/", "_"),
+        "time":   e["time"],
+    }
+    outbase = format.format(**fmtDict)
+    outfile = nonDupeFilename(outbase, outfiles)
+    outfiles[outfile] = True
+    if e["response"]["content"]["text"]:
+        if e["response"]["content"].get("encoding") == "base64":
+            print(f"{i}\tb64\t{outfile}")
+            with open(outdir + os.sep + outfile, "wb") as f:
+                f.write(base64.b64decode(e["response"]["content"]["text"]))
+        else:
+            print(f"{i}\ttext\t{outfile}")
+            with open(outdir + os.sep + outfile, "w") as f:
+                f.write(e["response"]["content"]["text"])
+    else:
+        print(f"{i}\t---\t{outfile}")
+
+
