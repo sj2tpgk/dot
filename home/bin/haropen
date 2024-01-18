@@ -1,0 +1,87 @@
+#!/bin/python
+
+import argparse, base64, json, os, re
+
+# TODO Dump as text
+
+def nonDupeFilename(basename, files):
+    file = basename
+    j = 0
+    while file in files:
+        j += 1
+        file = f"{basename}_{j}"
+    return file
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-f", "--format", type=str, default="{file}")
+parser.add_argument("-o", "--outdir", type=str, default="")
+parser.add_argument("infile")
+args = parser.parse_args()
+
+infile = args.infile
+outdir = args.outdir if len(args.outdir) else re.sub(r"[^][_.()a-zA-Z0-9-]", "_", re.sub(r"\.har", "", infile))
+format = args.format
+fmtDictExample = {
+    "index":  True,
+    "file":   True,
+    "status": True,
+    "method": True,
+    "type":   True,
+    "time":   True,
+}
+
+try:
+    format.format(**fmtDictExample)
+except:
+    print("Invalid format:", format)
+    print("Valid keys are:", ", ".join(list(fmtDictExample.keys())))
+    print("Example: -f '{index} {file}'")
+    exit(1)
+
+if os.path.exists(outdir):
+    if not os.path.isdir(outdir):
+        exit(1)
+else:
+    os.mkdir(outdir)
+
+with open(infile, "rb") as f:
+    har = json.load(f)
+
+outfiles = {}
+
+for i, e in enumerate(har["log"]["entries"]):
+    basename = re.sub(r".*/", "", e["request"]["url"]) #TODO format
+    if len(basename) == 0: basename = "(empty filename)"
+    # response body
+    content = e["response"]["content"]
+    fmtDict = {
+        "index":  i,
+        "file":   basename,
+        "status": e["response"]["status"],
+        "method": e["request"]["method"],
+        "type":   "mimeType" in content and content["mimeType"].replace("/", "_"),
+        "time":   e["time"],
+    }
+    outbase = format.format(**fmtDict)
+    outfile = nonDupeFilename(outbase, outfiles)
+    outfiles[outfile] = True
+    if not "text" in content:
+        print(f"{i}\t---\t{outfile}")
+    elif content["text"]:
+        if content.get("encoding") == "base64":
+            print(f"{i}\tb64\t{outfile}")
+            with open(outdir + os.sep + outfile, "wb") as f:
+                f.write(base64.b64decode(content["text"]))
+        else:
+            print(f"{i}\ttext\t{outfile}")
+            with open(outdir + os.sep + outfile, "w") as f:
+                f.write(content["text"])
+    else:
+        print(f"{i}\t---\t{outfile}")
+    # request body
+    if "postData" in e["request"]:
+        postData = e["request"]["postData"]["text"]
+        with open(outdir + os.sep + outfile + ".req", "w") as f:
+            f.write(postData)
+
+

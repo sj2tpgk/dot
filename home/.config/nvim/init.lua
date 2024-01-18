@@ -108,7 +108,6 @@ do -- Plugins <<<
 
 end -- >>>
 
-if can_require"nvim-autopairs" then require"nvim-autopairs".setup() end
 vim.cmd [[ let g:javascript_plugin_jsdoc = 1 ]]
 
 vim.cmd [[
@@ -1692,6 +1691,14 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter util funcs <<<
         if #chunks >= 1 then vim.api.nvim_echo(chunks, true, {}) end
     end
 
+end -- >>>
+
+if can_require"nvim-autopairs" then -- nvim-autopairs <<<
+    local AutoPairs = require"nvim-autopairs"
+    local Conds = require"nvim-autopairs.conds"
+    AutoPairs.setup()
+    AutoPairs.get_rule("'")[1].not_filetypes = { "scheme", "lisp" }
+    AutoPairs.get_rule("'")[1]:with_pair(Conds.not_after_text("["))
 end -- >>>
 
 if vim.fn.match(vim.o.rtp, "vim-easy-align") ~= -1 then -- vim-easy-align <<<
