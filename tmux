@@ -1,6 +1,8 @@
 #!/bin/sh
 #vim: fdm=marker fdl=0 fen
 
+# https://codeberg.org/sj2tpgk/dot/raw/branch/master/tmux
+
 errexit() { printf "\033[31;1mERROR: \033[0m%s\n" "$1" >&2; exit 1; }
 
 # Env vars and paths

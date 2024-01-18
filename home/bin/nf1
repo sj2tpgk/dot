@@ -2,4 +2,5 @@
 
 # Count number of files is current directory and subdirectories with depth 1
 
-find . -maxdepth 1 -type d | while read -r d; do n=$(find "$d" | wc -l); printf "%d\t%s\n" "$n" "$d"; done | sort -n
+dir=${1:-.}
+find "$dir" -maxdepth 1 -type d | while read -r d; do n=$(find "$d" | wc -l); printf "%d\t%s\n" "$n" "$d"; done | sort -n
