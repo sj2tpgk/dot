@@ -169,6 +169,7 @@ set fish_color_autosuggestion 'magenta'
 #| function mkcd; mkdir $argv[1] && cd $argv[1]; end
 #| for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i ""; end
 #| for i in \e\[25\;2~ \e\[26\;5~; bind $i ""; end
+#| bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
 #- }}}
 
 
@@ -238,6 +239,16 @@ bind -r o   select-pane -t :.+
 bind -r n   next-window
 bind -n F3  next-window
 bind -n F4  select-pane -t :.+
+
+# Completion using fzf
+bind    Tab   run "\
+f(){ tmux display -pF \"##{$1}\"; };\
+px=$(f pane_left); py=$(f pane_top); cx=$(f cursor_x); cy=$(f cursor_y);\
+q=$(tmux capturep -J -p -S \$cy -E \$cy | cut -c-\"\$cx\" | grep -oE '\\w+$');\
+tmux popup -EB -e \"q=\$q\" -w 20 -h 8 -x $((\$px + \$cx - \"\${##q}\" - 2)) -y $((\$py + \$cy + 1))\
+  'candidates(){ tmux lsp -a -F \"##D\" | xargs -n1 tmux capturep -J -pt | grep -oE \"\\w{4,}\" | sort -u;};\
+   s=$(candidates | fzf --no-color --info hidden --color bw --prompt \"  \" --pointer \" \" --print-query -q \"\$q\");\
+   [ \$? -eq 130 ] || { s=$(echo \"\$s\" | tail -n1); tmux send -N \"\${##s}\" BSpace 2>/dev/null \\; send -l \"\$s \"; }'"
 
 if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
