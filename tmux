@@ -246,11 +246,13 @@ bind -n F4  select-pane -t :.+
 bind    Tab   run "\
 f(){ tmux display -pF \"##{$1}\"; };\
 px=$(f pane_left); py=$(f pane_top); cx=$(f cursor_x); cy=$(f cursor_y);\
-q=$(tmux capturep -J -p -S \$cy -E \$cy | cut -c-\"\$cx\" | grep -oE '\\w+$');\
-tmux popup -EB -e \"q=\$q\" -w 20 -h 8 -x $((\$px + \$cx - \"\${##q}\" - 2)) -y $((\$py + \$cy + 1))\
-  'candidates(){ tmux lsp -a -F \"##D\" | xargs -n1 tmux capturep -J -pt | grep -oE \"\\w{4,}\" | sort -u;};\
-   s=$(candidates | fzf --no-color --info hidden --color bw --prompt \"  \" --pointer \" \" --print-query -q \"\$q\");\
-   [ \$? -eq 130 ] || { s=$(echo \"\$s\" | tail -n1); tmux send -N \"\${##s}\" BSpace 2>/dev/null \\; send -l \"\$s \"; }'"
+q=$(tmux capturep -J -p -S \$cy -E \$cy | cut -c-\"\$cx\" | grep -oE '\\w+$' || echo);\
+t=$(f pane_id)
+cmd='\
+  candidates(){ tmux lsp -a -F \"##D\" | xargs -n1 tmux capturep -J -pt | grep -oE \"\\w{4,}\" | sort -u;};\
+  s=$(candidates | fzf --no-color --info hidden --color bw --prompt \"  \" --pointer \" \" --print-query -q \"\$q\");\
+  [ \$? -eq 130 ] || { s=$(echo \"\$s\" | tail -n1); tmux send -t \"\$t\" -N \"\${##s}\" BSpace 2>/dev/null \\; send -t \"\$t\" -l \"\$s \"; }';\
+tmux popup0 -EB -e \"t=\$t\" -e \"q=\$q\" -w 20 -h 8 -x $(expr \$px + \$cx - \"\${##q}\" - 2) -y $(expr \$py + \$cy + 1) \"\$cmd\" || tmux splitw -e \"t=\$t\" -e \"q=\$q\" -b -l 8 \"\$cmd\""
 
 if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
