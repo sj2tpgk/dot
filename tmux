@@ -245,9 +245,8 @@ bind -n F4  select-pane -t :.+
 # Completion using fzf
 bind    Tab   run "\
 f(){ tmux display -pF \"##{$1}\"; };\
-px=$(f pane_left); py=$(f pane_top); cx=$(f cursor_x); cy=$(f cursor_y);\
+t=$(f pane_id); px=$(f pane_left); py=$(f pane_top); cx=$(f cursor_x); cy=$(f cursor_y);\
 q=$(tmux capturep -J -p -S \$cy -E \$cy | cut -c-\"\$cx\" | grep -oE '\\w+$' || echo);\
-t=$(f pane_id)
 cmd='\
   candidates(){ tmux lsp -a -F \"##D\" | xargs -n1 tmux capturep -J -pt | grep -oE \"\\w{4,}\" | sort -u;};\
   s=$(candidates | fzf --no-color --info hidden --color bw --prompt \"  \" --pointer \" \" --print-query -q \"\$q\");\
