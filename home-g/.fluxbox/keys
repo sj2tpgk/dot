@@ -19,10 +19,10 @@ OnWindowBorder Mouse1 :MacroCmd {Raise} {Focus} {ActivateTab}
 OnWindowBorder Move1  :StartMoving
 
 # Mod4+arrow to move windows
-Mod4 Left  :Move -20   0
-Mod4 Down  :Move   0  20
-Mod4 Right :Move  20   0
-Mod4 Up    :Move   0 -20
+# Mod4 Left  :Move -20   0
+# Mod4 Down  :Move   0  20
+# Mod4 Right :Move  20   0
+# Mod4 Up    :Move   0 -20
 
 # Unclutter / Arrange*
 Mod4 u :Unclutter (layer=Normal)
@@ -171,6 +171,20 @@ Mod4 b :LowerLayer
 # Close winow
 Mod1 F4 :Close
 
+# Mod4+arrow to move cursor etc.
+Mod4 Left  :Exec xdotool mousemove_relative -- -20   0
+Mod4 Down  :Exec xdotool mousemove_relative --   0  20
+Mod4 Right :Exec xdotool mousemove_relative --  20   0
+Mod4 Up    :Exec xdotool mousemove_relative --   0 -20
+Mod4 Return      :Exec xdotool click --clearmodifiers 1
+Mod4 BackSpace   :Exec xdotool click --clearmodifiers 3
+Mod4 Delete      :Exec xdotool click --clearmodifiers 2
+Mod4 Shift Up    :Exec xdotool click                  4
+Mod4 Shift Down  :Exec xdotool click                  5
+Mod4 Shift Left  :Exec xdotool click --clearmodifiers 8
+Mod4 Shift Right :Exec xdotool click --clearmodifiers 9
+
+# Unclutter / Arrange*
 # Monitor Off
 # Mod4 m :Exec sleep .3 && sh ~/bin/mysession monitor
 
@@ -241,7 +255,8 @@ F9 shift v :Exec vivaldi-stable --incognito
 F9 x       :Exec ~/script/guisel/tmuxp
 F9 y       :Exec XMODIFIERS="" alacritty
 F9 F5      :Reconfigure
-F9 F6      :Restart
+F9 F6      :Exec ~/script/x-setting.sh
+F9 F7      :Restart
 
 # AzPainter
 Mod4 x :Exec sh -c "sleep .4; xvkbd -text '\Cs\D3\r\D3\Af\D1x'"
