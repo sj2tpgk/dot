@@ -114,6 +114,39 @@ exec ranger --clean \
 #- }}}
 
 
+####FILE +x bin/tmux-comp {{{
+#!/bin/sh
+
+info=$(tmux display -pF 'pane_id=#{pane_id}:pane_left=#{pane_left}:pane_top=#{pane_top}:cursor_x=#{cursor_x}:cursor_y=#{cursor_y}:client_height=#{client_height}')
+tmp=${info#*pane_id=};       t=${tmp%%:*}
+tmp=${info#*pane_left=};     px=${tmp%%:*}
+tmp=${info#*pane_top=};      py=${tmp%%:*}
+tmp=${info#*cursor_x=};      cx=${tmp%%:*}
+tmp=${info#*cursor_y=};      cy=${tmp%%:*}
+tmp=${info#*client_height=}; h=${tmp%%:*}
+
+export q
+q=$(tmux capturep -J -p -S "$cy" -E "$cy" | cut -c-"$cx" | grep -oE '\w+$' || echo)
+
+cs="tmux "
+for i in $(tmux lsp -a -F '#D'); do cs="$cs capturep -J -pt $i \; "; done
+cs="$cs | grep -oE '\w{4,}' | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
+
+if ! command -v fzf >/dev/null; then
+    s=$(eval "$cs" | head -n $((h - 2)) | awk -v q="$q" -v l="${#q}" "{a=\$0; printf \"'%s' '%c' '\", a, NR+47+(NR>10)*39-(NR>36)*58; if (l) { printf \"send -N %d BSpace ; \", l } printf \"send -l \\\"%s\\\"' \", a}")
+    eval tmux menu "$s"
+    exit
+fi
+
+cmd='
+  s=$(eval "$cs" | fzf --no-color --color bw --info hidden --prompt "  " --pointer " " --print-query -q "$q")
+  [ $? -ne 130 ] && { s=$(echo "$s" | tail -n1); tmux ${q:+send -t "$t" -N "${#q}" BSpace \;} send -t "$t" -l "$s " 2>/dev/null; }
+  exit 0'
+tmux popup -EB -e "cs=$cs" -e "t=$t" -e "q=$q" -w 20 -h 8 -x $(expr $px + $cx - "${#q}" - 2) -y $(expr $py + $cy + 1) "$cmd" \
+    || tmux splitw -e "cs=$cs" -e "t=$t" -e "q=$q" -l 8 "$cmd"
+#- }}}
+
+
 ####FILE +x bin/TMUX_bash {{{
 #!/bin/sh
 INPUTRC="$TMUX_ROOT/inputrc" exec bash --rcfile "$TMUX_ROOT/bashrc"
@@ -172,6 +205,7 @@ set fish_color_autosuggestion 'magenta'
 #| for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i ""; end
 #| for i in \e\[25\;2~ \e\[26\;5~; bind $i ""; end
 #| bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
+#| command -v doas >/dev/null 2>&1 && alias sudo doas
 #- }}}
 
 
@@ -243,15 +277,7 @@ bind -n F3  next-window
 bind -n F4  select-pane -t :.+
 
 # Completion using fzf
-bind    Tab   run "\
-f(){ tmux display -pF \"##{$1}\"; };\
-t=$(f pane_id); px=$(f pane_left); py=$(f pane_top); cx=$(f cursor_x); cy=$(f cursor_y);\
-q=$(tmux capturep -J -p -S \$cy -E \$cy | cut -c-\"\$cx\" | grep -oE '\\w+$' || echo);\
-cmd='\
-  candidates(){ tmux lsp -a -F \"##D\" | xargs -n1 tmux capturep -J -pt | grep -oE \"\\w{4,}\" | sort -u;};\
-  s=$(candidates | fzf --no-color --info hidden --color bw --prompt \"  \" --pointer \" \" --print-query -q \"\$q\");\
-  [ \$? -eq 130 ] || { s=$(echo \"\$s\" | tail -n1); tmux send -t \"\$t\" -N \"\${##s}\" BSpace 2>/dev/null \\; send -t \"\$t\" -l \"\$s \"; }';\
-tmux popup -EB -e \"t=\$t\" -e \"q=\$q\" -w 20 -h 8 -x $(expr \$px + \$cx - \"\${##q}\" - 2) -y $(expr \$py + \$cy + 1) \"\$cmd\" || tmux splitw -e \"t=\$t\" -e \"q=\$q\" -b -l 8 \"\$cmd\""
+bind    Tab   run "$TMUX_ROOT/bin/tmux-comp"
 
 if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
@@ -286,4 +312,5 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     endif
 #| endfu
 #| au InsertCharPre * call OpenCompletion()
+#| hi Pmenu ctermbg=black ctermfg=magenta
 #- }}}

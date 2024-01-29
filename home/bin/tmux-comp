@@ -1,26 +1,29 @@
 #!/bin/sh
-w=20
-h=8
-dt=$(tmux display -pF ':t#{pane_id}:px#{pane_left}:py#{pane_top}:cx#{cursor_x}:cy#{cursor_y}')
-dt1=${dt##*:t};  t=${dt1%%:*}
-dt1=${dt##*:px}; px=${dt1%%:*}
-dt1=${dt##*:py}; py=${dt1%%:*}
-dt1=${dt##*:cx}; cx=${dt1%%:*}
-dt1=${dt##*:cy}; cy=${dt1%%:*}
-[ "$cx" -eq 0 ] && q="" || q=$(tmux capturep -J -p -S "$cy" -E "$cy" -t "$t" | cut -c-"$cx" | grep -o -E '\w+$')
-# px, py = pane's top-left usable-pos, where (0, 0) means top-left pos excluding status line
-# cx, cy = cursor pos (pane's top-left usable-pos is (0, 0))
-# -x = x of left edge (0-based), -y = y of bottom edge (1-based)
-tmux popup -EB -t "$t" -e "ESCDELAY=1" -e "QUERY=$q" -e "h=$h" \
-    -x $((px + cx - "${#q}" - 2)) -y $((py + cy + 1)) -w "$w" -h "$h" \
-    '{ s=""; for i in $(tmux lsp -a -F "#D"); do s="$s capturep -J -pt $i ;"; done; tmux $s; } | grep -oE "\\w{4,}" | grep -vxF "$QUERY" | sort -u | fzf --height "$h" --border none --info hidden --no-separator --no-scrollbar --color bw --no-bold --prompt "  " --pointer " " -q "$QUERY" --print-query > /tmp/tmux-comp; echo $? > /tmp/tmux-comp-status'
-read -r sta < /tmp/tmux-comp-status
-case "$sta" in
-    (130) exit ;; # Aborted
-    (1) read -r sel < /tmp/tmux-comp ;; # No match
-    (*) { read -r _; read -r sel; } < /tmp/tmux-comp ;; # Selected
-esac
-case "${#q}" in
-    (0) tmux send -t "$t" -l "$sel ";;
-    (*) tmux send -t "$t" -N "${#q}" BSpace \; send -t "$t" -l "$sel ";;
-esac
+
+info=$(tmux display -pF 'pane_id=#{pane_id}:pane_left=#{pane_left}:pane_top=#{pane_top}:cursor_x=#{cursor_x}:cursor_y=#{cursor_y}:client_height=#{client_height}')
+tmp=${info#*pane_id=};       t=${tmp%%:*}
+tmp=${info#*pane_left=};     px=${tmp%%:*}
+tmp=${info#*pane_top=};      py=${tmp%%:*}
+tmp=${info#*cursor_x=};      cx=${tmp%%:*}
+tmp=${info#*cursor_y=};      cy=${tmp%%:*}
+tmp=${info#*client_height=}; h=${tmp%%:*}
+
+export q
+q=$(tmux capturep -J -p -S "$cy" -E "$cy" | cut -c-"$cx" | grep -oE '\w+$' || echo)
+
+cs="tmux "
+for i in $(tmux lsp -a -F '#D'); do cs="$cs capturep -J -pt $i \; "; done
+cs="$cs | grep -oE '\w{4,}' | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
+
+if ! command -v fzf >/dev/null; then
+    s=$(eval "$cs" | head -n $((h - 2)) | awk -v q="$q" -v l="${#q}" "{a=\$0; printf \"'%s' '%c' '\", a, NR+47+(NR>10)*39-(NR>36)*58; if (l) { printf \"send -N %d BSpace ; \", l } printf \"send -l \\\"%s\\\"' \", a}")
+    eval tmux menu "$s"
+    exit
+fi
+
+cmd='
+  s=$(eval "$cs" | fzf --no-color --color bw --info hidden --prompt "  " --pointer " " --print-query -q "$q")
+  [ $? -ne 130 ] && { s=$(echo "$s" | tail -n1); tmux ${q:+send -t "$t" -N "${#q}" BSpace \;} send -t "$t" -l "$s " 2>/dev/null; }
+  exit 0'
+tmux popup -EB -e "cs=$cs" -e "t=$t" -e "q=$q" -w 20 -h 8 -x $(expr $px + $cx - "${#q}" - 2) -y $(expr $py + $cy + 1) "$cmd" \
+    || tmux splitw -e "cs=$cs" -e "t=$t" -e "q=$q" -l 8 "$cmd"
