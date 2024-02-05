@@ -97,7 +97,7 @@ do -- Plugins <<<
     -- Treesitter
     plug "nvim-treesitter/nvim-treesitter"
     -- plug "nvim-treesitter/playground"
-    -- plug "p00f/nvim-ts-rainbow"
+    plug "p00f/nvim-ts-rainbow"
 
     -- LSP
     plug "neovim/nvim-lspconfig"
@@ -1384,6 +1384,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
 end -- >>>
 
 if can_require"nvim-treesitter.configs" then -- TreeSitter custom queries <<<
+    -- Note: this will fail on first install, because treesitter parsers will be installed later asynchronously and when this config is loaded there is no parser yet.
 
     -- Utilities to define/modify treesitter queries
 
