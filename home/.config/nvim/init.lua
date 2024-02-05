@@ -88,7 +88,7 @@ do -- Plugins <<<
 
     -- Better syntax highlighting and indent for langs
     plug "Vimjas/vim-python-pep8-indent"
-    plug "udalov/kotlin-vim"
+    -- plug "udalov/kotlin-vim"
     -- plug "pangloss/vim-javascript"
     -- plug "bfrg/vim-cpp-modern"
     -- plug "gutenye/json5.vim"
