@@ -181,9 +181,9 @@ fi
 ####FILE +x bin/v {{{
 #!/bin/sh
 if command -v vim >/dev/null; then
-    vim -u "$TMUX_ROOT/vimrc" "$@"
+    SHELL=sh vim -u "$TMUX_ROOT/vimrc" "$@"
 elif command -v nvim >/dev/null; then
-    nvim -u "$TMUX_ROOT/vimrc" "$@"
+    SHELL=sh nvim -u "$TMUX_ROOT/vimrc" "$@"
 elif command -v nano >/dev/null; then
     nano "$@"
 elif command -v emacs >/dev/null; then
@@ -300,15 +300,18 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| exe "au InsertEnter * set cul"| exe "au InsertLeave * set nocul"
 
 #| " Basic auto completion
-#| inore <expr> <tab>   pumvisible() ? "\<c-n>" : "\<c-x>\<c-u>"
-#| inore <expr> <s-tab> pumvisible() ? "\<c-p>" : "\<c-x>\<c-u>"
+#| inore <tab>       <c-n>
+#| inore <plug>MyTab <c-n>
+#| inore <s-tab>     <c-p>
+#| inore <return>    <c-y><return>
 #| set shm+=c cot=menuone,noinsert,noselect inf
 #| " Auto complete (https://stackoverflow.com/questions/35837990)
 #| fu! OpenCompletion()
 #|     " check (menu invisible && inserting iskeyword char && at least minlen chars)
 #|     let minlen = 2
 #|     if !pumvisible() && (v:char =~ '\K') && (minlen == 1 || (col(".") >= (minlen-1) && matchstr(getline("."), '\%' . (col('.')-(minlen-1)) . 'c\K\{' . (minlen-1) . '\}') != ""))
-#|         call feedkeys("\<c-n>", "")
+#|         call feedkeys("\<plug>MyTab", "")
+#|         " feedkeys("\<c-n>", "") will mess up repeating
 #|     endif
 #| endfu
 #| au InsertCharPre * call OpenCompletion()
