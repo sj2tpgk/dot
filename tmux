@@ -69,6 +69,7 @@ if [ $# -eq 0 ]; then
         tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf"
     else
         echo Regenerated files in "$TMUX_ROOT"
+        tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf" attach
     fi
 else
     errexit "arguments are not allowed: $*"

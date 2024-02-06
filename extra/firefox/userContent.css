@@ -95,7 +95,7 @@
 @-moz-document domain("askubuntu.com"), domain("serverfault.com"), domain("stackexchange.com"), domain("stackoverflow.com"), domain("superuser.com") {
   .js-voting-container > button { visibility: hidden }
   noscript, .js-consent-banner, #noscript-warning, .js-dismissable-hero, #announcement-banner, header, #question-header > div, #left-sidebar, #sidebar, #post-form, #post-form ~ *, footer, .bottom-notice, .post-signature { display: none !important }
-  #mainbar { width: 728px !important }
+  #mainbar { width: min(100%, 728px) !important }
   body { padding: 0 0 70px !important }
   #content { border-left-width: 0 !important; border: none !important }
 }
@@ -114,6 +114,7 @@
 
 @-moz-document domain("zenn.dev") {
 	header, aside, #share, #share ~ *, #discuss, footer { display: none !important }
+	div[class^=View_stickyShare], div[class^=View_topics] { display: none !important }
 	section { margin: auto !important }
 }
 
