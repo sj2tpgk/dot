@@ -118,6 +118,12 @@
 	section { margin: auto !important }
 }
 
+@-moz-document domain("note.com") {
+    header, .o-noteContentHeader__titleAttachment, .o-noteContentHeader__creatorInfo, .p-article__action, .p-article__action ~ *, .p-article__comment, .p-article__comment ~ *, footer
+	{ display: none !important }
+	article { width: 760px !important }
+}
+
 @-moz-document domain("atmarkit.itmedia.co.jp") {
 	#mediaFooter, #masterFooter, #masterSub, #g_nav,
 	.cmsBodyItmidSeriesButtonRegist, .cmsBodyItmidSeriesButtonRegist ~ *,
