@@ -61,6 +61,7 @@ _init() {
 
 }
 
+printf '\033[2 q' # block cursor
 if [ $# -eq 0 ]; then
     _init
     TMUX_SOCKET_NAME=${TMUX_SOCKET_NAME:-default}
