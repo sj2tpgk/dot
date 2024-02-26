@@ -62,6 +62,7 @@ _init() {
 }
 
 printf '\033[2 q' # block cursor
+
 if [ $# -eq 0 ]; then
     _init
     TMUX_SOCKET_NAME=${TMUX_SOCKET_NAME:-default}
@@ -70,9 +71,12 @@ if [ $# -eq 0 ]; then
         tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf"
     else
         echo Regenerated files in "$TMUX_ROOT"
+        tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf" source "$TMUX_ROOT/tmux.conf"
         tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf" attach
     fi
 else
+    echo "Usage: ./tmux"
+    echo "To use diffeent socket name, set \$TMUX_SOCKET_NAME (default: default)"
     errexit "arguments are not allowed: $*"
 fi
 
@@ -131,12 +135,14 @@ export q
 q=$(tmux capturep -J -p -S "$cy" -E "$cy" | cut -c-"$cx" | grep -oE '\w+$' || echo)
 
 p1='[[:alnum:]]{4,}'
-p2='[-+@./[:alnum:]]{4,}'
+p2='[-+@.[:alnum:]]{4,}'
+p3='[-+@./[:alnum:]]{4,}'
 
 cs="tmux "
 for i in $(tmux lsp -a -F '#D'); do cs="$cs capturep -J -pt $i \; "; done
 # cs="$cs | grep -oE '\w{4,}' | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
-cs="$cs | { { { tee /dev/fd/3 | grep -oE '$p1' >&4; } 3>&1 | grep -oE '$p2'; } 4>&1; } | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
+# cs="$cs | { { { tee /dev/fd/3 | grep -oE '$p1' >&4; } 3>&1 | grep -oE '$p2'; } 4>&1; } | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
+cs="$cs | { { { { tee /dev/fd/4 /dev/fd/5 | grep -oE '$p1' >&3; } 4>&1 | grep -oE '$p2' >&3; } 5>&1 | grep -oE '$p3'; } 3>&1; } | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
 
 if ! command -v fzf >/dev/null; then
     s=$(eval "$cs" | head -n $((h - 2)) | awk -v q="$q" -v l="${#q}" "{a=\$0; printf \"'%s' '%c' '\", a, NR+47+(NR>10)*39-(NR>36)*58; if (l) { printf \"send -N %d BSpace ; \", l } printf \"send -l \\\"%s\\\"' \", a}")
@@ -148,7 +154,7 @@ cmd='
   s=$(eval "$cs" | fzf --no-color --color bw --info hidden --prompt "  " --pointer " " --print-query -q "$q")
   [ $? -ne 130 ] && { s=$(echo "$s" | tail -n1); tmux ${q:+send -t "$t" -N "${#q}" BSpace \;} send -t "$t" -l "$s " 2>/dev/null; }
   exit 0'
-tmux popup -EB -e "cs=$cs" -e "t=$t" -e "q=$q" -w 20 -h 8 -x $(expr $px + $cx - "${#q}" - 2) -y $(expr $py + $cy + 1) "$cmd" \
+tmux popup -EB -e "cs=$cs" -e "t=$t" -e "q=$q" -w 35 -h 8 -x $(expr $px + $cx - "${#q}" - 2) -y $(expr $py + $cy + 1) "$cmd" \
     || tmux splitw -e "cs=$cs" -e "t=$t" -e "q=$q" -l 8 "$cmd"
 #- }}}
 
@@ -232,16 +238,16 @@ Tab:    menu-complete
 "\C-w": shell-backward-kill-word
 "\e[A": history-search-backward
 "\e[B": history-search-forward
-set show-all-if-ambiguous on        # Tab -> partial completion and show candidates
-set show-all-if-unmodified on       #
-set colored-stats on                # Color files by types
-set visible-stats on                # Append char to indicate type
-set mark-symlinked-directories on   # Mark symlinked directories
-set colored-completion-prefix on    # Color the common prefix
-set menu-complete-display-prefix on # Color the common prefix in menu-complete
-set eo-control-characters off     # Don't show ^C etc.
-set enable-bracketed-paste off      # Workaround (https://github.com/hanslub42/rlwrap/issues/108)
-set completion-ignore-case on       # Case insensitive completion
+set show-all-if-ambiguous        on  # Tab -> partial completion and show candidates
+set show-all-if-unmodified       on  #
+set colored-stats                on  # Color files by types
+set visible-stats                on  # Append char to indicate type
+set mark-symlinked-directories   on  # Mark symlinked directories
+set colored-completion-prefix    on  # Color the common prefix
+set menu-complete-display-prefix on  # Color the common prefix in menu-complete
+set eo-control-characters        off # Don't show ^C etc.
+set enable-bracketed-paste       off # Workaround (https://github.com/hanslub42/rlwrap/issues/108)
+set completion-ignore-case       on  # Case insensitive completion
 #- }}}
 
 
@@ -283,7 +289,7 @@ bind -n F3  next-window
 bind -n F4  select-pane -t :.+
 
 # Completion using fzf
-bind    Tab   run "$TMUX_ROOT/bin/tmux-comp"
+bind    Tab      run "$TMUX_ROOT/bin/tmux-comp"
 
 if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
