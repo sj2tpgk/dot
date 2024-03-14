@@ -97,7 +97,7 @@ do -- Plugins <<<
     -- Treesitter
     plug "nvim-treesitter/nvim-treesitter"
     -- plug "nvim-treesitter/playground"
-    plug "p00f/nvim-ts-rainbow"
+    -- plug "p00f/nvim-ts-rainbow"
 
     -- LSP
     plug "neovim/nvim-lspconfig"

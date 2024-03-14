@@ -62,7 +62,7 @@ for i, e in enumerate(har["log"]["entries"]):
         "type":   "mimeType" in content and content["mimeType"].replace("/", "_"),
         "time":   e["time"],
     }
-    outbase = format.format(**fmtDict)
+    outbase = format.format(**fmtDict)[:200]
     outfile = nonDupeFilename(outbase, outfiles)
     outfiles[outfile] = True
     if not "text" in content:
