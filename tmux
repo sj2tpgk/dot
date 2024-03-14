@@ -61,6 +61,8 @@ _init() {
 
 }
 
+printf '\033[2 q' # block cursor
+
 if [ $# -eq 0 ]; then
     _init
     TMUX_SOCKET_NAME=${TMUX_SOCKET_NAME:-default}
@@ -69,9 +71,12 @@ if [ $# -eq 0 ]; then
         tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf"
     else
         echo Regenerated files in "$TMUX_ROOT"
+        tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf" source "$TMUX_ROOT/tmux.conf"
         tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf" attach
     fi
 else
+    echo "Usage: ./tmux"
+    echo "To use diffeent socket name, set \$TMUX_SOCKET_NAME (default: default)"
     errexit "arguments are not allowed: $*"
 fi
 
@@ -115,6 +120,81 @@ exec ranger --clean \
 #- }}}
 
 
+
+####FILE +x bin/termux-my-config {{{
+#!/bin/sh
+command -v termux-reload-settings || { echo "termux-reload-settings is not available"; exit 1; }
+[ -z "$1" ] && color=light || color=dark
+[ -z "$1" ] && echo "Using light mode. Use 'termux-my-config 1' for dark mode"
+COLORFILE=~/.termux/colors.properties
+PROPFILE=~/.termux/termux.properties
+[ -e "$COLORFILE" ] && { cp "$COLORFILE" "$COLORFILE.$(date +%s)"; }
+[ -e "$PROPFILE" ] && { cp "$PROPFILE" "$PROPFILE$(date +%s)"; }
+if [ "$color" = light ]; then
+    {
+        echo "foreground=#000"
+        echo "background=#fff"
+        echo "cursor=#722"
+        echo
+        echo "color0=#e8e6e4"
+        echo "color1=#ef5253"
+        echo "color2=#5ca824"
+        echo "color3=#c49500"
+        echo "color4=#33b5e1"
+        echo "color5=#a363d5"
+        echo "color6=#32ab90"
+        echo "color7=#18262f"
+        echo
+        echo "color8=#b6bfc8"
+        echo "color9=#ff6263"
+        echo "color10=#6cb834"
+        echo "color11=#d4a50c"
+        echo "color12=#23a5d1"
+        echo "color13=#b373d5"
+        echo "color14=#42bba0"
+        echo "color15=#78868f"
+    } > "$COLORFILE"
+else
+    {
+        echo "foreground=#D0D0D0"
+        echo "background=#151515"
+        echo "cursor=#ffcccc"
+        echo
+        echo "color0=#18262f"
+        echo "color1=#ef5253"
+        echo "color2=#7cc844"
+        echo "color3=#e4b51c"
+        echo "color4=#33b5e1"
+        echo "color5=#a363d5"
+        echo "color6=#52cbb0"
+        echo "color7=#a6afb8"
+        echo
+        echo "color8=#78868f"
+        echo "color9=#ff6263"
+        echo "color10=#8cd854"
+        echo "color11=#f4c52c"
+        echo "color12=#43c5f1"
+        echo "color13=#b373d5"
+        echo "color14=#62dbc0"
+        echo "color15=#b6bfc8"
+    } > "$COLORFILE"
+fi
+{
+    echo "# vibrate, beep, ignore"
+    echo "bell-character=ignore"
+    echo
+    echo "# back, escape"
+    echo "back-key=back"
+    echo
+    echo "extra-keys = [ \\"
+    echo " ['ESC', '~', '/',    '|',   '{', '}', 'HOME', 'UP',   'END'  ], \\"
+    echo " ['TAB', '>', 'CTRL', 'ALT', '[', ']', 'LEFT', 'DOWN', 'RIGHT']  \\"
+    echo "]"
+} > "$PROPFILE"
+termux-reload-settings
+#- }}}
+
+
 ####FILE +x bin/tmux-comp {{{
 #!/bin/sh
 
@@ -129,9 +209,15 @@ tmp=${info#*client_height=}; h=${tmp%%:*}
 export q
 q=$(tmux capturep -J -p -S "$cy" -E "$cy" | cut -c-"$cx" | grep -oE '\w+$' || echo)
 
+p1='[[:alnum:]]{4,}'
+p2='[-+@.[:alnum:]]{4,}'
+p3='[-+@./[:alnum:]]{4,}'
+
 cs="tmux "
 for i in $(tmux lsp -a -F '#D'); do cs="$cs capturep -J -pt $i \; "; done
-cs="$cs | grep -oE '\w{4,}' | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
+# cs="$cs | grep -oE '\w{4,}' | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
+# cs="$cs | { { { tee /dev/fd/3 | grep -oE '$p1' >&4; } 3>&1 | grep -oE '$p2'; } 4>&1; } | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
+cs="$cs | { { { { tee /dev/fd/4 /dev/fd/5 | grep -oE '$p1' >&3; } 4>&1 | grep -oE '$p2' >&3; } 5>&1 | grep -oE '$p3'; } 3>&1; } | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
 
 if ! command -v fzf >/dev/null; then
     s=$(eval "$cs" | head -n $((h - 2)) | awk -v q="$q" -v l="${#q}" "{a=\$0; printf \"'%s' '%c' '\", a, NR+47+(NR>10)*39-(NR>36)*58; if (l) { printf \"send -N %d BSpace ; \", l } printf \"send -l \\\"%s\\\"' \", a}")
@@ -143,7 +229,7 @@ cmd='
   s=$(eval "$cs" | fzf --no-color --color bw --info hidden --prompt "  " --pointer " " --print-query -q "$q")
   [ $? -ne 130 ] && { s=$(echo "$s" | tail -n1); tmux ${q:+send -t "$t" -N "${#q}" BSpace \;} send -t "$t" -l "$s " 2>/dev/null; }
   exit 0'
-tmux popup -EB -e "cs=$cs" -e "t=$t" -e "q=$q" -w 20 -h 8 -x $(expr $px + $cx - "${#q}" - 2) -y $(expr $py + $cy + 1) "$cmd" \
+tmux popup -EB -e "cs=$cs" -e "t=$t" -e "q=$q" -w 35 -h 8 -x $(expr $px + $cx - "${#q}" - 2) -y $(expr $py + $cy + 1) "$cmd" \
     || tmux splitw -e "cs=$cs" -e "t=$t" -e "q=$q" -l 8 "$cmd"
 #- }}}
 
@@ -227,16 +313,16 @@ Tab:    menu-complete
 "\C-w": shell-backward-kill-word
 "\e[A": history-search-backward
 "\e[B": history-search-forward
-set show-all-if-ambiguous on        # Tab -> partial completion and show candidates
-set show-all-if-unmodified on       #
-set colored-stats on                # Color files by types
-set visible-stats on                # Append char to indicate type
-set mark-symlinked-directories on   # Mark symlinked directories
-set colored-completion-prefix on    # Color the common prefix
-set menu-complete-display-prefix on # Color the common prefix in menu-complete
-set eo-control-characters off     # Don't show ^C etc.
-set enable-bracketed-paste off      # Workaround (https://github.com/hanslub42/rlwrap/issues/108)
-set completion-ignore-case on       # Case insensitive completion
+set show-all-if-ambiguous        on  # Tab -> partial completion and show candidates
+set show-all-if-unmodified       on  #
+set colored-stats                on  # Color files by types
+set visible-stats                on  # Append char to indicate type
+set mark-symlinked-directories   on  # Mark symlinked directories
+set colored-completion-prefix    on  # Color the common prefix
+set menu-complete-display-prefix on  # Color the common prefix in menu-complete
+set eo-control-characters        off # Don't show ^C etc.
+set enable-bracketed-paste       off # Workaround (https://github.com/hanslub42/rlwrap/issues/108)
+set completion-ignore-case       on  # Case insensitive completion
 #- }}}
 
 
@@ -278,7 +364,7 @@ bind -n F3  next-window
 bind -n F4  select-pane -t :.+
 
 # Completion using fzf
-bind    Tab   run "$TMUX_ROOT/bin/tmux-comp"
+bind    Tab      run "$TMUX_ROOT/bin/tmux-comp"
 
 if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
@@ -287,6 +373,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 ####FILE -- vimrc {{{
 #| " vim
 #| if filereadable($VIMRUNTIME . "/defaults.vim") | source $VIMRUNTIME/defaults.vim | endif
+#| aug view|exe "au!"|exe "au BufWinLeave * mkvie"|exe "au BufWinEnter * sil! lo"|aug END
 #| set et nocp sm hid
 #| syntax on| filetype on| filetype plugin indent on
 #| set ls=2 stl=[%{&readonly?'R':''}%{&modified?'+':'-'}]\ \ %<%f%*%=%-10.(%l,%c%V%)\ %y%6.(%P%)
@@ -294,7 +381,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| set ai sw=4 ts=4 sr mouse=av so=1 siso=5 tw=0 nu sb spr cf acd wic ic scs is hls ttm=0 t_Co=16
 #| for i in range(1, 16) | for j in ["", "s-", "c-"] | for k in ["", "i", "c"] | exe k . "nore <" . j . "f" . i . "> <nop>" | endfor | endfor | endfor
 #| nn Q :q<cr>| ino <s-f13> <nop>| ino <c-f14> <nop>| nn D dd| nn Y yy| nn ss :sp<cr>| nn sv :vsp<cr>| nn sb :bd<cr>| nn so <c-w>o| nn :<cr> :wa<cr>| nn <a-j> J| nn - <c-w>w| nnore + :tabnext<cr>| nn > >>| nn <lt> <lt><lt>| nn U <c-r>
-#| no <esc>[25;2~ <nop>| ino <esc>[25;2~ <nop>| no <esc>[26;5~ <nop>| ino <esc>[26;5~ <nop>
+#| " no <esc>[25;2~ <nop>| ino <esc>[25;2~ <nop>| no <esc>[26;5~ <nop>| ino <esc>[26;5~ <nop>
 #| no j gj| no k gk| no gj j| no gk k| no J <c-d>| no K <c-u>| no h h| no l l| no gh 0| no gl <end>| no i i| no I I| no si s| no n n| no N N| no e e| no E E| ono e e| ono E E| ono h 0| ono l $| ono iw iw| ono iW iW
 #| if $MYKBD == "colemakdh" | no n gj| no e gk| no gn j| no ge k| no N <c-d>| no E <c-u>| no k h| no i l| no gk 0| no gi <end>| no l i| no L I| no sl s| no j n| no J N| no h e| no H E| ono h e| ono H E| ono k 0| ono i $| ono lw iw| ono lW iW| endif
 #| ono m %|nn m %
@@ -304,7 +391,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| inore <tab>       <c-n>
 #| inore <plug>MyTab <c-n>
 #| inore <s-tab>     <c-p>
-#| inore <return>    <c-y><return>
+#| inore <expr> <cr> pumvisible() ? "\<c-y>\<cr>" : "\<cr>"
 #| set shm+=c cot=menuone,noinsert,noselect inf
 #| " Auto complete (https://stackoverflow.com/questions/35837990)
 #| fu! OpenCompletion()
