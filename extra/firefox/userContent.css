@@ -114,7 +114,7 @@
 
 @-moz-document domain("zenn.dev") {
 	header, aside, #share, #share ~ *, #discuss, footer { display: none !important }
-	div[class^=View_stickyShare], div[class^=View_topics] { display: none !important }
+	div[class^=View_stickyShare], div[class^=View_topics], a[class^=Button_secondary] { display: none !important }
 	section { margin: auto !important }
 }
 
