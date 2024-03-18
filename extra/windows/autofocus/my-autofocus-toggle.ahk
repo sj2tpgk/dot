@@ -1,0 +1,1 @@
+Run, powershell  -noLogo -ExecutionPolicy unrestricted -file "%A_ScriptDir%\my-autofocus.ps1",, Hide
