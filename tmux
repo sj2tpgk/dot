@@ -403,6 +403,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|         " feedkeys("\<c-n>", "") will mess up repeating
 #|     endif
 #| endfu
-#| au InsertCharPre * call OpenCompletion()
+#| " au InsertCharPre * call OpenCompletion()
 #| hi Pmenu ctermbg=black ctermfg=magenta
 #- }}}
