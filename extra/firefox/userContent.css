@@ -1,7 +1,7 @@
 /* @import url("UserStyles/test.css"); */
 /* Note: @import must be at the BEGINNING of file */
 
-/* Note: userContens.css has less priority than page's css. So !important is needed to rules set by page's css. */
+/* Note: userContens.css has less priority than page's css. So !important is needed when conflicting with page's css. */
 
 
 /* ==== Firefox special pages and extension pages ==== */
@@ -104,6 +104,7 @@
   [id^=GlobalHeader],
   .style-yrmhnf, /* scores */
   .style-i43zkt, /* user name */
+  .style-172y6pz, /* flair at article top */
   .it-MdContent ~ *, /* footer 1 */
   .p-items_main > *:nth-child(2), /* footer 2 */
   footer /* footer 3 */
@@ -132,8 +133,16 @@
 	{ display: none }
 }
 
+@-moz-document domain("gigazine.net") {
+    #donation_wrapper, .p-category, header, aside, .article, .article ~ *, .items, footer, a[href*=envato] { display: none !important }
+    .yeartime { font-size: small !important }
+    .title { background: white !important; color: #222 !important }
+    #article { border: none !important }
+    #URLClip { border: none !important; color: darkblue !important; text-decoration: underline }
+}
+
 @-moz-document domain("impress.co.jp") {
-	.to-top { display: none !important }
+	#extra, .to-top { display: none !important }
 }
 
 @-moz-document domain("developer.mozilla.org") {

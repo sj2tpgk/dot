@@ -212,7 +212,7 @@ q=$(tmux capturep -J -p -S "$cy" -E "$cy" | cut -c-"$cx" | grep -oE '\w+$' || ec
 
 p1='[[:alnum:]]{4,}'
 p2='[-+@.[:alnum:]]{4,}'
-p3='[-+@./[:alnum:]]{4,}'
+p3='[-+@./:[:alnum:]]{4,}'
 
 cs="tmux "
 for i in $(tmux lsp -a -F '#D'); do cs="$cs capturep -J -pt $i \; "; done
