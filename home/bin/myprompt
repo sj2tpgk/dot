@@ -160,13 +160,10 @@ function get_arrow() {
     return C["w"] ">>>"
 }
 
-function hash(s, n, add,    sum, i) {
-    sum = 0
+function hash(s, n, seed,    i) {
     for (i=1; i<=length(s); i++)
-        sum += ord(substr(s, i, 1))
-    sum += add
-    sum %= n
-    return sum
+        seed += ord(substr(s, i, 1))
+    return seed % n
 }
 
 function ord(c,    i) {
