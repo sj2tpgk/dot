@@ -8,7 +8,7 @@ errexit() { printf "\033[31;1mERROR: \033[0m%s\n" "$1" >&2; exit 1; }
 # Env vars and paths
 #   TMUX_ROOT          temporary files are stored here
 #   TMUX_SHELL         bash or fish; use this shell for default-command
-#   TMUX_SOCKET_NAME   socket name
+#   TMUX_SOCKET_NAME   socket name (if set externally, use that one)
 #   TMUX_bash          bash
 #   TMUX_fish          fish
 #   TMUX_cleanup       removes temporary files. run when last session dies
@@ -63,21 +63,22 @@ _init() {
 
 printf '\033[2 q' # block cursor
 
-if [ $# -eq 0 ]; then
+if :; then
+    # Regen conf
     _init
+    # Export env vars
     TMUX_SOCKET_NAME=${TMUX_SOCKET_NAME:-default}
     export TMUX_SOCKET_NAME="$TMUX_SOCKET_NAME"
+
     if [ 0 -eq $(tmux -L "$TMUX_SOCKET_NAME" list-sessions 2>/dev/null | wc -l) ]; then
+        # If no session => create one
         tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf"
     else
+        # If session exists => reload config and run tmux command
         echo Regenerated files in "$TMUX_ROOT"
         tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf" source "$TMUX_ROOT/tmux.conf"
-        tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf" attach
+        tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf" "$@"
     fi
-else
-    echo "Usage: ./tmux"
-    echo "To use diffeent socket name, set \$TMUX_SOCKET_NAME (default: default)"
-    errexit "arguments are not allowed: $*"
 fi
 
 exit # Do not remove this exit
@@ -211,7 +212,7 @@ q=$(tmux capturep -J -p -S "$cy" -E "$cy" | cut -c-"$cx" | grep -oE '\w+$' || ec
 
 p1='[[:alnum:]]{4,}'
 p2='[-+@.[:alnum:]]{4,}'
-p3='[-+@./[:alnum:]]{4,}'
+p3='[-+@./:[:alnum:]]{4,}'
 
 cs="tmux "
 for i in $(tmux lsp -a -F '#D'); do cs="$cs capturep -J -pt $i \; "; done
@@ -402,6 +403,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|         " feedkeys("\<c-n>", "") will mess up repeating
 #|     endif
 #| endfu
-#| au InsertCharPre * call OpenCompletion()
+#| " au InsertCharPre * call OpenCompletion()
 #| hi Pmenu ctermbg=black ctermfg=magenta
 #- }}}
