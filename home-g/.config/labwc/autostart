@@ -1,0 +1,9 @@
+# Example autostart file
+
+# Set background color.
+swaybg -c '#21282b' >/dev/null 2>&1 &
+sfwbar -f t2.config &
+sudo /usr/bin/keyd &
+foot -s -o colors.alpha=0.9 -o letter-spacing=1 -f UnifontMy:pixelsize=16 &
+uim-xim &
+

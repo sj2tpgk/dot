@@ -1,0 +1,88 @@
+labwc_config:
+
+  core:
+    gap:               3
+    linux:             good
+
+  focus:
+    followMouse: yes
+
+  windowSwitcher show="no" preview="yes" outlines="no":
+
+  desktops:
+    names:
+      name: Desk 1
+      name: Desk 2
+      name: Desk 3
+      name: Desk 4
+      name: Desk 5
+    popupTime: 0
+
+  theme:
+    name:         themerc
+    cornerRadius: 6
+    font:
+      name:   UnifontMy
+      size:   12
+      weight: bold
+
+  keyboard:
+    default:
+    repeatDelay: 180
+    repeatRate:  45
+    keybind key="F1":
+      action name="GoToDesktop" to="left":
+    keybind key="F2":
+      action name="GoToDesktop" to="right":
+    keybind key="S-F1":
+      action name="SendToDesktop" to="left":
+    keybind key="S-F2":
+      action name="SendToDesktop" to="right":
+
+    keybind key="A-Left":
+      action name="None":
+    keybind key="A-Right":
+      action name="None":
+
+    keybind key="W-n":
+      action name="NextWindow":
+
+    # Dynabook special keys
+    #   F1-F12 with Fn: XF86ScreenSaver XF86Battery XF86Sleep XF86Suspend   XF86Display XF86MonBrightnessDown XF86MonBrightnessUp XF86WLAN   XF86TouchpadToggle (numpad) (numlock) Scroll_Lock
+    #   1-4 with Fn: XF86ZoomOut XF86ZoomIn XF86AudioLowerVolume XF86AudioRaiseVolume
+    keybind key="XF86AudioMute":
+      action name="Execute" command="~/script/mute":
+    keybind key="XF86AudioLowerVolume":
+      action name="Execute" command="~/script/volume -4%":
+    keybind key="XF86AudioRaiseVolume":
+      action name="Execute" command="~/script/volume +4%":
+    keybind key="XF86MonBrightnessDown":
+      action name="Execute" command="~/script/brightness -10":
+    keybind key="XF86MonBrightnessUp":
+      action name="Execute" command="~/script/brightness +10":
+
+    keybind key="W-F5":
+      action name="Execute" command="sh -c 'cd ~/.config/labwc; awk -f yaml2xml.awk rc.yaml > rc.xml'":
+      action name="Reconfigure":
+    keybind key="W-Return":
+      action name="Execute" command="footclient -o colors.alpha=0.9 -o letter-spacing=0":
+
+  mouse:
+    default:
+    context name="Root":
+      mousebind button="Right" action="Press":
+        action name="ShowMenu" menu="root-menu":
+      mousebind button="Left" action="Press":
+        action name="ShowMenu" menu="some-custom-menu":
+    context name="Bottom":
+      mousebind button="Right" action="Press":
+        action name="NextWindow":
+        action name="Focus":
+
+  libinput:
+    device category="touchpad":
+      naturalScroll: true
+      pointerSpeed: 1.0
+      accelProfile: flat
+
+

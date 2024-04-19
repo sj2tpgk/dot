@@ -1,0 +1,123 @@
+<labwc_config>
+  <core>
+    <gap>3</gap>
+    <linux>good</linux>
+  </core>
+  <focus>
+    <followMouse>yes</followMouse>
+  </focus>
+  <windowSwitcher show="no" preview="yes" outlines="no">
+  </windowSwitcher>
+  <desktops>
+    <names>
+      <name>Desk 1</name>
+      <name>Desk 2</name>
+      <name>Desk 3</name>
+      <name>Desk 4</name>
+      <name>Desk 5</name>
+    </names>
+    <popupTime>0</popupTime>
+  </desktops>
+  <theme>
+    <name>themerc</name>
+    <cornerRadius>6</cornerRadius>
+    <font>
+      <name>UnifontMy</name>
+      <size>12</size>
+      <weight>bold</weight>
+    </font>
+  </theme>
+  <keyboard>
+    <default>
+    </default>
+    <repeatDelay>180</repeatDelay>
+    <repeatRate>45</repeatRate>
+    <keybind key="F1">
+      <action name="GoToDesktop" to="left">
+      </action>
+    </keybind>
+    <keybind key="F2">
+      <action name="GoToDesktop" to="right">
+      </action>
+    </keybind>
+    <keybind key="S-F1">
+      <action name="SendToDesktop" to="left">
+      </action>
+    </keybind>
+    <keybind key="S-F2">
+      <action name="SendToDesktop" to="right">
+      </action>
+    </keybind>
+    <keybind key="A-Left">
+      <action name="None">
+      </action>
+    </keybind>
+    <keybind key="A-Right">
+      <action name="None">
+      </action>
+    </keybind>
+    <keybind key="W-n">
+      <action name="NextWindow">
+      </action>
+    </keybind>
+    <keybind key="XF86AudioMute">
+      <action name="Execute" command="~/script/mute">
+      </action>
+    </keybind>
+    <keybind key="XF86AudioLowerVolume">
+      <action name="Execute" command="~/script/volume -4%">
+      </action>
+    </keybind>
+    <keybind key="XF86AudioRaiseVolume">
+      <action name="Execute" command="~/script/volume +4%">
+      </action>
+    </keybind>
+    <keybind key="XF86MonBrightnessDown">
+      <action name="Execute" command="~/script/brightness -10">
+      </action>
+    </keybind>
+    <keybind key="XF86MonBrightnessUp">
+      <action name="Execute" command="~/script/brightness +10">
+      </action>
+    </keybind>
+    <keybind key="W-F5">
+      <action name="Execute" command="sh -c 'cd ~/.config/labwc; awk -f yaml2xml.awk rc.yaml > rc.xml'">
+      </action>
+      <action name="Reconfigure">
+      </action>
+    </keybind>
+    <keybind key="W-Return">
+      <action name="Execute" command="footclient -o colors.alpha=0.9 -o letter-spacing=0">
+      </action>
+    </keybind>
+  </keyboard>
+  <mouse>
+    <default>
+    </default>
+    <context name="Root">
+      <mousebind button="Right" action="Press">
+        <action name="ShowMenu" menu="root-menu">
+        </action>
+      </mousebind>
+      <mousebind button="Left" action="Press">
+        <action name="ShowMenu" menu="some-custom-menu">
+        </action>
+      </mousebind>
+    </context>
+    <context name="Bottom">
+      <mousebind button="Right" action="Press">
+        <action name="NextWindow">
+        </action>
+        <action name="Focus">
+        </action>
+      </mousebind>
+    </context>
+  </mouse>
+  <libinput>
+    <device category="touchpad">
+      <naturalScroll>true</naturalScroll>
+      <pointerSpeed>1.0</pointerSpeed>
+      <accelProfile>flat</accelProfile>
+    </device>
+  </libinput>
+</labwc_config>
