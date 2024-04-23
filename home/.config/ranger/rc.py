@@ -48,7 +48,7 @@ def rc_py_main():
     map <f5>   reload_config
     map cw     smart_rename
 
-    map <f8>   shell -s mv %s /home/${USER}/.trash
+    map <f8>   chain shell -s mkdir -p /home/${USER}/.trash ; shell -s mv %s /home/${USER}/.trash/
     map d<f8>  console delete
     map zd     console delete
     map zt     console touch%space

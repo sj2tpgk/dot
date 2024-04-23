@@ -653,9 +653,16 @@ fu! MyHighlight_TS()
 
 endfu
 
+fu! MyHighlight_RX()
+    "syn clear yamlBlockMappingKey
+    "syn match yamlBlockMappingKey /\_s*\zs\K\+/
+    "hi link yamlBlockMappingKey Normal
+endfu
+
 fu! MyHighlight2()
     call MyHighlight_UI()
     call MyHighlight_TS()
+    call MyHighlight_RX()
 endfu
 
 call MyHighlight2()

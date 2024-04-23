@@ -1,0 +1,10 @@
+[Unit]
+Description=Labwc config auto reload
+
+[Service]
+WorkingDirectory=%h
+ExecStart=%h/.config/labwc/_reload
+Type=oneshot
+
+[Install]
+WantedBy=default.target

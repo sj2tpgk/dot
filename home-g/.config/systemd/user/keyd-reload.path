@@ -1,0 +1,8 @@
+[Unit]
+Description=Keyd config auto reload
+
+[Path]
+PathChanged=%h/.config/keyd.conf
+
+[Install]
+WantedBy=default.target

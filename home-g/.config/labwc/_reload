@@ -1,0 +1,7 @@
+#!/bin/sh
+
+cd "$(dirname "$0")" || exit 1
+
+./_yml2xml -- rc.yml   > rc.xml
+./_yml2xml -- menu.yml > menu.xml
+LABWC_PID=$(pgrep labwc|head -n1) labwc -r

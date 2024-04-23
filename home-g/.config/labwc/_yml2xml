@@ -1,4 +1,10 @@
-# Usage: awk -f yaml2xml.awk rc.yaml > rc.xml
+#!/bin/awk -f
+
+# First argument must be "--"
+# Colons (:) in strings must be escaped as <COLON>
+
+# Usage: ./_yml2xml  --   in.yml > out.xml
+#        awk -f _yaml2xml in.yml > out.xml
 
 BEGIN {
     stk[0] = 0
@@ -23,11 +29,13 @@ BEGIN {
 
     # print "{" $0 "}{" tagattrs "}{" tag "}{" val "}"
     if (val) {
-        print indent(lev*sw) "<" tagattrs ">" val "</" tag ">"
+        line = indent(lev*sw) "<" tagattrs ">" val "</" tag ">"
     } else {
-        print indent(lev*sw) "<" tagattrs ">"
+        line = indent(lev*sw) "<" tagattrs ">"
         stk[++stk[0]] = tag
     }
+    gsub("<COLON>", ":", line)
+    print line
 
 }
 

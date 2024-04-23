@@ -1,0 +1,10 @@
+[Unit]
+Description=Labwc config auto reload
+
+[Path]
+PathChanged=%h/.config/labwc/menu.yml
+PathChanged=%h/.config/labwc/rc.yml
+PathChanged=%h/.config/labwc/themerc-override
+
+[Install]
+WantedBy=default.target

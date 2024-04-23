@@ -1,0 +1,73 @@
+openbox_menu:
+
+  menu id="client-menu":
+    item label="Minimize":
+      action name="Iconify":
+    item label="Maximize":
+      action name="ToggleMaximize":
+    item label="Fullscreen":
+      action name="ToggleFullscreen":
+    item label="Roll up/down":
+      action name="ToggleShade":
+    item label="Decorations":
+      action name="ToggleDecorations":
+    item label="Always on Top":
+      action name="ToggleAlwaysOnTop":
+
+    # Any menu with the id "workspaces" is hidden when there is only one workspace
+    menu id="workspaces" label="Workspace":
+      item label="Move left":
+        action name="SendToDesktop" to="left":
+      item label="Move right":
+        action name="SendToDesktop" to="right":
+      separator:
+      item label="Always on Visible Workspace":
+        action name="ToggleOmnipresent":
+
+    item label="Close":
+      action name="Close":
+
+  menu id="root-menu":
+    item label="Labwc 0.7.1":
+
+    menu id="Internet" label="Internet":
+      item label="Internet":
+        action name="Execute" command="firefox":
+      item label="VNC Client":
+        action name="Execute" command="~/script-local/vnc":
+
+    menu id="Utils" label="Utils":
+      item label="Files":
+        action name="Execute" command="pcmanfm":
+      item label="tmux (dark)":
+        action name="Execute" command="footclient -e uim-fep -e tmux":
+      item label="sh   (dark)":
+          action name="Execute" command="foot -e /bin/sh":
+      item label="tmux (light)":
+        action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=UnifontMy<COLON>style=bold<COLON>pixelsize=16 -e sh -c \"MY_DARK=0 exec uim-fep -e tmux\""':
+      item label="sh   (light)":
+        action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=UnifontMy<COLON>style=bold<COLON>pixelsize=16 -e sh -c \"MY_DARK=0 exec /bin/sh\""':
+
+    menu id="Media" label="Media":
+      item label="Inkscape":
+        action name="Execute" command="inkscape":
+      item label="Draw.io":
+        action name="Execute" command="draw.io":
+
+    menu id="Labwc" label="Labwc":
+      item label="Reconfigure":
+        action name="Reconfigure":
+      item label="Exit":
+        action name="Exit":
+      item label="Poweroff":
+        action name="Execute" command="systemctl -i poweroff":
+
+  menu id="some-custom-menu":
+    item label="Reconfigure":
+      action name="Reconfigure":
+    item label="Exit":
+      action name="Exit":
+
+
+
+

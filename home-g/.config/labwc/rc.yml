@@ -61,9 +61,14 @@ labwc_config:
     keybind key="XF86MonBrightnessUp":
       action name="Execute" command="~/script/brightness +10":
 
+    # cannot bind "Print" or "W-Print" for some reason
+    keybind key="W-P":
+      action name="Execute" command="grim":
+
     keybind key="W-F5":
-      action name="Execute" command="sh -c 'cd ~/.config/labwc; awk -f yaml2xml.awk rc.yaml > rc.xml'":
-      action name="Reconfigure":
+      action name="Execute" command="sh -c 'cd ~/.config/labwc; ./_reload'":
+    keybind key="W-F11":
+      action name="ToggleFullscreen":
     keybind key="W-Return":
       action name="Execute" command="footclient -o colors.alpha=0.9 -o letter-spacing=0":
 

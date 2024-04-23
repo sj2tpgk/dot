@@ -80,10 +80,16 @@
       <action name="Execute" command="~/script/brightness +10">
       </action>
     </keybind>
-    <keybind key="W-F5">
-      <action name="Execute" command="sh -c 'cd ~/.config/labwc; awk -f yaml2xml.awk rc.yaml > rc.xml'">
+    <keybind key="W-P">
+      <action name="Execute" command="grim">
       </action>
-      <action name="Reconfigure">
+    </keybind>
+    <keybind key="W-F5">
+      <action name="Execute" command="sh -c 'cd ~/.config/labwc; ./_reload'">
+      </action>
+    </keybind>
+    <keybind key="W-F11">
+      <action name="ToggleFullscreen">
       </action>
     </keybind>
     <keybind key="W-Return">

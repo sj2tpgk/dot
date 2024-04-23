@@ -1,0 +1,9 @@
+[Unit]
+Description=Labwc config auto reload
+
+[Service]
+ExecStart=/bin/sudo /bin/keyd reload
+Type=oneshot
+
+[Install]
+WantedBy=default.target

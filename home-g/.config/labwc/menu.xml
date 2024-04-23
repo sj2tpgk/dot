@@ -1,81 +1,118 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
 <openbox_menu>
-<!-- Note: for localization support of menu items "client-menu" has to be removed here -->
-<menu id="client-menu">
-  <item label="Minimize">
-    <action name="Iconify" />
-  </item>
-  <item label="Maximize">
-    <action name="ToggleMaximize" />
-  </item>
-  <item label="Fullscreen">
-    <action name="ToggleFullscreen" />
-  </item>
-  <item label="Roll up/down">
-    <action name="ToggleShade" />
-  </item>
-  <item label="Decorations">
-    <action name="ToggleDecorations" />
-  </item>
-  <item label="Always on Top">
-    <action name="ToggleAlwaysOnTop" />
-  </item>
-  <!--
-    Any menu with the id "workspaces" will be hidden
-    if there is only a single workspace available.
-  -->
-  <menu id="workspaces" label="Workspace">
-    <item label="Move left">
-      <action name="SendToDesktop" to="left" />
+  <menu id="client-menu">
+    <item label="Minimize">
+      <action name="Iconify">
+      </action>
     </item>
-    <item label="Move right">
-      <action name="SendToDesktop" to="right" />
+    <item label="Maximize">
+      <action name="ToggleMaximize">
+      </action>
     </item>
-    <separator />
-    <item label="Always on Visible Workspace">
-      <action name="ToggleOmnipresent" />
+    <item label="Fullscreen">
+      <action name="ToggleFullscreen">
+      </action>
     </item>
-  </menu>
-  <item label="Close">
-    <action name="Close" />
-  </item>
-</menu>
-
-<menu id="root-menu">
-  <item label="Labwc 0.7.1">
-  </item>
-  <item label="Web browser">
-    <action name="Execute" command="firefox" />
-  </item>
-  <item label="Terminal">
-    <action name="Execute" command="footclient -o colors.alpha=0.9 -o letter-spacing=0" />
-  </item>
-  <item label="Reconfigure">
-    <action name="Reconfigure" />
-  </item>
-  <menu id="Network" label="Network">
-    <item label="VNC Client">
-      <action name="Execute" command="~/script-local/vnc" />
+    <item label="Roll up/down">
+      <action name="ToggleShade">
+      </action>
+    </item>
+    <item label="Decorations">
+      <action name="ToggleDecorations">
+      </action>
+    </item>
+    <item label="Always on Top">
+      <action name="ToggleAlwaysOnTop">
+      </action>
+    </item>
+    <menu id="workspaces" label="Workspace">
+      <item label="Move left">
+        <action name="SendToDesktop" to="left">
+        </action>
+      </item>
+      <item label="Move right">
+        <action name="SendToDesktop" to="right">
+        </action>
+      </item>
+      <separator>
+      </separator>
+      <item label="Always on Visible Workspace">
+        <action name="ToggleOmnipresent">
+        </action>
+      </item>
+    </menu>
+    <item label="Close">
+      <action name="Close">
+      </action>
     </item>
   </menu>
-  <menu id="Labwc" label="Labwc">
+  <menu id="root-menu">
+    <item label="Labwc 0.7.1">
+    </item>
+    <menu id="Internet" label="Internet">
+      <item label="Internet">
+        <action name="Execute" command="firefox">
+        </action>
+      </item>
+      <item label="VNC Client">
+        <action name="Execute" command="~/script-local/vnc">
+        </action>
+      </item>
+    </menu>
+    <menu id="Utils" label="Utils">
+      <item label="Files">
+        <action name="Execute" command="pcmanfm">
+        </action>
+      </item>
+      <item label="tmux (dark)">
+        <action name="Execute" command="footclient -e uim-fep -e tmux">
+        </action>
+      </item>
+      <item label="sh   (dark)">
+          <action name="Execute" command="foot -e /bin/sh">
+        </action>
+      </item>
+      <item label="tmux (light)">
+        <action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=UnifontMy:style=bold:pixelsize=16 -e sh -c \"MY_DARK=0 exec uim-fep -e tmux\""'>
+        </action>
+      </item>
+      <item label="sh   (light)">
+        <action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=UnifontMy:style=bold:pixelsize=16 -e sh -c \"MY_DARK=0 exec /bin/sh\""'>
+        </action>
+      </item>
+    </menu>
+    <menu id="Media" label="Media">
+      <item label="Inkscape">
+        <action name="Execute" command="inkscape">
+        </action>
+      </item>
+      <item label="Draw.io">
+        <action name="Execute" command="draw.io">
+        </action>
+      </item>
+    </menu>
+    <menu id="Labwc" label="Labwc">
+      <item label="Reconfigure">
+        <action name="Reconfigure">
+        </action>
+      </item>
+      <item label="Exit">
+        <action name="Exit">
+        </action>
+      </item>
+      <item label="Poweroff">
+        <action name="Execute" command="systemctl -i poweroff">
+        </action>
+      </item>
+    </menu>
+  </menu>
+  <menu id="some-custom-menu">
+    <item label="Reconfigure">
+      <action name="Reconfigure">
+      </action>
+    </item>
     <item label="Exit">
-      <action name="Exit" />
-    </item>
-    <item label="Poweroff">
-      <action name="Execute" command="systemctl -i poweroff" />
+      <action name="Exit">
+      </action>
     </item>
   </menu>
-</menu>
-
-<menu id="some-custom-menu">
-  <item label="Reconfigure">
-    <action name="Reconfigure" />
-  </item>
-  <item label="Exit">
-    <action name="Exit" />
-  </item>
-</menu>
-
 </openbox_menu>

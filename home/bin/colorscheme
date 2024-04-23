@@ -1,0 +1,96 @@
+#!/bin/sh
+
+colors=${1:-myd}
+output=${2:-foot}
+
+f_rangef() {
+    # f_range a b x
+    # convert 0..a to 0..b
+    awk "BEGIN{printf \"%f\", ($2*$3)/($1); exit}"
+}
+
+colors_myd() {
+    back=10191f
+    fore=c6cfd8
+    curf=222222
+    curb=f9f5f4
+    alph=85
+
+    dk=18262F
+    bk=38464F
+    dr=EF5253
+    br=FF6263
+    dg=7CC844
+    bg=8CD854
+    dy=E4B51C
+    by=F4C52C
+    db=33B5E1
+    bb=43C5F1
+    dm=A363D5
+    bm=B373E5
+    dc=52CBB0
+    bc=62DBC0
+    dw=C6CfD8
+    bw=D6DFD8
+}
+
+colors_myb() {
+    back=f4f2f2
+    fore=444433
+    curf=f4f2f2
+    curb=333333
+    alph=93
+
+    dk=f8f4f4
+    bk=f8f4f4
+    dr=ee2222
+    br=ff3333
+    dg=006600
+    bg=228822
+    dy=c07700
+    by=c88018
+    db=1111aa
+    bb=3333cc
+    dm=aa5599
+    bm=bb66aa
+    dc=008888
+    bc=00aaaa
+    dw=444433
+    bw=444433
+}
+
+copy_colors() {
+    # c_d_0=$dk c_b_0=$bk c_0=$dk c_8=$bk
+    j=0
+    for i in k r g y b m c w; do
+        eval "c_d_$j=\$d$i c_b_$j=\$b$i c_$j=\$d$i c_$((j + 8))=\$b$i"
+        j=$((j + 1))
+    done
+}
+
+output_foot() {
+    # echo \-o colors.regular2=ff0000
+    for i in $(seq 0 7); do eval "printf '%s ' \"-o colors.regular$i=\$c_d_$i\""; done
+    for i in $(seq 0 7); do eval "printf '%s ' \"-o colors.bright$i=\$c_b_$i\""; done
+    printf '%s ' "-o colors.foreground=$fore"
+    printf '%s ' "-o colors.background=$back"
+    printf '%s ' "-o colors.alpha=$(f_rangef 100 1.0 "$alph")"
+}
+
+output_osc4() {
+    # /bin/printf '\033]4;2;#ff0000;\007'
+    for i in $(seq 0 7); do eval "/bin/printf '\\033]4;$i;#\$c_d_$i;\\007'"; done
+    for i in $(seq 0 7); do eval "/bin/printf '\\033]4;$i;#\$c_b_$i;\\007'"; done
+}
+
+if ! type "colors_$colors" 2>/dev/null | grep -q function; then
+    echo "color scheme '$colors' is not defined"
+    exit 1
+elif ! type "output_$output" 2>/dev/null | grep -q function; then
+    echo "output type '$output' is not defined"
+    exit 1
+fi
+
+"colors_$colors"
+copy_colors
+"output_$output"
