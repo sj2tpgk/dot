@@ -1,5 +1,2 @@
-run __install.sh (or __install-g.sh when GUI) to install
+run install.sh (or install-g.sh when GUI) to install
 
-Todo
-store links in home-g/
-and when installing, find original files and link them
