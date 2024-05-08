@@ -2,7 +2,11 @@
 
 die() { printf "\033[1;31m%s\033[0m\n" "$*"; exit 1; }
 
-help() { echo "Usage: $0 [-o] SRCDIR DESTDIR"; echo "Options:"; echo "  -o  override"; }
+help() {
+    echo "Usage: $0 [-o] SRCDIR DESTDIR"
+    echo "Options:"
+    echo "    -o  override"
+}
 
 
 ## Parse params
