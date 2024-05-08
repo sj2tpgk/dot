@@ -1,0 +1,11 @@
+#!/bin/sh
+
+exec python -ic "
+from math import *
+from json import *
+import datetime as dt
+import os
+import re
+import urllib.parse as up
+import urllib.request as ur
+"

@@ -1,2 +1,4 @@
 border.width: 2
+window.active.border.color: #bbbbbb
+window.inactive.border.color: #dddddd
 padding.height: 1
