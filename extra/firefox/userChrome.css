@@ -1,7 +1,7 @@
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
 /* UI font */
-* { font-family: Droid Sans Japanese !important; }
+/* * { font-family: Droid Sans Japanese !important; } */
 
 /* Thin Scrollbar */
 .scroller { overflow-y: scroll; scrollbar-color: #0A4C95 #C2D2E4; }
@@ -92,3 +92,12 @@
 [data-ctl=items] > [data-active] { background: #eee; font-weight: bold }
 [data-theme=dark] [data-ctl=items] > [data-active] { background: #38383d }
 */
+
+
+/* force thin url bar */
+toolbar#nav-bar {
+  height: 29px;
+  margin-top: -9px;
+  background: #444 !important;
+}
+#urlbar-container { margin-top: 4px; }
