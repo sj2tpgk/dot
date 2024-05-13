@@ -97,8 +97,7 @@ do -- Plugins <<<
     -- Treesitter
     plug "nvim-treesitter/nvim-treesitter"
     -- plug "nvim-treesitter/playground"
-    -- plug "p00f/nvim-ts-rainbow"
-    plug "HiPhish/nvim-ts-rainbow2"
+    -- plug "HiPhish/nvim-ts-rainbow2"
 
     -- LSP
     plug "neovim/nvim-lspconfig"
@@ -1190,7 +1189,10 @@ if can_require"lspconfig" then -- Lsp <<<
     --setup("ccls",                   nil,                      { on_attach = on_attach, single_file_support = true })
     setup("clangd",                 nil,                      { on_attach = on_attach, single_file_support = true })
     setup("kotlin_language_server", "kotlin-language-server", { on_attach = on_attach })
+    --setup("pylsp",                  nil,                      { on_attach = on_attach, settings = { pylsp = { plugins = { pycodestyle = { ignore = {'W391'}, maxLineLength = 100 } } } } })
+    --setup("pylyzer",                nil,                      { on_attach = on_attach })
     setup("pyright",                nil,                      { on_attach = on_attach })
+    --setup("ruff_lsp",               "ruff",                   { on_attach = on_attach, init_options = { settings = { args = { "--config", 'lint.ignore = ["E401", "E731"]' } } } })
     setup("tsserver",               nil,                      { on_attach = on_attach, single_file_support = true })
     setup("tsserver",               "typescript-language-server.cmd", { on_attach = on_attach, single_file_support = true })
     setup("serve_d",                "serve-d",                { on_attach = on_attach, single_file_support = true })
