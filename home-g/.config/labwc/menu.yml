@@ -55,6 +55,8 @@ openbox_menu:
         action name="Execute" command="draw.io":
 
     menu id="Labwc" label="Labwc":
+      menu id="StopKeyd" label="Stop Keyd":
+        item label="Please press Esc+BS+Ret":
       item label="Reconfigure":
         action name="Reconfigure":
       item label="Exit":

@@ -1,11 +1,16 @@
 #!/bin/sh
 
-exec python -ic "
+code="\
 from math import *
 from json import *
 import datetime as dt
 import os
 import re
 import urllib.parse as up
-import urllib.request as ur
-"
+import urllib.request as ur"
+
+code="\
+$code
+print('''$code''')"
+
+exec python -ic "$code" "$@"

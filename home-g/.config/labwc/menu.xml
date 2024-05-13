@@ -91,6 +91,10 @@
       </item>
     </menu>
     <menu id="Labwc" label="Labwc">
+      <menu id="StopKeyd" label="Stop Keyd">
+        <item label="Please press Esc+BS+Ret">
+        </item>
+      </menu>
       <item label="Reconfigure">
         <action name="Reconfigure">
         </action>

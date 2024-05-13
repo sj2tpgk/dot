@@ -1,3 +1,6 @@
+@import url("userChrome-local.css");
+/* Note: @import must be at the BEGINNING of file */
+
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
 /* UI font */
@@ -15,8 +18,6 @@
 .browserContainer { background-color: #111111 !important; }
 
 /* Sidebar width */
-/* #sidebar { width: 12em !important; min-width: 2em !important; } */
-/* FF 107: #sidebar is now contained in #sidebar-box, and setting #sidebar width will make unnecessary space on the right of the sidebar content. */
 #sidebar-box { min-width: 2em !important; max-width: 100em !important; }
 
 /* Hide sidebar title */
@@ -43,6 +44,14 @@
 /* Disable firefox update notification (2022/12, v107) */
 #appMenu-update-restart-notification, #appMenu-update-manual-notification, #appMenu-update-available-notification, .toolbarbutton-badge { display: none !important; }
 .toolbarbutton-badge { display: none }
+
+/* force thin url bar */
+/* toolbar#nav-bar { */
+/*   height:     29px; */
+/*   margin-top: -9px; */
+/*   background: #444 !important; */
+/* } */
+/* #urlbar-container { margin-top: 4px; } */
 
 
 /* ---- FF 109 "Extensions" button in toolbar ---- */
@@ -84,6 +93,8 @@
 :root { --item-height: 2.4em }
 * { font-family: Droid Sans Japanese }
 
+[data-ctl=items] > [data-pinned] { border-right: solid #bbb 6px }
+
 [data-theme=dark] { background: #28282d }
 
 [data-ctl=items] > [data-item] { border-bottom: solid #ddd 1px; padding-left: 0.5em }
@@ -92,12 +103,3 @@
 [data-ctl=items] > [data-active] { background: #eee; font-weight: bold }
 [data-theme=dark] [data-ctl=items] > [data-active] { background: #38383d }
 */
-
-
-/* force thin url bar */
-toolbar#nav-bar {
-  height: 29px;
-  margin-top: -9px;
-  background: #444 !important;
-}
-#urlbar-container { margin-top: 4px; }
