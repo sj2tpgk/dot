@@ -9,18 +9,30 @@ def tolist(x):
     elif type(x) is list: return x
     else: raise Exception("err")
 
-def resolve(lis, query):
+def matchParen(pat, s):
+    # if pat = "[]" then matches s = "[_[__[]_]]_[]_" and returns ["_[__[]_]", "_[]_"]
+    nest = 0
+    for i, c in enumerate(s):
+        nest += 1 if c == pat[0] else (-1 if c == pat[1] else 0)
+        if nest <= 0 and i > 0: return [s[1:i], s[i+1:]]
+
+def jq(lis, query):
     # lis = list(lis); print(lis, query) # generators can be consumed at most once
     rkey = r"[^][.]+"
     rnum = r"[0-9]+"
-    if query == "." or query == "":
+    if query == "." or query == "": # .
         return list(lis)
-    elif m := re.match(rf"\.({rkey})", query):
-        return resolve((x[m[1]] for x in lis), query[m.end():])
-    elif m := re.match(rf"\.?\[\]", query):
-        return resolve(sum((tolist(x) for x in lis), []), query[m.end():])
-    elif m := re.match(rf"\.?\[({rnum})\]", query):
-        return resolve((x[int(m[1])] for x in lis), query[m.end():])
+    elif m := re.match(rf"\.({rkey})", query): # .key
+        return jq((x[m[1]] for x in lis), query[m.end():])
+    elif m := re.match(rf"\.?\[\]", query): # .[]
+        return jq(sum((tolist(x) for x in lis), []), query[m.end():])
+    elif m := re.match(rf"\.?\[({rnum})\]", query): # .[0]
+        return jq((x[int(m[1])] for x in lis), query[m.end():])
+    elif m := matchParen("[]", query): # [x]
+        return jq([jq(lis, m[0])], m[1])
+    assert False
+
+# should name above "jqm" and create wrapper "jq" which handles multiple inputs
 
 def gron(jso, compact, raw):
     result = []
@@ -39,21 +51,30 @@ def gron(jso, compact, raw):
 
 def _test():
     jso = { "a": { "a1": 10 }, "b": [ 20, "21", 22, "23" ], "c": { "c1": [31, 32], "c2": [33, 34] } }
-    def t(i, x, y): print(i, x==y, x, "" if x==y else y)
-    t(1, resolve([jso], "."),        [jso])
-    t(2, resolve([jso], ".a"),       [jso["a"]])
-    t(3, resolve([jso], ".b"),       [jso["b"]])
-    t(4, resolve([jso], ".[]"),      list(jso.values()))
-    t(5, resolve([jso], ".b[]"),     jso["b"])
-    t(6, resolve([jso], ".c.c2[1]"), [jso["c"]["c2"][1]])
-    t(7, resolve([jso], ".c[][1]"),  [x[1] for x in jso["c"].values()])
-    t(31, gron(jso, False, False), [ 'json = {};', 'json.a = {};', 'json.a.a1 = 10;', 'json.b = [];', 'json.b[0] = 20;', 'json.b[1] = "21";', 'json.b[2] = 22;', 'json.b[3] = "23";', 'json.c = {};', 'json.c.c1 = [];', 'json.c.c1[0] = 31;', 'json.c.c1[1] = 32;', 'json.c.c2 = [];', 'json.c.c2[0] = 33;', 'json.c.c2[1] = 34;' ])
-    t(32, gron(jso, True, False), [ 'json={}', 'json.a={}', 'json.a.a1=10', 'json.b=[]', 'json.b[0]=20', 'json.b[1]="21"', 'json.b[2]=22', 'json.b[3]="23"', 'json.c={}', 'json.c.c1=[]', 'json.c.c1[0]=31', 'json.c.c1[1]=32', 'json.c.c2=[]', 'json.c.c2[0]=33', 'json.c.c2[1]=34' ])
-    t(33, gron(jso, True, True), [ 'json={}', 'json.a={}', 'json.a.a1=10', 'json.b=[]', 'json.b[0]=20', 'json.b[1]=21', 'json.b[2]=22', 'json.b[3]=23', 'json.c={}', 'json.c.c1=[]', 'json.c.c1[0]=31', 'json.c.c1[1]=32', 'json.c.c2=[]', 'json.c.c2[0]=33', 'json.c.c2[1]=34' ])
+    from subprocess import run
+    def t1(i, x, y): print(i, x==y, x, "" if x==y else y)
+    def t2(i, lis, query):
+        x = jq(lis, query)
+        y = json.loads(run(["jq", "[" + query + "]"], input="\n".join(json.dumps(x) for x in lis).encode(), capture_output=True).stdout.decode())
+        t1(i, x, y)
+    t2(1,  [jso], ".")
+    t2(2,  [jso], ".a")
+    t2(3,  [jso], ".b")
+    t2(4,  [jso], ".[]")
+    t2(5,  [jso], ".b[]")
+    t2(6,  [jso], ".c.c2[1]")
+    t2(7,  [jso], ".c[][1]")
+    t2(11, [jso], "[.b[0]]")
+    t2(12, [jso], "[.c[]]")
+    t2(13, [jso], "[.c[]][0]")
+    t1(31, gron(jso, False, False), [ 'json = {};', 'json.a = {};', 'json.a.a1 = 10;', 'json.b = [];', 'json.b[0] = 20;', 'json.b[1] = "21";', 'json.b[2] = 22;', 'json.b[3] = "23";', 'json.c = {};', 'json.c.c1 = [];', 'json.c.c1[0] = 31;', 'json.c.c1[1] = 32;', 'json.c.c2 = [];', 'json.c.c2[0] = 33;', 'json.c.c2[1] = 34;' ])
+    t1(32, gron(jso, True, False), [ 'json={}', 'json.a={}', 'json.a.a1=10', 'json.b=[]', 'json.b[0]=20', 'json.b[1]="21"', 'json.b[2]=22', 'json.b[3]="23"', 'json.c={}', 'json.c.c1=[]', 'json.c.c1[0]=31', 'json.c.c1[1]=32', 'json.c.c2=[]', 'json.c.c2[0]=33', 'json.c.c2[1]=34' ])
+    t1(33, gron(jso, True, True), [ 'json={}', 'json.a={}', 'json.a.a1=10', 'json.b=[]', 'json.b[0]=20', 'json.b[1]=21', 'json.b[2]=22', 'json.b[3]=23', 'json.c={}', 'json.c.c1=[]', 'json.c.c1[0]=31', 'json.c.c1[1]=32', 'json.c.c2=[]', 'json.c.c2[0]=33', 'json.c.c2[1]=34' ])
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Simple version of jq and gron")
     ap.add_argument("-c", "--compact", action="store_true")
+    ap.add_argument("-d", "--delete",  action="store_true", help="Delete matches (jq's del())")
     ap.add_argument("-g", "--gron",    action="store_true")
     ap.add_argument("-r", "--raw",     action="store_true")
     ap.add_argument("--test",          action="store_true")
@@ -70,7 +91,7 @@ if __name__ == "__main__":
             ap.print_help()
             print("ERROR: Query required", file=sys.stderr)
             exit(1)
-        lis = resolve([json.load(sys.stdin)], args.query)
+        lis = jq([json.load(sys.stdin)], args.query)
         for jso in lis:
             if args.raw and type(jso) is str:
                 print(jso)
