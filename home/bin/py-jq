@@ -28,8 +28,8 @@ def jq(lis, query):
         return jq(sum((tolist(x) for x in lis), []), query[m.end():])
     elif m := re.match(rf"\.?\[({rnum})\]", query): # .[0]
         return jq((x[int(m[1])] for x in lis), query[m.end():])
-    elif m := matchParen("[]", query): # [x]
-        return jq([jq(lis, m[0])], m[1])
+    # elif m := matchParen("[]", query): # [x]
+    #     return jq([jq(lis, m[0])], m[1])
     assert False
 
 # should name above "jqm" and create wrapper "jq" which handles multiple inputs
@@ -74,7 +74,6 @@ def _test():
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Simple version of jq and gron")
     ap.add_argument("-c", "--compact", action="store_true")
-    ap.add_argument("-d", "--delete",  action="store_true", help="Delete matches (jq's del())")
     ap.add_argument("-g", "--gron",    action="store_true")
     ap.add_argument("-r", "--raw",     action="store_true")
     ap.add_argument("--test",          action="store_true")

@@ -39,7 +39,7 @@ _init() {
     export PATH="$TMUX_ROOT/bin:$PATH"
 
     # Extract files from this script
-    # TODO optimize
+    # TODO optimize quadratic -> linear
     # Awk prints <NR> <permission> <file> e.g. "10 +x bin/foo"
     # Directives:
     #   ####FILE <permission> <file>       Mark the beginning of the file (ends before next ####FILE)

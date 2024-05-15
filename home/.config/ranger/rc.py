@@ -84,6 +84,7 @@ def rc_py_main():
     map {k("I", "L")}  eval fm.open_console('rename ' + fm.thisfile.relative_path.replace("%", "%%"), position=7)
 
     map {k("e", "h")}n open_with nano -- "$@"
+    map {k("e", "h")}v open_with nvim -- "$@"
     """)
 
     from ranger.ext.get_executables import get_executables

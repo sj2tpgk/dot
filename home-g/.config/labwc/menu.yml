@@ -31,21 +31,19 @@ openbox_menu:
     item label="Labwc 0.7.1":
 
     menu id="Internet" label="Internet":
-      item label="Internet":
+      item label="Firefox":
         action name="Execute" command="firefox":
       item label="VNC Client":
         action name="Execute" command="~/script-local/vnc":
 
     menu id="Utils" label="Utils":
-      item label="Files":
+      item label="PCManFM":
         action name="Execute" command="pcmanfm":
-      item label="tmux (dark)":
+      item label="tmux":
         action name="Execute" command="footclient -e uim-fep -e tmux":
-      item label="sh   (dark)":
+      item label="dark":
           action name="Execute" command="foot -e /bin/sh":
-      item label="tmux (light)":
-        action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=UnifontMy<COLON>style=bold<COLON>pixelsize=16 -e sh -c MY_DARK=0\\ exec\\ uim-fep\\ -e\\ tmux" -':
-      item label="sh   (light)":
+      item label="light":
         action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=UnifontMy<COLON>style=bold<COLON>pixelsize=16 -e sh -c MY_DARK=0\\ exec\\ /bin/sh" -':
 
     menu id="Media" label="Media":
@@ -57,10 +55,17 @@ openbox_menu:
     menu id="Labwc" label="Labwc":
       menu id="StopKeyd" label="Stop Keyd":
         item label="Please press Esc+BS+Ret":
+      menu id="Monitor" label="Monitor":
+        item label="HDMI-A-2 2160p 2x":
+          action name="Execute" command="wlr-randr --output HDMI-A-2 --mode 3840x2160 --scale 2":
+      item label="sfwbar":
+        action name="Execute" command='sh -c "pkill sfwbar; sfwbar -f t2.config" -':
       item label="Reconfigure":
         action name="Reconfigure":
       item label="Exit":
         action name="Exit":
+      item label="Hibernate":
+        action name="Execute" command="systemctl hibernate":
       item label="Poweroff":
         action name="Execute" command="systemctl -i poweroff":
 
