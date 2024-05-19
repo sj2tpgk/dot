@@ -40,6 +40,9 @@ user_pref("toolkit.tabbox.switchByScrolling", true);
 user_pref("ui.key.menuAccessKeyFocuses", false);
 user_pref("xpinstall.whitelist.required", false);
 
+// url bar: these are domains, not search words
+user_pref("browser.fixup.domainsuffixwhitelist.server", true);
+
 // addons on amo
 user_pref("extensions.webextensions.restrictedDomains", "");
 user_pref("privacy.resistFingerprinting.block_mozAddonManager", true);
@@ -49,7 +52,6 @@ user_pref("app.shield.optoutstudies.enabled", false);
 user_pref("browser.safebrowsing.malware.enabled", false);
 user_pref("browser.safebrowsing.phishing.enabled", false);
 user_pref("datareporting.healthreport.uploadEnabled", false);
-
 
 
 // Copied from https://gist.github.com/AetherEternity/5a6bb6e493a3d34988fc7342013f2ea6
