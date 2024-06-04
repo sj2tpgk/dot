@@ -1,6 +1,7 @@
 #!/bin/node
 
-import * as child_process from "child_process";
+// import * as child_process from "child_process"; // rename to xxx.mjs to use es6 import
+const child_process = require("child_process");
 
 const CONFIG = { verbose: false }
 

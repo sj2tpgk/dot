@@ -44,8 +44,8 @@ _init() {
     # Directives:
     #   ####FILE <permission> <file>       Mark the beginning of the file (ends before next ####FILE)
     #                                      (optionally followed by one apace and three open-brace, will be removed)
-    #   #| <any>                           Replaced with <string> (may help sh syntax highlighting)
-    #   #- <any>                           This line is removed
+    #   #| <string>                        Replaced with <string> (may help sh syntax highlighting)
+    #   #- <string>                        This line is removed
     awk '/^####FILE/{sub("####FILE ","");sub("{""{{$","");print NR" "$0}' "$0" | while read -r nr permission file; do
         path="$TMUX_ROOT"/"${file##/*}"
         dir=$(dirname "$path")
@@ -63,7 +63,19 @@ _init() {
 
 printf '\033[2 q' # block cursor
 
-if :; then
+if [ "$1" = pack ]; then
+
+    dest="$(dirname "$0")"/tmux2
+    { cat "$0"; printf "\n\n# ==""== Files packed from bin/ ====\n\n\n"; } > "$dest"
+    for i in ~/bin/*; do
+        [ -f "$i" ] || continue
+        echo "####FILE +X $(echo "$i" | sed 's#.*/\(bin/[^/]*\)$#\1#') {{""{"
+        cat "$i" | sed 's/^/#| /' # space after bar is needed
+        printf "#| }}""}\n\n\n"
+    done >> "$dest"
+
+else
+
     # Regen conf
     _init
     # Export env vars
@@ -79,19 +91,14 @@ if :; then
         tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf" source "$TMUX_ROOT/tmux.conf"
         tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf" "$@"
     fi
+
 fi
 
 exit # Do not remove this exit
 # ==== Shell script ends here ====
 
 
-# Now follows embedded files
-
-
-####FILE +x bin/du1 {{{
-#!/bin/sh
-du -d1 -BM "$@" 2>/dev/null | sort -n
-#- }}}
+# ==== Now follows embedded files ====
 
 
 ####FILE +x bin/ra {{{
@@ -118,120 +125,6 @@ exec ranger --clean \
     --cmd "map $(x=${flag:+J}; echo ${x:-N}) search_next forward=False" \
     --cmd "map $(x=${flag:+L}; echo ${x:-I}) eval fm.open_console('rename ' + fm.thisfile.relative_path.replace('%', '%%'), position=7)" \
     "$@"
-#- }}}
-
-
-
-####FILE +x bin/termux-my-config {{{
-#!/bin/sh
-command -v termux-reload-settings || { echo "termux-reload-settings is not available"; exit 1; }
-[ -z "$1" ] && color=light || color=dark
-[ -z "$1" ] && echo "Using light mode. Use 'termux-my-config 1' for dark mode"
-COLORFILE=~/.termux/colors.properties
-PROPFILE=~/.termux/termux.properties
-[ -e "$COLORFILE" ] && { cp "$COLORFILE" "$COLORFILE.$(date +%s)"; }
-[ -e "$PROPFILE" ] && { cp "$PROPFILE" "$PROPFILE$(date +%s)"; }
-if [ "$color" = light ]; then
-    {
-        echo "foreground=#000"
-        echo "background=#fff"
-        echo "cursor=#722"
-        echo
-        echo "color0=#e8e6e4"
-        echo "color1=#ef5253"
-        echo "color2=#5ca824"
-        echo "color3=#c49500"
-        echo "color4=#33b5e1"
-        echo "color5=#a363d5"
-        echo "color6=#32ab90"
-        echo "color7=#18262f"
-        echo
-        echo "color8=#b6bfc8"
-        echo "color9=#ff6263"
-        echo "color10=#6cb834"
-        echo "color11=#d4a50c"
-        echo "color12=#23a5d1"
-        echo "color13=#b373d5"
-        echo "color14=#42bba0"
-        echo "color15=#78868f"
-    } > "$COLORFILE"
-else
-    {
-        echo "foreground=#D0D0D0"
-        echo "background=#151515"
-        echo "cursor=#ffcccc"
-        echo
-        echo "color0=#18262f"
-        echo "color1=#ef5253"
-        echo "color2=#7cc844"
-        echo "color3=#e4b51c"
-        echo "color4=#33b5e1"
-        echo "color5=#a363d5"
-        echo "color6=#52cbb0"
-        echo "color7=#a6afb8"
-        echo
-        echo "color8=#78868f"
-        echo "color9=#ff6263"
-        echo "color10=#8cd854"
-        echo "color11=#f4c52c"
-        echo "color12=#43c5f1"
-        echo "color13=#b373d5"
-        echo "color14=#62dbc0"
-        echo "color15=#b6bfc8"
-    } > "$COLORFILE"
-fi
-{
-    echo "# vibrate, beep, ignore"
-    echo "bell-character=ignore"
-    echo
-    echo "# back, escape"
-    echo "back-key=back"
-    echo
-    echo "extra-keys = [ \\"
-    echo " ['ESC', '~', '/',    '|',   '{', '}', 'HOME', 'UP',   'END'  ], \\"
-    echo " ['TAB', '>', 'CTRL', 'ALT', '[', ']', 'LEFT', 'DOWN', 'RIGHT']  \\"
-    echo "]"
-} > "$PROPFILE"
-termux-reload-settings
-#- }}}
-
-
-####FILE +x bin/tmux-comp {{{
-#!/bin/sh
-
-info=$(tmux display -pF 'pane_id=#{pane_id}:pane_left=#{pane_left}:pane_top=#{pane_top}:cursor_x=#{cursor_x}:cursor_y=#{cursor_y}:client_height=#{client_height}')
-tmp=${info#*pane_id=};       t=${tmp%%:*}
-tmp=${info#*pane_left=};     px=${tmp%%:*}
-tmp=${info#*pane_top=};      py=${tmp%%:*}
-tmp=${info#*cursor_x=};      cx=${tmp%%:*}
-tmp=${info#*cursor_y=};      cy=${tmp%%:*}
-tmp=${info#*client_height=}; h=${tmp%%:*}
-
-export q
-q=$(tmux capturep -J -p -S "$cy" -E "$cy" | cut -c-"$cx" | grep -oE '\w+$' || echo)
-
-p1='[[:alnum:]]{4,}'
-p2='[-+@.[:alnum:]]{4,}'
-p3='[-+@./:[:alnum:]]{4,}'
-
-cs="tmux "
-for i in $(tmux lsp -a -F '#D'); do cs="$cs capturep -J -pt $i \; "; done
-# cs="$cs | grep -oE '\w{4,}' | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
-# cs="$cs | { { { tee /dev/fd/3 | grep -oE '$p1' >&4; } 3>&1 | grep -oE '$p2'; } 4>&1; } | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
-cs="$cs | { { { { tee /dev/fd/4 /dev/fd/5 | grep -oE '$p1' >&3; } 4>&1 | grep -oE '$p2' >&3; } 5>&1 | grep -oE '$p3'; } 3>&1; } | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
-
-if ! command -v fzf >/dev/null; then
-    s=$(eval "$cs" | head -n $((h - 2)) | awk -v q="$q" -v l="${#q}" "{a=\$0; printf \"'%s' '%c' '\", a, NR+47+(NR>10)*39-(NR>36)*58; if (l) { printf \"send -N %d BSpace ; \", l } printf \"send -l \\\"%s\\\"' \", a}")
-    eval tmux menu "$s"
-    exit
-fi
-
-cmd='
-  s=$(eval "$cs" | fzf --no-color --color bw --info hidden --prompt "  " --pointer " " --print-query -q "$q")
-  [ $? -ne 130 ] && { s=$(echo "$s" | tail -n1); tmux ${q:+send -t "$t" -N "${#q}" BSpace \;} send -t "$t" -l "$s " 2>/dev/null; }
-  exit 0'
-tmux popup -EB -e "cs=$cs" -e "t=$t" -e "q=$q" -w 35 -h 8 -x $(expr $px + $cx - "${#q}" - 2) -y $(expr $py + $cy + 1) "$cmd" \
-    || tmux splitw -e "cs=$cs" -e "t=$t" -e "q=$q" -l 8 "$cmd"
 #- }}}
 
 

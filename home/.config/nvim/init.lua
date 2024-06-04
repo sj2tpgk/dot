@@ -1053,6 +1053,13 @@ au BufNewFile,BufRead *.scm setl formatoptions+=rol
 au FileType             scm setl formatoptions+=rol
 aug END
 
+" === Wat (webassembly) ===
+aug vimrc_ft_wat
+au!
+au BufNewFile,BufRead *.wat setl ft=lisp
+au FileType             wat setl ft=lisp
+aug END
+
 " >>>
 
 ]]

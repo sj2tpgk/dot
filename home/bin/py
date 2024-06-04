@@ -1,15 +1,11 @@
 #!/bin/sh
 
 code="\
-from math import *
-from json import *
-import os, re, time
-import datetime as dt
-import urllib.parse as up
-import urllib.request as ur"
+from (math) import *
+import (json), (os), (re), (time)
+import collections as (co); import datetime as (dt); import functools as (ft); import itertools as (it)
+import urllib.parse as (up); import urllib.request as (ur)"
 
-code="\
-$code
-print('''$code''')"
+printf "$(printf %s "$code" | sed 's/(/\\033[31m/g; s/)/\\033[0m/g')\n"
 
-exec python -ic "$code" "$@"
+exec python -ic "$(printf %s "$code" | sed 's/[()]//g')" "$@"
