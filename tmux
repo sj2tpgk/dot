@@ -69,7 +69,7 @@ if [ "$1" = pack ]; then
     { cat "$0"; printf "\n\n# ==""== Files packed from bin/ ====\n\n\n"; } > "$dest"
     for i in ~/bin/*; do
         [ -f "$i" ] || continue
-        echo "####FILE +X $(echo "$i" | sed 's#.*/\(bin/[^/]*\)$#\1#') {{""{"
+        echo "####FILE +x $(echo "$i" | sed 's#.*/\(bin/[^/]*\)$#\1#') {{""{"
         cat "$i" | sed 's/^/#| /' # space after bar is needed
         printf "#| }}""}\n\n\n"
     done >> "$dest"

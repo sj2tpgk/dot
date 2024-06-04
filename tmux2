@@ -69,7 +69,7 @@ if [ "$1" = pack ]; then
     { cat "$0"; printf "\n\n# ==""== Files packed from bin/ ====\n\n\n"; } > "$dest"
     for i in ~/bin/*; do
         [ -f "$i" ] || continue
-        echo "####FILE +X $(echo "$i" | sed 's#.*/\(bin/[^/]*\)$#\1#') {{""{"
+        echo "####FILE +x $(echo "$i" | sed 's#.*/\(bin/[^/]*\)$#\1#') {{""{"
         cat "$i" | sed 's/^/#| /' # space after bar is needed
         printf "#| }}""}\n\n\n"
     done >> "$dest"
@@ -304,7 +304,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 # ==== Files packed from bin/ ====
 
 
-####FILE +X bin/cl {{{
+####FILE +x bin/cl {{{
 #| #!/bin/sh
 #| BREAK_CHARS="(){}[],^%$#@\"\";''|\\"
 #| RLWRAP=
@@ -322,7 +322,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/colorscheme {{{
+####FILE +x bin/colorscheme {{{
 #| #!/bin/sh
 #| 
 #| colors=${1:-myd}
@@ -422,21 +422,21 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/du1 {{{
+####FILE +x bin/du1 {{{
 #| #!/bin/sh
 #| 
 #| du -d1 -BM $1 | sort -n
 #| }}}
 
 
-####FILE +X bin/du2 {{{
+####FILE +x bin/du2 {{{
 #| #!/bin/sh
 #| 
 #| du -d2 -BM $1 | sort -n
 #| }}}
 
 
-####FILE +X bin/ec {{{
+####FILE +x bin/ec {{{
 #| #!/bin/sh
 #| 
 #| # emacsclient -a nano -nw -c "$@"
@@ -453,7 +453,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/en {{{
+####FILE +x bin/en {{{
 #| #!/bin/sh
 #| 
 #| # emacs -nw --color=yes "$@"
@@ -491,7 +491,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/finddupe {{{
+####FILE +x bin/finddupe {{{
 #| #!/bin/sh
 #| 
 #| usage () {
@@ -532,14 +532,14 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/findimg {{{
+####FILE +x bin/findimg {{{
 #| #!/bin/sh
 #| 
 #| find . -type f | sed -rn '/(bmp|gif|jpeg|jpg|png|webm)/Ip' | sort
 #| }}}
 
 
-####FILE +X bin/haropen {{{
+####FILE +x bin/haropen {{{
 #| #!/bin/python
 #| 
 #| import argparse, base64, json, os, re
@@ -630,7 +630,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/img2txtfull {{{
+####FILE +x bin/img2txtfull {{{
 #| #!/usr/bin/perl
 #| 
 #| my $img = $ARGV[0];
@@ -649,7 +649,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/imgsearch {{{
+####FILE +x bin/imgsearch {{{
 #| #!/bin/sh
 #| 
 #| input=$*
@@ -658,7 +658,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/machineid {{{
+####FILE +x bin/machineid {{{
 #| #!/bin/sh
 #| 
 #| # Prints machine unique string, truncated to 4 chars.
@@ -675,7 +675,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/myprompt {{{
+####FILE +x bin/myprompt {{{
 #| #!/bin/awk -f
 #| 
 #| # First argument must be "--"
@@ -854,7 +854,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/nf1 {{{
+####FILE +x bin/nf1 {{{
 #| #!/bin/sh
 #| 
 #| # Count number of files is current directory and subdirectories with depth 1
@@ -864,7 +864,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/npm-info {{{
+####FILE +x bin/npm-info {{{
 #| #!/bin/node
 #| 
 #| // import * as child_process from "child_process"; // rename to xxx.mjs to use es6 import
@@ -924,7 +924,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/nvimhl {{{
+####FILE +x bin/nvimhl {{{
 #| #!/bin/sh
 #| 
 #| if [ $# -ne 1 ]; then
@@ -961,7 +961,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/passq {{{
+####FILE +x bin/passq {{{
 #| #!/bin/bash
 #| 
 #| # All passwords in single plaintext file /all
@@ -1028,7 +1028,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/pip-info {{{
+####FILE +x bin/pip-info {{{
 #| #!/usr/bin/env python3
 #| import argparse, json, os, os.path, platform, re, sys, time, urllib.error, urllib.request
 #| 
@@ -1157,7 +1157,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/py {{{
+####FILE +x bin/py {{{
 #| #!/bin/sh
 #| 
 #| code="\
@@ -1172,7 +1172,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/py-jq {{{
+####FILE +x bin/py-jq {{{
 #| #!/usr/bin/env python3
 #| 
 #| # Simple version of jq and gron
@@ -1264,7 +1264,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/quiet {{{
+####FILE +x bin/quiet {{{
 #| #!/bin/sh
 #| 
 #| [ $# -le 0 ] && echo -e "Usage: ./quiet COMMAND ARGS ...\nSuppress stdout and stderr."
@@ -1273,7 +1273,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/randomstr {{{
+####FILE +x bin/randomstr {{{
 #| #!/bin/bash
 #| 
 #| usage() {
@@ -1359,7 +1359,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/recentfile {{{
+####FILE +x bin/recentfile {{{
 #| #!/bin/sh
 #| 
 #| # Get the N most recently modified file in the current directory
@@ -1371,7 +1371,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/running {{{
+####FILE +x bin/running {{{
 #| #!/bin/sh
 #| 
 #| foundprocs=$(ps alx | grep "$1" | grep -v grep | grep -v "$0")
@@ -1380,7 +1380,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/scm {{{
+####FILE +x bin/scm {{{
 #| #!/bin/bash
 #| 
 #| # Set NO_RLWRAP to run without rlwrap
@@ -1424,7 +1424,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/termux-my-config {{{
+####FILE +x bin/termux-my-config {{{
 #| #!/bin/sh
 #| command -v termux-reload-settings || { echo "termux-reload-settings is not available"; exit 1; }
 #| [ -z "$1" ] && color=light || color=dark
@@ -1499,7 +1499,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/termux-url-opener {{{
+####FILE +x bin/termux-url-opener {{{
 #| #!/data/data/com.termux/files/usr/bin/sh
 #| 
 #| in=$1
@@ -1515,7 +1515,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/tmux-comp {{{
+####FILE +x bin/tmux-comp {{{
 #| #!/bin/sh
 #| 
 #| info=$(tmux display -pF 'pane_id=#{pane_id}:pane_left=#{pane_left}:pane_top=#{pane_top}:cursor_x=#{cursor_x}:cursor_y=#{cursor_y}:client_height=#{client_height}')
@@ -1555,7 +1555,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/w3 {{{
+####FILE +x bin/w3 {{{
 #| #!/bin/sh
 #| 
 #| # Can view pdf
@@ -1587,21 +1587,21 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/w3_man {{{
+####FILE +x bin/w3_man {{{
 #| #!/bin/sh
 #| 
 #| w3 __W3_MAN__ "$@"
 #| }}}
 
 
-####FILE +X bin/w3_pager {{{
+####FILE +x bin/w3_pager {{{
 #| #!/bin/sh
 #| 
 #| w3 __W3_PAGER__ "$@"
 #| }}}
 
 
-####FILE +X bin/wslwatch {{{
+####FILE +x bin/wslwatch {{{
 #| #!/bin/bash
 #| 
 #| shopt -s nullglob
@@ -1722,7 +1722,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/xcopy {{{
+####FILE +x bin/xcopy {{{
 #| #!/bin/sh
 #| 
 #| text=$*
@@ -1824,7 +1824,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }}}
 
 
-####FILE +X bin/xpaste {{{
+####FILE +x bin/xpaste {{{
 #| #!/bin/sh
 #| 
 #| wsl_paste() {
