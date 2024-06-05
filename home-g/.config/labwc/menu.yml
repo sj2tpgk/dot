@@ -41,6 +41,8 @@ openbox_menu:
         action name="Execute" command="pcmanfm":
       item label="tmux":
         action name="Execute" command="footclient -e uim-fep -e tmux":
+      item label="tmux light":
+        action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=UnifontMy<COLON>style=bold<COLON>pixelsize=16 -e sh -c MY_DARK=0\\ exec\\ uim-fep\\ -e\\ tmux" -':
       item label="dark":
           action name="Execute" command="foot -e /bin/sh":
       item label="light":

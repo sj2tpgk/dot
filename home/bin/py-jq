@@ -9,13 +9,6 @@ def tolist(x):
     elif type(x) is list: return x
     else: raise Exception("err")
 
-def matchParen(pat, s):
-    # if pat = "[]" then matches s = "[_[__[]_]]_[]_" and returns ["_[__[]_]", "_[]_"]
-    nest = 0
-    for i, c in enumerate(s):
-        nest += 1 if c == pat[0] else (-1 if c == pat[1] else 0)
-        if nest <= 0 and i > 0: return [s[1:i], s[i+1:]]
-
 def jq(lis, query):
     # lis = list(lis); print(lis, query) # generators can be consumed at most once
     rkey = r"[^][.]+"
@@ -28,8 +21,6 @@ def jq(lis, query):
         return jq(sum((tolist(x) for x in lis), []), query[m.end():])
     elif m := re.match(rf"\.?\[({rnum})\]", query): # .[0]
         return jq((x[int(m[1])] for x in lis), query[m.end():])
-    # elif m := matchParen("[]", query): # [x]
-    #     return jq([jq(lis, m[0])], m[1])
     assert False
 
 # should name above "jqm" and create wrapper "jq" which handles multiple inputs
@@ -64,9 +55,6 @@ def _test():
     t2(5,  [jso], ".b[]")
     t2(6,  [jso], ".c.c2[1]")
     t2(7,  [jso], ".c[][1]")
-    t2(11, [jso], "[.b[0]]")
-    t2(12, [jso], "[.c[]]")
-    t2(13, [jso], "[.c[]][0]")
     t1(31, gron(jso, False, False), [ 'json = {};', 'json.a = {};', 'json.a.a1 = 10;', 'json.b = [];', 'json.b[0] = 20;', 'json.b[1] = "21";', 'json.b[2] = 22;', 'json.b[3] = "23";', 'json.c = {};', 'json.c.c1 = [];', 'json.c.c1[0] = 31;', 'json.c.c1[1] = 32;', 'json.c.c2 = [];', 'json.c.c2[0] = 33;', 'json.c.c2[1] = 34;' ])
     t1(32, gron(jso, True, False), [ 'json={}', 'json.a={}', 'json.a.a1=10', 'json.b=[]', 'json.b[0]=20', 'json.b[1]="21"', 'json.b[2]=22', 'json.b[3]="23"', 'json.c={}', 'json.c.c1=[]', 'json.c.c1[0]=31', 'json.c.c1[1]=32', 'json.c.c2=[]', 'json.c.c2[0]=33', 'json.c.c2[1]=34' ])
     t1(33, gron(jso, True, True), [ 'json={}', 'json.a={}', 'json.a.a1=10', 'json.b=[]', 'json.b[0]=20', 'json.b[1]=21', 'json.b[2]=22', 'json.b[3]=23', 'json.c={}', 'json.c.c1=[]', 'json.c.c1[0]=31', 'json.c.c1[1]=32', 'json.c.c2=[]', 'json.c.c2[0]=33', 'json.c.c2[1]=34' ])

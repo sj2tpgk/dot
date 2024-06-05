@@ -1,6 +1,0 @@
-#!/bin/sh
-
-word="$1"
-dict=~/download/stardict/gene-utf8.txt
-
-grep "$word" --color=always -A1 -i "$dict" # | perl -pe 'print "\n" if $.%2==1 && $.>1'
