@@ -572,12 +572,17 @@ fu! MyHighlight_UI()
     hi Error     ctermfg=white ctermbg=red
     hi ErrorMsg  ctermfg=white ctermbg=red
 
+    " Status
+    hi StatusLine   ctermbg=white ctermfg=black cterm=bold
+    hi StatusLineNC ctermbg=white ctermfg=black cterm=none
+
     " Misc
     hi Directory  ctermfg=cyan " "cterm=" in :hi command output etc.
     hi MoreMsg    ctermfg=cyan " "Save and exit?" question etc.
     hi Question   ctermfg=cyan " "Press ENTER or ..." etc.
     hi SpecialKey ctermfg=red  " <Enter> etc.
     hi Underlined ctermfg=cyan
+    hi LineNr     ctermfg=yellow
 endfu
 
 fu! MyHighlight_TS()
@@ -917,6 +922,8 @@ au BufNewFile,BufRead *.c,*.h,*.cpp,*.hpp setl cms=//%s
 au FileType           c,cpp               setl cms=//%s
 au BufNewFile,BufRead *.c,*.h,*.cpp,*.hpp setl cino+=(0
 au FileType           c,cpp               setl cino+=(0
+au BufNewFile,BufRead *.c,*.h,*.cpp,*.hpp inore <buffer> $$ ->
+au FileType           c,cpp               inore <buffer> $$ ->
 aug END
 
 " === D ===
