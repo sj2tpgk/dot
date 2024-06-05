@@ -66,12 +66,12 @@ printf '\033[2 q' # block cursor
 if [ "$1" = pack ]; then
 
     dest="$(dirname "$0")"/tmux2
-    { cat "$0"; printf "\n\n# ==""== Files packed from bin/ ====\n\n\n"; } > "$dest"
+    { cat "$0"; printf "\n\n\n\n"; } > "$dest"
     for i in ~/bin/*; do
         [ -f "$i" ] || continue
         echo "####FILE +x $(echo "$i" | sed 's#.*/\(bin/[^/]*\)$#\1#') {{""{"
         cat "$i" | sed 's/^/#| /' # space after bar is needed
-        printf "#| }}""}\n\n\n"
+        printf "#- }}""}\n\n\n"
     done >> "$dest"
 
 else

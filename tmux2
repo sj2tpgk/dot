@@ -66,12 +66,12 @@ printf '\033[2 q' # block cursor
 if [ "$1" = pack ]; then
 
     dest="$(dirname "$0")"/tmux2
-    { cat "$0"; printf "\n\n# ==""== Files packed from bin/ ====\n\n\n"; } > "$dest"
+    { cat "$0"; printf "\n\n\n\n"; } > "$dest"
     for i in ~/bin/*; do
         [ -f "$i" ] || continue
         echo "####FILE +x $(echo "$i" | sed 's#.*/\(bin/[^/]*\)$#\1#') {{""{"
         cat "$i" | sed 's/^/#| /' # space after bar is needed
-        printf "#| }}""}\n\n\n"
+        printf "#- }}""}\n\n\n"
     done >> "$dest"
 
 else
@@ -301,7 +301,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
-# ==== Files packed from bin/ ====
 
 
 ####FILE +x bin/cl {{{
@@ -319,7 +318,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|   exec /usr/bin/sbcl --script $*
 #| fi
 #| 
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/colorscheme {{{
@@ -419,21 +418,21 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| "colors_$colors"
 #| copy_colors
 #| "output_$output"
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/du1 {{{
 #| #!/bin/sh
 #| 
 #| du -d1 -BM $1 | sort -n
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/du2 {{{
 #| #!/bin/sh
 #| 
 #| du -d2 -BM $1 | sort -n
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/ec {{{
@@ -450,7 +449,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|   TERM=st-direct emacs -a nano -c -nw "$@"
 #| fi
 #| 
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/en {{{
@@ -488,7 +487,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|   # TERM=st-direct emacs -nw "$@"
 #| fi
 #| 
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/finddupe {{{
@@ -529,14 +528,14 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| else
 #|     f | g | cut -f2 | while read f1; do xxhsum "$f1"; done | g
 #| fi
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/findimg {{{
 #| #!/bin/sh
 #| 
 #| find . -type f | sed -rn '/(bmp|gif|jpeg|jpg|png|webm)/Ip' | sort
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/haropen {{{
@@ -627,7 +626,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|             f.write(postData)
 #| 
 #| 
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/img2txtfull {{{
@@ -646,7 +645,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| } else {
 #|     system("img2txt -H $th -g 0.6 $img")
 #| }
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/imgsearch {{{
@@ -655,7 +654,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| input=$*
 #| # echo "[$input]"
 #| rclip -f -t 30 "$input" 2>/dev/null | grep -v TensorList | sxiv -t -i -
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/machineid {{{
@@ -672,7 +671,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| else
 #|     echo 0000
 #| fi
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/myprompt {{{
@@ -851,7 +850,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     }
 #|     return 0
 #| }
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/nf1 {{{
@@ -861,7 +860,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| 
 #| dir=${1:-.}
 #| find "$dir" -maxdepth 1 -type d | while read -r d; do n=$(find "$d" | wc -l); printf "%d\t%s\n" "$n" "$d"; done | sort -n
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/npm-info {{{
@@ -921,7 +920,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }
 #| 
 #| main();
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/nvimhl {{{
@@ -958,7 +957,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| nvim -u NONE --headless -c "$cmds" "$in" 2>/dev/null \
 #|     | awk -v x="$head" '{ print } /<head>/ { print x }'
 #| 
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/passq {{{
@@ -1025,7 +1024,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     *) echo "Unknown operation: $op" ; usage ;;
 #| esac
 #| 
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/pip-info {{{
@@ -1154,7 +1153,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     ap.add_argument("pkg")
 #|     args = ap.parse_args()
 #|     main(args)
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/py {{{
@@ -1169,7 +1168,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| printf "$(printf %s "$code" | sed 's/(/\\033[31m/g; s/)/\\033[0m/g')\n"
 #| 
 #| exec python -ic "$(printf %s "$code" | sed 's/[()]//g')" "$@"
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/py-jq {{{
@@ -1261,7 +1260,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|                 print(json.dumps(jso, ensure_ascii=False, separators=(',', ':')))
 #|             else:
 #|                 print(json.dumps(jso, ensure_ascii=False, indent=2))
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/quiet {{{
@@ -1270,7 +1269,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| [ $# -le 0 ] && echo -e "Usage: ./quiet COMMAND ARGS ...\nSuppress stdout and stderr."
 #| 
 #| "$@" >/dev/null 2>/dev/null
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/randomstr {{{
@@ -1356,7 +1355,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| # if command -v xclip > /dev/null; then
 #| #   echo -n $rnd | xclip -i -selection clipboard
 #| # fi
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/recentfile {{{
@@ -1368,7 +1367,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| [ -z "$1" ] && N=10
 #| 
 #| find . -printf "%T+\t%p\n" | sort -r | head -n $N
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/running {{{
@@ -1377,7 +1376,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| foundprocs=$(ps alx | grep "$1" | grep -v grep | grep -v "$0")
 #| [ -n "$foundprocs" ] && exit 0 || exit 1
 #| # note: 0=true 1=false
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/scm {{{
@@ -1421,7 +1420,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     rlwrap -M .scm -q '"' -b "'"'(){}[].,#@;|`"' -pgreen \
 #|         gosh -fno-read-edit -r7 -e "$importstr" "$@"
 #| fi
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/termux-my-config {{{
@@ -1496,7 +1495,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| } > "$PROPFILE"
 #| termux-reload-settings
 #| 
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/termux-url-opener {{{
@@ -1512,7 +1511,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| echo "IN:  $in"  >> ~/openlog.txt
 #| echo "OUT: $out" >> ~/openlog.txt
 #| termux-open-url "$out"
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/tmux-comp {{{
@@ -1552,7 +1551,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|   exit 0'
 #| tmux popup -EB -e "cs=$cs" -e "t=$t" -e "q=$q" -w 35 -h 8 -x $(expr $px + $cx - "${#q}" - 2) -y $(expr $py + $cy + 1) "$cmd" \
 #|     || tmux splitw -e "cs=$cs" -e "t=$t" -e "q=$q" -l 8 "$cmd"
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/w3 {{{
@@ -1584,21 +1583,21 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|         ;;
 #|     *) w3m $conf "$@" ~/.w3m/search.html ;;
 #| esac
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/w3_man {{{
 #| #!/bin/sh
 #| 
 #| w3 __W3_MAN__ "$@"
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/w3_pager {{{
 #| #!/bin/sh
 #| 
 #| w3 __W3_PAGER__ "$@"
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/wslwatch {{{
@@ -1719,7 +1718,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| # ex.
 #| # wslwatch -g '*.txt' -- date
 #| # # this prints datetime on (1) change in existing .txt file (2) new .txt file added (3) .txt file removed.
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/xcopy {{{
@@ -1821,7 +1820,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|         | xclip -selection clipboard -i
 #| 
 #| fi
-#| }}}
+#- }}}
 
 
 ####FILE +x bin/xpaste {{{
@@ -1917,6 +1916,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     xclip -selection clipboard -o
 #| 
 #| fi
-#| }}}
+#- }}}
 
 
