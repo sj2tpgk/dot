@@ -302,7 +302,7 @@ endfu
 
 aug vimrc_folding
 au!
-au FileType lua,javascript,python,markdown call MyFolding()
+au FileType c,cpp,lua,javascript,python,markdown call MyFolding()
 aug END
 
 fu! MyFolding()

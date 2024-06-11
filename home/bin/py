@@ -8,4 +8,5 @@ import urllib.parse as (up); import urllib.request as (ur)"
 
 printf "$(printf %s "$code" | sed 's/(/\\033[31m/g; s/)/\\033[0m/g')\n"
 
-exec python -ic "$(printf %s "$code" | sed 's/[()]//g')" "$@"
+command -v python3 >/dev/null && PYTHON=python3 || PYTHON=python
+exec "$PYTHON" -ic "$(printf %s "$code" | sed 's/[()]//g')" "$@"
