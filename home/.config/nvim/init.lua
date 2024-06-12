@@ -97,8 +97,7 @@ do -- Plugins <<<
     -- Treesitter
     plug "nvim-treesitter/nvim-treesitter"
     -- plug "nvim-treesitter/playground"
-    -- plug "p00f/nvim-ts-rainbow"
-    plug "HiPhish/nvim-ts-rainbow2"
+    -- plug "HiPhish/nvim-ts-rainbow2"
 
     -- LSP
     plug "neovim/nvim-lspconfig"
@@ -303,7 +302,7 @@ endfu
 
 aug vimrc_folding
 au!
-au FileType lua,javascript,python,markdown call MyFolding()
+au FileType c,cpp,lua,javascript,python,markdown call MyFolding()
 aug END
 
 fu! MyFolding()
@@ -573,12 +572,17 @@ fu! MyHighlight_UI()
     hi Error     ctermfg=white ctermbg=red
     hi ErrorMsg  ctermfg=white ctermbg=red
 
+    " Status
+    hi StatusLine   ctermbg=white ctermfg=black cterm=bold
+    hi StatusLineNC ctermbg=white ctermfg=black cterm=none
+
     " Misc
     hi Directory  ctermfg=cyan " "cterm=" in :hi command output etc.
     hi MoreMsg    ctermfg=cyan " "Save and exit?" question etc.
     hi Question   ctermfg=cyan " "Press ENTER or ..." etc.
     hi SpecialKey ctermfg=red  " <Enter> etc.
     hi Underlined ctermfg=cyan
+    hi LineNr     ctermfg=yellow
 endfu
 
 fu! MyHighlight_TS()
@@ -918,6 +922,8 @@ au BufNewFile,BufRead *.c,*.h,*.cpp,*.hpp setl cms=//%s
 au FileType           c,cpp               setl cms=//%s
 au BufNewFile,BufRead *.c,*.h,*.cpp,*.hpp setl cino+=(0
 au FileType           c,cpp               setl cino+=(0
+au BufNewFile,BufRead *.c,*.h,*.cpp,*.hpp inore <buffer> $$ ->
+au FileType           c,cpp               inore <buffer> $$ ->
 aug END
 
 " === D ===
@@ -1052,6 +1058,13 @@ aug vimrc_ft_scheme
 au!
 au BufNewFile,BufRead *.scm setl formatoptions+=rol
 au FileType             scm setl formatoptions+=rol
+aug END
+
+" === Wat (webassembly) ===
+aug vimrc_ft_wat
+au!
+au BufNewFile,BufRead *.wat setl ft=lisp
+au FileType             wat setl ft=lisp
 aug END
 
 " >>>
@@ -1190,7 +1203,10 @@ if can_require"lspconfig" then -- Lsp <<<
     --setup("ccls",                   nil,                      { on_attach = on_attach, single_file_support = true })
     setup("clangd",                 nil,                      { on_attach = on_attach, single_file_support = true })
     setup("kotlin_language_server", "kotlin-language-server", { on_attach = on_attach })
+    --setup("pylsp",                  nil,                      { on_attach = on_attach, settings = { pylsp = { plugins = { pycodestyle = { ignore = {'W391'}, maxLineLength = 100 } } } } })
+    --setup("pylyzer",                nil,                      { on_attach = on_attach })
     setup("pyright",                nil,                      { on_attach = on_attach })
+    --setup("ruff_lsp",               "ruff",                   { on_attach = on_attach, init_options = { settings = { args = { "--config", 'lint.ignore = ["E401", "E731"]' } } } })
     setup("tsserver",               nil,                      { on_attach = on_attach, single_file_support = true })
     setup("tsserver",               "typescript-language-server.cmd", { on_attach = on_attach, single_file_support = true })
     setup("serve_d",                "serve-d",                { on_attach = on_attach, single_file_support = true })

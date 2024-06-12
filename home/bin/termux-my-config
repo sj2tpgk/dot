@@ -1,0 +1,71 @@
+#!/bin/sh
+command -v termux-reload-settings || { echo "termux-reload-settings is not available"; exit 1; }
+[ -z "$1" ] && color=light || color=dark
+[ -z "$1" ] && echo "Using light mode. Use 'termux-my-config 1' for dark mode"
+COLORFILE=~/.termux/colors.properties
+PROPFILE=~/.termux/termux.properties
+[ -e "$COLORFILE" ] && { cp "$COLORFILE" "$COLORFILE.$(date +%s)"; }
+[ -e "$PROPFILE" ] && { cp "$PROPFILE" "$PROPFILE$(date +%s)"; }
+if [ "$color" = light ]; then
+    {
+        echo "foreground=#000"
+        echo "background=#fff"
+        echo "cursor=#722"
+        echo
+        echo "color0=#e8e6e4"
+        echo "color1=#ef5253"
+        echo "color2=#5ca824"
+        echo "color3=#c49500"
+        echo "color4=#33b5e1"
+        echo "color5=#a363d5"
+        echo "color6=#32ab90"
+        echo "color7=#18262f"
+        echo
+        echo "color8=#b6bfc8"
+        echo "color9=#ff6263"
+        echo "color10=#6cb834"
+        echo "color11=#d4a50c"
+        echo "color12=#23a5d1"
+        echo "color13=#b373d5"
+        echo "color14=#42bba0"
+        echo "color15=#78868f"
+    } > "$COLORFILE"
+else
+    {
+        echo "foreground=#D0D0D0"
+        echo "background=#151515"
+        echo "cursor=#ffcccc"
+        echo
+        echo "color0=#18262f"
+        echo "color1=#ef5253"
+        echo "color2=#7cc844"
+        echo "color3=#e4b51c"
+        echo "color4=#33b5e1"
+        echo "color5=#a363d5"
+        echo "color6=#52cbb0"
+        echo "color7=#a6afb8"
+        echo
+        echo "color8=#78868f"
+        echo "color9=#ff6263"
+        echo "color10=#8cd854"
+        echo "color11=#f4c52c"
+        echo "color12=#43c5f1"
+        echo "color13=#b373d5"
+        echo "color14=#62dbc0"
+        echo "color15=#b6bfc8"
+    } > "$COLORFILE"
+fi
+{
+    echo "# vibrate, beep, ignore"
+    echo "bell-character=ignore"
+    echo
+    echo "# back, escape"
+    echo "back-key=back"
+    echo
+    echo "extra-keys = [ \\"
+    echo " ['ESC', '~', '/',    '|',   '{', '}', 'HOME', 'UP',   'END'  ], \\"
+    echo " ['TAB', '>', 'CTRL', 'ALT', '[', ']', 'LEFT', 'DOWN', 'RIGHT']  \\"
+    echo "]"
+} > "$PROPFILE"
+termux-reload-settings
+

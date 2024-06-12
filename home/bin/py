@@ -1,0 +1,12 @@
+#!/bin/sh
+
+code="\
+from (math) import *
+import (json), (os), (re), (time)
+import collections as (co); import datetime as (dt); import functools as (ft); import itertools as (it)
+import urllib.parse as (up); import urllib.request as (ur)"
+
+printf "$(printf %s "$code" | sed 's/(/\\033[31m/g; s/)/\\033[0m/g')\n"
+
+command -v python3 >/dev/null && PYTHON=python3 || PYTHON=python
+exec "$PYTHON" -ic "$(printf %s "$code" | sed 's/[()]//g')" "$@"

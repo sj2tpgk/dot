@@ -1,5 +1,0 @@
-#!/bin/sh
-
-str="$1"
-
-grep --color -r -i $@ .

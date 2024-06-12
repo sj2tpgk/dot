@@ -50,6 +50,8 @@
 @-moz-document domain("google.com") {
   .AUiS2, .ULSxyf
   { display: none !important }
+  header { position: sticky; top: 0; z-index: 2 }
+  header > div:first-of-type { display: none }
 }
 
 @-moz-document domain("projecteuler.net") {
@@ -105,6 +107,7 @@
   .style-ig1r0s, /* scores */
   .style-i43zkt, /* user name */
   .style-172y6pz, /* flair at article top */
+  [id^="Personal"] > :nth-child(2) > :nth-child(1):has(> button[aria-label*="facebook"]), /* sns */
   .it-MdContent ~ *, /* footer 1 */
   .p-items_main > *:nth-child(2), /* footer 2 */
   footer /* footer 3 */
