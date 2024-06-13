@@ -31,6 +31,7 @@ user_pref("full-screen-api.warning.timeout", 0);
 user_pref("general.smoothScroll", false);
 user_pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
 user_pref("network.http.request.max-attempts", 2); // default 10, too many (possibly banned)
+user_pref("network.security.ports.banned.override", "1-65535");
 user_pref("pointer-lock-api.warning.timeout", 0);
 user_pref("privacy.file_unique_origin", false); // Allow local script access local iframe's document
 user_pref("security.dialog_enable_delay", 0);
