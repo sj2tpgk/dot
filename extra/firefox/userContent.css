@@ -164,6 +164,9 @@
 	.vector-toc .vector-toc-text { padding: 4px 0 !important; line-height: 1; font-size: x-small }
 	.vector-toc .vector-toc-list-item-active > .vector-toc-link, .vector-toc .vector-toc-level-1-active:not(.vector-toc-list-item-expanded) > .vector-toc-link, .vector-toc .vector-toc-list-item-active.vector-toc-level-1-active > .vector-toc-link { color: #000088 !important; font-weight: unset !important }
 	.vector-toc-toggle { display: none !important }
+    /* remove right space */
+    #bodyContent { min-width: 75vw }
+    .vector-column-end { display: none }
 }
 
 @-moz-document domain("chiebukuro.yahoo.co.jp") {
