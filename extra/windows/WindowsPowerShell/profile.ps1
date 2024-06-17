@@ -1,3 +1,4 @@
+# C:\Users\xxxxxx\Documents\WindowsPowerShell
 Set-Alias n nvim
 function ..() { cd ../ }
 function scoi() { scoop install $args }
