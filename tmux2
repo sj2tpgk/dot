@@ -162,15 +162,15 @@ fi
 ####FILE +x bin/v {{{
 #!/bin/sh
 if command -v vim >/dev/null; then
-    SHELL=sh vim -u "$TMUX_ROOT/vimrc" "$@"
+    SHELL=sh exec vim -u "$TMUX_ROOT/vimrc" "$@"
 elif command -v nvim >/dev/null; then
-    SHELL=sh nvim -u "$TMUX_ROOT/vimrc" "$@"
+    SHELL=sh exec nvim -u "$TMUX_ROOT/vimrc" "$@"
 elif command -v nano >/dev/null; then
-    nano "$@"
+    exec nano "$@"
 elif command -v emacs >/dev/null; then
-    emacs -nw -Q --color=yes "$@"
+    exec emacs -nw -Q --color=yes "$@"
 elif command -v vi >/dev/null; then
-    vi "$@"
+    exec vi "$@"
 else
     echo "No editor found"
 fi

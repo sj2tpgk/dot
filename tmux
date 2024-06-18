@@ -162,15 +162,15 @@ fi
 ####FILE +x bin/v {{{
 #!/bin/sh
 if command -v vim >/dev/null; then
-    SHELL=sh vim -u "$TMUX_ROOT/vimrc" "$@"
+    SHELL=sh exec vim -u "$TMUX_ROOT/vimrc" "$@"
 elif command -v nvim >/dev/null; then
-    SHELL=sh nvim -u "$TMUX_ROOT/vimrc" "$@"
+    SHELL=sh exec nvim -u "$TMUX_ROOT/vimrc" "$@"
 elif command -v nano >/dev/null; then
-    nano "$@"
+    exec nano "$@"
 elif command -v emacs >/dev/null; then
-    emacs -nw -Q --color=yes "$@"
+    exec emacs -nw -Q --color=yes "$@"
 elif command -v vi >/dev/null; then
-    vi "$@"
+    exec vi "$@"
 else
     echo "No editor found"
 fi
@@ -267,7 +267,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 ####FILE -- vimrc {{{
 #| " vim
 #| if filereadable($VIMRUNTIME . "/defaults.vim") | source $VIMRUNTIME/defaults.vim | endif
-#| aug view|exe "au!"|exe "au BufWinLeave * mkvie"|exe "au BufWinEnter * sil! lo"|aug END
+#| aug view|exe "au!"|exe "au BufWinLeave * sil! cal mkdir(&viewdir)|mkvie"|exe "au BufWinEnter * sil! lo"|aug END
 #| set et nocp sm hid
 #| syntax on| filetype on| filetype plugin indent on
 #| set ls=2 stl=[%{&readonly?'R':''}%{&modified?'+':'-'}]\ \ %<%f%*%=%-10.(%l,%c%V%)\ %y%6.(%P%)

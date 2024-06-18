@@ -546,7 +546,7 @@ endfu
 
 fu! MyHighlight_UI()
     " Popup menu
-    hi Pmenu        ctermfg=blue ctermbg=black
+    hi Pmenu        ctermfg=blue ctermbg=black cterm=none
     hi PmenuSel     ctermfg=blue ctermbg=black cterm=bold,reverse
     if g:env.dark
         hi Pmenu        ctermfg=blue ctermbg=238 cterm=bold
@@ -1448,8 +1448,8 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter custom queries <<<
 ;(function_definition (word) @functiondef)
 ((command_name (word) @keyword.break)
  (#any-of? @keyword.break "break" "continue"))
-((command_name (word) @keyword.return)
- (#any-of? @keyword.break "exit" "return"))
+;((command_name (word) @keyword.return) ; this mark all commands as break/return (why?)
+; (#any-of? @keyword.break "exit" "return"))
 ;(command_name (word) @functiondef)
     ]])
 
