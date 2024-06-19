@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# rannnger: emulate ranger in nnn
+
+getPreview() {
+    local x="$1"
+    local width="$2"
+    local height="$3"
+    if [[ -d "$x" ]]; then
+        ls -1A --color "$x" | head -n "$((height - 2))" | cut -c 1-"$width"
+    elif [[ "$(file --mime "$x")" == *charset=binary* ]]; then
+        echo Binary
+    else
+        head -n "$((height - 2))" "$x" | cut -c 1-"$width"
+    fi
+}
+watchPreview() {
+    declare -A preview=()
+    declare -A previewTime=()
+    width=0 height=0
+    rm "$NNN_FIFO.2" 2>/dev/null || true; mkfifo "$NNN_FIFO.2"
+    while read -r x; do
+        echo "$x" >&2 &
+        mtime=$(stat -c %y "$x")
+        width1=$(tput cols)
+        height1=$(tput lines)
+        if [[ "$width" != "$width1" || "$height" != "$height1" ]]; then
+            preview=() previewTime=() width="$width1" height="$height1"
+        fi
+        if [[ -n "${preview["$x"]}" && "$mtime" = "${previewTime["$x"]}" ]]; then
+            flag=CACHE
+        else
+            flag=NEW
+            p=$(getPreview "$x" "$width" "$height")
+            preview["$x"]="$p"
+            previewTime["$x"]="$mtime"
+        fi
+        clear
+        echo -ne '\e[0m'
+        echo "$flag ${previewTime["$x"]} $x"
+        echo "${preview["$x"]}"
+    done < "$NNN_FIFO" 2> "$NNN_FIFO.2"
+}
+watchPreview2() {
+    # while sleep 1; do date; done
+    sleep 1
+    while read -r x; do
+        x=$(dirname "$x")
+        x=$(dirname "$x")
+        clear
+        ls -1 --color "$x"
+    done < "$NNN_FIFO.2"
+}
+export -f getPreview
+export -f watchPreview
+export -f watchPreview2
+
+opener() {
+    # nano "$2"
+    tmux -L "$1" new-window nano "$2"
+}
+export -f opener
+
+name=aaa-$$
+fifo="/tmp/fifoaaa-$name"
+conf="
+# set -g default-command /bin/sh
+set -g mouse on
+set -g pane-border-indicators off
+set -g pane-active-border-style 'fg=black,bg=black'
+set -g status off
+bind -n f6 kill-server
+bind -n ! new-window -c '#{pane_current_path}'
+"
+
+rm "$fifo" 2>/dev/null; mkfifo "$fifo"
+# trap 'tmux -L "$sock" kill-server; exit' INT TERM
+#
+export NNN_FIFO="$fifo"
+export NNN_OPENER='bash -c opener${IFS}"'"$name"'"${IFS}"$1" --'
+export NNN_FCOLORS=000102030405060708090a0b0c0d0e0f # TODO match ls color + video etc.
+
+tmux -L "$name" -f <(echo "$conf") \
+    new-session nnn -cd \; \
+    split-window -hb -l 15% bash -c 'watchPreview2' \; \
+    select-pane -t :.+ \; \
+    split-window -h  bash -c 'watchPreview' \; \
+    select-pane -t :.+ \; \
+    select-pane -t :.+
+rm "$fifo"
+
