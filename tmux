@@ -271,6 +271,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| set et nocp sm hid
 #| syntax on| filetype on| filetype plugin indent on
 #| set ls=2 stl=[%{&readonly?'R':''}%{&modified?'+':'-'}]\ \ %<%f%*%=%-10.(%l,%c%V%)\ %y%6.(%P%)
+#| nn s/ :noh<cr>:let @/ = ""<cr>
 #| " neovim
 #| set ai sw=4 ts=4 sr mouse=av so=1 siso=5 tw=0 nu sb spr cf acd wic ic scs is hls ttm=0 t_Co=16
 #| for i in range(1, 16) | for j in ["", "s-", "c-"] | for k in ["", "i", "c"] | exe k . "nore <" . j . "f" . i . "> <nop>" | endfor | endfor | endfor

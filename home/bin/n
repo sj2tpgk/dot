@@ -1,5 +1,7 @@
 #!/bin/bash
 
+command -v nnn >/dev/null || { echo "nnn is not installed" >&2; exit 1; }
+
 # rannnger: emulate ranger in nnn
 
 getPreview() {

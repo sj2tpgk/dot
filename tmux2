@@ -271,6 +271,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| set et nocp sm hid
 #| syntax on| filetype on| filetype plugin indent on
 #| set ls=2 stl=[%{&readonly?'R':''}%{&modified?'+':'-'}]\ \ %<%f%*%=%-10.(%l,%c%V%)\ %y%6.(%P%)
+#| nn s/ :noh<cr>:let @/ = ""<cr>
 #| " neovim
 #| set ai sw=4 ts=4 sr mouse=av so=1 siso=5 tw=0 nu sb spr cf acd wic ic scs is hls ttm=0 t_Co=16
 #| for i in range(1, 16) | for j in ["", "s-", "c-"] | for k in ["", "i", "c"] | exe k . "nore <" . j . "f" . i . "> <nop>" | endfor | endfor | endfor
@@ -301,6 +302,23 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+
+
+####FILE +x bin/7zenc {{{
+#| #!/bin/sh
+#| 
+#| [ $# -le 1 ] && { echo "Usage: $0 [-n] <archive_name> [<file_names> ...]"; echo "  -n  no password in file name"; exit 1; }
+#| nopass=0
+#| [ "$1" = -n ] && { nopass=1; shift; }
+#| arc=$1
+#| shift
+#| [ "${arc%.7z}" = "$arc" ] && { echo "archive name not ending with .7z"; exit 1; }
+#| pw=$(tr -dc '0-9a-z' </dev/urandom | head -c 10)
+#| [ "$nopass" = 0 ] && arc="${arc%.7z}-$pw.7z"
+#| 7z a -bb0 -mhe=on -p"$pw" "$arc" "$@"
+#| echo
+#| echo "Password: $pw"
+#- }}}
 
 
 ####FILE +x bin/cl {{{
@@ -629,6 +647,20 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+####FILE +x bin/im-ascii {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 image"; exit 1; }
+#| magick "$1" -geometry "$(($(tput cols) - 1))x" -colorspace Gray -colors 8 txt: | sed -n 's/\([0-9][0-9]*\),\([0-9][0-9]*\).*(\([0-9][0-9]*\).*/\1 \2 \3/p' | awk 'BEGIN{T="#+- "}{if($2%2<=0){if(y!=$2){print "";y=$2}v=($3/100)*length(T);v=v-(v%1);c=substr(T,v+1,1);printf c}}END{print ""}'
+#- }}}
+
+
+####FILE +x bin/im-sixel {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
+#| magick "$1" -geometry "x${2:-100}" sixel:-
+#- }}}
+
+
 ####FILE +x bin/img2txtfull {{{
 #| #!/usr/bin/perl
 #| 
@@ -850,6 +882,103 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     }
 #|     return 0
 #| }
+#- }}}
+
+
+####FILE +x bin/n {{{
+#| #!/bin/bash
+#| 
+#| command -v nnn >/dev/null || { echo "nnn is not installed" >&2; exit 1; }
+#| 
+#| # rannnger: emulate ranger in nnn
+#| 
+#| getPreview() {
+#|     local x="$1"
+#|     local width="$2"
+#|     local height="$3"
+#|     if [[ -d "$x" ]]; then
+#|         ls -1A --color "$x" | head -n "$((height - 2))" | cut -c 1-"$width"
+#|     elif [[ "$(file --mime "$x")" == *charset=binary* ]]; then
+#|         echo Binary
+#|     else
+#|         head -n "$((height - 2))" "$x" | cut -c 1-"$width"
+#|     fi
+#| }
+#| watchPreview() {
+#|     declare -A preview=()
+#|     declare -A previewTime=()
+#|     width=0 height=0
+#|     rm "$NNN_FIFO.2" 2>/dev/null || true; mkfifo "$NNN_FIFO.2"
+#|     while read -r x; do
+#|         echo "$x" >&2 &
+#|         mtime=$(stat -c %y "$x")
+#|         width1=$(tput cols)
+#|         height1=$(tput lines)
+#|         if [[ "$width" != "$width1" || "$height" != "$height1" ]]; then
+#|             preview=() previewTime=() width="$width1" height="$height1"
+#|         fi
+#|         if [[ -n "${preview["$x"]}" && "$mtime" = "${previewTime["$x"]}" ]]; then
+#|             flag=CACHE
+#|         else
+#|             flag=NEW
+#|             p=$(getPreview "$x" "$width" "$height")
+#|             preview["$x"]="$p"
+#|             previewTime["$x"]="$mtime"
+#|         fi
+#|         clear
+#|         echo -ne '\e[0m'
+#|         echo "$flag ${previewTime["$x"]} $x"
+#|         echo "${preview["$x"]}"
+#|     done < "$NNN_FIFO" 2> "$NNN_FIFO.2"
+#| }
+#| watchPreview2() {
+#|     # while sleep 1; do date; done
+#|     sleep 1
+#|     while read -r x; do
+#|         x=$(dirname "$x")
+#|         x=$(dirname "$x")
+#|         clear
+#|         ls -1 --color "$x"
+#|     done < "$NNN_FIFO.2"
+#| }
+#| export -f getPreview
+#| export -f watchPreview
+#| export -f watchPreview2
+#| 
+#| opener() {
+#|     # nano "$2"
+#|     tmux -L "$1" new-window nano "$2"
+#| }
+#| export -f opener
+#| 
+#| name=aaa-$$
+#| fifo="/tmp/fifoaaa-$name"
+#| conf="
+#| # set -g default-command /bin/sh
+#| set -g mouse on
+#| set -g pane-border-indicators off
+#| set -g pane-active-border-style 'fg=black,bg=black'
+#| set -g status off
+#| bind -n f6 kill-server
+#| bind -n ! new-window -c '#{pane_current_path}'
+#| "
+#| 
+#| rm "$fifo" 2>/dev/null; mkfifo "$fifo"
+#| # trap 'tmux -L "$sock" kill-server; exit' INT TERM
+#| #
+#| export NNN_FIFO="$fifo"
+#| export NNN_OPENER='bash -c opener${IFS}"'"$name"'"${IFS}"$1" --'
+#| export NNN_FCOLORS=000102030405060708090a0b0c0d0e0f # TODO match ls color + video etc.
+#| 
+#| tmux -L "$name" -f <(echo "$conf") \
+#|     new-session nnn -cd \; \
+#|     split-window -hb -l 15% bash -c 'watchPreview2' \; \
+#|     select-pane -t :.+ \; \
+#|     split-window -h  bash -c 'watchPreview' \; \
+#|     select-pane -t :.+ \; \
+#|     select-pane -t :.+
+#| rm "$fifo"
+#| 
 #- }}}
 
 

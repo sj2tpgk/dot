@@ -1,0 +1,3 @@
+#!/bin/sh
+[ $# -eq 0 ] && { echo "Usage: $0 image"; exit 1; }
+magick "$1" -geometry "$(($(tput cols) - 1))x" -colorspace Gray -colors 8 txt: | sed -n 's/\([0-9][0-9]*\),\([0-9][0-9]*\).*(\([0-9][0-9]*\).*/\1 \2 \3/p' | awk 'BEGIN{T="#+- "}{if($2%2<=0){if(y!=$2){print "";y=$2}v=($3/100)*length(T);v=v-(v%1);c=substr(T,v+1,1);printf c}}END{print ""}'
