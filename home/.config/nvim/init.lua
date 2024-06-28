@@ -26,7 +26,7 @@ let g:env = {
 
 ]] -- >>>
 
-function plug(url) -- Plugin manager <<<
+function plug(url, lazy) -- Plugin manager <<<
     -- Example: plug "neovim/nvim-lspconfig"
     -- Just git clone repo, windows compatible
     -- Using /site/pack/**/opt/ instead of /site/pack/**/start/ to not automatically load packages
@@ -65,22 +65,28 @@ function plug(url) -- Plugin manager <<<
     end
 
     -- Load package (not needed if you use /start instead of /opt)
-    vim.cmd("packadd! " .. name)
+    if not lazy then vim.cmd("packadd! " .. name) end
 
 end
 function can_require(x)
     if package.loaded[x] then
         return true
-    else
-        for _, searcher in ipairs(package.searchers or package.loaders) do
-            local loader = searcher(x)
-            if type(loader) == "function" then
-                package.preload[x] = loader
-                return true
-            end
-        end
-        return false
     end
+    for _, searcher in ipairs(package.searchers or package.loaders) do
+        local loader = searcher(x)
+        if type(loader) == "function" then
+            package.preload[x] = loader
+            return true
+        end
+    end
+end
+function lazy(callback, delay) -- lazily run vimscript or lua function
+    -- `callback` is either string (vimscript) or lua function (lua)
+    delay = delay or 0 -- if 0 it's similar to asynchronous-ness but may still block UI
+    local timer = vim.uv.new_timer()
+    timer:start(0, 0, vim.schedule_wrap(function()
+        if type(callback) == "string" then vim.api.nvim_command(callback) else callback() end
+    end))
 end
 -- >>>
 
@@ -95,7 +101,9 @@ do -- Plugins <<<
     -- plug "dmix/elvish.vim"
 
     -- Treesitter
-    plug "nvim-treesitter/nvim-treesitter"
+    -- plug "nvim-treesitter/nvim-treesitter"
+    plug ("nvim-treesitter/nvim-treesitter", 1) -- lazy loading (experimental)
+    vim.cmd("aug vimrc_loadts \n au! \n au FileType sh,c,css,cpp,html,javascript,kotlin,lua,python,vim,help lua lazy('packadd nvim-treesitter | call v:lua.ts_config() | au! vimrc_loadts') \n aug END")
     -- plug "nvim-treesitter/playground"
     -- plug "HiPhish/nvim-ts-rainbow2"
 
@@ -271,7 +279,7 @@ fu! MyFold_NextLine(lnum, dir)
 endfu
 
 fu! IsFirstCharInString(lnum)
-    if exists("*TSIsFirstCharInString") | return TSIsFirstCharInString(a:lnum) | endif
+    if exists("*v:lua.ts_IsFirstCharInString") | return v:lua.ts_IsFirstCharInString(a:lnum) | endif
     " Maybe true  if and only if  inside a multiline string.
     let synNames = map(synstack(a:lnum, 1), "synIDattr(synIDtrans(v:val), 'name')")
     return len(synNames) > 0 && synNames[-1] == "String"
@@ -530,7 +538,7 @@ endfu
 
 fu! DescribeFace()
     " Try treesitter highlighting
-    if exists("*TSDescribeFace") && TSDescribeFace() | return | endif
+    if exists("*v:lua.ts_DescribeFace()") && v:lua.ts_DescribeFace() | return | endif
     let first = 1
     for id in synstack(line("."), col("."))
         if first == 1 | let first = 0 | else | echon " > " | endif
@@ -633,6 +641,8 @@ fu! MyHighlight_TS()
     hi link @property             Normal
     hi link @variable             Normal
 
+    hi link @type.builtin         Type
+
     " javascirpt
     hi link @constructor.javascript VarDef
     hi link @functiondef.javascript VarDef
@@ -664,6 +674,8 @@ fu! MyHighlight_RX()
 endfu
 
 fu! MyHighlight2()
+    set notermguicolors
+    "colorscheme vim
     call MyHighlight_UI()
     call MyHighlight_TS()
     call MyHighlight_RX()
@@ -1384,11 +1396,18 @@ if can_require"lspconfig" then -- ElDoc (lsp signatureHelp) <<<
     end
 end -- >>>
 
-if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
+function ts_config() -- TreeSitter <<<
+    ts_config_1()
+    ts_config_2()
+    ts_config_3()
+end -- >>>
+
+function ts_config_1() -- TreeSitter (1) setup <<<
+
     local nvim_treesitter_configs = require"nvim-treesitter.configs"
 
     nvim_treesitter_configs.setup {
-        ensure_installed = { "bash", "c", "css", "cpp", "html", "javascript", "kotlin", "lua", "python", "vim", },
+        ensure_installed = { "bash", "c", "css", "cpp", "html", "javascript", "kotlin", "lua", "python", "vim", "vimdoc", },
         highlight = {
             enable  = true,
         },
@@ -1407,183 +1426,9 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter <<<
 
 end -- >>>
 
-if can_require"nvim-treesitter.configs" then -- TreeSitter custom queries <<<
-    -- Note: this will fail on first install, because treesitter parsers will be installed later asynchronously and when this config is loaded there is no parser yet.
+function ts_config_2() -- TreeSitter (2) utilities <<<
 
-    -- Utilities to define/modify treesitter queries
-
-    -- based on https://github.com/nvim-treesitter/nvim-treesitter/issues/3058
-    local function safe_read(filename, read_quantifier)
-        local file, err = io.open(filename, 'r')
-        if not file then
-            error(err)
-        end
-        local content = file:read(read_quantifier)
-        io.close(file)
-        return content
-    end
-
-    local function read_query_files(filenames)
-        local contents = {}
-        for _, filename in ipairs(filenames) do
-            table.insert(contents, safe_read(filename, '*a'))
-        end
-        return table.concat(contents, '')
-    end
-
-    local function set_query(lang, query_name, text)
-        vim.treesitter.query.set(lang, query_name, text)
-    end
-
-    local function add_query(lang, query_name, text) -- will RESET query
-        local query = read_query_files(vim.treesitter.query.get_files(lang, query_name))
-        set_query(lang, query_name, query .. "\n" .. text)
-    end
-
-
-    -- Customize highlights.scm
-
-    add_query("bash", "highlights", [[
-(variable_assignment (variable_name) @variabledef.bash)
-;(function_definition (word) @functiondef)
-((command_name (word) @keyword.break)
- (#any-of? @keyword.break "break" "continue"))
-;((command_name (word) @keyword.return) ; this mark all commands as break/return (why?)
-; (#any-of? @keyword.break "exit" "return"))
-;(command_name (word) @functiondef)
-    ]])
-
-    add_query("c", "highlights", [[
-(pointer_declarator (identifier) @variabledef) ; "arr" in "int (*arr)[]"
-[ "break" "continue" ] @keyword.break
-[ "goto" ] @keyword.return
-((call_expression (identifier) @keyword.return)
- (#eq? @keyword.return "exit"))
-    ]])
-
-    add_query("javascript", "highlights", [[
-(function_declaration (identifier) @functiondef)
-(method_definition (property_identifier) @functiondef)
-(variable_declarator (identifier) @variabledef)
-(variable_declarator (object_pattern (shorthand_property_identifier_pattern) @variabledef))
-(class_declaration (identifier) @functiondef)
-(class_heritage (identifier) @typestrong)
-(class_body (field_definition (private_property_identifier) @variabledef))
-(class_body (field_definition (property_identifier) @variabledef))
-[ "break" "continue" "throw" ] @keyword.break
-    ]])
-
-    add_query("lua", "highlights", [[
-(function_declaration (identifier) @functiondef)
-(variable_declaration (assignment_statement (variable_list (identifier) @variabledef)))
-(variable_declaration (variable_list (identifier) @variabledef))
-(break_statement) @keyword.break
-    ]])
-
-    add_query("python", "highlights", [[
-(function_definition (identifier) @functiondef)
-(class_definition (identifier) @functiondef)
-[ "break" "continue" "pass" "raise" "assert" ] @keyword.break
-;(function_definition (parameters (identifier) @variabledef))
-;(function_definition (parameters (default_parameter . (identifier) @variabledef)))
-    ]])
-
-
-    -- Customize indents.scm
-
-    -- Available captures:
-    -- https://github.com/nvim-treesitter/nvim-treesitter/blob/master/CONTRIBUTING.md#indents
-    -- @indent         ; indent children when matching this node
-    -- @indent_end     ; marks the end of indented block
-    -- @aligned_indent ; behaves like python aligned/hanging indent
-    -- @dedent         ; dedent children when matching this node
-    -- @branch         ; dedent itself when matching this node
-    -- @ignore         ; do not indent in this node
-    -- @auto           ; behaves like 'autoindent' buffer option
-    -- @zero_indent    ; sets this node at position 0 (no indent)
-
-    add_query("html", "indents", [[
-(element (start_tag (tag_name) @_no_indent_tag (#any-of? @_no_indent_tag "html" "head" "body" "script" "style"))) @dedent
-    ]])
-
-    add_query("javascript", "indents", [[
-; queries here overrides default ones
-
-; ===== brace-less blocks =====
-
-[
- (for_in_statement)
- (for_statement)
- (while_statement)
-] @indent ; do indent on brace-less blocks
-
-
-; ===== if block =====
-
-; Tree structure of "if(x)...else if(y)...else if(z)...else..." is like:
-; (if_statement (else_clause (if_statement (else_clause (if_statement (else_clause))))))
-
-(if_statement (_)) @indent   ; (1) indent children of a if_statement
-(else_clause "else" @branch) ; (2) if we're indented N levels; dedent "else" to N-1 but children are at N
-
-(else_clause (if_statement) @dedent) ; (3) prevent children of else-if from double-indented by (1)
-(else_clause (if_statement (statement_block) @dedent)) ; (4) somehow needed
-
-(else_clause (statement_block) @dedent) ; (5) do the same as (3) for last else clause
-
-; (6) Add following if you don't use default indents.scm:
-; "}" @branch
-; (statement_block) @indent
-
-
-; ===== manual indent for comments and multiline string =====
-
-[
- (comment)
- (template_string)
-] @auto ; manual indent
-
-    ]])
-
-    set_query("vim", "indents", [[
-[
- (if_statement)
- (function_definition)
- (for_loop)
- (while_loop)
- (call_expression)
- (dictionnary)
- (list)
-] @indent
-
-[
- "endif"
- "endfunction"
- "endfor"
- "endwhile"
-] @indent_end
-
-[
- "endif"
- "endfunction"
- "endfor"
- "endwhile"
- (else_statement)
- (elseif_statement)
-] @branch
-    ]])
-
-end -- >>>
-
-if can_require"nvim-treesitter.configs" then -- TreeSitter util funcs <<<
-
-    vim.cmd [[
-    fu! TSDescribeFace()
-        return luaeval("tsdescribe()")
-    endfu
-    ]]
-
-    function tsdescribe()
+    function ts_DescribeFace()
         local parsers     = require "nvim-treesitter.parsers"
         local highlighter = require "vim.treesitter.highlighter"
         local treesitter  = require "vim.treesitter"
@@ -1650,13 +1495,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter util funcs <<<
         end
     end
 
-    vim.cmd [[
-    fu! TSIsFirstCharInString(lnum)
-        return luaeval("ts_isFirstCharInString(" . a:lnum . ")")
-    endfu
-    ]]
-
-    function ts_isFirstCharInString(lnum)
+    function ts_IsFirstCharInString(lnum)
         local hlslist = queryHlsList(lnum, 1)
         for _, hls in ipairs(hlslist) do
             for _, hl in ipairs(hls) do
@@ -1668,7 +1507,7 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter util funcs <<<
         return false
     end
 
-    function TSGetLangAtCursor()
+    function ts_GetLangAtCursor()
         local parsers     = require "nvim-treesitter.parsers"
         local highlighter = require "vim.treesitter.highlighter"
         local bufnr  = vim.api.nvim_get_current_buf()
@@ -1715,6 +1554,174 @@ if can_require"nvim-treesitter.configs" then -- TreeSitter util funcs <<<
         end
         if #chunks >= 1 then vim.api.nvim_echo(chunks, true, {}) end
     end
+
+    -- Utilities to define/modify treesitter queries
+
+    -- based on https://github.com/nvim-treesitter/nvim-treesitter/issues/3058
+    function ts_safe_read(filename, read_quantifier)
+        local file, err = io.open(filename, 'r')
+        if not file then
+            error(err)
+        end
+        local content = file:read(read_quantifier)
+        io.close(file)
+        return content
+    end
+
+    function ts_read_query_files(filenames)
+        local contents = {}
+        for _, filename in ipairs(filenames) do
+            table.insert(contents, ts_safe_read(filename, '*a'))
+        end
+        return table.concat(contents, '')
+    end
+
+    function ts_set_query(lang, query_name, text)
+        vim.treesitter.query.set(lang, query_name, text)
+    end
+
+    function ts_add_query(lang, query_name, text) -- will RESET query
+        local query = ts_read_query_files(vim.treesitter.query.get_files(lang, query_name))
+        ts_set_query(lang, query_name, query .. "\n" .. text)
+    end
+
+end -- >>>
+
+function ts_config_3() -- TreeSitter (3) custom queries <<<
+
+    -- Note: this will fail on first install, because treesitter parsers will be installed later asynchronously and when this config is loaded there is no parser yet.
+
+    -- Customize highlights.scm
+
+    ts_add_query("bash", "highlights", [[
+(variable_assignment (variable_name) @variabledef.bash)
+;(function_definition (word) @functiondef)
+((command_name (word) @keyword.break)
+ (#any-of? @keyword.break "break" "continue"))
+;((command_name (word) @keyword.return) ; this mark all commands as break/return (why?)
+; (#any-of? @keyword.break "exit" "return"))
+;(command_name (word) @functiondef)
+    ]])
+
+    ts_add_query("c", "highlights", [[
+(pointer_declarator (identifier) @variabledef) ; "arr" in "int (*arr)[]"
+[ "break" "continue" ] @keyword.break
+[ "goto" ] @keyword.return
+((call_expression (identifier) @keyword.return)
+ (#eq? @keyword.return "exit"))
+    ]])
+
+    ts_add_query("javascript", "highlights", [[
+(function_declaration (identifier) @functiondef)
+(method_definition (property_identifier) @functiondef)
+(variable_declarator (identifier) @variabledef)
+(variable_declarator (object_pattern (shorthand_property_identifier_pattern) @variabledef))
+(class_declaration (identifier) @functiondef)
+(class_heritage (identifier) @typestrong)
+(class_body (field_definition (private_property_identifier) @variabledef))
+(class_body (field_definition (property_identifier) @variabledef))
+[ "break" "continue" "throw" ] @keyword.break
+    ]])
+
+    ts_add_query("lua", "highlights", [[
+(function_declaration (identifier) @functiondef)
+(variable_declaration (assignment_statement (variable_list (identifier) @variabledef)))
+(variable_declaration (variable_list (identifier) @variabledef))
+(break_statement) @keyword.break
+    ]])
+
+    ts_add_query("python", "highlights", [[
+(function_definition (identifier) @functiondef)
+(class_definition (identifier) @functiondef)
+[ "break" "continue" "pass" "raise" "assert" ] @keyword.break
+;(function_definition (parameters (identifier) @variabledef))
+;(function_definition (parameters (default_parameter . (identifier) @variabledef)))
+    ]])
+
+
+    -- Customize indents.scm
+
+    -- Available captures:
+    -- https://github.com/nvim-treesitter/nvim-treesitter/blob/master/CONTRIBUTING.md#indents
+    -- @indent         ; indent children when matching this node
+    -- @indent_end     ; marks the end of indented block
+    -- @aligned_indent ; behaves like python aligned/hanging indent
+    -- @dedent         ; dedent children when matching this node
+    -- @branch         ; dedent itself when matching this node
+    -- @ignore         ; do not indent in this node
+    -- @auto           ; behaves like 'autoindent' buffer option
+    -- @zero_indent    ; sets this node at position 0 (no indent)
+
+    ts_add_query("html", "indents", [[
+(element (start_tag (tag_name) @_no_indent_tag (#any-of? @_no_indent_tag "html" "head" "body" "script" "style"))) @dedent
+    ]])
+
+    ts_add_query("javascript", "indents", [[
+; queries here overrides default ones
+
+; ===== brace-less blocks =====
+
+[
+ (for_in_statement)
+ (for_statement)
+ (while_statement)
+] @indent ; do indent on brace-less blocks
+
+
+; ===== if block =====
+
+; Tree structure of "if(x)...else if(y)...else if(z)...else..." is like:
+; (if_statement (else_clause (if_statement (else_clause (if_statement (else_clause))))))
+
+(if_statement (_)) @indent   ; (1) indent children of a if_statement
+(else_clause "else" @branch) ; (2) if we're indented N levels; dedent "else" to N-1 but children are at N
+
+(else_clause (if_statement) @dedent) ; (3) prevent children of else-if from double-indented by (1)
+(else_clause (if_statement (statement_block) @dedent)) ; (4) somehow needed
+
+(else_clause (statement_block) @dedent) ; (5) do the same as (3) for last else clause
+
+; (6) Add following if you don't use default indents.scm:
+; "}" @branch
+; (statement_block) @indent
+
+
+; ===== manual indent for comments and multiline string =====
+
+[
+ (comment)
+ (template_string)
+] @auto ; manual indent
+
+    ]])
+
+    ts_set_query("vim", "indents", [[
+[
+ (if_statement)
+ (function_definition)
+ (for_loop)
+ (while_loop)
+ (call_expression)
+ (dictionnary)
+ (list)
+] @indent
+
+[
+ "endif"
+ "endfunction"
+ "endfor"
+ "endwhile"
+] @indent_end
+
+[
+ "endif"
+ "endfunction"
+ "endfor"
+ "endwhile"
+ (else_statement)
+ (elseif_statement)
+] @branch
+    ]])
 
 end -- >>>
 
@@ -1834,7 +1841,7 @@ function toggleCmt(visual) -- <<<
         return false
     end
     local function tslang(lang) -- check current treesitter tree has given lang
-        return TSGetLangAtCursor and (TSGetLangAtCursor() == lang)
+        return ts_GetLangAtCursor and (ts_GetLangAtCursor() == lang)
     end
     local function getCMSHere()
         if vim.bo.ft == "vim" and (hasSyntax("vimLuaRegion") or tslang("lua")) then

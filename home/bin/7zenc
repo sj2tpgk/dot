@@ -1,0 +1,13 @@
+#!/bin/sh
+
+[ $# -le 1 ] && { echo "Usage: $0 [-n] <archive_name> [<file_names> ...]"; echo "  -n  no password in file name"; exit 1; }
+nopass=0
+[ "$1" = -n ] && { nopass=1; shift; }
+arc=$1
+shift
+[ "${arc%.7z}" = "$arc" ] && { echo "archive name not ending with .7z"; exit 1; }
+pw=$(tr -dc '0-9a-z' </dev/urandom | head -c 10)
+[ "$nopass" = 0 ] && arc="${arc%.7z}-$pw.7z"
+7z a -bb0 -mhe=on -p"$pw" "$arc" "$@"
+echo
+echo "Password: $pw"
