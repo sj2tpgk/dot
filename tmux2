@@ -971,7 +971,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| export NNN_FCOLORS=000102030405060708090a0b0c0d0e0f # TODO match ls color + video etc.
 #| 
 #| tmux -L "$name" -f <(echo "$conf") \
-#|     new-session nnn -cd \; \
+#|     new-session nnn -cdRU \; \
 #|     split-window -hb -l 15% bash -c 'watchPreview2' \; \
 #|     select-pane -t :.+ \; \
 #|     split-window -h  bash -c 'watchPreview' \; \
