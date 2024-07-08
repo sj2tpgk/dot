@@ -191,6 +191,7 @@ endfu
 set statusline=%h%w%m%r\ \ %<%t\ \ \ [%{StlDirName()}]\ \ \ (%{StlFileTypeEnc()})%=%-14.(%l,%c%V%)\ %P%3@StlClose@\ \ [X]%X
 
 set laststatus=2
+" set cmdheight=0
 " >>>
 
 " Tabline <<<
@@ -582,7 +583,7 @@ fu! MyHighlight_UI()
 
     " Status
     hi StatusLine   ctermbg=white ctermfg=black cterm=bold
-    hi StatusLineNC ctermbg=white ctermfg=black cterm=none
+    hi StatusLineNC ctermbg=white ctermfg=black cterm=NONE
 
     " Misc
     hi Directory  ctermfg=cyan " "cterm=" in :hi command output etc.
@@ -591,6 +592,7 @@ fu! MyHighlight_UI()
     hi SpecialKey ctermfg=red  " <Enter> etc.
     hi Underlined ctermfg=cyan
     hi LineNr     ctermfg=yellow
+    " hi MsgArea    ctermfg=blue cterm=reverse
 endfu
 
 fu! MyHighlight_TS()
@@ -1275,6 +1277,9 @@ if can_require"lspconfig" then -- ElDoc (lsp signatureHelp) <<<
             local actPar = sig.activeParameter or result.activeParameter
             lspsig = "ERROR!"
 
+            --  gopls sets actPar to nil when a func has optional params but you haven't added one yet; we assume you are inputting the first param
+            if actPar == nil then actPar = 0 end
+
             if #params == 0 or #params <= actPar then -- no params (functions with no args etc.), or active param index is more than param count
                 local chunks = { { " ", "None" }, { sigLbl, "LspSig" } }
                 nvim_echo_no_hitenter(chunks, true, {})
@@ -1407,7 +1412,7 @@ function ts_config_1() -- TreeSitter (1) setup <<<
     local nvim_treesitter_configs = require"nvim-treesitter.configs"
 
     nvim_treesitter_configs.setup {
-        -- also edit autocmd pattern for lazy plugin loading
+        -- note: please update autocmd pattern for lazy loading
         ensure_installed = { "bash", "c", "css", "cpp", "go", "html", "javascript", "kotlin", "lua", "python", "vim", "vimdoc", },
         highlight = {
             enable  = true,
