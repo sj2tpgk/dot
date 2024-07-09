@@ -110,6 +110,9 @@ do -- Plugins <<<
     -- LSP
     plug "neovim/nvim-lspconfig"
 
+    -- AI
+    -- plug "David-Kunz/gen.nvim"
+
     -- Editing commands
     plug "junegunn/vim-easy-align"
     plug "windwp/nvim-autopairs"
@@ -1729,6 +1732,28 @@ function ts_config_3() -- TreeSitter (3) custom queries <<<
 ] @branch
     ]])
 
+end -- >>>
+
+if can_require"gen" then -- Ollama (experimental) <<<
+    local gen = require"gen"
+    vim.cmd [[ nnore <c-g> :G<cr> ]]
+    gen.setup {
+        model = "deepseek-coder-v2:16b",
+        host = "192.168.1.9",
+        port = "11434",
+        quit_map = "<esc>",
+        retry_map = "<c-r>",
+        init = function(options) end,
+        command = function(options)
+            local body = {model = options.model, stream = true}
+            return "curl --silent --no-buffer -X POST http://" .. options.host .. ":" .. options.port .. "/api/chat -d $body"
+        end,
+        display_mode = "float", -- float/split/horizontal-split
+        show_prompt = false,
+        show_model = false,
+        no_auto_close = false,
+        debug = false
+    }
 end -- >>>
 
 if can_require"nvim-autopairs" then -- nvim-autopairs <<<
