@@ -108,6 +108,7 @@
   .style-i43zkt, /* user name */
   .style-172y6pz, /* flair at article top */
   div:has(> button[aria-label*="facebook"]), /* sns */
+  section:has(> button[aria-label*="facebook"]), /* sns */
   .it-MdContent ~ *, /* footer 1 */
   footer /* footer 3 */
   { display: none !important }
