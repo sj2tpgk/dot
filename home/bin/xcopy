@@ -90,9 +90,14 @@ elif [ -n "${WAYLAND_DISPLAY}" ]; then # wayland
     wl-paste 2>/dev/null | xclip -selection clipboard -i 2>/dev/null &
     # note: wl-clipboard-rs is faster than wl-clipboard
     # (`time echo a | wl-copy` is 10ms vs 35ms)
+    # but wl-clipboard-rs does not work on gnome as of early 2024
 
 elif command -v xclip > /dev/null; then # xorg
     { [ -z "$text" ] && cat || printf "%s" "$text"; } \
         | xclip -selection clipboard -i
+
+elif [ "$PREFIX" != "${PREFIX#*/com.termux/*}" ]; then # termux
+    { [ -z "$text" ] && cat || printf "%s" "$text"; } \
+        | termux-clipboard-set
 
 fi

@@ -89,4 +89,7 @@ elif [ -n "${WAYLAND_DISPLAY}" ]; then # wayland
 elif command -v xclip > /dev/null; then # xorg
     xclip -selection clipboard -o
 
+elif [ "$PREFIX" != "${PREFIX#*/com.termux/*}" ]; then # termux
+    termux-clipboard-get
+
 fi

@@ -31,7 +31,7 @@ aliasif nv   nvim
 aliasif v    nvim
 aliasif sudo doas
 aliasif ra   ranger
-has rlwrap && alias sh 'rlwrap -p"3;34" sh' # Dash has no history, arrow keys etc.
+has rlwrap && alias sh 'PS1="\$ " rlwrap -p"3;34" sh' # Dash has no history, arrow keys etc.
 
 # Abbr
 if has sudo

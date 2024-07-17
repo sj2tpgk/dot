@@ -28,14 +28,12 @@ _init() {
     # Create "$TMUX_ROOT" directory
     [ "${TMUX_ROOT#$PREFIX/tmp/}" = "$TMUX_ROOT" ] && errexit "TMUX_ROOT $TMUX_ROOT is not in /tmp/"
     if [ -d "$TMUX_ROOT" ]; then
-        rm -r "$TMUX_ROOT"
-        mkdir -p "$TMUX_ROOT"
+        rm -r -- "$TMUX_ROOT"/*
     else
         mkdir -p "$TMUX_ROOT"
     fi
 
     # Create $TMUX_ROOT/bin and add it to $PATH
-    mkdir -p "$TMUX_ROOT/bin"
     export PATH="$TMUX_ROOT/bin:$PATH"
 
     # Extract files from this script
@@ -46,18 +44,34 @@ _init() {
     #                                      (optionally followed by one apace and three open-brace, will be removed)
     #   #| <string>                        Replaced with <string> (may help sh syntax highlighting)
     #   #- <string>                        This line is removed
-    awk '/^####FILE/{sub("####FILE ","");sub("{""{{$","");print NR" "$0}' "$0" | while read -r nr permission file; do
-        path="$TMUX_ROOT"/"${file##/*}"
-        dir=$(dirname "$path")
-        # echo "def nr=[$nr], permission=[$permission], path=[$path], dir=[$dir]"
-        [ ! -d "$dir" ] && mkdir -p "$dir"
-        sed "1,${nr}d;/^####/Q;/^#- /d;s/^#| //" "$0" > "$path"
-        case "$permission" in
-            ("--") ;;
-            ("+x") chmod +x "$path" ;;
-            ("*")  errexit "invalid permission specified: $permission (file=$file)" ;;
-        esac
-    done
+    if [ 1 -eq 0 ]; then
+        awk '/^####FILE/{sub("####FILE ","");sub("{""{{$","");print NR" "$0}' "$0" | while read -r nr permission file; do
+            path="$TMUX_ROOT"/"${file##/*}"
+            dir=$(dirname "$path")
+            # echo "def nr=[$nr], permission=[$permission], path=[$path], dir=[$dir]"
+            [ ! -d "$dir" ] && mkdir -p "$dir"
+            sed "1,${nr}d;/^####/Q;/^#- /d;s/^#| //" "$0" > "$path"
+            case "$permission" in
+                ("--") ;;
+                ("+x") chmod +x "$path" ;;
+                ("*")  errexit "invalid permission specified: $permission (file=$file)" ;;
+            esac
+        done
+    else
+        # improved version: no nested loop, no duplicate mkdir
+        awk -v T="$TMUX_ROOT/" -v Q="'" '
+            BEGIN{nxs=0}
+            /^####/{close(out);out=0}
+            END{close(out);cmd="chmod +x";for(i=0;i<nxs;i++){cmd=cmd" "Q xs[i] Q};system(cmd)}
+            /^#-/{next}
+            out{if(index($0,"#| ")){$0=substr($0,4)};print $0>out}
+            /^####FILE/{
+              out=T"/"$3;outd=out;sub("/[^/]*$","",outd);
+              if(!outds[outd]){system("mkdir -p "Q outd Q);outds[outd]=1}
+              if($2=="+x"){xs[nxs++]=out}
+            }
+        ' "$0"
+    fi
 
 }
 
@@ -82,7 +96,7 @@ else
     TMUX_SOCKET_NAME=${TMUX_SOCKET_NAME:-default}
     export TMUX_SOCKET_NAME="$TMUX_SOCKET_NAME"
 
-    if [ 0 -eq $(tmux -L "$TMUX_SOCKET_NAME" list-sessions 2>/dev/null | wc -l) ]; then
+    if [ -z "$(tmux -L "$TMUX_SOCKET_NAME" list-sessions 2>/dev/null)" ]; then
         # If no session => create one
         tmux -L "$TMUX_SOCKET_NAME" -f "$TMUX_ROOT/tmux.conf"
     else
@@ -246,16 +260,22 @@ set -g status-left-length 4
 set -g status-right       '#{s#^'$HOME'#~#;s#/\$##;s#([-._]*[^/])[^/]*/#\1/#g:pane_current_path} [#{s/^(..)...*(..)$/\1.\2/:user}@#{s/^(..)...*(..)$/\1.\2/:host}]'
 set -g pane-active-border-style fg=yellow
 
-bind    '"' split-window -vc "#{pane_current_path}"
-bind    s   split-window -vc "#{pane_current_path}"
-bind    %   split-window -hc "#{pane_current_path}"
-bind    v   split-window -hc "#{pane_current_path}"
-bind    w   new-window   -c  "#{pane_current_path}"
-bind    r   run "$TMUX_SCRIPT" \; source "$TMUX_ROOT/tmux.conf" \; display "Reloaded .tmux.conf"
-bind -r o   select-pane -t :.+
-bind -r n   next-window
-bind -n F3  next-window
-bind -n F4  select-pane -t :.+
+bind    '"'   split-window -vc "#{pane_current_path}"
+bind    s     split-window -vc "#{pane_current_path}"
+bind    %     split-window -hc "#{pane_current_path}"
+bind    v     split-window -hc "#{pane_current_path}"
+bind    w     new-window   -c  "#{pane_current_path}"
+bind    r     run "$TMUX_SCRIPT" \; source "$TMUX_ROOT/tmux.conf" \; display "Reloaded .tmux.conf"
+bind -r o     select-pane -t :.+
+bind -r n     next-window
+bind -n F3    next-window
+bind -n F4    select-pane -t :.+
+bind -r Left  resize-pane -L 1
+bind -r Down  resize-pane -D 1
+bind -r Up    resize-pane -U 1
+bind -r Right resize-pane -R 1
+bind -r <     swap-pane -d -t -1
+bind -r >     swap-pane -d -t +1
 
 # Completion using fzf
 bind    Tab      run "$TMUX_ROOT/bin/tmux-comp"
@@ -267,7 +287,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 ####FILE -- vimrc {{{
 #| " vim
 #| if filereadable($VIMRUNTIME . "/defaults.vim") | source $VIMRUNTIME/defaults.vim | endif
-#| aug view|exe "au!"|exe "au BufWinLeave * sil! cal mkdir(&viewdir)|mkvie"|exe "au BufWinEnter * sil! lo"|aug END
+#| aug view|exe "au!"|exe "au BufWinLeave * sil! cal mkdir(&viewdir,'p')|mkvie"|exe "au BufWinEnter * sil! lo"|aug END
 #| set et nocp sm hid
 #| syntax on| filetype on| filetype plugin indent on
 #| set ls=2 stl=[%{&readonly?'R':''}%{&modified?'+':'-'}]\ \ %<%f%*%=%-10.(%l,%c%V%)\ %y%6.(%P%)
@@ -654,13 +674,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
-####FILE +x bin/im-sixel {{{
-#| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
-#| magick "$1" -geometry "x${2:-100}" sixel:-
-#- }}}
-
-
 ####FILE +x bin/img2txtfull {{{
 #| #!/usr/bin/perl
 #| 
@@ -686,6 +699,13 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| input=$*
 #| # echo "[$input]"
 #| rclip -f -t 30 "$input" 2>/dev/null | grep -v TensorList | sxiv -t -i -
+#- }}}
+
+
+####FILE +x bin/im-sixel {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
+#| magick "$1" -geometry "x${2:-100}" sixel:-
 #- }}}
 
 
@@ -1944,10 +1964,15 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     wl-paste 2>/dev/null | xclip -selection clipboard -i 2>/dev/null &
 #|     # note: wl-clipboard-rs is faster than wl-clipboard
 #|     # (`time echo a | wl-copy` is 10ms vs 35ms)
+#|     # but wl-clipboard-rs does not work on gnome as of early 2024
 #| 
 #| elif command -v xclip > /dev/null; then # xorg
 #|     { [ -z "$text" ] && cat || printf "%s" "$text"; } \
 #|         | xclip -selection clipboard -i
+#| 
+#| elif [ "$PREFIX" != "${PREFIX#*/com.termux/*}" ]; then # termux
+#|     { [ -z "$text" ] && cat || printf "%s" "$text"; } \
+#|         | termux-clipboard-set
 #| 
 #| fi
 #- }}}
@@ -2044,6 +2069,9 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| 
 #| elif command -v xclip > /dev/null; then # xorg
 #|     xclip -selection clipboard -o
+#| 
+#| elif [ "$PREFIX" != "${PREFIX#*/com.termux/*}" ]; then # termux
+#|     termux-clipboard-get
 #| 
 #| fi
 #- }}}
