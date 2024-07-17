@@ -54,6 +54,9 @@ user_pref("browser.safebrowsing.malware.enabled", false);
 user_pref("browser.safebrowsing.phishing.enabled", false);
 user_pref("datareporting.healthreport.uploadEnabled", false);
 
+// firefox 128
+// https://github.com/mozilla/explainers/tree/main/ppa-experiment
+user_pref("dom.private-attribution.submission.enabled", false);
 
 // Copied from https://gist.github.com/AetherEternity/5a6bb6e493a3d34988fc7342013f2ea6
 
