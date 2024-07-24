@@ -64,7 +64,7 @@ _init() {
             /^####/{close(out);out=0}
             END{close(out);cmd="chmod +x";for(i=0;i<nxs;i++){cmd=cmd" "Q xs[i] Q};system(cmd)}
             /^#-/{next}
-            out{if(index($0,"#| ")){$0=substr($0,4)};print $0>out}
+            out{sub("#\\| ?","");print $0>out}
             /^####FILE/{
               out=T"/"$3;outd=out;sub("/[^/]*$","",outd);
               if(!outds[outd]){system("mkdir -p "Q outd Q);outds[outd]=1}
@@ -280,6 +280,10 @@ bind -r >     swap-pane -d -t +1
 # Completion using fzf
 bind    Tab      run "$TMUX_ROOT/bin/tmux-comp"
 
+# Use xcopy if exists (todo: add to main config)
+if-shell "command -v xcopy >/dev/null" "set copy-command xcopy"
+
+# Load local config
 if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
@@ -287,7 +291,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 ####FILE -- vimrc {{{
 #| " vim
 #| if filereadable($VIMRUNTIME . "/defaults.vim") | source $VIMRUNTIME/defaults.vim | endif
-#| aug view|exe "au!"|exe "au BufWinLeave * sil! cal mkdir(&viewdir,'p')|mkvie"|exe "au BufWinEnter * sil! lo"|aug END
 #| set et nocp sm hid
 #| syntax on| filetype on| filetype plugin indent on
 #| set ls=2 stl=[%{&readonly?'R':''}%{&modified?'+':'-'}]\ \ %<%f%*%=%-10.(%l,%c%V%)\ %y%6.(%P%)
@@ -301,7 +304,14 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| if $MYKBD == "colemakdh" | no n gj| no e gk| no gn j| no ge k| no N <c-d>| no E <c-u>| no k h| no i l| no gk 0| no gi <end>| no l i| no L I| no sl s| no j n| no J N| no h e| no H E| ono h e| ono H E| ono k 0| ono i $| ono lw iw| ono lW iW| endif
 #| ono m %|nn m %
 #| exe "au InsertEnter * set cul"| exe "au InsertLeave * set nocul"
-
+#|
+#| " Save/restore view
+#| aug view
+#| au!
+#| au BufWinLeave * if expand('%') != '' && &bt !~ 'nofile' | sil! cal mkdir(&vdir,'p') | mkvie | end
+#| au BufWinEnter * if expand('%') != '' && &bt !~ 'nofile' | sil! lo | end
+#| aug END
+#|
 #| " Basic auto completion
 #| inore <tab>       <c-n>
 #| inore <plug>MyTab <c-n>
@@ -674,6 +684,13 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+####FILE +x bin/im-sixel {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
+#| magick "$1" -geometry "x${2:-100}" sixel:-
+#- }}}
+
+
 ####FILE +x bin/img2txtfull {{{
 #| #!/usr/bin/perl
 #| 
@@ -699,13 +716,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| input=$*
 #| # echo "[$input]"
 #| rclip -f -t 30 "$input" 2>/dev/null | grep -v TensorList | sxiv -t -i -
-#- }}}
-
-
-####FILE +x bin/im-sixel {{{
-#| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
-#| magick "$1" -geometry "x${2:-100}" sixel:-
 #- }}}
 
 
