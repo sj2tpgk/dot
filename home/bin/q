@@ -1,0 +1,8 @@
+#!/bin/sh
+
+[ $# -le 0 ] && { echo "Usage: ./quiet COMMAND ARGS ..."; exit 1; }
+
+"$@" >/dev/null 2>&1 &
+
+# recommended fish config (complete commands):
+# complete -c q -xa '(__fish_complete_subcommand)'

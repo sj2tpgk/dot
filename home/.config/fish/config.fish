@@ -56,10 +56,19 @@ if has git
     abbr gpu  git pull origin master
     abbr gs   git status
 end
+if has flatpak
+    abbr fl        flatpak
+    abbr fli  sudo flatpak install
+    abbr flr       flatpak run
+    abbr fls       flatpak search
+    abbr flui      flatpak uninstall
+    abbr flup      flatpak update
+end
 
 # Completion
 # "quiet" : completion like "if" or "sudo" (followed by another commands)
 complete -c quiet -xa '(__fish_complete_subcommand)'
+complete -c q     -xa '(__fish_complete_subcommand)'
 
 # Pager and Man ( -x (--export) is necessary )
 if has vimpager
