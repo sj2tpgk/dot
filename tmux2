@@ -351,6 +351,19 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+####FILE +x bin/c {{{
+#| #!/bin/sh
+#| 
+#| if command -v highlight >/dev/null 2>&1; then
+#|     highlight --out-format ansi --stdout "$@"
+#| elif command -v bat >/dev/null 2>&1; then
+#|     bat "$@"
+#| else
+#|     cat "$@"
+#| fi
+#- }}}
+
+
 ####FILE +x bin/cl {{{
 #| #!/bin/sh
 #| BREAK_CHARS="(){}[],^%$#@\"\";''|\\"
@@ -1420,6 +1433,18 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|                 print(json.dumps(jso, ensure_ascii=False, separators=(',', ':')))
 #|             else:
 #|                 print(json.dumps(jso, ensure_ascii=False, indent=2))
+#- }}}
+
+
+####FILE +x bin/q {{{
+#| #!/bin/sh
+#| 
+#| [ $# -le 0 ] && { echo "Usage: ./quiet COMMAND ARGS ..."; exit 1; }
+#| 
+#| "$@" >/dev/null 2>&1 &
+#| 
+#| # recommended fish config (complete commands):
+#| # complete -c q -xa '(__fish_complete_subcommand)'
 #- }}}
 
 
