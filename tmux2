@@ -329,6 +329,28 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| endfu
 #| " au InsertCharPre * call OpenCompletion()
 #| hi Pmenu ctermbg=black ctermfg=magenta
+#|
+#| " Basic linter integration (press | key)
+#| nnore <bar> :sil call Linter(0)<cr>
+#| " au CursorHold *.pl call Linter(1)
+#| set updatetime=700
+#| au FileType sh setl makeprg=shellcheck\ -f\ gcc\ %:S
+#| au FileType perl setl makeprg=perlcritic\ --verbose\ 1\ -3\ %:S
+#| set ar aw
+#| fu! Linter(nomove)
+#|     let qf = 0 " quickfix open?
+#|     for i in range(1, winnr('$')) | let qf += getwinvar(i, '&syntax') == 'qf' | endfo
+#|     if empty(bufname("."))
+#|         return
+#|     elseif (getbufinfo(".")[0].changed || !qf) && executable(split(&makeprg)[0])
+#|         let [s1, s2] = [winnr(), getpos(".")]
+#|         sil make | cope
+#|         while winnr() != s1 | exec "norm! \<c-w>w" | endwh | call setpos(".", s2)
+#|     elseif !a:nomove
+#|         try | cnext | catch | cfirst | endtry
+#|     endif
+#|     " For neovim, check vim.diagnostic.{show,fromqflist}, vim.system, vim.schedule
+#| endf
 #- }}}
 
 
