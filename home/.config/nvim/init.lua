@@ -589,12 +589,13 @@ fu! MyHighlight_UI()
     hi StatusLineNC ctermbg=white ctermfg=black cterm=NONE
 
     " Misc
-    hi Directory  ctermfg=cyan " "cterm=" in :hi command output etc.
-    hi MoreMsg    ctermfg=cyan " "Save and exit?" question etc.
-    hi Question   ctermfg=cyan " "Press ENTER or ..." etc.
-    hi SpecialKey ctermfg=red  " <Enter> etc.
-    hi Underlined ctermfg=cyan
-    hi LineNr     ctermfg=yellow
+    hi Directory   ctermfg=cyan " "cterm=" in :hi command output etc.
+    hi MoreMsg     ctermfg=cyan " "Save and exit?" question etc.
+    hi Question    ctermfg=cyan " "Press ENTER or ..." etc.
+    hi SpecialKey  ctermfg=red  " <Enter> etc.
+    hi Underlined  ctermfg=cyan
+    hi LineNr      ctermfg=yellow
+    hi NormalFloat ctermfg=white ctermbg=black " Floating window
     " hi MsgArea    ctermfg=blue cterm=reverse
 endfu
 

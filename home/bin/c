@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if command -v highlight >/dev/null 2>&1; then
+    highlight --out-format ansi --stdout "$@"
+elif command -v bat >/dev/null 2>&1; then
+    bat "$@"
+else
+    cat "$@"
+fi
