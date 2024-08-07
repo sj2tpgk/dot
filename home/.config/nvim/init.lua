@@ -676,6 +676,7 @@ fu! MyHighlight_RX()
     "syn clear yamlBlockMappingKey
     "syn match yamlBlockMappingKey /\_s*\zs\K\+/
     "hi link yamlBlockMappingKey Normal
+    hi link dockerfileKeyword Special
 endfu
 
 fu! MyHighlight2()
