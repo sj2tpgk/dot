@@ -59,6 +59,11 @@ rec() {
         for i in ./* ./.*; do
             # note: $i is global but safe
             # note: cwd may change after rec
+            # note: assumes no file named . or .. exists
+            i=${i#./}
+            case "$i" in
+                (.|..) continue ;;
+            esac
             if [ -e "$1/$i" ] || [ -L "$1/$i" ]; then
                 rec "$1/$i" "$2/$i"
             fi

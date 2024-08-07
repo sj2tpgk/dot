@@ -1221,6 +1221,31 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+####FILE +x bin/ping-scan {{{
+#| #!/bin/sh
+#| 
+#| # vim set noinf
+#| 
+#| [ $# -eq 0 ] && { echo "Usage: $0 PREFIX [TIMEOUT]"; echo "example: $0 192.168.1 3"; exit 1; }
+#| 
+#| pfx=${1:-192.168.1}
+#| tout=${2:-5}
+#| 
+#| tmpd=$(mktemp -d /tmp/ping-scan-XXXXXXX)
+#| 
+#| pids=""
+#| for i in $(seq 1 254); do
+#|     ip=$pfx.$i
+#|     sh -c "timeout $tout ping -c1 $ip && touch \"$tmpd\"/$ip || rm \"$tmpd\"/$ip" >/dev/null 2>&1 &
+#|     pids="$pids $!"
+#| done
+#| wait $pids
+#| 
+#| ls "$tmpd"
+#| rm -r "$tmpd"
+#- }}}
+
+
 ####FILE +x bin/pip-info {{{
 #| #!/usr/bin/env python3
 #| import argparse, json, os, os.path, platform, re, sys, time, urllib.error, urllib.request
