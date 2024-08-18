@@ -156,7 +156,7 @@
 }
 
 @-moz-document domain("developer.mozilla.org") {
-	.top-banner, .main-document-header-container { display: none }
+	.top-banner, .top-navigation, .localized-content-note, .main-document-header-container, .article-footer, #nav-footer { display: none }
 	#sidebar-quicklinks { top: 20px !important }
 	.toc-container      { top: 0    !important }
 }
