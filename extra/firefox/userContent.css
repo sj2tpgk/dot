@@ -67,6 +67,13 @@
     }
 }
 
+@-moz-document domain("readthedocs.io") {
+    span.pre, em { color: #bd1f1f }
+    @media (prefers-color-scheme: dark) {
+        span.pre, em { color: #ec5d5d }
+    }
+}
+
 @-moz-document regexp(".*//www.gnu.org/software/[^/]*/manual.*") {
     code, samp, var { color: #d22 }
     @media (prefers-color-scheme: dark) {
@@ -149,7 +156,7 @@
 }
 
 @-moz-document domain("developer.mozilla.org") {
-	.top-banner, .main-document-header-container { display: none }
+	.top-banner, .top-navigation, .localized-content-note, .main-document-header-container, .article-footer, #nav-footer { display: none }
 	#sidebar-quicklinks { top: 20px !important }
 	.toc-container      { top: 0    !important }
 }

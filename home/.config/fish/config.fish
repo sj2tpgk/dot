@@ -69,6 +69,7 @@ end
 # "quiet" : completion like "if" or "sudo" (followed by another commands)
 complete -c quiet -xa '(__fish_complete_subcommand)'
 complete -c q     -xa '(__fish_complete_subcommand)'
+complete -c l     -xa '(__fish_complete_subcommand)'
 
 # Pager and Man ( -x (--export) is necessary )
 if has vimpager
