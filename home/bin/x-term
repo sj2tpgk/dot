@@ -1,0 +1,4 @@
+#!/bin/sh
+
+font="Noto Sans Mono:size=10.5"
+footclient -o font="$font" -e tmux

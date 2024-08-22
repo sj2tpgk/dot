@@ -291,7 +291,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 ####FILE -- vimrc {{{
 #| " vim
 #| if filereadable($VIMRUNTIME . "/defaults.vim") | source $VIMRUNTIME/defaults.vim | endif
-#| set et nocp sm hid
+#| set et nocp sm hid nosc
 #| syntax on| filetype on| filetype plugin indent on
 #| set ls=2 stl=[%{&readonly?'R':''}%{&modified?'+':'-'}]\ \ %<%f%*%=%-10.(%l,%c%V%)\ %y%6.(%P%)
 #| nn s/ :noh<cr>:let @/ = ""<cr>
@@ -304,6 +304,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| if $MYKBD == "colemakdh" | no n gj| no e gk| no gn j| no ge k| no N <c-d>| no E <c-u>| no k h| no i l| no gk 0| no gi <end>| no l i| no L I| no sl s| no j n| no J N| no h e| no H E| ono h e| ono H E| ono k 0| ono i $| ono lw iw| ono lW iW| endif
 #| ono m %|nn m %
 #| exe "au InsertEnter * set cul"| exe "au InsertLeave * set nocul"
+#| sil! colo vim
 #|
 #| " Save/restore view
 #| aug view
@@ -383,24 +384,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| else
 #|     cat "$@"
 #| fi
-#- }}}
-
-
-####FILE +x bin/cl {{{
-#| #!/bin/sh
-#| BREAK_CHARS="(){}[],^%$#@\"\";''|\\"
-#| RLWRAP=
-#| if [ $TERM == "dumb" ]; then  # slime
-#|   RLWRAP=
-#| else
-#|   RLWRAP="rlwrap -p3;32 --remember --history-filename=$HOME/.rlwrap/sbcl_history --histsize=1000000 -c -b $BREAK_CHARS -f $HOME/.rlwrap/sbcl_completions"
-#| fi
-#| if [ $# -eq 0 ]; then
-#|   exec $RLWRAP /usr/bin/sbcl
-#| else # permits #!/usr/bin/env sbcl , but breaks sbcl --help, etc.
-#|   exec /usr/bin/sbcl --script $*
-#| fi
-#| 
 #- }}}
 
 
@@ -751,6 +734,24 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| input=$*
 #| # echo "[$input]"
 #| rclip -f -t 30 "$input" 2>/dev/null | grep -v TensorList | sxiv -t -i -
+#- }}}
+
+
+####FILE +x bin/lisp {{{
+#| #!/bin/sh
+#| BREAK_CHARS="(){}[],^%$#@\"\";''|\\"
+#| RLWRAP=
+#| if [ $TERM == "dumb" ]; then  # slime
+#|   RLWRAP=
+#| else
+#|   RLWRAP="rlwrap -p3;32 --remember --history-filename=$HOME/.rlwrap/sbcl_history --histsize=1000000 -c -b $BREAK_CHARS -f $HOME/.rlwrap/sbcl_completions"
+#| fi
+#| if [ $# -eq 0 ]; then
+#|   exec $RLWRAP /usr/bin/sbcl
+#| else # permits #!/usr/bin/env sbcl , but breaks sbcl --help, etc.
+#|   exec /usr/bin/sbcl --script $*
+#| fi
+#| 
 #- }}}
 
 
@@ -1950,6 +1951,138 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| # ex.
 #| # wslwatch -g '*.txt' -- date
 #| # # this prints datetime on (1) change in existing .txt file (2) new .txt file added (3) .txt file removed.
+#- }}}
+
+
+####FILE +x bin/x-autorotate {{{
+#| #!/bin/sh
+#| 
+#| # requires iio-sensor-proxy
+#| 
+#| pkill -x monitor-sensor
+#| monitor-sensor --accel | while read -r x; do
+#|     t=
+#|     case "${x##* }" in
+#|         (normal)    t=0   ;;
+#|         (right-up)  t=90  ;;
+#|         (bottom-up) t=180 ;;
+#|         (left-up)   t=270 ;;
+#|     esac
+#|     [ -n "$t" ] && swaymsg output DSI-1 transform "$t"
+#| done
+#- }}}
+
+
+####FILE +x bin/x-brightness {{{
+#| #!/bin/sh
+#| brightness_file=/sys/class/backlight/backlight/brightness
+#| max_brightness_file=/sys/class/backlight/backlight/max_brightness
+#| help() {
+#|     echo "Usage: $0 <brightness>" >&2
+#|     echo "<brightness> = 1, +2, -2 etc. Max $(cat $max_brightness_file)" >&2
+#|     echo 'You should add the following line to /etc/sudoers (via "sudo visudo")' >&2
+#|     echo "  ALL ALL=(ALL) NOPASSWD: /usr/bin/tee $brightness_file" >&2
+#| }
+#| [ $# -eq 0 ] && { help; exit 1; }
+#| v=$1
+#| # Check $v is number
+#| [ 0 = $(expr "x$v" : '^x[-+]\?[0-9]*$') ] && { echo "Not a number: $v" >&2; help; exit 1; }
+#| # Calc new value
+#| case "$v" in
+#|     -*) read c < "$brightness_file"; b=$(expr "$c" - "${v#-}");;
+#|     +*) read c < "$brightness_file"; b=$(expr "$c" + "${v#+}");;
+#|     *)  b=$v;;
+#| esac
+#| # Value range check
+#| [ "$b" -lt 1 ] && b=1
+#| read max < "$max_brightness_file"
+#| [ "$b" -gt "$max" ] && b=$max
+#| # Write value
+#| echo "$b" | sudo /usr/bin/tee "$brightness_file" >/dev/null
+#- }}}
+
+
+####FILE +x bin/x-gestures {{{
+#| #!/bin/sh
+#| pkill -x lisgd
+#| lisgd -d /dev/input/event1 \
+#|     -g '1,LR,T,*,R,pkill -x -SIGUSR2 wvkbd-mobintl' \
+#|     -g '1,RL,T,*,R,pkill -x -SIGUSR1 wvkbd-mobintl' \
+#|     -g '1,UD,R,*,P,~/bin/x-brightness -10' \
+#|     -g '1,DU,R,*,P,~/bin/x-brightness +10' \
+#|     -g '2,UD,T,M,R,swaymsg kill' \
+#|     -g '1,UD,T,*,R,~/bin/x-run'
+#- }}}
+
+
+####FILE +x bin/x-mute {{{
+#| #!/bin/sh
+#| # Usage: ./mute
+#| pactl set-sink-mute @DEFAULT_SINK@ toggle
+#- }}}
+
+
+####FILE +x bin/x-run {{{
+#| #!/bin/sh
+#| 
+#| b="#000000dd"
+#| f="#00bbdd"
+#| hb="#333333"
+#| # pkill -x -SIGUSR2 wvkbd-mobintl
+#| # bemenu-run -i -l20 --scrollbar auto --counter always -W.3 --nb $b --ab $b --tf $f --hf $f --fbf $f --fbb $hb --hb $hb --fn "Noto Sans Mono 10"
+#| cd "$(dirname "$0")"/rundir
+#| cmd=$(find . -maxdepth 1 -not -type d | sed 's#^..##' | LC_ALL=C sort | bemenu -i -l20 -p ">" --scrollbar auto -W.33 --nb $b --ab $b --tf $f --hf $f --fbf "#ff3333" --fbb $hb --hb $hb --fn "Noto Sans Mono 33")
+#| cwd=$(pwd)
+#| cd ~
+#| case "$cmd" in
+#|     (*@) sh -c "${cmd%@}" ;;
+#|     ("") : ;;
+#|     (*) sh -c "$cwd/$cmd" & ;;
+#| esac
+#| # pkill -x -SIGUSR1 wvkbd-mobintl
+#- }}}
+
+
+####FILE +x bin/x-status {{{
+#| #!/bin/sh
+#| 
+#| read bat < /sys/class/power_supply/rk817-battery/capacity
+#| read sta < /sys/class/power_supply/rk817-battery/status
+#| case "$sta" in
+#|     (Charging)         sta=+ ;;
+#|     (Full|Discharging) sta=  ;;
+#|     (*)                sta=? ;;
+#| esac
+#| 
+#| vol=$(pactl get-sink-volume @DEFAULT_SINK@)
+#| vol=${vol% / *}; vol=${vol##* }
+#| 
+#| read br  < /sys/class/backlight/backlight/brightness
+#| read brm < /sys/class/backlight/backlight/max_brightness
+#| br=$((100 * br / brm))
+#| 
+#| dt=$(date +'%Y-%m-%d (%a) %H:%M:%S')
+#| 
+#| #net=$(echo $(ip a | sed -n '/state UP/s/^[^ ]* \([^ :]*\).*/\1/p'))
+#| net=$(echo $(ip -o a | awk '(!/ lo /)&&(!/ inet6 /){if(!a[$2]++){print $2}sub("/.*","",$4);print $4}'))
+#| #net=${net:--}
+#| 
+#| printf '%s  %s :%s *%s  %s\n' "$net" "[$sta$bat%]" "$vol" "$br%" "$dt"
+#- }}}
+
+
+####FILE +x bin/x-term {{{
+#| #!/bin/sh
+#| 
+#| font="Noto Sans Mono:size=10.5"
+#| footclient -o font="$font" -e tmux
+#- }}}
+
+
+####FILE +x bin/x-volume {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
+#| pactl set-sink-volume @DEFAULT_SINK@ "$1"
 #- }}}
 
 

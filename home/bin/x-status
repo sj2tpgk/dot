@@ -1,0 +1,24 @@
+#!/bin/sh
+
+read bat < /sys/class/power_supply/rk817-battery/capacity
+read sta < /sys/class/power_supply/rk817-battery/status
+case "$sta" in
+    (Charging)         sta=+ ;;
+    (Full|Discharging) sta=  ;;
+    (*)                sta=? ;;
+esac
+
+vol=$(pactl get-sink-volume @DEFAULT_SINK@)
+vol=${vol% / *}; vol=${vol##* }
+
+read br  < /sys/class/backlight/backlight/brightness
+read brm < /sys/class/backlight/backlight/max_brightness
+br=$((100 * br / brm))
+
+dt=$(date +'%Y-%m-%d (%a) %H:%M:%S')
+
+#net=$(echo $(ip a | sed -n '/state UP/s/^[^ ]* \([^ :]*\).*/\1/p'))
+net=$(echo $(ip -o a | awk '(!/ lo /)&&(!/ inet6 /){if(!a[$2]++){print $2}sub("/.*","",$4);print $4}'))
+#net=${net:--}
+
+printf '%s  %s :%s *%s  %s\n' "$net" "[$sta$bat%]" "$vol" "$br%" "$dt"

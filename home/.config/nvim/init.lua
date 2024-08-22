@@ -94,16 +94,17 @@ do -- Plugins <<<
 
     -- Better syntax highlighting and indent for langs
     plug "Vimjas/vim-python-pep8-indent"
+    plug "vim-python/python-syntax"
     -- plug "udalov/kotlin-vim"
-    -- plug "pangloss/vim-javascript"
+    plug "pangloss/vim-javascript"
     -- plug "bfrg/vim-cpp-modern"
     -- plug "gutenye/json5.vim"
     -- plug "dmix/elvish.vim"
 
     -- Treesitter
     -- plug "nvim-treesitter/nvim-treesitter"
-    plug ("nvim-treesitter/nvim-treesitter", 1) -- lazy loading (experimental)
-    vim.cmd("aug vimrc_loadts \n au! \n au FileType sh,c,css,cpp,go,html,javascript,kotlin,lua,python,vim,help lua lazy('packadd nvim-treesitter | call v:lua.ts_config() | au! vimrc_loadts') \n aug END")
+    -- plug ("nvim-treesitter/nvim-treesitter", 1) -- lazy loading (experimental)
+    -- vim.cmd("aug vimrc_loadts \n au! \n au FileType sh,c,css,cpp,go,html,javascript,kotlin,lua,python,vim,help lua lazy('packadd nvim-treesitter | call v:lua.ts_config() | au! vimrc_loadts') \n aug END")
     -- plug "nvim-treesitter/playground"
     -- plug "HiPhish/nvim-ts-rainbow2"
 
@@ -119,7 +120,12 @@ do -- Plugins <<<
 
 end -- >>>
 
-vim.cmd [[ let g:javascript_plugin_jsdoc = 1 ]]
+vim.cmd [[
+let g:javascript_plugin_jsdoc       = 1
+let g:python_highlight_all          = 1
+let g:python_highlight_space_errors = 0
+let g:python_highlight_func_calls   = 0
+]]
 
 vim.cmd [[
 
@@ -129,7 +135,7 @@ set showmatch         " Show matching brackets.
 set autowrite         " Automatically save before commands like :next and :make
 set mouse=a           " Enable mouse usage (see also: 'ttymouse')
 set pumheight=12      " Height of popup menu in completion
-set showcmd           " Show command being input
+set noshowcmd         " No show command being input
 set hidden            " Allow changing buffer without saving
 set textwidth=0       " Prevent automatically insert '\n' and goto next line
 set scrolloff=3       " Cursor > (bottom of screen + n)

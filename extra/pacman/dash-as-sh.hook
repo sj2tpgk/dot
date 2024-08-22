@@ -1,3 +1,7 @@
+# Usage:
+#   cp dot/extra/pacman/dash-as-sh.hook /etc/pacman.d/hooks/
+#   pacman -S dash
+
 [Trigger]
 Type = Package
 Operation = Install

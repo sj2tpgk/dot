@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# requires iio-sensor-proxy
+
+pkill -x monitor-sensor
+monitor-sensor --accel | while read -r x; do
+    t=
+    case "${x##* }" in
+        (normal)    t=0   ;;
+        (right-up)  t=90  ;;
+        (bottom-up) t=180 ;;
+        (left-up)   t=270 ;;
+    esac
+    [ -n "$t" ] && swaymsg output DSI-1 transform "$t"
+done

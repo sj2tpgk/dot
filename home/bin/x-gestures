@@ -1,0 +1,9 @@
+#!/bin/sh
+pkill -x lisgd
+lisgd -d /dev/input/event1 \
+    -g '1,LR,T,*,R,pkill -x -SIGUSR2 wvkbd-mobintl' \
+    -g '1,RL,T,*,R,pkill -x -SIGUSR1 wvkbd-mobintl' \
+    -g '1,UD,R,*,P,~/bin/x-brightness -10' \
+    -g '1,DU,R,*,P,~/bin/x-brightness +10' \
+    -g '2,UD,T,M,R,swaymsg kill' \
+    -g '1,UD,T,*,R,~/bin/x-run'

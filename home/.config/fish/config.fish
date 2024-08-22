@@ -98,7 +98,7 @@ else if has nano
 end
 
 # Rlwrap
-set -xg RLWRAP_HOME ~/.rlwrap/
+set -xg RLWRAP_HOME ~/.config/rlwrap/
 
 # Command not found
 function fish_command_not_found --on-event fish_command_not_found

@@ -1,0 +1,17 @@
+#!/bin/sh
+
+b="#000000dd"
+f="#00bbdd"
+hb="#333333"
+# pkill -x -SIGUSR2 wvkbd-mobintl
+# bemenu-run -i -l20 --scrollbar auto --counter always -W.3 --nb $b --ab $b --tf $f --hf $f --fbf $f --fbb $hb --hb $hb --fn "Noto Sans Mono 10"
+cd "$(dirname "$0")"/rundir
+cmd=$(find . -maxdepth 1 -not -type d | sed 's#^..##' | LC_ALL=C sort | bemenu -i -l20 -p ">" --scrollbar auto -W.33 --nb $b --ab $b --tf $f --hf $f --fbf "#ff3333" --fbb $hb --hb $hb --fn "Noto Sans Mono 33")
+cwd=$(pwd)
+cd ~
+case "$cmd" in
+    (*@) sh -c "${cmd%@}" ;;
+    ("") : ;;
+    (*) sh -c "$cwd/$cmd" & ;;
+esac
+# pkill -x -SIGUSR1 wvkbd-mobintl

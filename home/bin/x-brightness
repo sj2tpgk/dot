@@ -1,0 +1,25 @@
+#!/bin/sh
+brightness_file=/sys/class/backlight/backlight/brightness
+max_brightness_file=/sys/class/backlight/backlight/max_brightness
+help() {
+    echo "Usage: $0 <brightness>" >&2
+    echo "<brightness> = 1, +2, -2 etc. Max $(cat $max_brightness_file)" >&2
+    echo 'You should add the following line to /etc/sudoers (via "sudo visudo")' >&2
+    echo "  ALL ALL=(ALL) NOPASSWD: /usr/bin/tee $brightness_file" >&2
+}
+[ $# -eq 0 ] && { help; exit 1; }
+v=$1
+# Check $v is number
+[ 0 = $(expr "x$v" : '^x[-+]\?[0-9]*$') ] && { echo "Not a number: $v" >&2; help; exit 1; }
+# Calc new value
+case "$v" in
+    -*) read c < "$brightness_file"; b=$(expr "$c" - "${v#-}");;
+    +*) read c < "$brightness_file"; b=$(expr "$c" + "${v#+}");;
+    *)  b=$v;;
+esac
+# Value range check
+[ "$b" -lt 1 ] && b=1
+read max < "$max_brightness_file"
+[ "$b" -gt "$max" ] && b=$max
+# Write value
+echo "$b" | sudo /usr/bin/tee "$brightness_file" >/dev/null
