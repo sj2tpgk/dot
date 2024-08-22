@@ -51,9 +51,9 @@ end
 if has git
     abbr ga   git add .
     abbr gc   git commit -m
-    abbr gd   git diff
+    abbr gd   git diff HEAD
     abbr gps  git push origin master
-    abbr gpu  git pull origin master
+    abbr gpl  git pull origin master
     abbr gs   git status
 end
 if has flatpak
