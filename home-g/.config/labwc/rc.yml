@@ -57,9 +57,9 @@ labwc_config:
     keybind key="XF86AudioRaiseVolume":
       action name="Execute" command="~/script/volume +4%":
     keybind key="XF86MonBrightnessDown":
-      action name="Execute" command="~/script/brightness -10":
+      action name="Execute" command="~/script/brightness -20":
     keybind key="XF86MonBrightnessUp":
-      action name="Execute" command="~/script/brightness +10":
+      action name="Execute" command="~/script/brightness +20":
 
     # cannot bind "Print" or "W-Print" for some reason
     keybind key="W-P":
