@@ -2245,7 +2245,7 @@ function mycomp_collect() -- Collect words <<<
     local comps_list = { -- defines order of words
         { "h", mycomp_collect_history() },
         { "o", mycomp_collect_omni() },
-        { "b", mycomp_collect_bufferall() },
+        --{ "b", mycomp_collect_bufferall() },
         { "k", mycomp_collect_keywords() },
         { "t", mycomp_collect_tmux() },
     }
