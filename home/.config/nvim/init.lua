@@ -95,8 +95,8 @@ do -- Plugins <<<
     -- Better syntax highlighting and indent for langs
     plug "Vimjas/vim-python-pep8-indent"
     plug "vim-python/python-syntax"
-    -- plug "udalov/kotlin-vim"
     plug "pangloss/vim-javascript"
+    -- plug "udalov/kotlin-vim"
     -- plug "bfrg/vim-cpp-modern"
     -- plug "gutenye/json5.vim"
     -- plug "dmix/elvish.vim"
@@ -2095,6 +2095,16 @@ aug END
 -- TODO: show source buffer, tags
 
 local mycomp_cache = nil -- mycomp_cache[i] = comps cached when base:len() == i
+timeit_time = 0
+timeit_name = 0
+function timeit(name)
+    if nil then
+        local now = vim.fn.reltimefloat(vim.fn.reltime())
+        print(string.format("%-10s %f", timeit_name, now - timeit_time))
+        timeit_time = now
+        timeit_name = name
+    end
+end
 function mycomp(findstart, base) -- <<<
     if findstart == 1 then
         if nil then return -2 end
@@ -2133,18 +2143,22 @@ function mycomp(findstart, base) -- <<<
 
         -- Cached version
         -- Initialize cache if not present (don't take base into account)
+        timeit("collect")
         if not mycomp_cache then
             mycomp_cache = {}
             mycomp_cache[0] = mycomp_collect()
         end
         -- Get most detailed cache
+        timeit("get cache")
         local cached
         for i = (base:len() - 1), 0, -1 do
             cached = mycomp_cache[i]
             if cached then break end
         end
         -- Filter cache further, and cache the new one
+        timeit("filter")
         local comps = mycomp_filter(base, cached)
+        timeit("end")
         mycomp_cache[base:len()] = comps
         return { words = comps, refresh = "always" } -- refresh="always" is required for fuzzy matching
     end
@@ -2242,12 +2256,24 @@ function mycomp_collect() -- Collect words <<<
 
     local ABBR_THRESHOLD = 40
 
+    timeit("collect h")
+    local c1 = { "h", mycomp_collect_history() }
+    timeit("collect o")
+    local c2 = { "o", mycomp_collect_omni() }
+    timeit("collect b")
+    local c3 = { "b", mycomp_collect_bufferall() }
+    timeit("collect k")
+    local c4 = { "k", mycomp_collect_keywords() }
+    timeit("collect t")
+    local c5 = { "t", mycomp_collect_tmux() }
+    timeit("collect -")
     local comps_list = { -- defines order of words
-        { "h", mycomp_collect_history() },
-        { "o", mycomp_collect_omni() },
-        { "b", mycomp_collect_bufferall() },
-        { "k", mycomp_collect_keywords() },
-        { "t", mycomp_collect_tmux() },
+        c1, c2, c3, c4, c5,
+        -- { "h", mycomp_collect_history() },
+        -- { "o", mycomp_collect_omni() },
+        -- { "b", mycomp_collect_bufferall() },
+        -- { "k", mycomp_collect_keywords() },
+        -- { "t", mycomp_collect_tmux() },
     }
     local priority = { o=1, k=2, b=3, h=4, t=5 } -- which source has priority for extra info of word
 
@@ -2287,6 +2313,7 @@ function mycomp_collect() -- Collect words <<<
             end
         end
     end
+    timeit("collect --")
 
     return result
 end -- >>>
@@ -2319,29 +2346,94 @@ function mycomp_collect_bufferall() -- Collect from all bufs <<<
     return comps
 end -- >>>
 
-local mycomp_collect_buffer_cache = {}
+local mycomp_collect_buffer_cache = {} -- each item is: { res, lines, lastused }
 function mycomp_collect_buffer(buf) -- Collect from a buf <<<
     -- TODO: better cache: rescan relevant parts of file (already good? seems lastused only change on comp start)
+    -- Helpers
+    local function union(itvls) -- union of integer intervals
+        -- note: destructive
+        -- note: [a,b] and [b+1,c] will be merged
+        local res = {}
+        table.sort(itvls, function (it1, it2) return it1[1] < it2[1] end)
+        local n = #itvls
+        local it1 = itvls[1]
+        for i = 2, n do
+            local it2 = itvls[i]
+            if it1[2] + 2 <= it2[1] then
+                table.insert(res, it1)
+                it1 = it2
+            else
+                it1 = { it1[1], math.max(it1[2], it2[2]) }
+            end
+        end
+        table.insert(res, it1)
+        return res
+    end
+    local function findall(str, regex) -- regex matches to list
+        local matches = {}
+        for s in str:gmatch(regex) do
+            table.insert(matches, s)
+        end
+        return matches
+    end
+    local function lnums_to_scan(buf, C) -- Which lines to scan?
+        local GRADSCAN_LINES = 20
+        local CHANGE_CONTEXT = 5
+        local lnums = {}
+        local linecount = vim.fn.getbufinfo(buf)[1].linecount
+        -- Lines for initial scan
+        if #C.res == 0 then return { { "1", "$" } } end
+        -- Lines from gradual scan (has one line overlap)
+        table.insert(lnums, {
+            math.max(1, C.gradscan),
+            math.min(linecount, C.gradscan + GRADSCAN_LINES)
+        })
+        C.gradscan = C.gradscan + GRADSCAN_LINES
+        -- Lines from changelist
+        local chlist = vim.fn.getchangelist(buf)[1]
+        local chlistlen = #chlist
+        for i = math.max(1, chlistlen - 3), chlistlen do
+            local lnum = chlist[i].lnum
+            table.insert(lnums, {
+                math.max(1, lnum - CHANGE_CONTEXT),
+                math.min(linecount, lnum + CHANGE_CONTEXT)
+            })
+        end -- todo remove duplicates
+        return union(lnums)
+    end
+    -- Get buffer name string
     buf = (type(buf) == "string") and buf or vim.fn.bufname(buf or "%")
     -- If cache exists and up-to-date (lastused did not change), return it.
-    local cache = mycomp_collect_buffer_cache[buf]
-    if cache and cache.lastused == vim.fn.getbufinfo(buf)[1].lastused then
-        return cache.res
+    local C = mycomp_collect_buffer_cache[buf]
+    local lastused = vim.fn.getbufinfo(buf)[1].lastused
+    if C and C.lastused == lastused then
+        return C.res
+    end
+    -- Initialize cache if not yet
+    if not C then
+        C = { res = {}, gradscan = 0, linewords = {}, lastused = lastused }
     end
     -- Extract words from buf
     local word_reg = mycomp_word_reg()
-    local res, seen = {}, {} -- use 2 tables to prevent dupes
-    for _, line in pairs(vim.fn.getbufline(buf, "1", "$")) do
-        for s in line:gmatch(word_reg) do
+    for _, lnums in pairs(lnums_to_scan(buf, C)) do
+        for i, line in pairs(vim.fn.getbufline(buf, lnums[1], lnums[2])) do
+            C.linewords[lnums[1] + i - 1] = findall(line, word_reg)
+        end
+    end
+    -- Merge results
+    local seen = {} -- to prevent dupes
+    C.res = {}
+    for _, words in pairs(C.linewords) do
+        for _, s in pairs(words) do
             if (not seen[s]) then
                 seen[s] = true
-                table.insert(res, { word=s, menu=buf })
+                table.insert(C.res, { word=s, menu=buf })
             end
         end
     end
---    vim.cmd("sleep 1") -- for cache test
-    mycomp_collect_buffer_cache[buf] = { res = res, lastused = vim.fn.getbufinfo(buf)[1].lastused }
-    return res
+    -- vim.cmd("sleep 1") -- for cache test
+    mycomp_collect_buffer_cache[buf] = C
+    return C.res
 end -- >>>
 
 local mycomp_collect_tmux_cache = { res = {}, time = 0 }
