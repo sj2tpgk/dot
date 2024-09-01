@@ -313,6 +313,13 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| au BufWinEnter * if expand('%') != '' && &bt !~ 'nofile' | sil! lo | end
 #| aug END
 #|
+#| " Clipboard
+#| set clipboard=unnamedplus
+#| " If my clipboard wrapper is available, use it.
+#| if executable("xcopy") && executable("xpaste")
+#|     let g:clipboard = { 'name': 'my', 'copy': { '+': 'xcopy', '*': 'xcopy', }, 'paste': { '+': 'xpaste', '*': 'xpaste', }, 'cache_enabled': 1, }
+#| endif
+#|
 #| " Basic auto completion
 #| inore <tab>       <c-n>
 #| inore <plug>MyTab <c-n>
