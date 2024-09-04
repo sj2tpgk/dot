@@ -24,6 +24,8 @@ openbox_menu:
         action name="SendToDesktop" to="3":
       item label="Move to 4":
         action name="SendToDesktop" to="4":
+      item label="Move to 5":
+        action name="SendToDesktop" to="5":
       item label="Move left":
         action name="SendToDesktop" to="left":
       item label="Move right":
@@ -41,6 +43,8 @@ openbox_menu:
     menu id="Internet" label="Internet":
       item label="Firefox":
         action name="Execute" command="firefox":
+      item label="Chromium":
+        action name="Execute" command="chromium":
       item label="VNC Client":
         action name="Execute" command="~/script-local/vnc":
 
@@ -72,6 +76,8 @@ openbox_menu:
       menu id="Monitor" label="Monitor":
         item label="HDMI-A-2 2160p 2x":
           action name="Execute" command="wlr-randr --output HDMI-A-2 --mode 3840x2160 --scale 2":
+        item label="Magnifier":
+          action name="ToggleMagnify":
       item label="sfwbar":
         action name="Execute" command='sh -c "pkill sfwbar; sfwbar -f t2.config" -':
       item label="Reconfigure":

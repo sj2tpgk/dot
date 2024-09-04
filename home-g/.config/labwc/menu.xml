@@ -41,6 +41,10 @@
         <action name="SendToDesktop" to="4">
         </action>
       </item>
+      <item label="Move to 5">
+        <action name="SendToDesktop" to="5">
+        </action>
+      </item>
       <item label="Move left">
         <action name="SendToDesktop" to="left">
         </action>
@@ -67,6 +71,10 @@
     <menu id="Internet" label="Internet">
       <item label="Firefox">
         <action name="Execute" command="firefox">
+        </action>
+      </item>
+      <item label="Chromium">
+        <action name="Execute" command="chromium">
         </action>
       </item>
       <item label="VNC Client">
@@ -122,6 +130,10 @@
       <menu id="Monitor" label="Monitor">
         <item label="HDMI-A-2 2160p 2x">
           <action name="Execute" command="wlr-randr --output HDMI-A-2 --mode 3840x2160 --scale 2">
+          </action>
+        </item>
+        <item label="Magnifier">
+          <action name="ToggleMagnify">
           </action>
         </item>
       </menu>
