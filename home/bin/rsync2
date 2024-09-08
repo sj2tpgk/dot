@@ -1,0 +1,75 @@
+#!/bin/bash
+
+set -euo pipefail
+
+die() { echo "ERROR: $*" >&2; exit 1; }
+echoB() { echo -ne "\033[1m"; echo "$@"; echo -ne "\033[0m"; }
+
+help() {
+    echo "Usage: $0 FROM TO [RSYNC OPTIONS ...]"
+    echo "Note: Invoked by moving to FROM and rsync . TO"
+    echo "* Exclude pattern are interpreted relative to FROM dir"
+    echo "  - trailing slash   = match directories only"
+    echo "  - leading slash    = path relative to FROM dir"
+    echo "  - no leading slash = match any path component (not substring match)"
+}
+
+from=
+to=
+# shellcheck disable=SC2054
+opts=(
+    -aP # --archive --partial
+    # -AX # --progress --acls --xattrs
+    --info=stats2,progress2 -h # --human-readable
+    --mkpath # link mkdir -p for TO
+    --exclude=/.cache/
+    --exclude=/.cargo/
+    --exclude=/.cpan/
+    --exclude=/.go/
+    --exclude=/.ipfs/
+    --exclude=/.npm/
+    --exclude=.gradle/
+    --exclude=.venv/
+    --exclude=node_modules/
+)
+
+# Parse args
+from=$1
+to=$2
+shift 2
+while [[ $# -ge 1 ]]; do
+    case "$1" in
+        (*) opts+=("$1"); shift ;;
+    esac
+done
+
+# Check args
+[[ "${from%/}" == "$from" ]] || die "$from ends with /"
+[[ "${to%/}" == "$to" ]] || die "$to ends with /"
+[[ -d "$from" ]] || die "$from is not a directory"
+
+# Cd to FROM dir
+cd "$from" || die "Cannot cd to $from"
+echoB "Directory:"
+echo "  $from"
+echo
+
+# Construct rsync command
+cmd=(
+    rsync
+    "${opts[@]}"
+    . "$to"
+)
+
+# Show command
+echoB "Command:"
+for i in "${cmd[@]}"; do
+    printf "  %q\n" "$i"
+done
+
+# Run command
+echo
+echoB -n "Run this command? [y/n] "; read -r ans
+[[ "$ans" == y ]] || die "cancelled by user"
+# echo "${cmd[*]}"
+"${cmd[@]}"

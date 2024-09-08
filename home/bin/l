@@ -2,10 +2,14 @@
 
 # Argument transposer
 
+die() { echo "Error: $*" >&2; exit 1; }
+
 f() {
     local a=()
     local b=()
     local c=()
+    # Separate at last --
+    # l x1 -- x2 x3 -- x4 x5 ==> a=(x1 -- x2 x3), b=(-- x4 x5)
     for i in "$@"; do
         if [[ "$i" = -- ]]; then
             a+=("${b[@]}")
@@ -13,21 +17,27 @@ f() {
         fi
         b+=("$i")
     done
+    # No -- ==> exit
+    [[ "${#a[@]}" -eq 0 ]] && die "no -- found"
+    # Remove -- from b
     b=("${b[@]:1}")
+    # Substitute -- and --- in a
     for i in "${a[@]}"; do
         if [[ "$i" = -- ]]; then
+            [[ "${#b[@]}" -eq 0 ]] && die "too few args"
             c+=("${b[0]}")
             b=("${b[@]:1}")
         elif [[ "$i" = --- ]]; then
+            [[ "${#b[@]}" -eq 0 ]] && die "too few args"
             c+=("${b[@]}")
             b=()
         else
             c+=("$i")
         fi
     done
-    # echo "a: ${a[*]}"
-    # echo "b: ${b[*]}"
-    # echo "c: ${c[*]}"
+    [[ "${#b[@]}" -gt 0 ]] && die "too many args"
+    # echo "a=(${a[*]}), b=(${b[*]}), c=(${c[*]})"
+    # Run command
     "${c[@]}"
 }
 

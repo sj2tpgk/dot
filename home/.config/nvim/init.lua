@@ -1236,6 +1236,7 @@ if can_require"lspconfig" then -- Lsp <<<
     setup("tsserver",               "typescript-language-server.cmd", { on_attach = on_attach, single_file_support = true })
     setup("serve_d",                "serve-d",                { on_attach = on_attach, single_file_support = true })
     setup("gopls",                  nil,                      { on_attach = on_attach, single_file_support = true })
+    setup("rust_analyzer",          "rust-analyzer",          { on_attach = on_attach, single_file_support = true })
     -- Place libaries in node_modules/ to let LSP recognize it.
 
 end -- >>>
