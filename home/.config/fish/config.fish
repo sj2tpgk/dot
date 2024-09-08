@@ -52,6 +52,7 @@ if has git
     abbr ga   git add .
     abbr gc   git commit -m
     abbr gd   git diff HEAD
+    abbr gl   git log
     abbr gps  git push origin master
     abbr gpl  git pull origin master
     abbr gs   git status
