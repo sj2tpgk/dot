@@ -283,6 +283,9 @@ bind    Tab      run "$TMUX_ROOT/bin/tmux-comp"
 # Use xcopy if exists (todo: add to main config)
 if-shell "command -v xcopy >/dev/null" "set copy-command xcopy"
 
+# hide status on zoom
+set-hook -g after-resize-pane 'if "[ #{window_zoomed_flag} -eq 1 ]" "set -g status off" "set -g status on"'
+
 # Load local config
 if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
@@ -300,7 +303,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| for i in range(1, 16) | for j in ["", "s-", "c-"] | for k in ["", "i", "c"] | exe k . "nore <" . j . "f" . i . "> <nop>" | endfor | endfor | endfor
 #| nn Q :q<cr>| ino <s-f13> <nop>| ino <c-f14> <nop>| nn D dd| nn Y yy| nn ss :sp<cr>| nn sv :vsp<cr>| nn sb :bd<cr>| nn so <c-w>o| nn :<cr> :wa<cr>| nn <a-j> J| nn - <c-w>w| nnore + :tabnext<cr>| nn > >>| nn <lt> <lt><lt>| nn U <c-r>
 #| " no <esc>[25;2~ <nop>| ino <esc>[25;2~ <nop>| no <esc>[26;5~ <nop>| ino <esc>[26;5~ <nop>
-#| no j gj| no k gk| no gj j| no gk k| no J <c-d>| no K <c-u>| no h h| no l l| no gh 0| no gl <end>| no i i| no I I| no si s| no n n| no N N| no e e| no E E| ono e e| ono E E| ono h 0| ono l $| ono iw iw| ono iW iW
+#| no j gj| no k gk| no gj j| no gk k| no J <c-d>| no K <c-u>| no h h| no l l| no gh 0| no gl <end>| no i i| no I I| no si s| no n n| no N N| no e e| no E E| ono e e| ono E E| ono h 0| ono l $| ono iw iw| ono iW iW| no yb mzggVGy'z| no db mzggVGd'z
 #| if $MYKBD == "colemakdh" | no n gj| no e gk| no gn j| no ge k| no N <c-d>| no E <c-u>| no k h| no i l| no gk 0| no gi <end>| no l i| no L I| no sl s| no j n| no J N| no h e| no H E| ono h e| ono H E| ono k 0| ono i $| ono lw iw| ono lW iW| endif
 #| ono m %|nn m %
 #| exe "au InsertEnter * set cul"| exe "au InsertLeave * set nocul"

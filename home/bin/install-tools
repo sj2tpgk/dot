@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if command -v pacman >/dev/null; then
+    pacman -S tmux vim fish git ranger
+elif command -v apt >/dev/null; then
+    apt install tmux vim fish git ranger
+fi

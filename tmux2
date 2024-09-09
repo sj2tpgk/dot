@@ -283,6 +283,9 @@ bind    Tab      run "$TMUX_ROOT/bin/tmux-comp"
 # Use xcopy if exists (todo: add to main config)
 if-shell "command -v xcopy >/dev/null" "set copy-command xcopy"
 
+# hide status on zoom
+set-hook -g after-resize-pane 'if "[ #{window_zoomed_flag} -eq 1 ]" "set -g status off" "set -g status on"'
+
 # Load local config
 if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
@@ -300,7 +303,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| for i in range(1, 16) | for j in ["", "s-", "c-"] | for k in ["", "i", "c"] | exe k . "nore <" . j . "f" . i . "> <nop>" | endfor | endfor | endfor
 #| nn Q :q<cr>| ino <s-f13> <nop>| ino <c-f14> <nop>| nn D dd| nn Y yy| nn ss :sp<cr>| nn sv :vsp<cr>| nn sb :bd<cr>| nn so <c-w>o| nn :<cr> :wa<cr>| nn <a-j> J| nn - <c-w>w| nnore + :tabnext<cr>| nn > >>| nn <lt> <lt><lt>| nn U <c-r>
 #| " no <esc>[25;2~ <nop>| ino <esc>[25;2~ <nop>| no <esc>[26;5~ <nop>| ino <esc>[26;5~ <nop>
-#| no j gj| no k gk| no gj j| no gk k| no J <c-d>| no K <c-u>| no h h| no l l| no gh 0| no gl <end>| no i i| no I I| no si s| no n n| no N N| no e e| no E E| ono e e| ono E E| ono h 0| ono l $| ono iw iw| ono iW iW
+#| no j gj| no k gk| no gj j| no gk k| no J <c-d>| no K <c-u>| no h h| no l l| no gh 0| no gl <end>| no i i| no I I| no si s| no n n| no N N| no e e| no E E| ono e e| ono E E| ono h 0| ono l $| ono iw iw| ono iW iW| no yb mzggVGy'z| no db mzggVGd'z
 #| if $MYKBD == "colemakdh" | no n gj| no e gk| no gn j| no ge k| no N <c-d>| no E <c-u>| no k h| no i l| no gk 0| no gi <end>| no l i| no L I| no sl s| no j n| no J N| no h e| no H E| ono h e| ono H E| ono k 0| ono i $| ono lw iw| ono lW iW| endif
 #| ono m %|nn m %
 #| exe "au InsertEnter * set cul"| exe "au InsertLeave * set nocul"
@@ -744,15 +747,30 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+####FILE +x bin/install-tools {{{
+#| #!/bin/sh
+#| 
+#| if command -v pacman >/dev/null; then
+#|     pacman -S tmux vim fish git ranger
+#| elif command -v apt >/dev/null; then
+#|     apt install tmux vim fish git ranger
+#| fi
+#- }}}
+
+
 ####FILE +x bin/l {{{
 #| #!/bin/bash
 #| 
 #| # Argument transposer
 #| 
+#| die() { echo "Error: $*" >&2; exit 1; }
+#| 
 #| f() {
 #|     local a=()
 #|     local b=()
 #|     local c=()
+#|     # Separate at last --
+#|     # l x1 -- x2 x3 -- x4 x5 ==> a=(x1 -- x2 x3), b=(-- x4 x5)
 #|     for i in "$@"; do
 #|         if [[ "$i" = -- ]]; then
 #|             a+=("${b[@]}")
@@ -760,21 +778,27 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|         fi
 #|         b+=("$i")
 #|     done
+#|     # No -- ==> exit
+#|     [[ "${#a[@]}" -eq 0 ]] && die "no -- found"
+#|     # Remove -- from b
 #|     b=("${b[@]:1}")
+#|     # Substitute -- and --- in a
 #|     for i in "${a[@]}"; do
 #|         if [[ "$i" = -- ]]; then
+#|             [[ "${#b[@]}" -eq 0 ]] && die "too few args"
 #|             c+=("${b[0]}")
 #|             b=("${b[@]:1}")
 #|         elif [[ "$i" = --- ]]; then
+#|             [[ "${#b[@]}" -eq 0 ]] && die "too few args"
 #|             c+=("${b[@]}")
 #|             b=()
 #|         else
 #|             c+=("$i")
 #|         fi
 #|     done
-#|     # echo "a: ${a[*]}"
-#|     # echo "b: ${b[*]}"
-#|     # echo "c: ${c[*]}"
+#|     [[ "${#b[@]}" -gt 0 ]] && die "too many args"
+#|     # echo "a=(${a[*]}), b=(${b[*]}), c=(${c[*]})"
+#|     # Run command
 #|     "${c[@]}"
 #| }
 #| 
@@ -1793,6 +1817,85 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| [ -z "$1" ] && N=10
 #| 
 #| find . -printf "%T+\t%p\n" | sort -r | head -n $N
+#- }}}
+
+
+####FILE +x bin/rsync2 {{{
+#| #!/bin/bash
+#| 
+#| set -euo pipefail
+#| 
+#| die() { echo "ERROR: $*" >&2; exit 1; }
+#| echoB() { echo -ne "\033[1m"; echo "$@"; echo -ne "\033[0m"; }
+#| 
+#| help() {
+#|     echo "Usage: $0 FROM TO [RSYNC OPTIONS ...]"
+#|     echo "Note: Invoked by moving to FROM and rsync . TO"
+#|     echo "* Exclude pattern are interpreted relative to FROM dir"
+#|     echo "  - trailing slash   = match directories only"
+#|     echo "  - leading slash    = path relative to FROM dir"
+#|     echo "  - no leading slash = match any path component (not substring match)"
+#| }
+#| 
+#| from=
+#| to=
+#| # shellcheck disable=SC2054
+#| opts=(
+#|     -aP # --archive --partial
+#|     # -AX # --progress --acls --xattrs
+#|     --info=stats2,progress2 -h # --human-readable
+#|     --mkpath # link mkdir -p for TO
+#|     --exclude=/.cache/
+#|     --exclude=/.cargo/
+#|     --exclude=/.cpan/
+#|     --exclude=/.go/
+#|     --exclude=/.ipfs/
+#|     --exclude=/.npm/
+#|     --exclude=.gradle/
+#|     --exclude=.venv/
+#|     --exclude=node_modules/
+#| )
+#| 
+#| # Parse args
+#| from=$1
+#| to=$2
+#| shift 2
+#| while [[ $# -ge 1 ]]; do
+#|     case "$1" in
+#|         (*) opts+=("$1"); shift ;;
+#|     esac
+#| done
+#| 
+#| # Check args
+#| [[ "${from%/}" == "$from" ]] || die "$from ends with /"
+#| [[ "${to%/}" == "$to" ]] || die "$to ends with /"
+#| [[ -d "$from" ]] || die "$from is not a directory"
+#| 
+#| # Cd to FROM dir
+#| cd "$from" || die "Cannot cd to $from"
+#| echoB "Directory:"
+#| echo "  $from"
+#| echo
+#| 
+#| # Construct rsync command
+#| cmd=(
+#|     rsync
+#|     "${opts[@]}"
+#|     . "$to"
+#| )
+#| 
+#| # Show command
+#| echoB "Command:"
+#| for i in "${cmd[@]}"; do
+#|     printf "  %q\n" "$i"
+#| done
+#| 
+#| # Run command
+#| echo
+#| echoB -n "Run this command? [y/n] "; read -r ans
+#| [[ "$ans" == y ]] || die "cancelled by user"
+#| # echo "${cmd[*]}"
+#| "${cmd[@]}"
 #- }}}
 
 
