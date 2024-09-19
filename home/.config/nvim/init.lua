@@ -103,8 +103,8 @@ do -- Plugins <<<
 
     -- Treesitter
     -- plug "nvim-treesitter/nvim-treesitter"
-    plug ("nvim-treesitter/nvim-treesitter", 1) -- lazy loading (experimental)
-    vim.cmd("aug vimrc_loadts \n au! \n au FileType sh,c,css,cpp,go,html,javascript,kotlin,lua,python,vim,help lua lazy('packadd nvim-treesitter | call v:lua.ts_config() | au! vimrc_loadts') \n aug END")
+    -- plug ("nvim-treesitter/nvim-treesitter", 1) -- lazy loading (experimental)
+    -- vim.cmd("aug vimrc_loadts \n au! \n au FileType sh,c,css,cpp,go,html,javascript,kotlin,lua,python,vim,help lua lazy('packadd nvim-treesitter | call v:lua.ts_config() | au! vimrc_loadts') \n aug END")
     -- plug "nvim-treesitter/playground"
     -- plug "HiPhish/nvim-ts-rainbow2"
 
