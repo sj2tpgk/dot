@@ -103,3 +103,10 @@
 [data-ctl=items] > [data-active] { background: #eee; font-weight: bold }
 [data-theme=dark] [data-ctl=items] > [data-active] { background: #38383d }
 */
+
+/* Markdown New Tab CSS
+html { filter: invert(1) }
+#time, #lastEdited { display: none }
+.bar { border: none !important; background: transparent !important }
+section.main { margin-bottom: 0 !important }
+*/

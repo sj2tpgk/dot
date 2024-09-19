@@ -103,13 +103,19 @@ do -- Plugins <<<
 
     -- Treesitter
     -- plug "nvim-treesitter/nvim-treesitter"
-    -- plug ("nvim-treesitter/nvim-treesitter", 1) -- lazy loading (experimental)
-    -- vim.cmd("aug vimrc_loadts \n au! \n au FileType sh,c,css,cpp,go,html,javascript,kotlin,lua,python,vim,help lua lazy('packadd nvim-treesitter | call v:lua.ts_config() | au! vimrc_loadts') \n aug END")
+    plug ("nvim-treesitter/nvim-treesitter", 1) -- lazy loading (experimental)
+    vim.cmd("aug vimrc_loadts \n au! \n au FileType sh,c,css,cpp,go,html,javascript,kotlin,lua,python,vim,help lua lazy('packadd nvim-treesitter | call v:lua.ts_config() | au! vimrc_loadts') \n aug END")
     -- plug "nvim-treesitter/playground"
     -- plug "HiPhish/nvim-ts-rainbow2"
 
     -- LSP
+    plug "williamboman/mason.nvim"
+    plug "williamboman/mason-lspconfig.nvim"
     plug "neovim/nvim-lspconfig"
+
+    -- DAP
+    -- plug "jay-babu/mason-nvim-dap.nvim"
+    -- plug "mfussenegger/nvim-dap"
 
     -- AI
     -- plug "David-Kunz/gen.nvim"
@@ -158,7 +164,7 @@ if exists("&ttymouse") | set ttymouse=xterm2 | endif " Mouse drag to resize wind
 set clipboard=unnamedplus
 " If my clipboard wrapper is available, use it.
 if executable("xcopy") && executable("xpaste")
-    let g:clipboard = { 'name': 'my', 'copy': { '+': 'xcopy', '*': 'xcopy', }, 'paste': { '+': 'xpaste', '*': 'xpaste', }, 'cache_enabled': 0, }
+    let g:clipboard = { 'name': 'my', 'copy': { '+': 'xcopy', '*': 'xcopy', }, 'paste': { '+': 'xpaste', '*': 'xpaste', }, 'cache_enabled': 1, }
 endif
 
 
@@ -387,6 +393,7 @@ aug END
 " vimrc
 nnore <f5> :wa<cr>:sil source $MYVIMRC<cr>
 nnore s<f5> :lua smartSp("$MYVIMRC")<cr>
+nnore sr    :lua smartSp("$MYVIMRC")<cr>
 
 " motion
 onore m %
@@ -1148,15 +1155,25 @@ do -- Keys (keyboard layout specific) <<<
 
 end -- >>>
 
-if can_require"lspconfig" then -- Lsp <<<
-    local lspconfig = require"lspconfig"
+function lsp_config() -- Lsp <<<
+    if can_require"lspconfig" then
+        lsp_config_1_misc()
+        lsp_config_2_eldoc()
+        if can_require"mason" and can_require"mason-lspconfig" then
+            -- mason is an auto lang server installer. this is optional
+            lsp_config_3_mason()
+        end
+        lsp_config_4_servers()
+    end
+end -- >>>
+
+function lsp_config_1_misc() -- Lsp (1) misc config <<<
 
     vim.cmd [[ let g:diaglength = 30 ]]
     function rightAlignFormatFunction(diagnostic)
         local line = diagnostic.lnum -- 0-based
         local space = string.rep(" ", vim.o.columns - vim.fn.getline(1+line):len() - 11 - vim.g.diaglength)
         return ""
-        -- return string.format("%s* %s", space, diagnostic.message)
     end
 
     vim.cmd [[
@@ -1200,8 +1217,14 @@ if can_require"lspconfig" then -- Lsp <<<
         }
     )
 
-    local function on_attach(client, bufnr)
-        --vim.diagnostic[vim.g.myLspDiag == 1 and "enable" or "disable"]()
+    function my_lsp_setup(lsname, cmd, arg)
+        -- call language server setup function if server program is present
+        if vim.fn.executable(cmd or lsname) == 1 then
+            require'lspconfig'[lsname]["setup"](arg)
+        end
+    end
+
+    function my_lsp_on_attach(client, bufnr)
         vim.cmd [[
         setl omnifunc=v:lua.vim.lsp.omnifunc
         setl signcolumn=number
@@ -1212,36 +1235,13 @@ if can_require"lspconfig" then -- Lsp <<<
         nnore <buffer> <leader>lq :LspQuickFix<cr>
         nnore <buffer> <leader>lr :lua vim.lsp.buf.rename()<cr>
         ]]
-        --vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
         local cap = client.server_capabilities
-        lastcap = cap
         cap.semanticTokensProvider = false -- prevent my highlighting gettting overridden
     end
 
-    local function setup(lsname, cmd, arg)
-        -- call language server setup function if server program is present
-        if vim.fn.executable(cmd or lsname) == 1 then
-            require'lspconfig'[lsname]["setup"](arg)
-        end
-    end
-    setup("bashls",                 "bash-language-server",   { on_attach = on_attach })
-    --setup("ccls",                   nil,                      { on_attach = on_attach, single_file_support = true })
-    setup("clangd",                 nil,                      { on_attach = on_attach, single_file_support = true })
-    setup("kotlin_language_server", "kotlin-language-server", { on_attach = on_attach })
-    --setup("pylsp",                  nil,                      { on_attach = on_attach, settings = { pylsp = { plugins = { pycodestyle = { ignore = {'W391'}, maxLineLength = 100 } } } } })
-    --setup("pylyzer",                nil,                      { on_attach = on_attach })
-    setup("pyright",                nil,                      { on_attach = on_attach })
-    --setup("ruff_lsp",               "ruff",                   { on_attach = on_attach, init_options = { settings = { args = { "--config", 'lint.ignore = ["E401", "E731"]' } } } })
-    setup("tsserver",               nil,                      { on_attach = on_attach, single_file_support = true })
-    setup("tsserver",               "typescript-language-server.cmd", { on_attach = on_attach, single_file_support = true })
-    setup("serve_d",                "serve-d",                { on_attach = on_attach, single_file_support = true })
-    setup("gopls",                  nil,                      { on_attach = on_attach, single_file_support = true })
-    setup("rust_analyzer",          "rust-analyzer",          { on_attach = on_attach, single_file_support = true })
-    -- Place libaries in node_modules/ to let LSP recognize it.
-
 end -- >>>
 
-if can_require"lspconfig" then -- ElDoc (lsp signatureHelp) <<<
+function lsp_config_2_eldoc() -- Lsp (2) eldoc <<<
 
     vim.cmd [[
     hi link LspSig    Normal
@@ -1292,7 +1292,7 @@ if can_require"lspconfig" then -- ElDoc (lsp signatureHelp) <<<
             --  gopls sets actPar to nil when a func has optional params but you haven't added one yet; we assume you are inputting the first param
             if actPar == nil then actPar = 0 end
 
-            if #params == 0 or #params <= actPar then -- no params (functions with no args etc.), or active param index is more than param count
+            if (not params) or #params == 0 or #params <= actPar then -- no params (functions with no args etc.), or active param index is more than param count. None that in this case, value of params differ among server implementations
                 local chunks = { { " ", "None" }, { sigLbl, "LspSig" } }
                 nvim_echo_no_hitenter(chunks, true, {})
                 return
@@ -1411,7 +1411,47 @@ if can_require"lspconfig" then -- ElDoc (lsp signatureHelp) <<<
             vim.lsp.with(signature_handler, {})
         )
     end
+
 end -- >>>
+
+function lsp_config_3_mason() -- Lsp (3) install servers with meson <<<
+    local mason = require"mason"
+    local mason_lspconfig = require"mason-lspconfig"
+    mason.setup()
+    mason_lspconfig.setup {
+        -- this installs servers in ~/.local/share/nvim/mason/
+        -- this does NOT config neovim for servers. please use lspconfig.xxx.setup()
+        ensure_installed = { "bashls", "lua_ls", "pyright", "ts_ls" },
+    }
+end -- >>>
+
+function lsp_config_4_servers() -- Lsp (4) configure servers <<<
+
+    local lspconfig = require"lspconfig"
+    local function f(lang, lsname, ...)
+        -- setup server `lsname` where the argument is all tables in {...} merged to a single table
+        local arg = {}
+        for _, tbl in ipairs({...}) do for k, v in pairs(tbl) do arg[k] = v end end
+        lspconfig[lsname].setup(arg)
+    end
+
+    local a = { on_attach = my_lsp_on_attach }
+    local s = { single_file_support = true }
+
+    f("js/ts",  "ts_ls",        a, s)
+    -- f("lua",    "lua_ls",       a)
+    -- f("python", "basedpyright", a)
+    f("python", "pyright",      a)
+    f("shell",  "bashls",       a) -- requires shellcheck
+
+    -- setup("pylsp",                  nil,                      { on_attach = on_attach, settings = { pylsp = { plugins = { pycodestyle = { ignore = {'W391'}, maxLineLength = 100 } } } } })
+    -- setup("ruff_lsp",               "ruff",                   { on_attach = on_attach, init_options = { settings = { args = { "--config", 'lint.ignore = ["E401", "E731"]' } } } })
+
+    -- For JS/TS: put libaries in node_modules/ to let LSP recognize it.
+
+end -- >>>
+
+lsp_config()
 
 function ts_config() -- TreeSitter <<<
     ts_config_1()
@@ -2064,6 +2104,8 @@ au FileType lua setl iskeyword+=.
 au FileType sh  setl iskeyword+=.,-
 
 " Auto complete (https://stackoverflow.com/questions/35837990)
+let g:x1 = ""
+let g:comp_open_prev = [-1, -1]
 fu! OpenCompletion()
 
     " prefetch lsp completion asynchronously
@@ -2072,12 +2114,23 @@ fu! OpenCompletion()
     "     lua mycomp_lsp_omnifunc_prefetch()
     " endif
 
-    " check (menu invisible && inserting alphabet && at least comp_minlen chars)
+    " check (menu invisible && inserting alphabet)
     let minlen = g:comp_minlen
-    if !pumvisible() && (('a' <= v:char && v:char <= 'z') || ('A' <= v:char && v:char <= 'Z') || (v:char == '_')) && (minlen == 1 || (col(".") >= (minlen-1) && matchstr(getline("."), '\%' . (col('.')-(minlen-1)) . 'c[a-zA-Z_]\{' . (minlen-1) . '\}') != ""))
-        call feedkeys("\<plug>MyTab", "")
-        " call feedkeys("\<c-x>\<c-u>", "n") " this will mess up repeating (.)
+    let [line1, col1] = [line("."), col(".")]
+    if !pumvisible() && (('a' <= v:char && v:char <= 'z') || ('A' <= v:char && v:char <= 'Z') || (v:char == '_'))
+        " && (minlen == 1 || (col(".") >= (minlen-1) && matchstr(getline("."), '\%' . (col('.')-(minlen-1)) . 'c[a-zA-Z_]\{' . (minlen-1) . '\}') != ""))
+        " Check number of keywords chars before cursor (at most minlen+1)
+        let prefix = matchstr(getline("."), '[[:keyword:]' . ']\{,' . (minlen+1) . '\}\%' . col1 . 'c')
+        " If completing at same pos and prefix length is already >= minlen+1 yet not pumvisible ==> abort
+        " (avoid calling MyTab when there is no possibility of completion)
+        if len(prefix) >= (minlen+1) && g:comp_open_prev == [line1, col1-1]
+            :
+        elseif len(prefix) >= 1
+            call feedkeys("\<plug>MyTab", "")
+            " Note: call feedkeys("\<c-x>\<c-u>", "n") will mess up repeating (.)
+        endif
     endif
+    let g:comp_open_prev = [line1, col1]
 
     " if !pumvisible() && (('a' <= v:char && v:char <= 'z') || ('A' <= v:char && v:char <= 'Z') || (v:char == '_')) && (g:comp_minlen == 1 || (col(".") >= (g:comp_minlen-1) && matchstr(getline("."), '\%' . (col('.')-(g:comp_minlen-1)) . 'c[a-zA-Z_]\{' . (g:comp_minlen-1) . '\}') != ""))
     "     call feedkeys("\<plug>MyTab", "")
@@ -2086,6 +2139,7 @@ fu! OpenCompletion()
 
 endfu
 au InsertCharPre * call OpenCompletion()
+au InsertEnter   * let g:comp_open_prev = [-1, -1]
 
 aug END
 ]] -- >>>
@@ -2224,17 +2278,26 @@ function mycomp_filter(base, list) -- <<<
         local prefix = (str:find(pat:sub(1, max)) == 1)
         return max + (prefix and 1 or 0) -- Add 1 if max common is prefix
     end
-    -- Setup regexp and score table
-    local fuzreg = "^.*" .. base:gsub(".", "%1.*"):gsub("%.%*$", ""):gsub("%%", "%%%%")
+    -- Setup regexp and more
+    -- local fuzreg = "^.*" .. base:gsub(".", "%1.*"):gsub("%.%*$", ""):gsub("%%", "%%%%")
+    local fuzreg = base:sub(2):gsub(".", "%1.*"):gsub("%.%*$", ""):gsub("%%", "%%%%")
+    local base1 = base:sub(1, 1):lower()
+    -- Setup score table
     local t = {} -- t[i] = list of comps with score i
     for i = 1, maxscore do
         t[i] = {}
     end
     -- Calc score for each fuzzy match
     for _, comp in ipairs(list) do
-        local w = mycomp_compword(comp)
-        if w:lower():match(fuzreg) then
-            table.insert(t[score(w:lower(), base)], comp)
+        -- local w = mycomp_compword(comp)
+        -- if w:lower():match(fuzreg) then
+        --     table.insert(t[score(w:lower(), base)], comp)
+        -- end
+        -- Search in two steps for performance
+        local w = mycomp_compword(comp):lower()
+        local pos = w:find(base1, 1, true) -- search first char of base in w without using regex
+        if pos and w:find(fuzreg, pos+1) then -- then search the rest of base in w[pos+1:] with regex
+            table.insert(t[score(w, base)], comp)
         end
     end
     -- Result

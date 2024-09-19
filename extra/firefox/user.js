@@ -14,6 +14,7 @@ user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
 user_pref("browser.tabs.closeWindowWithLastTab", false);
 user_pref("browser.tabs.warnOnClose", false);
 user_pref("browser.theme.dark-private-windows", false);
+user_pref("browser.urlbar.suggest.trending", false);
 user_pref("browser.privatebrowsing.enable-new-indicator", false);
 user_pref("browser.privatebrowsing.enable-new-logo", false);
 user_pref("browser.quitShortcut.disabled", true);
