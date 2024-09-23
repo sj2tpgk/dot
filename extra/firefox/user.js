@@ -3,6 +3,7 @@
 // But you can "install" settings by placing user.js, launch browser, then remove user.js.
 // (Settings will be saved in prefs.js)
 
+user_pref("accessibility.blockautorefresh", true);
 user_pref("browser.aboutConfig.showWarning", false);
 user_pref("browser.compactmode.show", true);
 user_pref("browser.download.autohideButton", true);

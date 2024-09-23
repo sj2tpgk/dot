@@ -695,7 +695,7 @@ endfu
 
 fu! MyHighlight2()
     set notermguicolors
-    "colorscheme vim
+    colorscheme vim
     call MyHighlight_UI()
     call MyHighlight_TS()
     call MyHighlight_RX()
@@ -1421,16 +1421,23 @@ function lsp_config_3_mason() -- Lsp (3) install servers with meson <<<
     mason_lspconfig.setup {
         -- this installs servers in ~/.local/share/nvim/mason/
         -- this does NOT config neovim for servers. please use lspconfig.xxx.setup()
-        ensure_installed = { "bashls", "lua_ls", "pyright", "ts_ls" },
+        -- ensure_installed = { "bashls", "lua_ls", "pyright", "ts_ls" },
     }
+    -- Note: LspInstall and ensure_installed may fail on invalid certificate
+    --       workaround: add "check_certificate = off" in ~/.wgetrc
+    -- Note: Some external tools must be installed manually e.g. shellcheck
+    -- Note: To install pylsp plugins:
+    --       :PylspInstall pyls-flake8 pylsp-mypy pyls-isort
 end -- >>>
 
 function lsp_config_4_servers() -- Lsp (4) configure servers <<<
 
     local lspconfig = require"lspconfig"
-    local function f(lang, lsname, ...)
+    local function f(lang, lsname, cmds, ...)
         -- setup server `lsname` where the argument is all tables in {...} merged to a single table
+        -- abort if at least one command in `cmds` is not executable
         local arg = {}
+        for _, cmd in pairs(cmds) do if vim.fn.executable(cmd) == 0 then return end end
         for _, tbl in ipairs({...}) do for k, v in pairs(tbl) do arg[k] = v end end
         lspconfig[lsname].setup(arg)
     end
@@ -1438,11 +1445,12 @@ function lsp_config_4_servers() -- Lsp (4) configure servers <<<
     local a = { on_attach = my_lsp_on_attach }
     local s = { single_file_support = true }
 
-    f("js/ts",  "ts_ls",        a, s)
-    -- f("lua",    "lua_ls",       a)
+    f("js/ts",  "ts_ls",   { "typescript-language-server" },         a, s)
+    f("lua",    "lua_ls",  { "lua-language-server" },                a)
     -- f("python", "basedpyright", a)
-    f("python", "pyright",      a)
-    f("shell",  "bashls",       a) -- requires shellcheck
+    f("python", "pyright", { "pyright" },                            a)
+    f("python", "pylsp",   { "pylsp" },                              a)
+    f("shell",  "bashls",  { "bash-language-server", "shellcheck" }, a)
 
     -- setup("pylsp",                  nil,                      { on_attach = on_attach, settings = { pylsp = { plugins = { pycodestyle = { ignore = {'W391'}, maxLineLength = 100 } } } } })
     -- setup("ruff_lsp",               "ruff",                   { on_attach = on_attach, init_options = { settings = { args = { "--config", 'lint.ignore = ["E401", "E731"]' } } } })
