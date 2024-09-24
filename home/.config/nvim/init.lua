@@ -94,8 +94,8 @@ do -- Plugins <<<
 
     -- Better syntax highlighting and indent for langs
     plug "Vimjas/vim-python-pep8-indent"
-    plug "vim-python/python-syntax"
-    plug "pangloss/vim-javascript"
+    -- plug "vim-python/python-syntax"
+    -- plug "pangloss/vim-javascript"
     -- plug "udalov/kotlin-vim"
     -- plug "bfrg/vim-cpp-modern"
     -- plug "gutenye/json5.vim"
@@ -124,6 +124,9 @@ do -- Plugins <<<
     plug "junegunn/vim-easy-align"
     plug "windwp/nvim-autopairs"
 
+    -- My plugins
+    plug "https://codeberg.org/sj2tpgk/vim-fast-syntax"
+
 end -- >>>
 
 vim.cmd [[
@@ -131,6 +134,7 @@ let g:javascript_plugin_jsdoc       = 1
 let g:python_highlight_all          = 1
 let g:python_highlight_space_errors = 0
 let g:python_highlight_func_calls   = 0
+let g:fastsyntax_enable_symbol      = 1
 ]]
 
 vim.cmd [[
@@ -691,6 +695,11 @@ fu! MyHighlight_RX()
     "syn match yamlBlockMappingKey /\_s*\zs\K\+/
     "hi link yamlBlockMappingKey Normal
     hi link dockerfileKeyword Special
+
+    " vim-fast-syntax
+    hi fastBuiltin ctermfg=cyan
+    hi fastKeyword ctermfg=green
+    hi fastReturn  ctermfg=red
 endfu
 
 fu! MyHighlight2()
@@ -978,7 +987,7 @@ au FileType             html call HtmlIndent_CheckUserSettings()
 aug END
 
 " === Lua ===
-aug vimrc_ft_javascript
+aug vimrc_ft_lua
 au!
 au BufNewFile,BufRead *.lua iabbr <buffer> ll local
 au FileType lua             iabbr <buffer> ll local
@@ -1083,6 +1092,17 @@ aug vimrc_ft_org
 au!
 au BufNewFile,BufRead *.org call MyOrgSyntaxHighlight()
 au FileType             org call MyOrgSyntaxHighlight()
+aug END
+
+" === Python ===
+fu! MyPythonSyntax()
+    "syn keyword myPythonFlow assert break continue pass raise return yield
+    "hi def link myPythonFlow Flow
+endfu
+aug vimrc_ft_python
+au!
+au BufNewFile,BufRead *.py   call MyPythonSyntax()
+au FileType           python call MyPythonSyntax()
 aug END
 
 " === Scheme ===
@@ -1244,8 +1264,8 @@ end -- >>>
 function lsp_config_2_eldoc() -- Lsp (2) eldoc <<<
 
     vim.cmd [[
-    hi link LspSig    Normal
-    hi      LspSigCur ctermfg=cyan  ctermbg=none cterm=bold
+    hi def link LspSig    Normal
+    hi def link LspSigCur Identifier
     aug vimrc_lspsig
     au!
     au CursorHold,CursorHoldI,InsertEnter * lua lspsigUpdate()
