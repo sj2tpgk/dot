@@ -1465,6 +1465,7 @@ function lsp_config_4_servers() -- Lsp (4) configure servers <<<
     local a = { on_attach = my_lsp_on_attach }
     local s = { single_file_support = true }
 
+    f("go",     "gopls",   { "gopls" },                              a)
     f("js/ts",  "ts_ls",   { "typescript-language-server" },         a, s)
     f("lua",    "lua_ls",  { "lua-language-server" },                a)
     -- f("python", "basedpyright", a)
