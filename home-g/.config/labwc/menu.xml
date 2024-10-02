@@ -136,6 +136,10 @@
           <action name="ToggleMagnify">
           </action>
         </item>
+        <item label="wl-gammactl">
+          <action name="Execute" command='sh -c "pkill -x wl-gammactl || wl-gammactl -c 0.800 -b 0.900 -g 1.000" -'>
+          </action>
+        </item>
       </menu>
       <item label="sfwbar">
         <action name="Execute" command='sh -c "pkill sfwbar; sfwbar -f t2.config" -'>

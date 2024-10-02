@@ -704,7 +704,7 @@ endfu
 
 fu! MyHighlight2()
     set notermguicolors
-    colorscheme vim
+    "colorscheme vim
     call MyHighlight_UI()
     call MyHighlight_TS()
     call MyHighlight_RX()
