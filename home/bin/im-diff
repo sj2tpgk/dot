@@ -1,0 +1,19 @@
+#!/bin/sh
+[ $# -eq 0 ] && { echo "Usage: $0 image1 image2 [fuzz%] [outfile]"; exit 1; }
+image1=$1
+image2=$2
+fuzz=${3:-10%}
+out=${4:-NULL:}
+
+wh=$(magick identify -ping -format '%w %h' "$image1")
+w=${wh% *}
+h=${wh#* }
+
+ae=$(magick compare -fuzz "$fuzz" -metric AE \
+    \( -resize "${w}x${h}" "$image1" \) \
+    \( -resize "${w}x${h}" "$image2" \) \
+    "$out" 2>&1)
+
+echo "$w,$h,$ae"
+echo $(( ( 100 * ae ) / ( w * h ) ))
+

@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# call ollama api and streams response
+
+[ "$#" -lt 3 ] && { echo "Usage: oll HOST:PORT MODEL PROMPT ..." >&2; exit 1; }
+
+addr="$1"
+model="$2"
+shift 2
+prompt="$*"
+prompt_withquote=$(printf %s "$prompt"|jq -Rs .)
+
+json=" {
+    \"model\"      : \"$model\",
+    \"prompt\"     : $prompt_withquote,
+    \"keep_alive\" : \"99999m\"
+} "
+
+stdbuf -o0 \
+    curl -s "http://$addr/api/generate" -d "$json" \
+    | jq -j --unbuffered '.response'

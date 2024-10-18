@@ -30,7 +30,9 @@
   .commentsignupbar { display: none !important; }
 
   /* clean sidebar */
-  .side > .spacer > *:not(.titlebox) { display: none !important; }
+  .side { display: none }
+  /* .side > .spacer > *:not(.titlebox) { display: none !important; } */
+  /* .side .titlebox > .usertext { display: none } */
 
   /* become a redditor banner */
   .listingsignupbar { display: none !important }
@@ -45,6 +47,15 @@
   .entry > form { margin: .65em 0 }
   .entry .buttons li a { font-weight: normal !important }
   .stickied.locked.comment { display: none }
+  .entry > .flat-list { display: none !important }
+  .entry > .tagline > .author { font-size: 0 }
+  .entry > .tagline > .author::before { font-size: 10px; content: "user" }
+
+  /* remove popular sub list */
+  #sr-header-area, #header-bottom-right { display: none }
+
+  /* no footer */
+  .footer-parent { display: none }
 }
 
 @-moz-document domain("google.com") {
