@@ -96,6 +96,10 @@
       <action name="Execute" command="footclient -o colors.alpha=0.9 -o letter-spacing=0">
       </action>
     </keybind>
+    <keybind key="W-d">
+      <action name="ToggleDecorations">
+      </action>
+    </keybind>
   </keyboard>
   <mouse>
     <default>
@@ -121,7 +125,7 @@
   </mouse>
   <libinput>
     <device category="touchpad">
-      <naturalScroll>true</naturalScroll>
+      <naturalScroll>false</naturalScroll>
       <pointerSpeed>1.0</pointerSpeed>
       <accelProfile>flat</accelProfile>
     </device>

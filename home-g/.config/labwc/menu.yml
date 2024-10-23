@@ -47,6 +47,8 @@ openbox_menu:
         action name="Execute" command="chromium":
       item label="VNC Client":
         action name="Execute" command="~/script-local/vnc":
+      item label="Claws Mail":
+        action name="Execute" command="claws-mail":
 
     menu id="Utils" label="Utils":
       item label="PCManFM":
@@ -71,8 +73,6 @@ openbox_menu:
         action name="Execute" command="draw.io":
 
     menu id="Labwc" label="Labwc":
-      menu id="StopKeyd" label="Stop Keyd":
-        item label="Please press Esc+BS+Ret":
       menu id="Monitor" label="Monitor":
         item label="HDMI-A-2 2160p 2x":
           action name="Execute" command="wlr-randr --output HDMI-A-2 --mode 3840x2160 --scale 2":
@@ -80,6 +80,8 @@ openbox_menu:
           action name="ToggleMagnify":
         item label="wl-gammactl":
           action name="Execute" command='sh -c "pkill -x wl-gammactl || wl-gammactl -c 0.800 -b 0.900 -g 1.000" -':
+      menu id="StopKeyd" label="Stop Keyd":
+        item label="Please press Esc+BS+Ret":
       item label="sfwbar":
         action name="Execute" command='sh -c "pkill sfwbar; sfwbar -f t2.config" -':
       item label="Reconfigure":

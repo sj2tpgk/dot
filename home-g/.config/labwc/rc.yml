@@ -72,6 +72,9 @@ labwc_config:
     keybind key="W-Return":
       action name="Execute" command="footclient -o colors.alpha=0.9 -o letter-spacing=0":
 
+    keybind key="W-d":
+      action name="ToggleDecorations":
+
   mouse:
     default:
     context name="Root":
@@ -86,7 +89,7 @@ labwc_config:
 
   libinput:
     device category="touchpad":
-      naturalScroll: true
+      naturalScroll: false
       pointerSpeed: 1.0
       accelProfile: flat
 

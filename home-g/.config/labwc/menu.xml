@@ -81,6 +81,10 @@
         <action name="Execute" command="~/script-local/vnc">
         </action>
       </item>
+      <item label="Claws Mail">
+        <action name="Execute" command="claws-mail">
+        </action>
+      </item>
     </menu>
     <menu id="Utils" label="Utils">
       <item label="PCManFM">
@@ -123,10 +127,6 @@
       </item>
     </menu>
     <menu id="Labwc" label="Labwc">
-      <menu id="StopKeyd" label="Stop Keyd">
-        <item label="Please press Esc+BS+Ret">
-        </item>
-      </menu>
       <menu id="Monitor" label="Monitor">
         <item label="HDMI-A-2 2160p 2x">
           <action name="Execute" command="wlr-randr --output HDMI-A-2 --mode 3840x2160 --scale 2">
@@ -139,6 +139,10 @@
         <item label="wl-gammactl">
           <action name="Execute" command='sh -c "pkill -x wl-gammactl || wl-gammactl -c 0.800 -b 0.900 -g 1.000" -'>
           </action>
+        </item>
+      </menu>
+      <menu id="StopKeyd" label="Stop Keyd">
+        <item label="Please press Esc+BS+Ret">
         </item>
       </menu>
       <item label="sfwbar">
