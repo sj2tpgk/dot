@@ -6,7 +6,7 @@ CONFIG = { "verbose": False }
 # TODO recursive dependencies
 
 def parseSpec(spec):
-    m = re.match(r"([-\w]+)(\[([-\w]+)\])?", spec)
+    m = re.match(r"([-.\w]+)(\[([-.\w]+)\])?", spec)
     name = m[1]
     extra = m[3]
     expr = spec.split(";")[1].strip() if ";" in spec else "True" # Empty spec => always required
