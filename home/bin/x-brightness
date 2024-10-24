@@ -1,6 +1,11 @@
 #!/bin/sh
-brightness_file=/sys/class/backlight/backlight/brightness
-max_brightness_file=/sys/class/backlight/backlight/max_brightness
+
+for dir in /sys/class/backlight/backlight /sys/class/backlight/intel_backlight; do
+    [ -d "$dir" ] && break
+done
+brightness_file=$dir/brightness
+max_brightness_file=$dir/max_brightness
+
 help() {
     echo "Usage: $0 <brightness>" >&2
     echo "<brightness> = 1, +2, -2 etc. Max $(cat $max_brightness_file)" >&2
@@ -23,3 +28,6 @@ read max < "$max_brightness_file"
 [ "$b" -gt "$max" ] && b=$max
 # Write value
 echo "$b" | sudo /usr/bin/tee "$brightness_file" >/dev/null
+
+# note sudo's NOPASSWD won't work if there is a duplicate slash
+# note sudo's NOPASSWD must be in the last line

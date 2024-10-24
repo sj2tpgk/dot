@@ -2,7 +2,7 @@
 
 # Set background color.
 swaybg -c '#21282b' >/dev/null 2>&1 &
-sfwbar -f t2.config &
+sfwbar -f myt2.config &
 # sudo /usr/bin/keyd &
 foot -s &
 uim-xim &

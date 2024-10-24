@@ -1,0 +1,93 @@
+<!-- TODO extra mapping textarea -->
+<!-- TODO do not automatic write -->
+
+<head>
+<style>
+#input { display: flex }
+.cell { width: 35px }
+</style>
+<script>
+const Q = x => document.querySelector(x);
+const append = (...aa) => (aa.length == 0) ? [] : aa[0].concat(append(...aa.slice(1)));
+
+//const con = append([""], "kstnhmyrwgzjdfbpxcv".split(""), "ktnhgbpmr".split("").map(s=>s+"g"), ["th", "dh"]);
+//const vow = ("aiueo"+"frt"+"qnkdjwmpl").split("");
+const con = append([""], "kstnfmyrwgzldhbpvcx".split(""), "ktnfgbpmr".split("").map(s=>s+"t"), ["th", "dh"]);
+const vow = ("aiueo"+"grst"+"qnkflwmdy").split("");
+
+window.onload = function() {
+    let html = `<table><tr><td></td>`;
+    for (let j = 0; j < vow.length; j++) {
+        html += `<td>${vow[j]}</td>`;
+    }
+    html += `</tr>`;
+    for (let i = 0; i < con.length; i++) {
+        html += `<tr><td>${con[i]}</td>`;
+        for (let j = 0; j < vow.length; j++) {
+            html += `<td><input class="cell" id="c${j}_${i}" onKeydown="sel(${j}, ${i}, event)"></td>`;
+        }
+        html += `</tr>`;
+    }
+    html += `</table>`;
+
+    Q("#table").innerHTML = html;
+}
+
+function sel(j, i, event) {
+    if (event.key=='Enter')
+        Q(`#c${j}_${i+(event.shiftKey ? -1 : 1)}`).focus();
+}
+
+function load() {
+    let tbl = Q("#out").value;
+    Q("#extra").value = "";
+    loop: for (let [from, to] of tbl.split("\n").map(s => s.trim().split(/\s+/))) {
+        for (let i = 0; i < vow.length; i++) {
+            for (let j = 0; j < con.length; j++) {
+                if (con[j] + vow[i] == from) {
+                    Q(`#c${i}_${j}`).value = to;
+                    continue loop;
+                }
+            }
+        }
+        Q("#extra").value += `${from}\t${to}\n`;
+    }
+}
+
+function save() {
+    let out = [];
+    for (let i = 0; i < vow.length; i++) {
+        for (let j = 0; j < con.length; j++) {
+            const val = Q(`#c${i}_${j}`).value;
+            if (val.length > 0)
+                out.push(`${con[j]}${vow[i]}\t${val}`);
+        }
+    }
+    for (let [from, to] of Q("#extra").value.split("\n").map(s => s.split(/\s+/)))
+        if (from && to)
+            out.push(`${from}\t${to}`);
+    out.sort();
+    Q("#out").value = out.join("\n");
+}
+</script>
+</head>
+
+<body>
+<div id="input">
+    <div id="table"></div>
+    <div>
+        Extra mappings:<br>
+        <textarea id="extra" cols=20 rows=10></textarea>
+    </div>
+    <div>
+        <input type="button" value="←Import←" onClick="load()"> <br>
+        <input type="button" value="→Export→" onClick="save()"> <br>
+        <textarea id="out" cols=40 rows=20>ka か
+hya ひゃ</textarea>
+        <br>
+        <b>Output may be erased when reloading page, be careful!</b>
+    </div>
+</div>
+<div id="output">
+</div>
+</body>

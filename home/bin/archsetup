@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Install essential packages
+
+ask() {
+    printf "%s [y/n] " "$*"; read -r ask_answer
+    if test "$ask_answer" == y; then "$@"; fi
+}
+
+ask echo pacman --noconfirm -S anthy atool bluez bluz-utils dash entr fish git imagemagick jq keyd man man-db neovim ranger tmux udiskie w3m wget
+
+ask echo pacman --noconfirm -S foot mpv wl-clipboard wlr-randr
+
+ask echo pacman --noconfirm -S claws-mail firefox
+
+ask echo pacman --noconfirm -S docker
+
+

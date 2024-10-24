@@ -51,15 +51,15 @@ labwc_config:
     #   F1-F12 with Fn: XF86ScreenSaver XF86Battery XF86Sleep XF86Suspend   XF86Display XF86MonBrightnessDown XF86MonBrightnessUp XF86WLAN   XF86TouchpadToggle (numpad) (numlock) Scroll_Lock
     #   1-4 with Fn: XF86ZoomOut XF86ZoomIn XF86AudioLowerVolume XF86AudioRaiseVolume
     keybind key="XF86AudioMute":
-      action name="Execute" command="~/script/mute":
+      action name="Execute" command="x-mute":
     keybind key="XF86AudioLowerVolume":
-      action name="Execute" command="~/script/volume -4%":
+      action name="Execute" command="x-volume -4%":
     keybind key="XF86AudioRaiseVolume":
-      action name="Execute" command="~/script/volume +4%":
+      action name="Execute" command="x-volume +4%":
     keybind key="XF86MonBrightnessDown":
-      action name="Execute" command="~/script/brightness -20":
+      action name="Execute" command="x-brightness -20":
     keybind key="XF86MonBrightnessUp":
-      action name="Execute" command="~/script/brightness +20":
+      action name="Execute" command="x-brightness +20":
 
     # cannot bind "Print" or "W-Print" for some reason
     keybind key="W-P":

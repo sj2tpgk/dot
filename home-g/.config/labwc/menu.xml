@@ -146,7 +146,7 @@
         </item>
       </menu>
       <item label="sfwbar">
-        <action name="Execute" command='sh -c "pkill sfwbar; sfwbar -f t2.config" -'>
+        <action name="Execute" command='sh -c "pkill -x sfwbar; sfwbar -f myt2.config" -'>
         </action>
       </item>
       <item label="Reconfigure">
