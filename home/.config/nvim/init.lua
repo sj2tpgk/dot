@@ -109,8 +109,8 @@ do -- Plugins <<<
     -- plug "HiPhish/nvim-ts-rainbow2"
 
     -- LSP
-    plug "williamboman/mason.nvim"
-    plug "williamboman/mason-lspconfig.nvim"
+    -- plug "williamboman/mason.nvim"
+    -- plug "williamboman/mason-lspconfig.nvim"
     plug "neovim/nvim-lspconfig"
 
     -- DAP
@@ -122,7 +122,7 @@ do -- Plugins <<<
 
     -- Editing commands
     plug "junegunn/vim-easy-align"
-    plug "windwp/nvim-autopairs"
+    -- plug "windwp/nvim-autopairs"
 
     -- My plugins
     plug "https://codeberg.org/sj2tpgk/vim-fast-syntax"
@@ -330,17 +330,18 @@ endfu
 
 aug vimrc_folding
 au!
-au FileType c,cpp,lua,javascript,python,markdown call MyFolding()
+au FileType c,cpp,go,lua,javascript,python,markdown call MyFolding()
 aug END
 
 fu! MyFolding()
     let ft = &ft
-    if index(["lua", "javascript", "html", "perl", "c", "cpp", "awk"], ft) != -1
-        setl fdm=expr fde=MyFold(v:lnum,0)
-    elseif ft == "python"
+    if ft == "python"
         setl fdm=expr fde=MyFold(v:lnum,1)
     elseif ft == "Markdown"
         setl fdm=expr fde=MarkdownLevel()
+    "elseif index(["lua", "javascript", "html", "perl", "c", "cpp", "awk"], ft) != -1
+    else
+        setl fdm=expr fde=MyFold(v:lnum,0)
     endif
 endfu
 
@@ -1465,6 +1466,7 @@ function lsp_config_4_servers() -- Lsp (4) configure servers <<<
     local a = { on_attach = my_lsp_on_attach }
     local s = { single_file_support = true }
 
+    f("c",      "clangd",  { "clangd" },                             a, s)
     f("go",     "gopls",   { "gopls" },                              a)
     f("js/ts",  "ts_ls",   { "typescript-language-server" },         a, s)
     f("lua",    "lua_ls",  { "lua-language-server" },                a)

@@ -179,8 +179,8 @@ Mod4 Up    :Exec xdotool mousemove_relative --   0 -20
 Mod4 Return      :Exec xdotool click --clearmodifiers 1
 Mod4 BackSpace   :Exec xdotool click --clearmodifiers 3
 Mod4 Delete      :Exec xdotool click --clearmodifiers 2
-Mod4 Shift Up    :Exec xdotool click                  4
-Mod4 Shift Down  :Exec xdotool click                  5
+Mod4 Shift Up    :Exec xdotool click --clearmodifiers 4
+Mod4 Shift Down  :Exec xdotool click --clearmodifiers 5
 Mod4 Shift Left  :Exec xdotool click --clearmodifiers 8
 Mod4 Shift Right :Exec xdotool click --clearmodifiers 9
 

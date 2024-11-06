@@ -26,6 +26,9 @@
 /* Disable fullscreen animation (about:config not working?) */
 #navigator-toolbox[fullscreenShouldAnimate] { transition: none !important; }
 
+/* Remove border below toolbar */
+#navigator-toolbox { border-bottom: none !important }
+
 /* Hide pointer-lock notification */
 #fullscreen-and-pointerlock-wrapper { display: none !important }
 
