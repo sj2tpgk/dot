@@ -3,6 +3,7 @@ labwc_config:
   core:
     gap:               3
     linux:             good
+    xwaylandPersistence: yes
 
   focus:
     followMouse: yes

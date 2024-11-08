@@ -2,6 +2,7 @@
   <core>
     <gap>3</gap>
     <linux>good</linux>
+    <xwaylandPersistence>yes</xwaylandPersistence>
   </core>
   <focus>
     <followMouse>yes</followMouse>
