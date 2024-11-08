@@ -16,7 +16,7 @@ ask() {
     if test "$ask_answer" == y; then echo "$@"; fi
 }
 
-ask pacman --noconfirm -S anthy atool bluez bluz-utils dash entr fish git imagemagick jq keyd man man-db neovim ranger tmux pv udiskie w3m wget
+ask pacman --noconfirm -S anthy atool bluez bluz-utils dash entr fish git imagemagick jq keyd man man-db neovim nmap openssh pv ranger rsync tmux pv udiskie w3m wget
 
 ask pacman --noconfirm -S foot mpv wl-clipboard wlr-randr
 

@@ -158,7 +158,7 @@
         </action>
       </item>
       <item label="Hibernate">
-        <action name="Execute" command="systemctl hibernate">
+        <action name="Execute" command="x-hibernate">
         </action>
       </item>
       <item label="Reboot">

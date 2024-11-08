@@ -34,7 +34,7 @@ bw	べい
 by	ぼん
 ca	ちゃ
 cd	ちょう
-ce	せ
+ce	ちぇ
 cf	ちゅう
 ci	ち
 ck	ちん

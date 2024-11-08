@@ -53,8 +53,8 @@ if has git
     abbr gc   git commit -m
     abbr gd   git diff HEAD
     abbr gl   git log
-    abbr gps  git push origin '(git branch --show-current)'
-    abbr gpl  git pull origin '(git branch --show-current)'
+    abbr gps  git push --all origin
+    abbr gpl  git pull --all origin # '(git branch --show-current)'
     abbr gs   git status
 end
 if has flatpak
