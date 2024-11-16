@@ -2,17 +2,24 @@
 
 # Install essential packages
 
+# Usage: archsetup [-n] [-y]
+# Options:
+#    -n   dry run
+#    -y   yes to all
+
+dryrun= yes=
+while [ $# -ge 1 ]; do case "$1" in (-n) dryrun=1;; (-y) yes=1;; esac; shift; done
+
 ask() {
-    printf "%s [y/n] " "$*"; read -r ask_answer
-    if test "$ask_answer" == y; then "$@"; fi
+    if [ "$dryrun" ]; then printf "> %s\n" "$*"; return 0; fi
+    if [ "$yes" ]; then ask_answer=y; else printf "%s [y/n] " "$*"; read -r ask_answer; fi
+    if test "$ask_answer" == y; then echo "$@"; fi
 }
 
-ask echo pacman --noconfirm -S anthy atool bluez bluz-utils dash entr fish git imagemagick jq keyd man man-db neovim nmap openssh pv ranger rsync tmux udiskie w3m wget
+ask pacman --noconfirm -S anthy atool bluez bluz-utils dash entr fish git imagemagick jq keyd man man-db neovim nmap openssh pv ranger rsync tmux pv udiskie w3m wget
 
-ask echo pacman --noconfirm -S foot mpv wl-clipboard wlr-randr
+ask pacman --noconfirm -S foot mpv wl-clipboard wlr-randr
 
-ask echo pacman --noconfirm -S claws-mail firefox
+ask pacman --noconfirm -S claws-mail firefox mousepad pcmanfm
 
-ask echo pacman --noconfirm -S docker
-
-
+ask pacman --noconfirm -S docker

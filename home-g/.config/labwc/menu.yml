@@ -89,7 +89,7 @@ openbox_menu:
       item label="Exit":
         action name="Exit":
       item label="Hibernate":
-        action name="Execute" command="systemctl hibernate":
+        action name="Execute" command="x-hibernate":
       item label="Reboot":
         action name="Execute" command="systemctl reboot":
       item label="Poweroff":
