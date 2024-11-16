@@ -339,7 +339,10 @@ xterm*reverseVideo: on
 ! xvkbd*Font: -*-courier-bold-r-*-*-17-*-*-*-*-*-*-*
 ! xvkbd*Font: -*-helvetica-bold-r-*-*-17-*-*-*-*-*-*-*
 ! xvkbd*Font: -gnu-unifont-medium-r-normal-sans-16-160-75-75-c-80-iso10646-1
-xvkbd*Font: -misc-comic relief-bold-r-normal--0-140-0-0-p-0-koi8-uni
+! xvkbd*Font: -misc-comic relief-bold-r-normal--0-140-0-0-p-0-koi8-uni
+! xvkbd*Font: -misc-migu 2m-bold-r-normal--0-0-0-0-p-0-iso10646-1
+xvkbd*Font: -misc-droid sans-bold-r-normal--20-0-0-0-p-0-iso10646-1
+
 ! xvkbd*compact: true
 ! xvkbd.windowGeometry: 600x200-0-0
 
