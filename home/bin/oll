@@ -19,7 +19,7 @@ prompt="$*"
 prompt_withquote=$(printf %s "$prompt"|jq -Rs .)
 
 context=null
-if [ "$flag_context" ]; then
+if [ "$flag_context" ] && [ -e /tmp/ol_content ]; then
     read -r context < /tmp/ol_context
     if ! printf %s "$context" | grep -qE '^\[[0-9]+(,[0-9]+)*\]$'; then context=null; fi
 fi

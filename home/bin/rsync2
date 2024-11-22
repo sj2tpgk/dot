@@ -2,12 +2,13 @@
 
 set -euo pipefail
 
-die() { echo "ERROR: $*" >&2; exit 1; }
+die() { help >&2; echo >&2; echo "ERROR: $*" >&2; exit 1; }
 echoB() { echo -ne "\033[1m"; echo "$@"; echo -ne "\033[0m"; }
 
 help() {
     echo "Usage: $0 FROM TO [RSYNC OPTIONS ...]"
     echo "Note: Invoked by moving to FROM and rsync . TO"
+    echo
     echo "* Exclude pattern are interpreted relative to FROM dir"
     echo "  - trailing slash   = match directories only"
     echo "  - leading slash    = path relative to FROM dir"
@@ -34,6 +35,7 @@ opts=(
 )
 
 # Parse args
+[ $# -ge 2 ] || die "Not enough arguments"
 from=$1
 to=$2
 shift 2
@@ -42,6 +44,10 @@ while [[ $# -ge 1 ]]; do
         (*) opts+=("$1"); shift ;;
     esac
 done
+
+# To absolute path
+from=$(cd "$from"; pwd)
+to=$(cd "$to"; pwd)
 
 # Check args
 [[ "${from%/}" == "$from" ]] || die "$from ends with /"

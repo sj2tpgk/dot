@@ -330,12 +330,12 @@ endfu
 
 aug vimrc_folding
 au!
-au FileType c,cpp,lua,javascript,python,markdown call MyFolding()
+au FileType awk,c,cpp,go,html,javascript,lua,perl,python,markdown call MyFolding()
 aug END
 
 fu! MyFolding()
     let ft = &ft
-    if index(["lua", "javascript", "html", "perl", "c", "cpp", "awk"], ft) != -1
+    if index(["awk", "c", "cpp", "go", "html", "javascript", "lua", "perl"], ft) != -1
         setl fdm=expr fde=MyFold(v:lnum,0)
     elseif ft == "python"
         setl fdm=expr fde=MyFold(v:lnum,1)
