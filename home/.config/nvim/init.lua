@@ -122,7 +122,7 @@ do -- Plugins <<<
 
     -- Editing commands
     plug "junegunn/vim-easy-align"
-    -- plug "windwp/nvim-autopairs"
+    plug "windwp/nvim-autopairs"
 
     -- My plugins
     plug "https://codeberg.org/sj2tpgk/vim-fast-syntax"

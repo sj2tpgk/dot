@@ -54,7 +54,7 @@ if has git
     abbr gd   git diff HEAD
     abbr gl   git log
     abbr gps  git push --all origin
-    abbr gpl  git pull --all origin # '(git branch --show-current)'
+    abbr gpl  git pull origin '(git branch --show-current)'
     abbr gs   git status
 end
 if has flatpak
@@ -65,6 +65,7 @@ if has flatpak
     abbr flui      flatpak uninstall
     abbr flup      flatpak update
 end
+has magick && abbr mg magick
 
 # Completion
 # "quiet" : completion like "if" or "sudo" (followed by another commands)
