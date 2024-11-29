@@ -998,18 +998,18 @@ aug END
 " === JavaScript ===
 aug vimrc_ft_javascript
 au!
-au BufNewFile,BufRead *.js iabbr <buffer> cs const
-au FileType javascript     iabbr <buffer> cs const
-au BufNewFile,BufRead *.js iabbr <buffer> ts this
-au FileType javascript     iabbr <buffer> ts this
-au BufNewFile,BufRead *.js inore <buffer> /// /**<space><space>*/<left><left><left>
-au FileType javascript     inore <buffer> /// /**<space><space>*/<left><left><left>
-au BufNewFile,BufRead *.js inore <buffer> $$ <space>=><space>
-au FileType javascript     inore <buffer> $$ <space>=><space>
-au BufNewFile,BufRead *.js inore <buffer> clog console.log()<left>
-au FileType javascript     inore <buffer> clog console.log()<left>
-au BufNewFile,BufRead *.js setl iskeyword+=#
-au FileType javascript     setl iskeyword+=#
+au BufNewFile,BufRead *.js,*.ts   iabbr <buffer> cs const
+au FileType javascript,typescript iabbr <buffer> cs const
+au BufNewFile,BufRead *.js,*.ts   iabbr <buffer> ts this
+au FileType javascript,typescript iabbr <buffer> ts this
+au BufNewFile,BufRead *.js,*.ts   inore <buffer> /// /**<space><space>*/<left><left><left>
+au FileType javascript,typescript inore <buffer> /// /**<space><space>*/<left><left><left>
+au BufNewFile,BufRead *.js,*.ts   inore <buffer> $$ <space>=><space>
+au FileType javascript,typescript inore <buffer> $$ <space>=><space>
+au BufNewFile,BufRead *.js,*.ts   inore <buffer> clog console.log()<left>
+au FileType javascript,typescript inore <buffer> clog console.log()<left>
+au BufNewFile,BufRead *.js,*.ts   setl iskeyword+=#
+au FileType javascript,typescript setl iskeyword+=#
 aug END
 
 " === Org mode ===
@@ -1466,7 +1466,9 @@ function lsp_config_4_servers() -- Lsp (4) configure servers <<<
     local s = { single_file_support = true }
 
     f("c",      "clangd",  { "clangd" },                             a, s)
+    f("css",    "cssls",   { "vscode-css-language-server" },         a, s)
     f("go",     "gopls",   { "gopls" },                              a)
+    f("html",   "html",    { "vscode-html-language-server" },        a)
     f("js/ts",  "ts_ls",   { "typescript-language-server" },         a, s)
     f("lua",    "lua_ls",  { "lua-language-server" },                a)
     -- f("python", "basedpyright", a)
