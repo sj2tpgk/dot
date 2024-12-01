@@ -1,18 +1,6 @@
 openbox_menu:
 
   menu id="client-menu":
-    item label="Minimize":
-      action name="Iconify":
-    item label="Maximize":
-      action name="ToggleMaximize":
-    item label="Fullscreen":
-      action name="ToggleFullscreen":
-    item label="Roll up/down":
-      action name="ToggleShade":
-    item label="Decorations":
-      action name="ToggleDecorations":
-    item label="Always on Top":
-      action name="ToggleAlwaysOnTop":
 
     # Any menu with the id "workspaces" is hidden when there is only one workspace
     menu id="workspaces" label="Workspace":
@@ -33,6 +21,19 @@ openbox_menu:
       separator:
       item label="Always on Visible Workspace":
         action name="ToggleOmnipresent":
+
+    item label="Minimize":
+      action name="Iconify":
+    item label="Maximize":
+      action name="ToggleMaximize":
+    item label="Fullscreen":
+      action name="ToggleFullscreen":
+    item label="Roll up/down":
+      action name="ToggleShade":
+    item label="Decorations":
+      action name="ToggleDecorations":
+    item label="Always on Top":
+      action name="ToggleAlwaysOnTop":
 
     item label="Close":
       action name="Close":
@@ -65,6 +66,8 @@ openbox_menu:
         action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=Dejavu\ Sans\ Mono<COLON>size=30 -e sh -c MY_DARK=0\\ exec\\ /bin/fish" -':
       item label="Mousepad":
         action name="Execute" command="mousepad":
+      item label="VirtualBox":
+        action name="Execute" command="virtualbox":
 
     menu id="Media" label="Media":
       item label="Inkscape":

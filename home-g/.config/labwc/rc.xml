@@ -1,8 +1,7 @@
 <labwc_config>
   <core>
     <gap>3</gap>
-    <linux>good</linux>
-    <xwaylandPersistence>yes</xwaylandPersistence>
+    <xwaylandPersistence>true</xwaylandPersistence>
   </core>
   <focus>
     <followMouse>yes</followMouse>

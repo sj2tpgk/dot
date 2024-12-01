@@ -1,29 +1,5 @@
 <openbox_menu>
   <menu id="client-menu">
-    <item label="Minimize">
-      <action name="Iconify">
-      </action>
-    </item>
-    <item label="Maximize">
-      <action name="ToggleMaximize">
-      </action>
-    </item>
-    <item label="Fullscreen">
-      <action name="ToggleFullscreen">
-      </action>
-    </item>
-    <item label="Roll up/down">
-      <action name="ToggleShade">
-      </action>
-    </item>
-    <item label="Decorations">
-      <action name="ToggleDecorations">
-      </action>
-    </item>
-    <item label="Always on Top">
-      <action name="ToggleAlwaysOnTop">
-      </action>
-    </item>
     <menu id="workspaces" label="Workspace">
       <item label="Move to 1">
         <action name="SendToDesktop" to="1">
@@ -60,6 +36,30 @@
         </action>
       </item>
     </menu>
+    <item label="Minimize">
+      <action name="Iconify">
+      </action>
+    </item>
+    <item label="Maximize">
+      <action name="ToggleMaximize">
+      </action>
+    </item>
+    <item label="Fullscreen">
+      <action name="ToggleFullscreen">
+      </action>
+    </item>
+    <item label="Roll up/down">
+      <action name="ToggleShade">
+      </action>
+    </item>
+    <item label="Decorations">
+      <action name="ToggleDecorations">
+      </action>
+    </item>
+    <item label="Always on Top">
+      <action name="ToggleAlwaysOnTop">
+      </action>
+    </item>
     <item label="Close">
       <action name="Close">
       </action>
@@ -113,6 +113,10 @@
       </item>
       <item label="Mousepad">
         <action name="Execute" command="mousepad">
+        </action>
+      </item>
+      <item label="VirtualBox">
+        <action name="Execute" command="virtualbox">
         </action>
       </item>
     </menu>

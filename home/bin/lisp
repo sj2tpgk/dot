@@ -1,4 +1,19 @@
 #!/bin/sh
+
+if [ "$TERM" = dumb ] || [ $# -ge 1 ]; then
+    exec sbcl "$@"
+else
+    exec rlwrap -p'3;32' \
+        --remember \
+        --history-filename="$HOME/.rlwrap/sbcl_history" \
+        --histsize=1000000 \
+        --complete-filenames \
+        --break-chars "$BREAK_CHARS" \
+        sbcl
+        # --file="$HOME/.rlwrap/sbcl_completions" \
+fi
+exit
+
 BREAK_CHARS="(){}[],^%$#@\"\";''|\\"
 RLWRAP=
 if [ $TERM == "dumb" ]; then  # slime

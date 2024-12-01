@@ -71,6 +71,8 @@ keymap ?     HELP
 keymap O     OPTIONS
 keymap H     HISTORY
 keymap :     COMMAND
+keymap x     CHARSET
+keymap X     DEFAULT_CHARSET
 
 
 # Bookmarks

@@ -26,6 +26,7 @@ let g:env = {
 
 ]] -- >>>
 
+
 function plug(url, lazy) -- Plugin manager <<<
     -- Example: plug "neovim/nvim-lspconfig"
     -- Just git clone repo, windows compatible
@@ -46,9 +47,6 @@ function plug(url, lazy) -- Plugin manager <<<
 
     -- Download package if not already installed
     if 0 == vim.fn.isdirectory(dir .. "/" .. name) then
-
-        -- Create containing directory and git clone
-        -- os.execute("[ -d '" .. dir .. "' ] || mkdir -p '" .. dir .. "'; git -C '" .. dir .. "' clone '" .. url .. "'")
 
         -- Check if git is available
         if not vim.fn.executable("git") then print("plug: git is not available!") return end
@@ -124,18 +122,22 @@ do -- Plugins <<<
     plug "junegunn/vim-easy-align"
     plug "windwp/nvim-autopairs"
 
+    -- Misc
+    plug "stevearc/profile.nvim"
+
     -- My plugins
     plug "https://codeberg.org/sj2tpgk/vim-fast-syntax"
 
 end -- >>>
 
-vim.cmd [[
+vim.cmd [[ " Plugin options <<<
 let g:javascript_plugin_jsdoc       = 1
 let g:python_highlight_all          = 1
 let g:python_highlight_space_errors = 0
 let g:python_highlight_func_calls   = 0
 let g:fastsyntax_enable_symbol      = 1
-]]
+]] -- >>>
+
 
 vim.cmd [[
 
@@ -259,7 +261,6 @@ set shiftround              " Indents to next multiple of 'shiftwidth'
 set fdm=marker
 set fdn=2
 nnore <tab> za
-nnore <leader>z :set fdm=marker<cr>zm
 
 " close folding by 'h' if cursor is 0 of the line and in a opened folding
 "nnore <expr> h  (getcurpos()[2] == 1) && (foldlevel('.') != 0) ? 'zc' : 'h'
@@ -330,12 +331,14 @@ endfu
 
 aug vimrc_folding
 au!
-au FileType c,cpp,go,lua,javascript,python,markdown call MyFolding()
+au FileType awk,c,cpp,go,html,javascript,lua,perl,python,markdown call MyFolding()
 aug END
 
 fu! MyFolding()
     let ft = &ft
-    if ft == "python"
+    if index(["awk", "c", "cpp", "go", "html", "javascript", "lua", "perl"], ft) != -1
+        setl fdm=expr fde=MyFold(v:lnum,0)
+    elseif ft == "python"
         setl fdm=expr fde=MyFold(v:lnum,1)
     elseif ft == "Markdown"
         setl fdm=expr fde=MarkdownLevel()
@@ -413,6 +416,8 @@ nnore ) <c-i>
 nnore <c-u> <c-i>
 nnore <silent> <expr> f (reg_recording() . reg_executing()) != "" ? "f" : ":lua smartf(1)\<cr>"
 nnore <silent> <expr> F (reg_recording() . reg_executing()) != "" ? "F" : ":lua smartf(-1)\<cr>"
+nnore <space> <c-d>
+nnore <backspace> <c-u>
 
 " edit
 nnore D dd
@@ -442,7 +447,7 @@ nnore ss :sp<cr>
 nnore sv :vsp<cr>
 " nnore sb :sp\|b#<cr><c-w>p:bd<cr>
 nnore sb :bd<cr>
-nnore sp :lua smartSp()<cr>
+"nnore sp :lua smartSp()<cr>
 nnore s<space> :b#<cr>
 "nnore sm :ls<cr>:b<space>
 nnore <expr> sm FzfExists() ? ":FzfBuffers\<cr>" : ":ls\<cr>:b\<space>"
@@ -459,9 +464,7 @@ nnore s* :call AddHighlight()<cr>
 nnore :<cr> :<up><cr>
 tnore <esc> <c-\><c-n>
 nnore <c-h> :call DescribeFace()<cr>
-nnore <c-k> :lua browseDoc(false)<cr>
-vnore <c-k> :lua browseDoc(true)<cr>
-command! -nargs=* BD lua browseDoc(false, "<args>")
+nore  <cr> K
 nnore <c-l> :call RecenterTopBottom()<cr>
 "   commandline: <up> to prev candidate when completion popup menu in visible, otherwise go to previous history item with prefix matching
 cnore <expr> <up>   pumvisible() ? "\<c-p>" : "\<up>"
@@ -705,17 +708,20 @@ endfu
 
 fu! MyHighlight2()
     set notermguicolors
-    "colorscheme vim
     call MyHighlight_UI()
     call MyHighlight_TS()
     call MyHighlight_RX()
 endfu
 
-call MyHighlight2()
 aug vimrc_hi " :hi need to be in autocmd on first run??
 au!
-au VimEnter * :call MyHighlight2()
+" when there is a 'colorscheme vim' in init.vim (note: it is possible that (2)(3) runs in reverse order):
+" (1) apply colorscheme vim (2) vimrc's :hi commands run (3) opens file (4) apply colorscheme which clears your :hi
+" we must use ColorScheme autocmd to run :hi commands after (4).
+" note :au must be before :colorscheme
+au ColorScheme vim :call MyHighlight2()
 aug END
+colorscheme vim
 nnore <f6> :call MyHighlight2()<cr>
 " >>>
 
@@ -820,14 +826,14 @@ com! -bar -bang FzfFiles   call Fzf(expand("<bang>" == "" ? "*" : "**", 0, 1),  
 " >>>
 
 " Repl/Eval <<<
-" b:terminal_job_id
-" jobsend(34, join(getline(1,"$"), "\n") . "\n")
-" \ "scheme": { "cmd": "gosh -fno-read-edit", "newl": "\r", "newlMore": 0 },
-" \ "scheme": { "cmd": "rlwrap -pgreen gosh -fno-read-edit", "cmdBase": "gosh", "newl": "\r", "newlMore": 0 },
+" set p (tmux lsp -f "#{==:sbcl,#{pane_current_command}}" -F '#{pane_id}')
+" tmux send -t $p -l '(list 1 2 3)'
+" tmux send -t $p 'Enter'
 let g:ReplData = {
-    \ "scheme":     { "cmd": "gosh", "newl": "\r", "newlMore": 0 },
-    \ "python":     { "cmd": "python", "newl": "\r\n", "newlMore": 1 },
-    \ "javascript": { "cmd": "node", "newl": "\r\n", "newlMore": 1 },
+    \ "javascript": { "newl": "\r\n", "newlMore": 1, "cmd": "node" },
+    \ "lisp":       { "newl": "\r",   "newlMore": 0, "cmd": "sbcl --noinform" },
+    \ "python":     { "newl": "\r\n", "newlMore": 1, "cmd": "python" },
+    \ "scheme":     { "newl": "\r",   "newlMore": 0, "cmd": "gosh" },
     \ } " cl, lua, node
 fu! ReplGetOpenTermBuf(cmd) " (cmd)
     " Get (or open) repl term buffer for filetype (and return bufnr)
@@ -930,6 +936,14 @@ let tmpl_html5 = [
 
 " Filetype specific configs <<<
 
+" === Applies to multiple langs ===
+set keywordprg=:BrowseDoc
+aug vimrc_ft_multi
+au!
+au FileType c,cpp,*sh set keywordprg=:Man
+au FileType python    set keywordprg=:BrowseDoc
+aug END
+
 " === Awk ===
 fu! MyAwkFixIndent()
     set inde=GetAwkIndent2()
@@ -999,18 +1013,18 @@ aug END
 " === JavaScript ===
 aug vimrc_ft_javascript
 au!
-au BufNewFile,BufRead *.js iabbr <buffer> cs const
-au FileType javascript     iabbr <buffer> cs const
-au BufNewFile,BufRead *.js iabbr <buffer> ts this
-au FileType javascript     iabbr <buffer> ts this
-au BufNewFile,BufRead *.js inore <buffer> /// /**<space><space>*/<left><left><left>
-au FileType javascript     inore <buffer> /// /**<space><space>*/<left><left><left>
-au BufNewFile,BufRead *.js inore <buffer> $$ <space>=><space>
-au FileType javascript     inore <buffer> $$ <space>=><space>
-au BufNewFile,BufRead *.js inore <buffer> clog console.log()<left>
-au FileType javascript     inore <buffer> clog console.log()<left>
-au BufNewFile,BufRead *.js setl iskeyword+=#
-au FileType javascript     setl iskeyword+=#
+au BufNewFile,BufRead *.js,*.ts   iabbr <buffer> cs const
+au FileType javascript,typescript iabbr <buffer> cs const
+au BufNewFile,BufRead *.js,*.ts   iabbr <buffer> ts this
+au FileType javascript,typescript iabbr <buffer> ts this
+au BufNewFile,BufRead *.js,*.ts   inore <buffer> /// /**<space><space>*/<left><left><left>
+au FileType javascript,typescript inore <buffer> /// /**<space><space>*/<left><left><left>
+au BufNewFile,BufRead *.js,*.ts   inore <buffer> $$ <space>=><space>
+au FileType javascript,typescript inore <buffer> $$ <space>=><space>
+au BufNewFile,BufRead *.js,*.ts   inore <buffer> clog console.log()<left>
+au FileType javascript,typescript inore <buffer> clog console.log()<left>
+au BufNewFile,BufRead *.js,*.ts   setl iskeyword+=#
+au FileType javascript,typescript setl iskeyword+=#
 aug END
 
 " === Org mode ===
@@ -1120,6 +1134,13 @@ au BufNewFile,BufRead *.wat setl ft=lisp
 au FileType             wat setl ft=lisp
 aug END
 
+" === Zig ===
+aug vimrc_ft_zig
+au!
+au BufNewFile,BufRead *.zig iabbr <buffer> cs const
+au FileType zig             iabbr <buffer> cs const
+aug END
+
 " >>>
 
 ]]
@@ -1160,6 +1181,9 @@ do -- Keys (keyboard layout specific) <<<
         "o   l  i  $",
         "o   iw lw iw",
         "o   iW lW iW",
+
+        "n   H  K  <c-o>", -- back jump list (like browser hist)
+        "n   L  I  <c-i>", -- forward
     }
 
     for _, entry in ipairs(mappings) do
@@ -1250,11 +1274,11 @@ function lsp_config_1_misc() -- Lsp (1) misc config <<<
         setl omnifunc=v:lua.vim.lsp.omnifunc
         setl signcolumn=number
         nnore <buffer> <enter> :lua vim.lsp.buf.hover()<cr>
-        nnore <buffer> <leader>dd :LspToggleDiag<cr>
-        nnore <buffer> <leader>dl :LspToggleDiagLevel<cr>
-        nnore <buffer> <leader>ll :LspLocList<cr>
-        nnore <buffer> <leader>lq :LspQuickFix<cr>
-        nnore <buffer> <leader>lr :lua vim.lsp.buf.rename()<cr>
+        nnore <buffer> spd :LspToggleDiag<cr>
+        nnore <buffer> spD :LspToggleDiagLevel<cr>
+        nnore <buffer> spl :LspLocList<cr>
+        nnore <buffer> spq :LspQuickFix<cr>
+        nnore <buffer> spr :lua vim.lsp.buf.rename()<cr>
         ]]
         local cap = client.server_capabilities
         cap.semanticTokensProvider = false -- prevent my highlighting gettting overridden
@@ -1467,13 +1491,16 @@ function lsp_config_4_servers() -- Lsp (4) configure servers <<<
     local s = { single_file_support = true }
 
     f("c",      "clangd",  { "clangd" },                             a, s)
+    f("css",    "cssls",   { "vscode-css-language-server" },         a, s)
     f("go",     "gopls",   { "gopls" },                              a)
+    f("html",   "html",    { "vscode-html-language-server" },        a)
     f("js/ts",  "ts_ls",   { "typescript-language-server" },         a, s)
     f("lua",    "lua_ls",  { "lua-language-server" },                a)
     -- f("python", "basedpyright", a)
     f("python", "pyright", { "pyright" },                            a)
     f("python", "pylsp",   { "pylsp" },                              a)
     f("shell",  "bashls",  { "bash-language-server", "shellcheck" }, a)
+    f("zig",    "zls",     { "zls" },                                a)
 
     -- setup("pylsp",                  nil,                      { on_attach = on_attach, settings = { pylsp = { plugins = { pycodestyle = { ignore = {'W391'}, maxLineLength = 100 } } } } })
     -- setup("ruff_lsp",               "ruff",                   { on_attach = on_attach, init_options = { settings = { args = { "--config", 'lint.ignore = ["E401", "E731"]' } } } })
@@ -1844,6 +1871,31 @@ if can_require"nvim-autopairs" then -- nvim-autopairs <<<
     AutoPairs.get_rule("'")[1]:with_pair(Conds.not_after_text("["))
 end -- >>>
 
+if can_require"profile" then -- Profiler <<<
+    -- To open profile: https://ui.perfetto.dev/
+    local should_profile = "1" -- os.getenv("NVIM_PROFILE")
+    local profile = require("profile")
+    if should_profile then
+        profile.instrument_autocmds()
+        if should_profile:lower():match("^start") then
+            profile.start("*")
+        else
+            profile.instrument("*")
+        end
+    end
+    local function toggle_profile()
+        if profile.is_recording() then
+            profile.stop()
+            filename = os.date('profile-%Y%m%d-%H%M%S.json')
+            profile.export(filename)
+            vim.notify(string.format("Written to %s", filename))
+        else
+            profile.start("*")
+        end
+    end
+    vim.keymap.set("", "X", toggle_profile)
+end -- >>>
+
 if vim.fn.match(vim.o.rtp, "vim-easy-align") ~= -1 then -- vim-easy-align <<<
     vim.cmd [[
     xmap ga <Plug>(EasyAlign)
@@ -2055,12 +2107,16 @@ end -- >>>
 function browseDoc(visual, text) -- <<<
     text = visual and vim.fn.GetVisualSelection() or (text or vim.fn.expand("<cword>"))
     local ft    = vim.bo.ft
-    local extra = (ft == "javascript" or ft == "html") and " mdn" or ""
-    local query = text .. " " .. ft .. extra
+    local extra = ({ javascript="mdn", css="mdn", html="mdn" })[ft] or ""
+    local query = ft .. "+" .. extra .. "+doc+" .. text
     -- TODO: w3m?
     local cmd   = "sil! !firefox 'https://lite.duckduckgo.com/lite/?q=" .. query .. "'"
     vim.cmd(cmd)
-end -- >>>
+end
+vim.cmd [[
+command! -nargs=* BrowseDoc lua browseDoc(false, <q-args>)
+]]
+ -- >>>
 
 function nvim_echo_no_hitenter(chunks, history, opts) -- <<<
     -- Similar to vim.api.nvim_echo but do not show hit-enter message
@@ -2114,7 +2170,7 @@ set shortmess+=c                           " No message like "Pattern not found"
 set completeopt+=menuone,noinsert,noselect " Needed for auto completion
 set completeopt-=longest                   " -=longest is needed otherwise first candidate appears and then disappears before menu is created, looks weird
 set completeopt-=menu,preview
-set infercase
+set noinfercase
 
 " My completion
 set completefunc=MyComp
@@ -2135,7 +2191,6 @@ au FileType lua setl iskeyword+=.
 au FileType sh  setl iskeyword+=.,-
 
 " Auto complete (https://stackoverflow.com/questions/35837990)
-let g:x1 = ""
 let g:comp_open_prev = [-1, -1]
 fu! OpenCompletion()
 
