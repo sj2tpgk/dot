@@ -1274,11 +1274,11 @@ function lsp_config_1_misc() -- Lsp (1) misc config <<<
         setl omnifunc=v:lua.vim.lsp.omnifunc
         setl signcolumn=number
         nnore <buffer> <enter> :lua vim.lsp.buf.hover()<cr>
-        nnore <buffer> spd :LspToggleDiag<cr>
-        nnore <buffer> spD :LspToggleDiagLevel<cr>
-        nnore <buffer> spl :LspLocList<cr>
-        nnore <buffer> spq :LspQuickFix<cr>
-        nnore <buffer> spr :lua vim.lsp.buf.rename()<cr>
+        nnore <buffer> sld :LspToggleDiag<cr>
+        nnore <buffer> slD :LspToggleDiagLevel<cr>
+        nnore <buffer> sll :LspLocList<cr>
+        nnore <buffer> slq :LspQuickFix<cr>
+        nnore <buffer> slr :lua vim.lsp.buf.rename()<cr>
         ]]
         local cap = client.server_capabilities
         cap.semanticTokensProvider = false -- prevent my highlighting gettting overridden
