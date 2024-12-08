@@ -1,4 +1,4 @@
 #!/bin/sh
 
 f=$1
-gofmt -w "$f" && goimports -w "$f" && go run "$f"
+gofmt -w "$f" && goimports -w "$f" && go run "$@"

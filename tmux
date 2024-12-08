@@ -194,7 +194,8 @@ fi
 ####FILE -- config/fish/config.fish {{{
 [ -d "/data/data/com.termux/files/home/bin/" ] \
     && set -x PATH $PATH:/data/data/com.termux/files/home/bin/
-set fish_color_autosuggestion 'magenta'
+set fish_color_autosuggestion magenta
+set fish_color_command cyan
 #| function fish_greeting; end
 #| function mkcd; mkdir $argv[1] && cd $argv[1]; end
 #| for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i ""; end
