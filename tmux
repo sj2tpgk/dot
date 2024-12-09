@@ -263,9 +263,9 @@ set -g pane-active-border-style fg=yellow
 
 run-shell -b '
 r=$(tr -dc 1-7 </dev/urandom | head -c2) a=${r##?} b=${r%?}
-tmux set -g status-style                 fg=0,bg=$a,bold \; \
-     set -g window-status-style          fg=0,bg=$b,bold \; \
-     set -g window-status-current-style  fg=0,bg=$b,bold,reverse \; \
+tmux set -g status-style                 bg=0,fg=$a,bold \; \
+     set -g window-status-style          bg=0,fg=$b,bold \; \
+     set -g window-status-current-style  bg=0,fg=$b,bold,reverse \; \
      set -g window-status-format         " ##I:##W##F " \; \
      set -g window-status-current-format " ##I:##W##F " \; \
      set -g window-status-separator      ""
