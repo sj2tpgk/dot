@@ -1,4 +1,12 @@
 #!/bin/sh
 
+[ $# -eq 0 ] && { echo >&2 "Usage: gorun [-b] file.go"; exit 1; }
+
+if [ "$1" = -b ]; then build=1; shift; else build=; fi
 f=$1
-gofmt -w "$f" && goimports -w "$f" && go run "$f"
+
+if [ "$build" ]; then
+    gofmt -w "$f" && goimports -w "$f" && go build -o "${f%.go}" "$f"
+else
+    gofmt -w "$f" && goimports -w "$f" && go run "$f"
+fi

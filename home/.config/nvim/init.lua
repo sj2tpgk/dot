@@ -609,9 +609,15 @@ fu! MyHighlight_UI()
     hi Error     ctermfg=white ctermbg=red
     hi ErrorMsg  ctermfg=white ctermbg=red
 
-    " Status
+    " Status and tabs
     hi StatusLine   ctermbg=white ctermfg=black cterm=bold
     hi StatusLineNC ctermbg=white ctermfg=black cterm=NONE
+    if !g:env.dark
+        hi StatusLine   ctermfg=white ctermbg=252 cterm=bold
+        hi StatusLineNC ctermfg=white ctermbg=254 cterm=NONE
+        hi TabLine      ctermfg=white ctermbg=253 cterm=NONE
+        hi TabLineFill  ctermfg=white ctermbg=253 cterm=NONE
+    endif
 
     " Misc
     hi Directory   ctermfg=cyan " "cterm=" in :hi command output etc.

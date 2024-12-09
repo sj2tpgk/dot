@@ -45,7 +45,7 @@ openbox_menu:
       item label="Firefox":
         action name="Execute" command="firefox":
       item label="Chromium":
-        action name="Execute" command="chromium":
+        action name="Execute" command="flatpak run io.github.ungoogled_software.ungoogled_chromium":
       item label="VNC Client":
         action name="Execute" command="~/script-local/vnc":
       item label="Claws Mail":
