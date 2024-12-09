@@ -194,7 +194,8 @@ fi
 ####FILE -- config/fish/config.fish {{{
 [ -d "/data/data/com.termux/files/home/bin/" ] \
     && set -x PATH $PATH:/data/data/com.termux/files/home/bin/
-set fish_color_autosuggestion 'magenta'
+set fish_color_autosuggestion magenta
+set fish_color_command cyan
 #| function fish_greeting; end
 #| function mkcd; mkdir $argv[1] && cd $argv[1]; end
 #| for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i ""; end
@@ -259,6 +260,16 @@ set -g status-left        '[#S] '
 set -g status-left-length 4
 set -g status-right       '#{s#^'$HOME'#~#;s#/\$##;s#([-._]*[^/])[^/]*/#\1/#g:pane_current_path} [#{s/^(..)...*(..)$/\1.\2/:user}@#{s/^(..)...*(..)$/\1.\2/:host}]'
 set -g pane-active-border-style fg=yellow
+
+run-shell -b '
+r=$(tr -dc 1-7 </dev/urandom | head -c2) a=${r##?} b=${r%?}
+tmux set -g status-style                 fg=0,bg=$a,bold \; \
+     set -g window-status-style          fg=0,bg=$b,bold \; \
+     set -g window-status-current-style  fg=0,bg=$b,bold,reverse \; \
+     set -g window-status-format         " ##I:##W##F " \; \
+     set -g window-status-current-format " ##I:##W##F " \; \
+     set -g window-status-separator      ""
+'
 
 bind    '"'   split-window -vc "#{pane_current_path}"
 bind    s     split-window -vc "#{pane_current_path}"

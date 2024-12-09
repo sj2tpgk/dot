@@ -613,8 +613,8 @@ fu! MyHighlight_UI()
     hi StatusLine   ctermbg=white ctermfg=black cterm=bold
     hi StatusLineNC ctermbg=white ctermfg=black cterm=NONE
     if !g:env.dark
-        hi StatusLine   ctermfg=white ctermbg=252 cterm=bold
-        hi StatusLineNC ctermfg=white ctermbg=254 cterm=NONE
+        hi StatusLine   ctermfg=white ctermbg=251 cterm=bold
+        hi StatusLineNC ctermfg=white ctermbg=253 cterm=NONE
         hi TabLine      ctermfg=white ctermbg=253 cterm=NONE
         hi TabLineFill  ctermfg=white ctermbg=253 cterm=NONE
     endif

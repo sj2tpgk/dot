@@ -194,7 +194,8 @@ fi
 ####FILE -- config/fish/config.fish {{{
 [ -d "/data/data/com.termux/files/home/bin/" ] \
     && set -x PATH $PATH:/data/data/com.termux/files/home/bin/
-set fish_color_autosuggestion 'magenta'
+set fish_color_autosuggestion magenta
+set fish_color_command cyan
 #| function fish_greeting; end
 #| function mkcd; mkdir $argv[1] && cd $argv[1]; end
 #| for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i ""; end
@@ -259,6 +260,16 @@ set -g status-left        '[#S] '
 set -g status-left-length 4
 set -g status-right       '#{s#^'$HOME'#~#;s#/\$##;s#([-._]*[^/])[^/]*/#\1/#g:pane_current_path} [#{s/^(..)...*(..)$/\1.\2/:user}@#{s/^(..)...*(..)$/\1.\2/:host}]'
 set -g pane-active-border-style fg=yellow
+
+run-shell -b '
+r=$(tr -dc 1-7 </dev/urandom | head -c2) a=${r##?} b=${r%?}
+tmux set -g status-style                 fg=0,bg=$a,bold \; \
+     set -g window-status-style          fg=0,bg=$b,bold \; \
+     set -g window-status-current-style  fg=0,bg=$b,bold,reverse \; \
+     set -g window-status-format         " ##I:##W##F " \; \
+     set -g window-status-current-format " ##I:##W##F " \; \
+     set -g window-status-separator      ""
+'
 
 bind    '"'   split-window -vc "#{pane_current_path}"
 bind    s     split-window -vc "#{pane_current_path}"
@@ -428,12 +439,16 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 ####FILE +x bin/c {{{
 #| #!/bin/sh
 #| 
-#| if command -v highlight >/dev/null 2>&1; then
-#|     highlight --out-format ansi --stdout "$@"
-#| elif command -v bat >/dev/null 2>&1; then
-#|     bat "$@"
+#| if [ -t 1 ]; then
+#|     if command -v highlight >/dev/null 2>&1; then
+#|         exec highlight --out-format ansi --stdout "$@"
+#|     elif command -v bat >/dev/null 2>&1; then
+#|         exec bat "$@"
+#|     else
+#|         exec cat "$@"
+#|     fi
 #| else
-#|     cat "$@"
+#|     exec cat "$@"
 #| fi
 #- }}}
 
@@ -658,8 +673,16 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 ####FILE +x bin/gorun {{{
 #| #!/bin/sh
 #| 
+#| [ $# -eq 0 ] && { echo >&2 "Usage: gorun [-b] file.go"; exit 1; }
+#| 
+#| if [ "$1" = -b ]; then build=1; shift; else build=; fi
 #| f=$1
-#| gofmt -w "$f" && goimports -w "$f" && go run "$f"
+#| 
+#| if [ "$build" ]; then
+#|     gofmt -w "$f" && goimports -w "$f" && go build -o "${f%.go}" "$@"
+#| else
+#|     gofmt -w "$f" && goimports -w "$f" && go run "$@"
+#| fi
 #- }}}
 
 
@@ -784,13 +807,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
-####FILE +x bin/im-sixel {{{
-#| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
-#| magick "$1" -geometry "x${2:-100}" sixel:-
-#- }}}
-
-
 ####FILE +x bin/img2txtfull {{{
 #| #!/usr/bin/perl
 #| 
@@ -816,6 +832,13 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| input=$*
 #| # echo "[$input]"
 #| rclip -f -t 30 "$input" 2>/dev/null | grep -v TensorList | sxiv -t -i -
+#- }}}
+
+
+####FILE +x bin/im-sixel {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
+#| magick "$1" -geometry "x${2:-100}" sixel:-
 #- }}}
 
 
@@ -1073,6 +1096,15 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| else
 #|     echo 0000
 #| fi
+#- }}}
+
+
+####FILE +x bin/moshc {{{
+#| #!/bin/sh
+#| 
+#| [ $# -ne 3 ] && { printf "Usage: moshc IP PORT KEY\nPress ctrl-a . to exit\n" >&2; exit 1; }
+#| 
+#| MOSH_ESCAPE_KEY=$(printf "\x01") MOSH_KEY=$3 mosh-client "$1" "$2"
 #- }}}
 
 
@@ -2444,97 +2476,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
-####FILE +x bin/x-gestures {{{
-#| #!/bin/sh
-#| pkill -x lisgd
-#| lisgd -d /dev/input/event1 \
-#|     -g '1,LR,T,*,R,pkill -x -SIGUSR2 wvkbd-mobintl' \
-#|     -g '1,RL,T,*,R,pkill -x -SIGUSR1 wvkbd-mobintl' \
-#|     -g '1,UD,R,*,P,~/bin/x-brightness -10' \
-#|     -g '1,DU,R,*,P,~/bin/x-brightness +10' \
-#|     -g '2,UD,T,M,R,swaymsg kill' \
-#|     -g '1,UD,T,*,R,~/bin/x-run'
-#- }}}
-
-
-####FILE +x bin/x-hibernate {{{
-#| #!/bin/sh
-#| 
-#| swaylock -c 888888 & sleep .1 && systemctl hibernate
-#- }}}
-
-
-####FILE +x bin/x-mute {{{
-#| #!/bin/sh
-#| # Usage: ./mute
-#| pactl set-sink-mute @DEFAULT_SINK@ toggle
-#- }}}
-
-
-####FILE +x bin/x-run {{{
-#| #!/bin/sh
-#| 
-#| b="#000000dd"
-#| f="#00bbdd"
-#| hb="#333333"
-#| # pkill -x -SIGUSR2 wvkbd-mobintl
-#| # bemenu-run -i -l20 --scrollbar auto --counter always -W.3 --nb $b --ab $b --tf $f --hf $f --fbf $f --fbb $hb --hb $hb --fn "Noto Sans Mono 10"
-#| cd "$(dirname "$0")"/rundir
-#| cmd=$(find . -maxdepth 1 -not -type d | sed 's#^..##' | LC_ALL=C sort | bemenu -i -l20 -p ">" --scrollbar auto -W.33 --nb $b --ab $b --tf $f --hf $f --fbf "#ff3333" --fbb $hb --hb $hb --fn "Noto Sans Mono 33")
-#| cwd=$(pwd)
-#| cd ~
-#| case "$cmd" in
-#|     (*@) sh -c "${cmd%@}" ;;
-#|     ("") : ;;
-#|     (*) sh -c "$cwd/$cmd" & ;;
-#| esac
-#| # pkill -x -SIGUSR1 wvkbd-mobintl
-#- }}}
-
-
-####FILE +x bin/x-status {{{
-#| #!/bin/sh
-#| 
-#| read bat < /sys/class/power_supply/rk817-battery/capacity
-#| read sta < /sys/class/power_supply/rk817-battery/status
-#| case "$sta" in
-#|     (Charging)         sta=+ ;;
-#|     (Full|Discharging) sta=  ;;
-#|     (*)                sta=? ;;
-#| esac
-#| 
-#| vol=$(pactl get-sink-volume @DEFAULT_SINK@)
-#| vol=${vol% / *}; vol=${vol##* }
-#| 
-#| read br  < /sys/class/backlight/backlight/brightness
-#| read brm < /sys/class/backlight/backlight/max_brightness
-#| br=$((100 * br / brm))
-#| 
-#| dt=$(date +'%Y-%m-%d (%a) %H:%M:%S')
-#| 
-#| #net=$(echo $(ip a | sed -n '/state UP/s/^[^ ]* \([^ :]*\).*/\1/p'))
-#| net=$(echo $(ip -o a | awk '(!/ lo /)&&(!/ inet6 /){if(!a[$2]++){print $2}sub("/.*","",$4);print $4}'))
-#| #net=${net:--}
-#| 
-#| printf '%s  %s :%s *%s  %s\n' "$net" "[$sta$bat%]" "$vol" "$br%" "$dt"
-#- }}}
-
-
-####FILE +x bin/x-term {{{
-#| #!/bin/sh
-#| 
-#| font="Noto Sans Mono:size=10.5"
-#| footclient -o font="$font" -e tmux
-#- }}}
-
-
-####FILE +x bin/x-volume {{{
-#| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
-#| pactl set-sink-volume @DEFAULT_SINK@ "$1"
-#- }}}
-
-
 ####FILE +x bin/xcopy {{{
 #| #!/bin/sh
 #| 
@@ -2642,6 +2583,33 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+####FILE +x bin/x-gestures {{{
+#| #!/bin/sh
+#| pkill -x lisgd
+#| lisgd -d /dev/input/event1 \
+#|     -g '1,LR,T,*,R,pkill -x -SIGUSR2 wvkbd-mobintl' \
+#|     -g '1,RL,T,*,R,pkill -x -SIGUSR1 wvkbd-mobintl' \
+#|     -g '1,UD,R,*,P,~/bin/x-brightness -10' \
+#|     -g '1,DU,R,*,P,~/bin/x-brightness +10' \
+#|     -g '2,UD,T,M,R,swaymsg kill' \
+#|     -g '1,UD,T,*,R,~/bin/x-run'
+#- }}}
+
+
+####FILE +x bin/x-hibernate {{{
+#| #!/bin/sh
+#| 
+#| swaylock -c 888888 & sleep .1 && systemctl hibernate
+#- }}}
+
+
+####FILE +x bin/x-mute {{{
+#| #!/bin/sh
+#| # Usage: ./mute
+#| pactl set-sink-mute @DEFAULT_SINK@ toggle
+#- }}}
+
+
 ####FILE +x bin/xpaste {{{
 #| #!/bin/sh
 #| 
@@ -2738,6 +2706,70 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     termux-clipboard-get
 #| 
 #| fi
+#- }}}
+
+
+####FILE +x bin/x-run {{{
+#| #!/bin/sh
+#| 
+#| b="#000000dd"
+#| f="#00bbdd"
+#| hb="#333333"
+#| # pkill -x -SIGUSR2 wvkbd-mobintl
+#| # bemenu-run -i -l20 --scrollbar auto --counter always -W.3 --nb $b --ab $b --tf $f --hf $f --fbf $f --fbb $hb --hb $hb --fn "Noto Sans Mono 10"
+#| cd "$(dirname "$0")"/rundir
+#| cmd=$(find . -maxdepth 1 -not -type d | sed 's#^..##' | LC_ALL=C sort | bemenu -i -l20 -p ">" --scrollbar auto -W.33 --nb $b --ab $b --tf $f --hf $f --fbf "#ff3333" --fbb $hb --hb $hb --fn "Noto Sans Mono 33")
+#| cwd=$(pwd)
+#| cd ~
+#| case "$cmd" in
+#|     (*@) sh -c "${cmd%@}" ;;
+#|     ("") : ;;
+#|     (*) sh -c "$cwd/$cmd" & ;;
+#| esac
+#| # pkill -x -SIGUSR1 wvkbd-mobintl
+#- }}}
+
+
+####FILE +x bin/x-status {{{
+#| #!/bin/sh
+#| 
+#| read bat < /sys/class/power_supply/rk817-battery/capacity
+#| read sta < /sys/class/power_supply/rk817-battery/status
+#| case "$sta" in
+#|     (Charging)         sta=+ ;;
+#|     (Full|Discharging) sta=  ;;
+#|     (*)                sta=? ;;
+#| esac
+#| 
+#| vol=$(pactl get-sink-volume @DEFAULT_SINK@)
+#| vol=${vol% / *}; vol=${vol##* }
+#| 
+#| read br  < /sys/class/backlight/backlight/brightness
+#| read brm < /sys/class/backlight/backlight/max_brightness
+#| br=$((100 * br / brm))
+#| 
+#| dt=$(date +'%Y-%m-%d (%a) %H:%M:%S')
+#| 
+#| #net=$(echo $(ip a | sed -n '/state UP/s/^[^ ]* \([^ :]*\).*/\1/p'))
+#| net=$(echo $(ip -o a | awk '(!/ lo /)&&(!/ inet6 /){if(!a[$2]++){print $2}sub("/.*","",$4);print $4}'))
+#| #net=${net:--}
+#| 
+#| printf '%s  %s :%s *%s  %s\n' "$net" "[$sta$bat%]" "$vol" "$br%" "$dt"
+#- }}}
+
+
+####FILE +x bin/x-term {{{
+#| #!/bin/sh
+#| 
+#| font="Noto Sans Mono:size=10.5"
+#| footclient -o font="$font" -e tmux
+#- }}}
+
+
+####FILE +x bin/x-volume {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
+#| pactl set-sink-volume @DEFAULT_SINK@ "$1"
 #- }}}
 
 

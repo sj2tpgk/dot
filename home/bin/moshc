@@ -1,0 +1,5 @@
+#!/bin/sh
+
+[ $# -ne 3 ] && { printf "Usage: moshc IP PORT KEY\nPress ctrl-a . to exit\n" >&2; exit 1; }
+
+MOSH_ESCAPE_KEY=$(printf "\x01") MOSH_KEY=$3 mosh-client "$1" "$2"

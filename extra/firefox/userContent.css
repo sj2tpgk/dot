@@ -212,6 +212,11 @@
     div[class*=ClapLv2AnswerSensitive_Chie-AnswerSensitive__Item] { display: unset !important; opacity: unset !important; }
 }
 
+@-moz-document domain("transit.yahoo.co.jp") {
+    #wrapper > #header, #contents-body > #sub, #contents-footer, #footer
+    { display: none }
+}
+
 @-moz-document domain("weblio.jp") {
 	#headWrp, #side, .free-member-features, #footWrp, #footBottomWrp { display: none }
 	#main { float: none; display: block; margin: 0 auto }
