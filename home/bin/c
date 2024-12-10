@@ -4,7 +4,7 @@ if [ -t 1 ]; then
     if command -v highlight >/dev/null 2>&1; then
         exec highlight --out-format ansi --stdout "$@"
     elif command -v bat >/dev/null 2>&1; then
-        exec bat "$@"
+        exec bat --theme ansi -p -P "$@"
     else
         exec cat "$@"
     fi

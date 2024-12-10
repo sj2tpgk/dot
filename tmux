@@ -261,6 +261,7 @@ set -g status-left-length 4
 set -g status-right       '#{s#^'$HOME'#~#;s#/\$##;s#([-._]*[^/])[^/]*/#\1/#g:pane_current_path} [#{s/^(..)...*(..)$/\1.\2/:user}@#{s/^(..)...*(..)$/\1.\2/:host}]'
 set -g pane-active-border-style fg=yellow
 
+set -g status-style bg=black,fg=black
 run-shell -b '
 r=$(tr -dc 1-7 </dev/urandom | head -c2) a=${r##?} b=${r%?}
 tmux set -g status-style                 bg=0,fg=$a,bold \; \
