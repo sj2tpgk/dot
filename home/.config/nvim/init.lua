@@ -98,6 +98,7 @@ do -- Plugins <<<
     -- plug "bfrg/vim-cpp-modern"
     -- plug "gutenye/json5.vim"
     -- plug "dmix/elvish.vim"
+    plug "pearofducks/ansible-vim"
 
     -- Treesitter
     -- plug "nvim-treesitter/nvim-treesitter"
@@ -601,13 +602,22 @@ fu! MyHighlight_UI()
     hi DiagnosticInfo  ctermfg=blue
     hi DiagnosticHint  ctermfg=blue
 
+    " Quickfix
+    hi qfLineNr ctermfg=blue
+
     " Error
     hi Error     ctermfg=white ctermbg=red
     hi ErrorMsg  ctermfg=white ctermbg=red
 
-    " Status
+    " Status and tabs
     hi StatusLine   ctermbg=white ctermfg=black cterm=bold
     hi StatusLineNC ctermbg=white ctermfg=black cterm=NONE
+    if !g:env.dark
+        hi StatusLine   ctermfg=white ctermbg=251 cterm=bold
+        hi StatusLineNC ctermfg=white ctermbg=253 cterm=NONE
+        hi TabLine      ctermfg=white ctermbg=253 cterm=NONE
+        hi TabLineFill  ctermfg=white ctermbg=253 cterm=NONE
+    endif
 
     " Misc
     hi Directory   ctermfg=cyan " "cterm=" in :hi command output etc.
@@ -942,6 +952,13 @@ aug vimrc_ft_multi
 au!
 au FileType c,cpp,*sh set keywordprg=:Man
 au FileType python    set keywordprg=:BrowseDoc
+au FileType qf        nnore <buffer> <cr> <cr>
+aug END
+
+" === Ansible ===
+aug vimrc_ft_ansible
+au!
+au BufRead,BufNewFile */playbooks/*.yml,*/playbooks/*.yaml set ft=yaml.ansible
 aug END
 
 " === Awk ===
@@ -1490,17 +1507,18 @@ function lsp_config_4_servers() -- Lsp (4) configure servers <<<
     local a = { on_attach = my_lsp_on_attach }
     local s = { single_file_support = true }
 
-    f("c",      "clangd",  { "clangd" },                             a, s)
-    f("css",    "cssls",   { "vscode-css-language-server" },         a, s)
-    f("go",     "gopls",   { "gopls" },                              a)
-    f("html",   "html",    { "vscode-html-language-server" },        a)
-    f("js/ts",  "ts_ls",   { "typescript-language-server" },         a, s)
-    f("lua",    "lua_ls",  { "lua-language-server" },                a)
+    f("ansible", "ansiblels", { "ansible-language-server" },            a, s)
+    f("c",       "clangd",    { "clangd" },                             a, s)
+    f("css",     "cssls",     { "vscode-css-language-server" },         a, s)
+    f("go",      "gopls",     { "gopls" },                              a)
+    f("html",    "html",      { "vscode-html-language-server" },        a)
+    f("js/ts",   "ts_ls",     { "typescript-language-server" },         a, s)
+    f("lua",     "lua_ls",    { "lua-language-server" },                a)
     -- f("python", "basedpyright", a)
-    f("python", "pyright", { "pyright" },                            a)
-    f("python", "pylsp",   { "pylsp" },                              a)
-    f("shell",  "bashls",  { "bash-language-server", "shellcheck" }, a)
-    f("zig",    "zls",     { "zls" },                                a)
+    f("python",  "pyright",   { "pyright" },                            a)
+    f("python",  "pylsp",     { "pylsp" },                              a)
+    f("shell",   "bashls",    { "bash-language-server", "shellcheck" }, a)
+    f("zig",     "zls",       { "zls" },                                a)
 
     -- setup("pylsp",                  nil,                      { on_attach = on_attach, settings = { pylsp = { plugins = { pycodestyle = { ignore = {'W391'}, maxLineLength = 100 } } } } })
     -- setup("ruff_lsp",               "ruff",                   { on_attach = on_attach, init_options = { settings = { args = { "--config", 'lint.ignore = ["E401", "E731"]' } } } })
@@ -2104,17 +2122,26 @@ function getDefunByIndent() -- Get current block in lisps, python etc. <<<
     end
 end -- >>>
 
-function browseDoc(visual, text) -- <<<
-    text = visual and vim.fn.GetVisualSelection() or (text or vim.fn.expand("<cword>"))
-    local ft    = vim.bo.ft
-    local extra = ({ javascript="mdn", css="mdn", html="mdn" })[ft] or ""
-    local query = ft .. "+" .. extra .. "+doc+" .. text
+function browseDoc(range, text) -- <<<
+    if range >= 1 then -- <range>
+        text = vim.fn.GetVisualSelection()
+    elseif not (type(text) == "string" and text:len() > 0) then
+        text = vim.fn.expand("<cword>")
+    end
+    local prefixes = {
+        javascript       = "mdn js",
+        css              = "mdn css",
+        html             = "mdn html",
+        ["yaml.ansible"] = "ansible doc",
+    }
+    local prefix = prefixes[vim.bo.ft] or (vim.bo.ft .. " doc")
+    local query = prefix .. " " .. text
     -- TODO: w3m?
     local cmd   = "sil! !firefox 'https://lite.duckduckgo.com/lite/?q=" .. query .. "'"
     vim.cmd(cmd)
 end
 vim.cmd [[
-command! -nargs=* BrowseDoc lua browseDoc(false, <q-args>)
+command! -range -nargs=* -range BrowseDoc lua browseDoc(<range>, <q-args>)
 ]]
  -- >>>
 
