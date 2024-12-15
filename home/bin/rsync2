@@ -45,6 +45,9 @@ while [[ $# -ge 1 ]]; do
     esac
 done
 
+# Make dest dir
+mkdir -p "$to"
+
 # To absolute path
 from=$(cd "$from"; pwd)
 to=$(cd "$to"; pwd)
@@ -53,6 +56,7 @@ to=$(cd "$to"; pwd)
 [[ "${from%/}" == "$from" ]] || die "$from ends with /"
 [[ "${to%/}" == "$to" ]] || die "$to ends with /"
 [[ -d "$from" ]] || die "$from is not a directory"
+[[ -d "$to" ]] || die "could not create directory $to"
 
 # Cd to FROM dir
 cd "$from" || die "Cannot cd to $from"

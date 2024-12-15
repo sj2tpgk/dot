@@ -51,6 +51,7 @@ end
 if has git
     abbr ga   git add .
     abbr gc   git commit -m
+    abbr gcl  git clone
     abbr gd   git diff HEAD
     abbr gl   git log
     abbr gps  git push --all origin
