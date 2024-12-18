@@ -429,6 +429,7 @@ nnore yb :call SaveExcursion("ggVGy")<cr>
 nnore yf :let @+=expand("%:t")<cr>
 nnore yp :let @+=expand("%:p")<cr>
 nnore yd :let @+=expand("%:h")<cr>
+nnore yc :let @+=printf("%s:%s\n%s\n", expand("%:p"), line("."), getline(line(".")))<cr>
 nnore db ggVGd
 nnore s= :call SaveExcursion("ggVG=")<cr>
 nnore <a-j> J
