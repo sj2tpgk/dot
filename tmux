@@ -197,7 +197,7 @@ fi
 set fish_color_autosuggestion magenta
 set fish_color_command cyan
 #| function fish_greeting; end
-#| function mkcd; mkdir $argv[1] && cd $argv[1]; end
+#| function mkcd; mkdir -p $argv[1] && cd $argv[1]; end
 #| for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i ""; end
 #| for i in \e\[25\;2~ \e\[26\;5~; bind $i ""; end
 #| bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
@@ -211,7 +211,7 @@ command -v nvim >/dev/null && nv() { nvim -u <(conf vim) "$@"; }
 command -v vim  >/dev/null && v()  { vim  -u <(conf vim) "$@"; }
 _exitstatus() { local s=$?; [[ $s == 0 ]] && echo "" || echo -e "\e[31m$s\e[0m "; }
 export PS1="\[\e[36m\]\w\[$(tput sgr0)\] \$(_exitstatus)>>> "
-mkcd() { mkdir "$1" && cd "$1"; }
+mkcd() { mkdir -p "$1" && cd "$1"; }
 alias la='ls -la'
 #- }}}
 
@@ -262,15 +262,7 @@ set -g status-right       '#{s#^'$HOME'#~#;s#/\$##;s#([-._]*[^/])[^/]*/#\1/#g:pa
 set -g pane-active-border-style fg=yellow
 
 set -g status-style bg=black,fg=black
-run-shell -b '
-r=$(tr -dc 1-7 </dev/urandom | head -c2) a=${r##?} b=${r%?}
-tmux set -g status-style                 bg=0,fg=$a,bold \; \
-     set -g window-status-style          bg=0,fg=$b,bold \; \
-     set -g window-status-current-style  bg=0,fg=$b,bold,reverse \; \
-     set -g window-status-format         " ##I:##W##F " \; \
-     set -g window-status-current-format " ##I:##W##F " \; \
-     set -g window-status-separator      ""
-'
+run-shell -b 'r=$(tr -dc 1-7 </dev/urandom | head -c2); a=${r##?}; b=${r%?}; tmux set -g status-style bg=0,fg=$a,bold \; set -g window-status-style bg=0,fg=$b,bold \; set -g window-status-current-style  bg=0,fg=$b,bold,reverse \; set -g window-status-format " ##I:##W##F " \; set -g window-status-current-format " ##I:##W##F " \; set -g window-status-separator ""'
 
 bind    '"'   split-window -vc "#{pane_current_path}"
 bind    s     split-window -vc "#{pane_current_path}"
@@ -293,7 +285,7 @@ bind -r >     swap-pane -d -t +1
 bind    Tab      run "$TMUX_ROOT/bin/tmux-comp"
 
 # Use xcopy if exists (todo: add to main config)
-if-shell "command -v xcopy >/dev/null" "set copy-command xcopy"
+if-shell "command -v xcopy >/dev/null" "set -q copy-command xcopy"
 
 # hide status on zoom
 set-hook -g after-resize-pane 'if "[ #{window_zoomed_flag} -eq 1 ]" "set -g status off" "set -g status on"'
