@@ -98,7 +98,7 @@ do -- Plugins <<<
     -- plug "bfrg/vim-cpp-modern"
     -- plug "gutenye/json5.vim"
     -- plug "dmix/elvish.vim"
-    plug "pearofducks/ansible-vim"
+    -- plug "pearofducks/ansible-vim"
 
     -- Treesitter
     -- plug "nvim-treesitter/nvim-treesitter"
@@ -124,7 +124,8 @@ do -- Plugins <<<
     plug "windwp/nvim-autopairs"
 
     -- Misc
-    plug "stevearc/profile.nvim"
+    -- plug "stevearc/profile.nvim"
+    plug "ibhagwan/fzf-lua"
 
     -- My plugins
     plug "https://codeberg.org/sj2tpgk/vim-fast-syntax"
@@ -629,6 +630,9 @@ fu! MyHighlight_UI()
     hi LineNr      ctermfg=yellow
     hi NormalFloat ctermfg=white ctermbg=black " Floating window
     " hi MsgArea    ctermfg=blue cterm=reverse
+    if g:env.dark
+        hi LineNr       ctermfg=243
+    endif
 endfu
 
 fu! MyHighlight_TS()
@@ -1922,6 +1926,24 @@ if vim.fn.match(vim.o.rtp, "vim-easy-align") ~= -1 then -- vim-easy-align <<<
     xmap T  <Plug>(EasyAlign)
     nmap T  <Plug>(EasyAlign)
     ]]
+end -- >>>
+
+if can_require"fzf-lua" then -- fzf lua <<<
+    vim.cmd [[
+        nnore t  :FzfLua<cr>
+        nnore tf :FzfLua files<cr>
+        nnore tg :FzfLua grep<cr>
+    ]]
+    require'fzf-lua'.setup {
+        winopts = {
+            border = "none",
+            fullscreen = true,
+            preview = {
+                flip_columns = 180,
+                vertical = "down:55%",
+            },
+        }
+    }
 end -- >>>
 
 -- My utils <<<
