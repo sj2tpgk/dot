@@ -2274,8 +2274,8 @@ fu! OpenCompletion()
     " endif
 
 endfu
-au InsertCharPre * call OpenCompletion()
-au InsertEnter   * let g:comp_open_prev = [-1, -1]
+"au InsertCharPre * call OpenCompletion()
+"au InsertEnter   * let g:comp_open_prev = [-1, -1]
 
 aug END
 ]] -- >>>
