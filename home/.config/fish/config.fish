@@ -34,6 +34,7 @@ aliasif ra   ranger
 has rlwrap && alias sh 'PS1="\$ " rlwrap -p"3;34" sh' # Dash has no history, arrow keys etc.
 
 # Abbr
+abbr psa "ps alx | grep -i"
 if has sudo
     abbr s    sudo
 end

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# To detach:
+#   ./x-picom -b
+
+pkill --exact picom
+
+picom_args=(
+    --config /dev/null         # no default config
+    --no-fading-destroyed-argb # prevent urxvt window from flashing on closing
+    --no-fading-openclose      # not working? use .config/compton.conf
+    --xrender-sync-fence       # Avoid "keyboard/mouse lag"; actually the display is not redrawing
+    --backend xrender          # "xrender" is less laggy than "glx"?
+    --vsync                    # Avoid tearing
+    -I1 -O1                    # No fading (workaround)
+
+    # no shadow for maximized windows, unfocused windows and menu
+    # --shadow-exclude "(widthb > $wsmall || heightb > $hsmall) || !focused" # || (WM_WINDOW_ROLE@:s *= "fluxbox-menu")'
+    --shadow-exclude "!(window_type *= \"menu\") && (focused || !focused)"
+)
+
+exec picom "${picom_args[@]}" "$@"
