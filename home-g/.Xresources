@@ -230,11 +230,14 @@ URxvt.color15: col_dbw
 ! URxvt.font: xft:Dina-9
 ! [221020] Bold font looks blurry for some reason. As a workaround I set boldFont separately. (size=12 and antialias=false seems to be both necessary for both .font and .boldFont)
 ! [221106] Broken again... I noticed (in zoomed screenshot) subpixel rendering in enabled. rgba=none seems to fix.
-URxvt.font: xft:UnifontMy:size=12:rgba=none
 ! URxvt.font: xft:UnifontMy:size=12:antialias=false
-URxvt.boldFont: xft:UnifontMy:style=Bold:size=12:rgba=none
 ! URxvt.boldFont: xft:UnifontMy:style=Bold:pixelsize=16:rgba=none
 ! URxvt.boldFont: xft:UnifontMy:style=Bold:size=12:antialias=false
+! 241221 ver.
+! URxvt.font: xft:UnifontMy:size=12:rgba=none
+! URxvt.boldFont: xft:UnifontMy:style=Bold:size=12:rgba=none
+URxvt.font: xft:Unifont JPMod:size=12:rgba=none
+URxvt.boldFont: xft:Unifont JPMod:style=Bold:size=12:rgba=none
 
 ! Xft.dpi:       96
 ! Xft.antialias: 1
@@ -341,7 +344,7 @@ xterm*reverseVideo: on
 ! xvkbd*Font: -gnu-unifont-medium-r-normal-sans-16-160-75-75-c-80-iso10646-1
 ! xvkbd*Font: -misc-comic relief-bold-r-normal--0-140-0-0-p-0-koi8-uni
 ! xvkbd*Font: -misc-migu 2m-bold-r-normal--0-0-0-0-p-0-iso10646-1
-xvkbd*Font: -misc-droid sans-bold-r-normal--20-0-0-0-p-0-iso10646-1
+xvkbd*Font: -misc-ipaexgothic-medium-r-normal--20-0-0-0-p-0-iso10646-1
 
 ! xvkbd*compact: true
 ! xvkbd.windowGeometry: 600x200-0-0

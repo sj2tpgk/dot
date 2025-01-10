@@ -2,15 +2,30 @@
 
 # call ollama api and streams response
 
-[ "$#" -lt 3 ] && { echo >&2 "Usage: oll [-n] HOST:PORT MODEL PROMPT ..."; echo >&2 "  -n  disable context"; exit 1; }
-
-flag_context=1
-while :; do
-    case "$1" in
-        (-n) flag_context= ; shift ;;
-        (*) break ;;
-    esac
+for cmd in curl jq stdbuf; do
+    command -v "$cmd" >/dev/null || { echo "Command $cmd is not available" >&2; exit 1; }
 done
+
+[ "$#" -eq 0 ] && {
+    echo >&2 "Usage: oll HOST:PORT MODEL PROMPT ..."
+    echo >&2 "       oll HOST:PORT list"
+    echo >&2 "       oll reset"
+    exit 1
+}
+
+tmpdir=$(mktemp -d -u)
+tmpdir=${tmpdir%/*}/oll
+mkdir -p "$tmpdir"
+
+if [ "$1" = reset ]; then
+    rm -f "$tmpdir/context"
+    exit
+fi
+
+if [ "$2" = list ]; then
+    curl -s "$1"/api/tags | jq -r .models[].model
+    exit
+fi
 
 addr="$1"
 model="$2"
@@ -19,9 +34,10 @@ prompt="$*"
 prompt_withquote=$(printf %s "$prompt"|jq -Rs .)
 
 context=null
-if [ "$flag_context" ] && [ -e /tmp/ol_content ]; then
-    read -r context < /tmp/ol_context
-    if ! printf %s "$context" | grep -qE '^\[[0-9]+(,[0-9]+)*\]$'; then context=null; fi
+if [ -e "$tmpdir/context" ]; then
+    read -r context < "$tmpdir/context"
+    if ! echo "$context" | grep -qE '^\[[0-9]+(,[0-9]+)*\]$'; then context=null; fi
+    # context is like [123,45678,...,333,44444] or null
 fi
 
 json="{
@@ -32,10 +48,11 @@ json="{
 }"
 # \"options\" : { \"num_ctx\" : 65536 },
 
-printf "%s\n" "$json" > /tmp/ol_json
+printf "%s\n" "$json" > "$tmpdir/request"
 
 stdbuf -o0 \
-    curl -s "http://$addr/api/generate" -d "@/tmp/ol_json" \
+    curl -s "http://$addr/api/generate" -d "@$tmpdir/request" \
     | jq -j --unbuffered 'if .context then .context|stderr|empty else .response end' \
-    2>/tmp/ol_context | tee /tmp/ol_response
+    2>"$tmpdir/context" | tee "$tmpdir/response"
 
+# rm "$tmpdir/request" "$tmpdir/response"
