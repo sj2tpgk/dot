@@ -2220,7 +2220,10 @@ au FileType sh  setl iskeyword+=.,-
 
 " Auto complete (https://stackoverflow.com/questions/35837990)
 let g:comp_open_prev = [-1, -1]
+let g:comp_enable = v:false
 fu! OpenCompletion()
+
+    if !g:comp_enable | return | endif
 
     " prefetch lsp completion asynchronously
     " let minlen = g:comp_minlen - 1
@@ -2252,8 +2255,8 @@ fu! OpenCompletion()
     " endif
 
 endfu
-"au InsertCharPre * call OpenCompletion()
-"au InsertEnter   * let g:comp_open_prev = [-1, -1]
+au InsertCharPre * call OpenCompletion()
+au InsertEnter   * let g:comp_open_prev = [-1, -1]
 
 aug END
 ]] -- >>>

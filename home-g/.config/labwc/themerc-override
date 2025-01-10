@@ -4,3 +4,5 @@ window.active.title.bg.color: #bcccdc
 window.active.border.color: #bbbbbb
 window.inactive.border.color: #dddddd
 padding.height: 1
+window.titlebar.padding.height: 0
+window.button.height: 20

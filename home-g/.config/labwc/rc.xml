@@ -22,10 +22,13 @@
     <name>themerc</name>
     <cornerRadius>6</cornerRadius>
     <font>
-      <name>UnifontMy</name>
+      <name>Unifont JPMod</name>
       <size>12</size>
       <weight>bold</weight>
     </font>
+    <titlebar>
+      <layout>menu,shade:iconify,max,close</layout>
+    </titlebar>
   </theme>
   <keyboard>
     <default>
