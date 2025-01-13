@@ -312,7 +312,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| ono m %| nn m %| nn yb mzggVGy'z| nn db mzggVGd'z
 #| exe "au InsertEnter * set cul"| exe "au InsertLeave * set nocul"
 #|
-#| if has("nvim")|set notgc|sil! colo vim|endif
+#| if has("nvim") | exe "au ColorScheme * set notgc | hi Pmenu ctermfg=1 ctermbg=0" | colo vim | endif
 #|
 #| " Save/restore view
 #| aug view
@@ -333,7 +333,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| inore <plug>MyTab <c-n>
 #| inore <s-tab>     <c-p>
 #| inore <expr> <cr> pumvisible() ? "\<c-y>\<cr>" : "\<cr>"
-#| set shm+=c cot=menuone,noinsert,noselect inf
+#| set shm+=c cot=menuone,noinsert,noselect noinf
 #| " Auto complete (https://stackoverflow.com/questions/35837990)
 #| fu! OpenCompletion()
 #|     " check (menu invisible && inserting iskeyword char && at least minlen chars)
@@ -344,7 +344,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     endif
 #| endfu
 #| " au InsertCharPre * call OpenCompletion()
-#| hi Pmenu ctermbg=black ctermfg=magenta
 #|
 #| " Basic linter integration (press | key)
 #| nnore <bar> :sil call Linter(0)<cr>
