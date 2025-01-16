@@ -25,6 +25,8 @@ labwc_config:
       name:   Unifont JPMod
       size:   12
       weight: bold
+    titlebar:
+      layout: menu,shade<COLON>iconify,max,close
 
   keyboard:
     default:

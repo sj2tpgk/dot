@@ -333,12 +333,12 @@ endfu
 
 aug vimrc_folding
 au!
-au FileType awk,c,cpp,go,html,javascript,lua,perl,python,markdown call MyFolding()
+au FileType awk,c,cpp,go,html,javascript,json,json5,lua,perl,python,markdown call MyFolding()
 aug END
 
 fu! MyFolding()
     let ft = &ft
-    if index(["awk", "c", "cpp", "go", "html", "javascript", "lua", "perl"], ft) != -1
+    if index(["awk", "c", "cpp", "go", "html", "javascript", "json", "json5", "lua", "perl"], ft) != -1
         setl fdm=expr fde=MyFold(v:lnum,0)
     elseif ft == "python"
         setl fdm=expr fde=MyFold(v:lnum,1)
@@ -2242,7 +2242,10 @@ au FileType sh  setl iskeyword+=.,-
 
 " Auto complete (https://stackoverflow.com/questions/35837990)
 let g:comp_open_prev = [-1, -1]
+let g:comp_enable = v:false
 fu! OpenCompletion()
+
+    if !g:comp_enable | return | endif
 
     " prefetch lsp completion asynchronously
     " let minlen = g:comp_minlen - 1
@@ -2274,8 +2277,8 @@ fu! OpenCompletion()
     " endif
 
 endfu
-"au InsertCharPre * call OpenCompletion()
-"au InsertEnter   * let g:comp_open_prev = [-1, -1]
+au InsertCharPre * call OpenCompletion()
+au InsertEnter   * let g:comp_open_prev = [-1, -1]
 
 aug END
 ]] -- >>>

@@ -26,6 +26,9 @@
       <size>12</size>
       <weight>bold</weight>
     </font>
+    <titlebar>
+      <layout>menu,shade:iconify,max,close</layout>
+    </titlebar>
   </theme>
   <keyboard>
     <default>

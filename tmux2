@@ -312,7 +312,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| ono m %| nn m %| nn yb mzggVGy'z| nn db mzggVGd'z
 #| exe "au InsertEnter * set cul"| exe "au InsertLeave * set nocul"
 #|
-#| if has("nvim")|set notgc|sil! colo vim|endif
+#| if has("nvim") | exe "au ColorScheme * set notgc | hi Pmenu ctermfg=1 ctermbg=0" | colo vim | endif
 #|
 #| " Save/restore view
 #| aug view
@@ -333,7 +333,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| inore <plug>MyTab <c-n>
 #| inore <s-tab>     <c-p>
 #| inore <expr> <cr> pumvisible() ? "\<c-y>\<cr>" : "\<cr>"
-#| set shm+=c cot=menuone,noinsert,noselect inf
+#| set shm+=c cot=menuone,noinsert,noselect noinf
 #| " Auto complete (https://stackoverflow.com/questions/35837990)
 #| fu! OpenCompletion()
 #|     " check (menu invisible && inserting iskeyword char && at least minlen chars)
@@ -344,7 +344,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     endif
 #| endfu
 #| " au InsertCharPre * call OpenCompletion()
-#| hi Pmenu ctermbg=black ctermfg=magenta
 #|
 #| " Basic linter integration (press | key)
 #| nnore <bar> :sil call Linter(0)<cr>
@@ -800,6 +799,13 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+####FILE +x bin/im-sixel {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
+#| magick "$1" -geometry "x${2:-100}" sixel:-
+#- }}}
+
+
 ####FILE +x bin/img2txtfull {{{
 #| #!/usr/bin/perl
 #| 
@@ -825,13 +831,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| input=$*
 #| # echo "[$input]"
 #| rclip -f -t 30 "$input" 2>/dev/null | grep -v TensorList | sxiv -t -i -
-#- }}}
-
-
-####FILE +x bin/im-sixel {{{
-#| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
-#| magick "$1" -geometry "x${2:-100}" sixel:-
 #- }}}
 
 
@@ -1489,15 +1488,30 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| 
 #| # call ollama api and streams response
 #| 
-#| [ "$#" -lt 3 ] && { echo >&2 "Usage: oll [-n] HOST:PORT MODEL PROMPT ..."; echo >&2 "  -n  disable context"; exit 1; }
-#| 
-#| flag_context=1
-#| while :; do
-#|     case "$1" in
-#|         (-n) flag_context= ; shift ;;
-#|         (*) break ;;
-#|     esac
+#| for cmd in curl jq stdbuf; do
+#|     command -v "$cmd" >/dev/null || { echo "Command $cmd is not available" >&2; exit 1; }
 #| done
+#| 
+#| [ "$#" -eq 0 ] && {
+#|     echo >&2 "Usage: oll HOST:PORT MODEL PROMPT ..."
+#|     echo >&2 "       oll HOST:PORT list"
+#|     echo >&2 "       oll reset"
+#|     exit 1
+#| }
+#| 
+#| tmpdir=$(mktemp -d -u)
+#| tmpdir=${tmpdir%/*}/oll
+#| mkdir -p "$tmpdir"
+#| 
+#| if [ "$1" = reset ]; then
+#|     rm -f "$tmpdir/context"
+#|     exit
+#| fi
+#| 
+#| if [ "$2" = list ]; then
+#|     curl -s "$1"/api/tags | jq -r .models[].model
+#|     exit
+#| fi
 #| 
 #| addr="$1"
 #| model="$2"
@@ -1506,9 +1520,10 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| prompt_withquote=$(printf %s "$prompt"|jq -Rs .)
 #| 
 #| context=null
-#| if [ "$flag_context" ] && [ -e /tmp/ol_content ]; then
-#|     read -r context < /tmp/ol_context
-#|     if ! printf %s "$context" | grep -qE '^\[[0-9]+(,[0-9]+)*\]$'; then context=null; fi
+#| if [ -e "$tmpdir/context" ]; then
+#|     read -r context < "$tmpdir/context"
+#|     if ! echo "$context" | grep -qE '^\[[0-9]+(,[0-9]+)*\]$'; then context=null; fi
+#|     # context is like [123,45678,...,333,44444] or null
 #| fi
 #| 
 #| json="{
@@ -1519,13 +1534,14 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| }"
 #| # \"options\" : { \"num_ctx\" : 65536 },
 #| 
-#| printf "%s\n" "$json" > /tmp/ol_json
+#| printf "%s\n" "$json" > "$tmpdir/request"
 #| 
 #| stdbuf -o0 \
-#|     curl -s "http://$addr/api/generate" -d "@/tmp/ol_json" \
+#|     curl -s "http://$addr/api/generate" -d "@$tmpdir/request" \
 #|     | jq -j --unbuffered 'if .context then .context|stderr|empty else .response end' \
-#|     2>/tmp/ol_context | tee /tmp/ol_response
+#|     2>"$tmpdir/context" | tee "$tmpdir/response"
 #| 
+#| # rm "$tmpdir/request" "$tmpdir/response"
 #- }}}
 
 
@@ -2473,6 +2489,123 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+####FILE +x bin/x-gestures {{{
+#| #!/bin/sh
+#| pkill -x lisgd
+#| lisgd -d /dev/input/event1 \
+#|     -g '1,LR,T,*,R,pkill -x -SIGUSR2 wvkbd-mobintl' \
+#|     -g '1,RL,T,*,R,pkill -x -SIGUSR1 wvkbd-mobintl' \
+#|     -g '1,UD,R,*,P,~/bin/x-brightness -10' \
+#|     -g '1,DU,R,*,P,~/bin/x-brightness +10' \
+#|     -g '2,UD,T,M,R,swaymsg kill' \
+#|     -g '1,UD,T,*,R,~/bin/x-run'
+#- }}}
+
+
+####FILE +x bin/x-hibernate {{{
+#| #!/bin/sh
+#| 
+#| swaylock -c 888888 & sleep .1 && systemctl hibernate
+#- }}}
+
+
+####FILE +x bin/x-mute {{{
+#| #!/bin/sh
+#| # Usage: ./mute
+#| pactl set-sink-mute @DEFAULT_SINK@ toggle
+#- }}}
+
+
+####FILE +x bin/x-picom {{{
+#| #!/bin/bash
+#| 
+#| # To detach:
+#| #   ./x-picom -b
+#| 
+#| pkill --exact picom
+#| 
+#| picom_args=(
+#|     --config /dev/null         # no default config
+#|     --no-fading-destroyed-argb # prevent urxvt window from flashing on closing
+#|     --no-fading-openclose      # not working? use .config/compton.conf
+#|     --xrender-sync-fence       # Avoid "keyboard/mouse lag"; actually the display is not redrawing
+#|     --backend xrender          # "xrender" is less laggy than "glx"?
+#|     --vsync                    # Avoid tearing
+#|     -I1 -O1                    # No fading (workaround)
+#| 
+#|     # no shadow for maximized windows, unfocused windows and menu
+#|     # --shadow-exclude "(widthb > $wsmall || heightb > $hsmall) || !focused" # || (WM_WINDOW_ROLE@:s *= "fluxbox-menu")'
+#|     --shadow-exclude "!(window_type *= \"menu\") && (focused || !focused)"
+#| )
+#| 
+#| exec picom "${picom_args[@]}" "$@"
+#- }}}
+
+
+####FILE +x bin/x-run {{{
+#| #!/bin/sh
+#| 
+#| b="#000000dd"
+#| f="#00bbdd"
+#| hb="#333333"
+#| # pkill -x -SIGUSR2 wvkbd-mobintl
+#| # bemenu-run -i -l20 --scrollbar auto --counter always -W.3 --nb $b --ab $b --tf $f --hf $f --fbf $f --fbb $hb --hb $hb --fn "Noto Sans Mono 10"
+#| cd "$(dirname "$0")"/rundir
+#| cmd=$(find . -maxdepth 1 -not -type d | sed 's#^..##' | LC_ALL=C sort | bemenu -i -l20 -p ">" --scrollbar auto -W.33 --nb $b --ab $b --tf $f --hf $f --fbf "#ff3333" --fbb $hb --hb $hb --fn "Noto Sans Mono 33")
+#| cwd=$(pwd)
+#| cd ~
+#| case "$cmd" in
+#|     (*@) sh -c "${cmd%@}" ;;
+#|     ("") : ;;
+#|     (*) sh -c "$cwd/$cmd" & ;;
+#| esac
+#| # pkill -x -SIGUSR1 wvkbd-mobintl
+#- }}}
+
+
+####FILE +x bin/x-status {{{
+#| #!/bin/sh
+#| 
+#| read bat < /sys/class/power_supply/rk817-battery/capacity
+#| read sta < /sys/class/power_supply/rk817-battery/status
+#| case "$sta" in
+#|     (Charging)         sta=+ ;;
+#|     (Full|Discharging) sta=  ;;
+#|     (*)                sta=? ;;
+#| esac
+#| 
+#| vol=$(pactl get-sink-volume @DEFAULT_SINK@)
+#| vol=${vol% / *}; vol=${vol##* }
+#| 
+#| read br  < /sys/class/backlight/backlight/brightness
+#| read brm < /sys/class/backlight/backlight/max_brightness
+#| br=$((100 * br / brm))
+#| 
+#| dt=$(date +'%Y-%m-%d (%a) %H:%M:%S')
+#| 
+#| #net=$(echo $(ip a | sed -n '/state UP/s/^[^ ]* \([^ :]*\).*/\1/p'))
+#| net=$(echo $(ip -o a | awk '(!/ lo /)&&(!/ inet6 /){if(!a[$2]++){print $2}sub("/.*","",$4);print $4}'))
+#| #net=${net:--}
+#| 
+#| printf '%s  %s :%s *%s  %s\n' "$net" "[$sta$bat%]" "$vol" "$br%" "$dt"
+#- }}}
+
+
+####FILE +x bin/x-term {{{
+#| #!/bin/sh
+#| 
+#| font="Noto Sans Mono:size=10.5"
+#| footclient -o font="$font" -e tmux
+#- }}}
+
+
+####FILE +x bin/x-volume {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
+#| pactl set-sink-volume @DEFAULT_SINK@ "$1"
+#- }}}
+
+
 ####FILE +x bin/xcopy {{{
 #| #!/bin/sh
 #| 
@@ -2580,33 +2713,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
-####FILE +x bin/x-gestures {{{
-#| #!/bin/sh
-#| pkill -x lisgd
-#| lisgd -d /dev/input/event1 \
-#|     -g '1,LR,T,*,R,pkill -x -SIGUSR2 wvkbd-mobintl' \
-#|     -g '1,RL,T,*,R,pkill -x -SIGUSR1 wvkbd-mobintl' \
-#|     -g '1,UD,R,*,P,~/bin/x-brightness -10' \
-#|     -g '1,DU,R,*,P,~/bin/x-brightness +10' \
-#|     -g '2,UD,T,M,R,swaymsg kill' \
-#|     -g '1,UD,T,*,R,~/bin/x-run'
-#- }}}
-
-
-####FILE +x bin/x-hibernate {{{
-#| #!/bin/sh
-#| 
-#| swaylock -c 888888 & sleep .1 && systemctl hibernate
-#- }}}
-
-
-####FILE +x bin/x-mute {{{
-#| #!/bin/sh
-#| # Usage: ./mute
-#| pactl set-sink-mute @DEFAULT_SINK@ toggle
-#- }}}
-
-
 ####FILE +x bin/xpaste {{{
 #| #!/bin/sh
 #| 
@@ -2703,70 +2809,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     termux-clipboard-get
 #| 
 #| fi
-#- }}}
-
-
-####FILE +x bin/x-run {{{
-#| #!/bin/sh
-#| 
-#| b="#000000dd"
-#| f="#00bbdd"
-#| hb="#333333"
-#| # pkill -x -SIGUSR2 wvkbd-mobintl
-#| # bemenu-run -i -l20 --scrollbar auto --counter always -W.3 --nb $b --ab $b --tf $f --hf $f --fbf $f --fbb $hb --hb $hb --fn "Noto Sans Mono 10"
-#| cd "$(dirname "$0")"/rundir
-#| cmd=$(find . -maxdepth 1 -not -type d | sed 's#^..##' | LC_ALL=C sort | bemenu -i -l20 -p ">" --scrollbar auto -W.33 --nb $b --ab $b --tf $f --hf $f --fbf "#ff3333" --fbb $hb --hb $hb --fn "Noto Sans Mono 33")
-#| cwd=$(pwd)
-#| cd ~
-#| case "$cmd" in
-#|     (*@) sh -c "${cmd%@}" ;;
-#|     ("") : ;;
-#|     (*) sh -c "$cwd/$cmd" & ;;
-#| esac
-#| # pkill -x -SIGUSR1 wvkbd-mobintl
-#- }}}
-
-
-####FILE +x bin/x-status {{{
-#| #!/bin/sh
-#| 
-#| read bat < /sys/class/power_supply/rk817-battery/capacity
-#| read sta < /sys/class/power_supply/rk817-battery/status
-#| case "$sta" in
-#|     (Charging)         sta=+ ;;
-#|     (Full|Discharging) sta=  ;;
-#|     (*)                sta=? ;;
-#| esac
-#| 
-#| vol=$(pactl get-sink-volume @DEFAULT_SINK@)
-#| vol=${vol% / *}; vol=${vol##* }
-#| 
-#| read br  < /sys/class/backlight/backlight/brightness
-#| read brm < /sys/class/backlight/backlight/max_brightness
-#| br=$((100 * br / brm))
-#| 
-#| dt=$(date +'%Y-%m-%d (%a) %H:%M:%S')
-#| 
-#| #net=$(echo $(ip a | sed -n '/state UP/s/^[^ ]* \([^ :]*\).*/\1/p'))
-#| net=$(echo $(ip -o a | awk '(!/ lo /)&&(!/ inet6 /){if(!a[$2]++){print $2}sub("/.*","",$4);print $4}'))
-#| #net=${net:--}
-#| 
-#| printf '%s  %s :%s *%s  %s\n' "$net" "[$sta$bat%]" "$vol" "$br%" "$dt"
-#- }}}
-
-
-####FILE +x bin/x-term {{{
-#| #!/bin/sh
-#| 
-#| font="Noto Sans Mono:size=10.5"
-#| footclient -o font="$font" -e tmux
-#- }}}
-
-
-####FILE +x bin/x-volume {{{
-#| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
-#| pactl set-sink-volume @DEFAULT_SINK@ "$1"
 #- }}}
 
 
