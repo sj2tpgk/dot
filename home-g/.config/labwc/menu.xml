@@ -74,7 +74,7 @@
         </action>
       </item>
       <item label="Chromium">
-        <action name="Execute" command="flatpak run io.github.ungoogled_software.ungoogled_chromium">
+        <action name="Execute" command="sh -c 'if command -v chromium; then chromium; else flatpak run io.github.ungoogled_software.ungoogled_chromium; fi'">
         </action>
       </item>
       <item label="VNC Client">
@@ -96,7 +96,7 @@
         </action>
       </item>
       <item label="tmux light">
-        <action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=UnifontMy:style=bold:pixelsize=16 -e sh -c MY_DARK=0\\ exec\\ uim-fep\\ -e\\ tmux" -'>
+        <action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=Unifont\\ JPMod:style=bold:pixelsize=16 -e sh -c MY_DARK=0\\ exec\\ uim-fep\\ -e\\ tmux" -'>
         </action>
       </item>
       <item label="dark">
@@ -104,7 +104,7 @@
         </action>
       </item>
       <item label="light">
-        <action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=UnifontMy:style=bold:pixelsize=16 -e sh -c MY_DARK=0\\ exec\\ /bin/sh" -'>
+        <action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=Unifont\\ JPMod:style=bold:pixelsize=16 -e sh -c MY_DARK=0\\ exec\\ /bin/sh" -'>
         </action>
       </item>
       <item label="big">

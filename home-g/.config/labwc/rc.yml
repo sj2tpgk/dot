@@ -22,7 +22,7 @@ labwc_config:
     name:         themerc
     cornerRadius: 6
     font:
-      name:   UnifontMy
+      name:   Unifont JPMod
       size:   12
       weight: bold
 
