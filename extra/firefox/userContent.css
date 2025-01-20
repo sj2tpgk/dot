@@ -17,6 +17,11 @@
     html { background-color: #444 !important; filter: invert(1) saturate(5) contrast(.7); }
 }
 
+/* Dark stylus editor */
+@-moz-document regexp("moz-extension://.*/edit.html.*") {
+    html#stylus.firefox { filter: invert(1) contrast(.7) }
+}
+
 
 /* ==== Other websites ==== */
 
@@ -150,7 +155,7 @@
 
 @-moz-document domain("zenn.dev") {
 	header, aside, #share, #share ~ *, #discuss, footer { display: none !important }
-	div[class^=View_stickyShare], div[class^=View_topics], a[class^=Button_secondary] { display: none !important }
+	div[class^=PublicationInfoForDesktop_container], div[class^=View_stickyShare], div[class^=View_topics], a[class^=Button_secondary] { display: none !important }
 	section { margin: auto !important }
 }
 
