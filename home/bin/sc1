@@ -1,0 +1,21 @@
+#!/bin/sh
+
+scimrc=''
+
+[ "$MYKBD" = colemakdh ] && scimrc="$scimrc"'
+nnoremap "k" "h"
+nnoremap "n" "j"
+nnoremap "e" "k"
+nnoremap "i" "l"
+nnoremap "a" "e"
+nnoremap "A" "E"
+'
+
+tmpdir=$(mktemp -d)
+mkdir -p "$tmpdir/sc-im"
+export XDG_CONFIG_HOME="$tmpdir"
+echo "$scimrc" > "$tmpdir/sc-im/scimrc"
+sc-im "$@"
+rm    "$tmpdir/sc-im/scimrc"
+rmdir "$tmpdir/sc-im/"
+rmdir "$tmpdir/"

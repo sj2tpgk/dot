@@ -262,7 +262,7 @@ set -g status-right       '#{s#^'$HOME'#~#;s#/\$##;s#([-._]*[^/])[^/]*/#\1/#g:pa
 set -g pane-active-border-style fg=yellow
 
 set -g status-style bg=black,fg=black
-run-shell -b 'r=$(tr -dc 1-7 </dev/urandom | head -c2); a=${r##?}; b=${r%?}; tmux set -g status-style bg=0,fg=$a,bold \; set -g window-status-style bg=0,fg=$b,bold \; set -g window-status-current-style  bg=0,fg=$b,bold,reverse \; set -g window-status-format " ##I:##W##F " \; set -g window-status-current-format " ##I:##W##F " \; set -g window-status-separator ""'
+run-shell -b 'r=$(sed "y/089abcdef/123456724/;s/\(..\).*/\1/" /etc/machine-id 2>/dev/null || echo 00); a=${r##?}; b=${r%?}; tmux set -g status-style bg=0,fg=$a,bold \; set -g window-status-style bg=0,fg=$b,bold \; set -g window-status-current-style  bg=0,fg=$b,bold,reverse \; set -g window-status-format " ##I:##W##F " \; set -g window-status-current-format " ##I:##W##F " \; set -g window-status-separator ""'
 
 bind    '"'   split-window -vc "#{pane_current_path}"
 bind    s     split-window -vc "#{pane_current_path}"
