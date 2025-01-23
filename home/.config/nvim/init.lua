@@ -118,6 +118,10 @@ do -- Plugins <<<
 
     -- AI
     -- plug "David-Kunz/gen.nvim"
+    -- plug 'stevearc/dressing.nvim'
+    -- plug 'nvim-lua/plenary.nvim'
+    -- plug 'MunifTanjim/nui.nvim'
+    -- plug 'yetone/avante.nvim'
 
     -- Editing commands
     plug "junegunn/vim-easy-align"
@@ -125,7 +129,7 @@ do -- Plugins <<<
 
     -- Misc
     -- plug "stevearc/profile.nvim"
-    plug "ibhagwan/fzf-lua"
+    -- plug "ibhagwan/fzf-lua"
 
     -- My plugins
     plug "https://codeberg.org/sj2tpgk/vim-fast-syntax"
@@ -1884,6 +1888,34 @@ if can_require"gen" then -- Ollama (experimental) <<<
         no_auto_close = false,
         debug = false
     }
+end -- >>>
+
+if can_require"avante" then -- Avante (experimental) <<<
+    vim.cmd [[
+    vnore aa <Plug>(AvanteAsk)
+    vnore A  <Plug>(AvanteEdit)
+    ]]
+    require('avante_lib').load({})
+    require('avante').setup({
+        -- check M._defaults in ~/.local/share/nvim/site/pack/avante.nvim/opt/avante.nvim/lua/avante/config.lua
+        provider = "ollama",
+        vendors = {
+            ollama = {
+                __inherited_from = "openai",
+                api_key_name = "",
+                endpoint = "http://192.168.120.49:11434/v1",
+                model = "qwen2.5-coder:32b-instruct-q4_K_M",
+            },
+        },
+        mappings = {
+            submit = { normal = "<cr>", insert = "<cr>", },
+        },
+        windows = { -- options to nvim_win_open()
+            sidebar_header = { rounded = false, },
+            edit = { border = "single", },
+            ask = { floating = true, start_insert = true, border = "single", },
+        },
+    })
 end -- >>>
 
 if can_require"nvim-autopairs" then -- nvim-autopairs <<<

@@ -45,7 +45,7 @@ openbox_menu:
       item label="Firefox":
         action name="Execute" command="firefox":
       item label="Chromium":
-        action name="Execute" command="sh -c 'if command -v chromium; then chromium; else flatpak run io.github.ungoogled_software.ungoogled_chromium; fi'":
+        action name="Execute" command="sh -c 'if command -v chromium; then chromium --ozone-platform-hint=auto --gtk-version=4; else flatpak run io.github.ungoogled_software.ungoogled_chromium --ozone-platform-hint=auto --gtk-version=4; fi'":
       item label="VNC Client":
         action name="Execute" command="~/script-local/vnc":
       item label="Claws Mail":
