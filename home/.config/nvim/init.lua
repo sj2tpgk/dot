@@ -22,6 +22,7 @@ let g:env = {
     \ "git":    executable("git"),
     \ "curl":   executable("curl"),
     \ "dark":   !empty($MY_DARK) ? ($MY_DARK == "1") : ($MYKBD == "colemakdh"),
+    \ "llama":  !empty($MY_LLAMA_SERVER) ? $MY_LLAMA_SERVER : "",
     \ }
 
 ]] -- >>>
@@ -122,6 +123,7 @@ do -- Plugins <<<
     -- plug 'nvim-lua/plenary.nvim'
     -- plug 'MunifTanjim/nui.nvim'
     -- plug 'yetone/avante.nvim'
+    -- plug 'ggml-org/llama.vim'
 
     -- Editing commands
     plug "junegunn/vim-easy-align"
@@ -1917,6 +1919,27 @@ if can_require"avante" then -- Avante (experimental) <<<
         },
     })
 end -- >>>
+
+vim.cmd [[ " llama.vim (experimental) <<<
+    fu! LlamaVim()
+        if empty(g:env.llama)
+            sil! aug! llama
+        else
+            if exists("g:llama_config")
+                let g:llama_config.endpoint         = g:env.llama
+                let g:llama_config.show_info        = 0
+                let g:llama_config.auto_fim         = v:false
+                let g:llama_config.t_max_predict_ms = 500
+                inore <expr> <silent> <c-l> llama#fim_inline(v:false, v:true)
+                sil! aug! vimrc_llama_vim
+            endif
+        endif
+    endfu
+    aug vimrc_llama_vim
+        au!
+        au InsertEnter * call LlamaVim()
+    aug END
+]] -- >>>
 
 if can_require"nvim-autopairs" then -- nvim-autopairs <<<
     local AutoPairs = require"nvim-autopairs"
