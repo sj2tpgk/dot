@@ -262,7 +262,7 @@ set -g status-right       '#{s#^'$HOME'#~#;s#/\$##;s#([-._]*[^/])[^/]*/#\1/#g:pa
 set -g pane-active-border-style fg=yellow
 
 set -g status-style bg=black,fg=black
-run-shell -b 'r=$(tr -dc 1-7 </dev/urandom | head -c2); a=${r##?}; b=${r%?}; tmux set -g status-style bg=0,fg=$a,bold \; set -g window-status-style bg=0,fg=$b,bold \; set -g window-status-current-style  bg=0,fg=$b,bold,reverse \; set -g window-status-format " ##I:##W##F " \; set -g window-status-current-format " ##I:##W##F " \; set -g window-status-separator ""'
+run-shell -b 'r=$(sed "y/089abcdef/123456724/;s/\(..\).*/\1/" /etc/machine-id 2>/dev/null || echo 00); a=${r##?}; b=${r%?}; tmux set -g status-style bg=0,fg=$a,bold \; set -g window-status-style bg=0,fg=$b,bold \; set -g window-status-current-style  bg=0,fg=$b,bold,reverse \; set -g window-status-format " ##I:##W##F " \; set -g window-status-current-format " ##I:##W##F " \; set -g window-status-separator ""'
 
 bind    '"'   split-window -vc "#{pane_current_path}"
 bind    s     split-window -vc "#{pane_current_path}"
@@ -542,6 +542,13 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| "colors_$colors"
 #| copy_colors
 #| "output_$output"
+#- }}}
+
+
+####FILE +x bin/dt {{{
+#| #!/bin/sh
+#| 
+#| date +"%Y%m%d-%H%M%S"
 #- }}}
 
 
@@ -2088,6 +2095,31 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| foundprocs=$(ps alx | grep "$1" | grep -v grep | grep -v "$0")
 #| [ -n "$foundprocs" ] && exit 0 || exit 1
 #| # note: 0=true 1=false
+#- }}}
+
+
+####FILE +x bin/sc1 {{{
+#| #!/bin/sh
+#| 
+#| scimrc=''
+#| 
+#| [ "$MYKBD" = colemakdh ] && scimrc="$scimrc"'
+#| nnoremap "k" "h"
+#| nnoremap "n" "j"
+#| nnoremap "e" "k"
+#| nnoremap "i" "l"
+#| nnoremap "a" "e"
+#| nnoremap "A" "E"
+#| '
+#| 
+#| tmpdir=$(mktemp -d)
+#| mkdir -p "$tmpdir/sc-im"
+#| export XDG_CONFIG_HOME="$tmpdir"
+#| echo "$scimrc" > "$tmpdir/sc-im/scimrc"
+#| sc-im "$@"
+#| rm    "$tmpdir/sc-im/scimrc"
+#| rmdir "$tmpdir/sc-im/"
+#| rmdir "$tmpdir/"
 #- }}}
 
 
