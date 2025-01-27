@@ -56,12 +56,12 @@ BEGIN {
 
     # Only print user@host and exit
     if (SHORT) {
-        printf "%s%s", get_uandh(), C["none"]
+        printf "%s%s", get_uandh(0), C["none"]
         exit
     }
 
     # Components
-    uandh = get_uandh()
+    uandh = get_uandh(1)
     dir   = get_dir()
     git   = get_git()
     codes = get_codes()
@@ -76,7 +76,7 @@ BEGIN {
 
 }
 
-function get_uandh(    user, host, cu, ch) {
+function get_uandh(trunc,    user, host, cu, ch) {
     user = ENVIRON["USER"]
 
     # ENVIRON["hostname"], ENVIRON["HOSTNAME"], ENVIRON["HOST"] are not passed to awk from shell? (fish has $hostname, bash $HOSTNAME, zsh $HOST but none of them are passed. sh and elvish has neither of them)
@@ -87,9 +87,9 @@ function get_uandh(    user, host, cu, ch) {
     ch = C[hash(host, 7, 0) + 1]
 
     # abbreviate if too long
-    if (length(user) >= 6)
+    if (trunc && length(user) >= 6)
         user = substr(user, 1, 2) "." substr(user, (length(user) - 1))
-    if (length(host) >= 6)
+    if (trunc && length(host) >= 6)
         host = substr(host, 1, 2) "." substr(host, (length(host) - 1))
 
     # colorize (using hash) and return

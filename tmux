@@ -255,14 +255,18 @@ if "if [ -n '#{TMUX_SHELL}' ]; then [ fish = '#{TMUX_SHELL}' ]; else command -v 
 set -g escape-time 0
 set -g mouse       on
 
-set -g status-position    top
-set -g status-left        '[#S] '
-set -g status-left-length 4
+run-shell -b 'p=$(myprompt -- --tmux --short | sed "s/ .*//"); tmux set -g status-left "#[nobold]$p [##S] "'
+set -g status-left-length 20
 set -g status-right       '#{s#^'$HOME'#~#;s#/\$##;s#([-._]*[^/])[^/]*/#\1/#g:pane_current_path} [#{s/^(..)...*(..)$/\1.\2/:user}@#{s/^(..)...*(..)$/\1.\2/:host}]'
+set -g status-position    top
 set -g pane-active-border-style fg=yellow
 
-set -g status-style bg=black,fg=black
-run-shell -b 'r=$(sed "y/089abcdef/123456724/;s/\(..\).*/\1/" /etc/machine-id 2>/dev/null || echo 00); a=${r##?}; b=${r%?}; tmux set -g status-style bg=0,fg=$a,bold \; set -g window-status-style bg=0,fg=$b,bold \; set -g window-status-current-style  bg=0,fg=$b,bold,reverse \; set -g window-status-format " ##I:##W##F " \; set -g window-status-current-format " ##I:##W##F " \; set -g window-status-separator ""'
+set -g status-style                 bg=0,fg=7,bold
+set -g window-status-style          bg=0,fg=1,bold
+set -g window-status-current-style  bg=0,fg=1,bold,reverse
+set -g window-status-format         " #I:#W#F "
+set -g window-status-current-format " #I:#W#F "
+set -g window-status-separator      ""
 
 bind    '"'   split-window -vc "#{pane_current_path}"
 bind    s     split-window -vc "#{pane_current_path}"

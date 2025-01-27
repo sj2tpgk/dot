@@ -633,8 +633,9 @@ fu! MyHighlight_UI()
     hi Question    ctermfg=cyan " "Press ENTER or ..." etc.
     hi SpecialKey  ctermfg=red  " <Enter> etc.
     hi Underlined  ctermfg=cyan
-    hi LineNr      ctermfg=yellow
+    hi LineNr      ctermfg=248
     hi NormalFloat ctermfg=white ctermbg=black " Floating window
+    hi Search      ctermfg=black ctermbg=blue
     " hi MsgArea    ctermfg=blue cterm=reverse
     if g:env.dark
         hi LineNr       ctermfg=243
@@ -828,7 +829,7 @@ fu! Fzf(list, callback)
     let tmpfile = tempname()
     call writefile(fzf_stdin, tmpfile)
     " Can't use termopen() here, as it *replaces* current buf with :term buf (thus lose the current buf)
-    exe "term sh -c 'cat " . tmpfile . " | fzf'"
+    exe "term /bin/sh -c 'cat " . tmpfile . " | fzf'"
 endfu
 fu! FzfOnExit(stdout) " stdout = list of strings
     " Delete fzf buffer
@@ -1977,25 +1978,25 @@ end -- >>>
 if vim.fn.match(vim.o.rtp, "vim-easy-align") ~= -1 then -- vim-easy-align <<<
     vim.cmd [[
     xmap ga <Plug>(EasyAlign)
-    nmap ga <Plug>(EasyAlign)
     xmap T  <Plug>(EasyAlign)
-    nmap T  <Plug>(EasyAlign)
     ]]
 end -- >>>
 
 if can_require"fzf-lua" then -- fzf lua <<<
     vim.cmd [[
-        nnore t  :FzfLua<cr>
-        nnore tf :FzfLua files<cr>
-        nnore tg :FzfLua grep<cr>
+        nnore t  :FzfLua files<cr>
+        nnore T  :FzfLua live_grep<cr>
+        nnore sf :FzfLua<cr>
+        hi link FzfLuaSearch Search
     ]]
     require'fzf-lua'.setup {
         winopts = {
             border = "none",
-            fullscreen = true,
+            fullscreen = false,
             preview = {
                 flip_columns = 180,
                 vertical = "down:55%",
+                border = "single",
             },
         }
     }

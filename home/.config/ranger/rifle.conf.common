@@ -8,21 +8,20 @@
 
 
 # Media
-mime ^video|audio|ogg$, has mpv, X, flag f = mpv --geometry=58%x58%+50%+50% --force-window -- "$@"
+mime ^video|audio|ogg$, has mpv, X, flag f = mpv --geometry=58%x58%+50%+50% --force-window --sub=1 -- "$@"
 mime ^video|audio|ogg$, has ffprobe = ffprobe -- "$@"; read x
 mime ^image, !ext svg, has sxiv, X, flag f = sxiv -A1 -- "$@"
 
 # Text files
-mime ^text,  label editor = ${VISUAL:-$EDITOR} -- "$@"
-mime ^text,  label editor = ${VISUAL:-$EDITOR} -- "$@"
-mime ^text,  label editor = ${VISUAL:-$EDITOR} -- "$@"
 ext x?html?, has firefox, X, flag f = firefox -- "$@"
+mime ^text, label editor = ${VISUAL:-$EDITOR} -- "$@"
+ext org = ${VISUAL:-$EDITOR} -- "$@"
 mime ^text, has leafpad, X, flag f = leafpad -- "$@"
 mime ^text, has mousepad, X, flag f = mousepad -- "$@"
 ext pdf, has qpdfview, X, flag f = wmctrl -x -a qpdfview; qpdfview --unique -- "$@"
 
-# Archives (no atool)
-ext ace|ar|arc|bz2?|cab|cpio|cpt|deb|dgc|dmg|gz,     has atool = atool --list --each -- "$@" | "$PAGER"
+# Archives
+ext 7z|ace|ar|arc|bz2?|cab|cpio|cpt|deb|dgc|dmg|gz,  has atool = atool --list --each -- "$@" | "$PAGER"
 ext iso|jar|msi|pkg|rar|shar|tar|tgz|xar|xpi|xz|zip, has atool = atool --list --each -- "$@" | "$PAGER"
 ext 7z|ace|ar|arc|bz2?|cab|cpio|cpt|deb|dgc|dmg|gz,  has atool = atool --extract --each -- "$@"
 ext iso|jar|msi|pkg|rar|shar|tar|tgz|xar|xpi|xz|zip, has atool = atool --extract --each -- "$@"
