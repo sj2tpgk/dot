@@ -142,10 +142,13 @@
   div:has(> button[aria-label*="facebook"]), /* sns */
   section:has(> button[aria-label*="facebook"]), /* sns */
   .it-MdContent ~ *, /* footer 1 */
-  footer /* footer 3 */
+  footer, /* footer 3 */
+  .p-items_main > article ~ *, /* footer (250120) */
+  END
   { display: none !important }
   .p-items_main { width: 100% !important }
   .p-items_options { display: none }
+  main { background: none !important }
 }
 
 @-moz-document domain("zenn.dev") {
