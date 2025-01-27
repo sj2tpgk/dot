@@ -22,6 +22,7 @@ let g:env = {
     \ "git":    executable("git"),
     \ "curl":   executable("curl"),
     \ "dark":   !empty($MY_DARK) ? ($MY_DARK == "1") : ($MYKBD == "colemakdh"),
+    \ "llama":  !empty($MY_LLAMA_SERVER) ? $MY_LLAMA_SERVER : "",
     \ }
 
 ]] -- >>>
@@ -118,6 +119,11 @@ do -- Plugins <<<
 
     -- AI
     -- plug "David-Kunz/gen.nvim"
+    -- plug 'stevearc/dressing.nvim'
+    -- plug 'nvim-lua/plenary.nvim'
+    -- plug 'MunifTanjim/nui.nvim'
+    -- plug 'yetone/avante.nvim'
+    -- plug 'ggml-org/llama.vim'
 
     -- Editing commands
     plug "junegunn/vim-easy-align"
@@ -1885,6 +1891,55 @@ if can_require"gen" then -- Ollama (experimental) <<<
         debug = false
     }
 end -- >>>
+
+if can_require"avante" then -- Avante (experimental) <<<
+    vim.cmd [[
+    vnore aa <Plug>(AvanteAsk)
+    vnore A  <Plug>(AvanteEdit)
+    ]]
+    require('avante_lib').load({})
+    require('avante').setup({
+        -- check M._defaults in ~/.local/share/nvim/site/pack/avante.nvim/opt/avante.nvim/lua/avante/config.lua
+        provider = "ollama",
+        vendors = {
+            ollama = {
+                __inherited_from = "openai",
+                api_key_name = "",
+                endpoint = "http://192.168.120.49:11434/v1",
+                model = "qwen2.5-coder:32b-instruct-q4_K_M",
+            },
+        },
+        mappings = {
+            submit = { normal = "<cr>", insert = "<cr>", },
+        },
+        windows = { -- options to nvim_win_open()
+            sidebar_header = { rounded = false, },
+            edit = { border = "single", },
+            ask = { floating = true, start_insert = true, border = "single", },
+        },
+    })
+end -- >>>
+
+vim.cmd [[ " llama.vim (experimental) <<<
+    fu! LlamaVim()
+        if empty(g:env.llama)
+            sil! aug! llama
+        else
+            if exists("g:llama_config")
+                let g:llama_config.endpoint         = g:env.llama
+                let g:llama_config.show_info        = 0
+                let g:llama_config.auto_fim         = v:false
+                let g:llama_config.t_max_predict_ms = 500
+                inore <expr> <silent> <c-l> llama#fim_inline(v:false, v:true)
+                sil! aug! vimrc_llama_vim
+            endif
+        endif
+    endfu
+    aug vimrc_llama_vim
+        au!
+        au InsertEnter * call LlamaVim()
+    aug END
+]] -- >>>
 
 if can_require"nvim-autopairs" then -- nvim-autopairs <<<
     local AutoPairs = require"nvim-autopairs"
