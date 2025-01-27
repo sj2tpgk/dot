@@ -2025,6 +2025,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     -aP # --archive --partial
 #|     # -AX # --progress --acls --xattrs
 #|     --info=stats2,progress2 -h # --human-readable
+#|     --log-file="$(pwd)/rsync-$(date +"%Y%m%d-%H%M%S").log"
 #|     --mkpath # link mkdir -p for TO
 #|     --exclude=/.cache/
 #|     --exclude=/.cargo/
