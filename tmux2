@@ -437,7 +437,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| 
 #| if [ -t 1 ]; then
 #|     if command -v highlight >/dev/null 2>&1; then
-#|         exec highlight --out-format ansi --stdout "$@"
+#|         exec highlight --out-format ansi --stdout --force "$@"
 #|     elif command -v bat >/dev/null 2>&1; then
 #|         exec bat --theme ansi -p -P "$@"
 #|     else
