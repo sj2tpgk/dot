@@ -18,7 +18,7 @@ ext webp,              has geeqie, X, flag f = geeqie -- "$@"
 # Text files
 ext x?html?, has firefox, X, flag f = firefox -- "$@"
 mime ^text, label editor = ${VISUAL:-$EDITOR} -- "$@"
-ext org = ${VISUAL:-$EDITOR} -- "$@"
+ext lua|org = ${VISUAL:-$EDITOR} -- "$@"
 mime ^text, has leafpad, X, flag f = leafpad -- "$@"
 mime ^text, has mousepad, X, flag f = mousepad -- "$@"
 ext pdf, has qpdfview, X, flag f = wmctrl -x -a qpdfview; qpdfview --unique -- "$@"
