@@ -13,6 +13,10 @@ help() {
     echo "  - trailing slash   = match directories only"
     echo "  - leading slash    = path relative to FROM dir"
     echo "  - no leading slash = match any path component (not substring match)"
+    echo
+    echo "Examples:"
+    echo "1. Use --link-dest (incremental backup)"
+    echo "   rsync2 /path/to/mydir /dest/mydir/20230501 --link-dest=/dest/mydir/20230401 -i"
 }
 
 from=
@@ -20,6 +24,7 @@ to=
 # shellcheck disable=SC2054
 opts=(
     -aP # --archive --partial
+    -H # --hard-links (hard linked two files in source will not be duplicated in the destination)
     # -AX # --progress --acls --xattrs
     --info=stats2,progress2 -h # --human-readable
     --log-file="$(pwd)/rsync-$(date +"%Y%m%d-%H%M%S").log"
