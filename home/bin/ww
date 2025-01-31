@@ -3,8 +3,8 @@
 shopt -s nullglob
 
 help() {
-    echo "Usage: wslwatch [option ...] FILE ... -- CMD ..."
-    echo "       cmd1 | wslwatch [option ...] -- CMD ..."
+    echo "Usage: ww [option ...] FILE ... -- CMD ..."
+    echo "       cmd1 | ww [option ...] -- CMD ..."
     echo "Watch FILEs and run CMD on change."
     echo "In the second form, read paths of FILEs from stdin."
     echo "Similar to entr http://eradman.com/entrproject/"
@@ -12,10 +12,10 @@ help() {
     echo "Options:"
     echo "   -h         Help"
     echo "   -g         Interpret each FILE as bash glob pattern and dynamically update the list of files to watch."
-    echo "   -r         Reload a persistent child process"
-    echo "   -t TIME    Check file update on each TIME seconds (default: 1)"
-    echo "   -T         Show timestamp when cmd runs"
+    echo "   -t SEC     Check file update on each SEC seconds (default: 1)"
     echo "   -z         Exit after cmd exits"
+    echo "   -R         Disable reloading of persistent child processes"
+    echo "   -T         Disable showing timestamp when cmd runs"
 }
 
 
@@ -36,14 +36,14 @@ redo_globs() {
 ## Parse opts (TODO -- flag (option separator))
 
 [[ $# -eq 0 ]] && { help; exit; }
-gflag="" rflag="" tval=1 Tflag="" zflag=""
+gflag="" Rflag="" tval=1 Tflag="" zflag=""
 files=()
 globs=()
 while true; do
     case "$1" in
         -h|--help) help; exit;;
         -g) gflag=1;   shift;;
-        -r) rflag=1;   shift;;
+        -R) Rflag=1;   shift;;
         -t) tval="$2"; shift; shift;;
         -T) Tflag=1;   shift;;
         -z) zflag=1;   shift;;
@@ -54,7 +54,7 @@ done
 [ ! -t 0 ] && { while read -r f; do files+=("$f"); done; }
 [[ $# -eq 0 ]] && { echo "ERR: No command" >&2; help; exit 1; }
 [[ "${#files[@]}" -eq 0 ]] && [[ "${#globs[@]}" -eq 0 ]] && { echo "ERR: No files"   >&2; help; exit 1; }
-# echo "r=$rflag,t=$tval,T=$Tflag,z=$zflag"; echo "files: ${files[*]}"; echo "globs: ${globs[*]}"; echo "cmd: $*"
+# echo "R=$Rflag,t=$tval,T=$Tflag,z=$zflag"; echo "files: ${files[*]}"; echo "globs: ${globs[*]}"; echo "cmd: $*"
 # exit
 
 
@@ -88,11 +88,11 @@ while true; do
 
         if [[ "$time" != "$newtime" ]]; then
 
-            # (-r flag) kill persistent process
-            [[ $rflag ]] && [[ -n "$pid" ]] && { kill "$pid" 2>/dev/null; }
+            # (unless -R flag) kill persistent process
+            [[ -z $Rflag ]] && [[ -n "$pid" ]] && { kill "$pid" 2>/dev/null; }
 
-            # (-T flag) show timestamp
-            [[ $Tflag ]] && timestamp
+            # (unless -T flag) show timestamp
+            [[ -z $Tflag ]] && timestamp
 
             # run command and save pid
             "$@" &
@@ -113,5 +113,5 @@ while true; do
 done
 
 # ex.
-# wslwatch -g '*.txt' -- date
+# ww -g '*.txt' -- date
 # # this prints datetime on (1) change in existing .txt file (2) new .txt file added (3) .txt file removed.
