@@ -22,7 +22,7 @@ let g:env = {
     \ "git":    executable("git"),
     \ "curl":   executable("curl"),
     \ "dark":   !empty($MY_DARK) ? ($MY_DARK == "1") : ($MYKBD == "colemakdh"),
-    \ "llama":  !empty($MY_LLAMA_SERVER) ? $MY_LLAMA_SERVER : v:false,
+    \ "llama":  !empty($MY_LLAMA) ? $MY_LLAMA : v:false,
     \ }
 
 ]] -- >>>
@@ -419,8 +419,6 @@ nnore M m
 nnore <silent> 0      :lua smartHome()<cr>
 nnore <silent> <home> :lua smartHome()<cr>
 inore <silent> <home> <c-o>:lua smartHome(true)<cr>
-nnore ( <c-o>
-nnore ) <c-i>
 nnore <c-u> <c-i>
 nnore <silent> <expr> f (reg_recording() . reg_executing()) != "" ? "f" : ":lua smartf(1)\<cr>"
 nnore <silent> <expr> F (reg_recording() . reg_executing()) != "" ? "F" : ":lua smartf(-1)\<cr>"
@@ -479,8 +477,12 @@ nnore <c-l> :call RecenterTopBottom()<cr>
 cnore <expr> <up>   pumvisible() ? "\<c-p>" : "\<up>"
 cnore <expr> <down> pumvisible() ? "\<c-n>" : "\<down>"
 vnore T :T<space>/
-nnore zr zR
+nnore { zm
+nnore } zr
+nnore ( zc
+nnore ) zo
 nnore zm zM
+nnore zr zR
 
 " Ignore function keys
 for i in range(1, 16)
@@ -2292,7 +2294,7 @@ au FileType sh  setl iskeyword+=.,-
 
 " Auto complete (https://stackoverflow.com/questions/35837990)
 let g:comp_open_prev = [-1, -1]
-let g:comp_enable = v:false
+let g:comp_enable = v:true
 fu! OpenCompletion()
 
     if !g:comp_enable | return | endif

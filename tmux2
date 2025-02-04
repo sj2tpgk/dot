@@ -411,7 +411,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     if test "$ask_answer" == y; then echo "$@"; fi
 #| }
 #| 
-#| ask pacman --noconfirm -S anthy atool bluez bluz-utils dash entr fish git imagemagick jq keyd man man-db neovim nmap openssh pv ranger rsync tmux pv udiskie w3m wget
+#| ask pacman --noconfirm -S anthy atool bluez bluz-utils dash entr fish fzf git imagemagick jq keyd man man-db neovim nmap openssh pv ranger rsync tmux pv udiskie w3m wget
 #| 
 #| ask pacman --noconfirm -S foot mpv wl-clipboard wlr-randr
 #| 
@@ -810,6 +810,13 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+####FILE +x bin/im-sixel {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
+#| magick "$1" -geometry "x${2:-100}" sixel:-
+#- }}}
+
+
 ####FILE +x bin/img2txtfull {{{
 #| #!/usr/bin/perl
 #| 
@@ -835,13 +842,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| input=$*
 #| # echo "[$input]"
 #| rclip -f -t 30 "$input" 2>/dev/null | grep -v TensorList | sxiv -t -i -
-#- }}}
-
-
-####FILE +x bin/im-sixel {{{
-#| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
-#| magick "$1" -geometry "x${2:-100}" sixel:-
 #- }}}
 
 
@@ -2020,6 +2020,10 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     echo "  - trailing slash   = match directories only"
 #|     echo "  - leading slash    = path relative to FROM dir"
 #|     echo "  - no leading slash = match any path component (not substring match)"
+#|     echo
+#|     echo "Examples:"
+#|     echo "1. Use --link-dest (incremental backup)"
+#|     echo "   rsync2 /path/to/mydir /dest/mydir/20230501 --link-dest=/dest/mydir/20230401 -i"
 #| }
 #| 
 #| from=
@@ -2027,6 +2031,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| # shellcheck disable=SC2054
 #| opts=(
 #|     -aP # --archive --partial
+#|     -H # --hard-links (hard linked two files in source will not be duplicated in the destination)
 #|     # -AX # --progress --acls --xattrs
 #|     --info=stats2,progress2 -h # --human-readable
 #|     --log-file="$(pwd)/rsync-$(date +"%Y%m%d-%H%M%S").log"
@@ -2349,14 +2354,14 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
-####FILE +x bin/wslwatch {{{
+####FILE +x bin/ww {{{
 #| #!/bin/bash
 #| 
 #| shopt -s nullglob
 #| 
 #| help() {
-#|     echo "Usage: wslwatch [option ...] FILE ... -- CMD ..."
-#|     echo "       cmd1 | wslwatch [option ...] -- CMD ..."
+#|     echo "Usage: ww [option ...] FILE ... -- CMD ..."
+#|     echo "       cmd1 | ww [option ...] -- CMD ..."
 #|     echo "Watch FILEs and run CMD on change."
 #|     echo "In the second form, read paths of FILEs from stdin."
 #|     echo "Similar to entr http://eradman.com/entrproject/"
@@ -2364,10 +2369,10 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     echo "Options:"
 #|     echo "   -h         Help"
 #|     echo "   -g         Interpret each FILE as bash glob pattern and dynamically update the list of files to watch."
-#|     echo "   -r         Reload a persistent child process"
-#|     echo "   -t TIME    Check file update on each TIME seconds (default: 1)"
-#|     echo "   -T         Show timestamp when cmd runs"
+#|     echo "   -t SEC     Check file update on each SEC seconds (default: 1)"
 #|     echo "   -z         Exit after cmd exits"
+#|     echo "   -R         Disable reloading of persistent child processes"
+#|     echo "   -T         Disable showing timestamp when cmd runs"
 #| }
 #| 
 #| 
@@ -2388,14 +2393,14 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| ## Parse opts (TODO -- flag (option separator))
 #| 
 #| [[ $# -eq 0 ]] && { help; exit; }
-#| gflag="" rflag="" tval=1 Tflag="" zflag=""
+#| gflag="" Rflag="" tval=1 Tflag="" zflag=""
 #| files=()
 #| globs=()
 #| while true; do
 #|     case "$1" in
 #|         -h|--help) help; exit;;
 #|         -g) gflag=1;   shift;;
-#|         -r) rflag=1;   shift;;
+#|         -R) Rflag=1;   shift;;
 #|         -t) tval="$2"; shift; shift;;
 #|         -T) Tflag=1;   shift;;
 #|         -z) zflag=1;   shift;;
@@ -2406,7 +2411,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| [ ! -t 0 ] && { while read -r f; do files+=("$f"); done; }
 #| [[ $# -eq 0 ]] && { echo "ERR: No command" >&2; help; exit 1; }
 #| [[ "${#files[@]}" -eq 0 ]] && [[ "${#globs[@]}" -eq 0 ]] && { echo "ERR: No files"   >&2; help; exit 1; }
-#| # echo "r=$rflag,t=$tval,T=$Tflag,z=$zflag"; echo "files: ${files[*]}"; echo "globs: ${globs[*]}"; echo "cmd: $*"
+#| # echo "R=$Rflag,t=$tval,T=$Tflag,z=$zflag"; echo "files: ${files[*]}"; echo "globs: ${globs[*]}"; echo "cmd: $*"
 #| # exit
 #| 
 #| 
@@ -2440,11 +2445,11 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| 
 #|         if [[ "$time" != "$newtime" ]]; then
 #| 
-#|             # (-r flag) kill persistent process
-#|             [[ $rflag ]] && [[ -n "$pid" ]] && { kill "$pid" 2>/dev/null; }
+#|             # (unless -R flag) kill persistent process
+#|             [[ -z $Rflag ]] && [[ -n "$pid" ]] && { kill "$pid" 2>/dev/null; }
 #| 
-#|             # (-T flag) show timestamp
-#|             [[ $Tflag ]] && timestamp
+#|             # (unless -T flag) show timestamp
+#|             [[ -z $Tflag ]] && timestamp
 #| 
 #|             # run command and save pid
 #|             "$@" &
@@ -2465,7 +2470,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| done
 #| 
 #| # ex.
-#| # wslwatch -g '*.txt' -- date
+#| # ww -g '*.txt' -- date
 #| # # this prints datetime on (1) change in existing .txt file (2) new .txt file added (3) .txt file removed.
 #- }}}
 
@@ -2523,6 +2528,123 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| 
 #| # note sudo's NOPASSWD won't work if there is a duplicate slash
 #| # note sudo's NOPASSWD must be in the last line
+#- }}}
+
+
+####FILE +x bin/x-gestures {{{
+#| #!/bin/sh
+#| pkill -x lisgd
+#| lisgd -d /dev/input/event1 \
+#|     -g '1,LR,T,*,R,pkill -x -SIGUSR2 wvkbd-mobintl' \
+#|     -g '1,RL,T,*,R,pkill -x -SIGUSR1 wvkbd-mobintl' \
+#|     -g '1,UD,R,*,P,~/bin/x-brightness -10' \
+#|     -g '1,DU,R,*,P,~/bin/x-brightness +10' \
+#|     -g '2,UD,T,M,R,swaymsg kill' \
+#|     -g '1,UD,T,*,R,~/bin/x-run'
+#- }}}
+
+
+####FILE +x bin/x-hibernate {{{
+#| #!/bin/sh
+#| 
+#| swaylock -c 888888 & sleep .1 && systemctl hibernate
+#- }}}
+
+
+####FILE +x bin/x-mute {{{
+#| #!/bin/sh
+#| # Usage: ./mute
+#| pactl set-sink-mute @DEFAULT_SINK@ toggle
+#- }}}
+
+
+####FILE +x bin/x-picom {{{
+#| #!/bin/bash
+#| 
+#| # To detach:
+#| #   ./x-picom -b
+#| 
+#| pkill --exact picom
+#| 
+#| picom_args=(
+#|     --config /dev/null         # no default config
+#|     --no-fading-destroyed-argb # prevent urxvt window from flashing on closing
+#|     --no-fading-openclose      # not working? use .config/compton.conf
+#|     --xrender-sync-fence       # Avoid "keyboard/mouse lag"; actually the display is not redrawing
+#|     --backend xrender          # "xrender" is less laggy than "glx"?
+#|     --vsync                    # Avoid tearing
+#|     -I1 -O1                    # No fading (workaround)
+#| 
+#|     # no shadow for maximized windows, unfocused windows and menu
+#|     # --shadow-exclude "(widthb > $wsmall || heightb > $hsmall) || !focused" # || (WM_WINDOW_ROLE@:s *= "fluxbox-menu")'
+#|     --shadow-exclude "!(window_type *= \"menu\") && (focused || !focused)"
+#| )
+#| 
+#| exec picom "${picom_args[@]}" "$@"
+#- }}}
+
+
+####FILE +x bin/x-run {{{
+#| #!/bin/sh
+#| 
+#| b="#000000dd"
+#| f="#00bbdd"
+#| hb="#333333"
+#| # pkill -x -SIGUSR2 wvkbd-mobintl
+#| # bemenu-run -i -l20 --scrollbar auto --counter always -W.3 --nb $b --ab $b --tf $f --hf $f --fbf $f --fbb $hb --hb $hb --fn "Noto Sans Mono 10"
+#| cd "$(dirname "$0")"/rundir
+#| cmd=$(find . -maxdepth 1 -not -type d | sed 's#^..##' | LC_ALL=C sort | bemenu -i -l20 -p ">" --scrollbar auto -W.33 --nb $b --ab $b --tf $f --hf $f --fbf "#ff3333" --fbb $hb --hb $hb --fn "Noto Sans Mono 33")
+#| cwd=$(pwd)
+#| cd ~
+#| case "$cmd" in
+#|     (*@) sh -c "${cmd%@}" ;;
+#|     ("") : ;;
+#|     (*) sh -c "$cwd/$cmd" & ;;
+#| esac
+#| # pkill -x -SIGUSR1 wvkbd-mobintl
+#- }}}
+
+
+####FILE +x bin/x-status {{{
+#| #!/bin/sh
+#| 
+#| read bat < /sys/class/power_supply/rk817-battery/capacity
+#| read sta < /sys/class/power_supply/rk817-battery/status
+#| case "$sta" in
+#|     (Charging)         sta=+ ;;
+#|     (Full|Discharging) sta=  ;;
+#|     (*)                sta=? ;;
+#| esac
+#| 
+#| vol=$(pactl get-sink-volume @DEFAULT_SINK@)
+#| vol=${vol% / *}; vol=${vol##* }
+#| 
+#| read br  < /sys/class/backlight/backlight/brightness
+#| read brm < /sys/class/backlight/backlight/max_brightness
+#| br=$((100 * br / brm))
+#| 
+#| dt=$(date +'%Y-%m-%d (%a) %H:%M:%S')
+#| 
+#| #net=$(echo $(ip a | sed -n '/state UP/s/^[^ ]* \([^ :]*\).*/\1/p'))
+#| net=$(echo $(ip -o a | awk '(!/ lo /)&&(!/ inet6 /){if(!a[$2]++){print $2}sub("/.*","",$4);print $4}'))
+#| #net=${net:--}
+#| 
+#| printf '%s  %s :%s *%s  %s\n' "$net" "[$sta$bat%]" "$vol" "$br%" "$dt"
+#- }}}
+
+
+####FILE +x bin/x-term {{{
+#| #!/bin/sh
+#| 
+#| font="Noto Sans Mono:size=10.5"
+#| footclient -o font="$font" -e tmux
+#- }}}
+
+
+####FILE +x bin/x-volume {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
+#| pactl set-sink-volume @DEFAULT_SINK@ "$1"
 #- }}}
 
 
@@ -2633,33 +2755,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
-####FILE +x bin/x-gestures {{{
-#| #!/bin/sh
-#| pkill -x lisgd
-#| lisgd -d /dev/input/event1 \
-#|     -g '1,LR,T,*,R,pkill -x -SIGUSR2 wvkbd-mobintl' \
-#|     -g '1,RL,T,*,R,pkill -x -SIGUSR1 wvkbd-mobintl' \
-#|     -g '1,UD,R,*,P,~/bin/x-brightness -10' \
-#|     -g '1,DU,R,*,P,~/bin/x-brightness +10' \
-#|     -g '2,UD,T,M,R,swaymsg kill' \
-#|     -g '1,UD,T,*,R,~/bin/x-run'
-#- }}}
-
-
-####FILE +x bin/x-hibernate {{{
-#| #!/bin/sh
-#| 
-#| swaylock -c 888888 & sleep .1 && systemctl hibernate
-#- }}}
-
-
-####FILE +x bin/x-mute {{{
-#| #!/bin/sh
-#| # Usage: ./mute
-#| pactl set-sink-mute @DEFAULT_SINK@ toggle
-#- }}}
-
-
 ####FILE +x bin/xpaste {{{
 #| #!/bin/sh
 #| 
@@ -2756,96 +2851,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     termux-clipboard-get
 #| 
 #| fi
-#- }}}
-
-
-####FILE +x bin/x-picom {{{
-#| #!/bin/bash
-#| 
-#| # To detach:
-#| #   ./x-picom -b
-#| 
-#| pkill --exact picom
-#| 
-#| picom_args=(
-#|     --config /dev/null         # no default config
-#|     --no-fading-destroyed-argb # prevent urxvt window from flashing on closing
-#|     --no-fading-openclose      # not working? use .config/compton.conf
-#|     --xrender-sync-fence       # Avoid "keyboard/mouse lag"; actually the display is not redrawing
-#|     --backend xrender          # "xrender" is less laggy than "glx"?
-#|     --vsync                    # Avoid tearing
-#|     -I1 -O1                    # No fading (workaround)
-#| 
-#|     # no shadow for maximized windows, unfocused windows and menu
-#|     # --shadow-exclude "(widthb > $wsmall || heightb > $hsmall) || !focused" # || (WM_WINDOW_ROLE@:s *= "fluxbox-menu")'
-#|     --shadow-exclude "!(window_type *= \"menu\") && (focused || !focused)"
-#| )
-#| 
-#| exec picom "${picom_args[@]}" "$@"
-#- }}}
-
-
-####FILE +x bin/x-run {{{
-#| #!/bin/sh
-#| 
-#| b="#000000dd"
-#| f="#00bbdd"
-#| hb="#333333"
-#| # pkill -x -SIGUSR2 wvkbd-mobintl
-#| # bemenu-run -i -l20 --scrollbar auto --counter always -W.3 --nb $b --ab $b --tf $f --hf $f --fbf $f --fbb $hb --hb $hb --fn "Noto Sans Mono 10"
-#| cd "$(dirname "$0")"/rundir
-#| cmd=$(find . -maxdepth 1 -not -type d | sed 's#^..##' | LC_ALL=C sort | bemenu -i -l20 -p ">" --scrollbar auto -W.33 --nb $b --ab $b --tf $f --hf $f --fbf "#ff3333" --fbb $hb --hb $hb --fn "Noto Sans Mono 33")
-#| cwd=$(pwd)
-#| cd ~
-#| case "$cmd" in
-#|     (*@) sh -c "${cmd%@}" ;;
-#|     ("") : ;;
-#|     (*) sh -c "$cwd/$cmd" & ;;
-#| esac
-#| # pkill -x -SIGUSR1 wvkbd-mobintl
-#- }}}
-
-
-####FILE +x bin/x-status {{{
-#| #!/bin/sh
-#| 
-#| read bat < /sys/class/power_supply/rk817-battery/capacity
-#| read sta < /sys/class/power_supply/rk817-battery/status
-#| case "$sta" in
-#|     (Charging)         sta=+ ;;
-#|     (Full|Discharging) sta=  ;;
-#|     (*)                sta=? ;;
-#| esac
-#| 
-#| vol=$(pactl get-sink-volume @DEFAULT_SINK@)
-#| vol=${vol% / *}; vol=${vol##* }
-#| 
-#| read br  < /sys/class/backlight/backlight/brightness
-#| read brm < /sys/class/backlight/backlight/max_brightness
-#| br=$((100 * br / brm))
-#| 
-#| dt=$(date +'%Y-%m-%d (%a) %H:%M:%S')
-#| 
-#| #net=$(echo $(ip a | sed -n '/state UP/s/^[^ ]* \([^ :]*\).*/\1/p'))
-#| net=$(echo $(ip -o a | awk '(!/ lo /)&&(!/ inet6 /){if(!a[$2]++){print $2}sub("/.*","",$4);print $4}'))
-#| #net=${net:--}
-#| 
-#| printf '%s  %s :%s *%s  %s\n' "$net" "[$sta$bat%]" "$vol" "$br%" "$dt"
-#- }}}
-
-
-####FILE +x bin/x-term {{{
-#| #!/bin/sh
-#| 
-#| font="Noto Sans Mono:size=10.5"
-#| footclient -o font="$font" -e tmux
-#- }}}
-
-
-####FILE +x bin/x-volume {{{
-#| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
-#| pactl set-sink-volume @DEFAULT_SINK@ "$1"
 #- }}}
 
 
