@@ -167,7 +167,10 @@
 }
 
 @-moz-document domain("note.com") {
-    header, .o-noteContentHeader__titleAttachment, .o-noteContentHeader__creatorInfo, .p-article__action, .p-article__action ~ *, .p-article__comment, .p-article__comment ~ *, footer
+    header, .o-noteEyecatch, .o-noteContentHeader__titleAttachment, .o-noteContentHeader__creatorInfo, .p-article__action, .p-article__action ~ *, .p-article__comment, .p-article__comment ~ *, footer,
+    .o-supportAppealBox, .o-supportAppealBox ~ *,
+    .p-article__extraItemContainer, .p-article__extraItemContainer ~ *,
+    .p-article__sideCreatorInfo
 	{ display: none !important }
 	article { width: 760px !important }
 }

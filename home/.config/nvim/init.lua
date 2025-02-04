@@ -1926,6 +1926,9 @@ vim.cmd [[ " llama.vim (experimental) <<<
         let g:llama_config = {
             \ 'endpoint': g:env.llama . "/infill",
             \ 'show_info': v:false,
+            \ 't_max_prompt_ms': 1000,
+            \ 't_max_predict_ms': 1000,
+            \ 'n_predict': 256,
             \ }
         packadd llama.vim
     endif
