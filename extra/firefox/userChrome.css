@@ -94,7 +94,6 @@
 
 /* Tab Sidebar CSS
 :root { --item-height: 2.4em }
-* { font-family: Droid Sans Japanese }
 
 [data-ctl=items] > [data-pinned] { border-right: solid #bbb 6px }
 
