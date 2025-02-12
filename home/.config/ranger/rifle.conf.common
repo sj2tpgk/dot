@@ -31,6 +31,7 @@ ext iso|jar|msi|pkg|rar|shar|tar|tgz|xar|xpi|xz|zip, has atool = atool --extract
 ext zip, has unar  = unar "$1" # zip (better filenames handling win & japanese)
 ext zip, has unzip = unzip "$1"
 ext tar|tgz|gz|bz2|xz, has tar = tar -xf "$1"
+ext rar, has unrar = unrar x -kb -- "$1"
 
 # Media fallback to web browsers
 mime ^video|audio|ogg|image|application/pdf, has firefox, X, flag f = firefox -- "$@"
