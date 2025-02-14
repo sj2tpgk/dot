@@ -131,7 +131,7 @@ do -- Plugins <<<
 
     -- Misc
     -- plug "stevearc/profile.nvim"
-    plug "ibhagwan/fzf-lua"
+    -- plug "ibhagwan/fzf-lua"
 
     -- My plugins
     plug "https://codeberg.org/sj2tpgk/vim-fast-syntax"

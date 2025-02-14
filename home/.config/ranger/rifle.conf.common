@@ -42,6 +42,9 @@ ext json = ${VISUAL:-$EDITOR} -- "$@"
 ext json = jq . "$1"; read x
 ext json, has tmux-capture-window = tmux-capture-window -e -l "$1"; read x
 
+# Misc
+ext ply, X, has org.cloudcompare.CloudCompare, flag f = org.cloudcompare.CloudCompare "$@"
+
 # WSL
 has cmd.exe = echo "$@" | sed -e 's;/mnt/\(.\);\1:;' -e 's;/home/[^/]*;c:;' -e 's/.*/"&"/' -e 's:/:\\:g' | xargs cmd.exe /C start ""
 

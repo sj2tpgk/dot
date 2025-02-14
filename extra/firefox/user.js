@@ -43,6 +43,20 @@ user_pref("toolkit.tabbox.switchByScrolling", true);
 user_pref("ui.key.menuAccessKeyFocuses", false);
 user_pref("xpinstall.whitelist.required", false);
 
+// fonts (the "Default" fonts)
+// user_pref("font.name-list.monospace.ja"         , "Droid Sans Japanese,Droid Sans Mono,IPAexGothic");
+// user_pref("font.name-list.monospace.x-western"  , "Droid Sans Japanese,Droid Sans Mono,IPAexGothic");
+// user_pref("font.name-list.sans-serif.ja"        , "Droid Sans Japanese,Droid Sans,FreeSans,IPAexGothic");
+// user_pref("font.name-list.sans-serif.x-western" , "Droid Sans Japanese,Droid Sans,FreeSans,IPAexGothic");
+// user_pref("font.name-list.serif.ja"             , "Liberation Serif,FreeSerif,IPAexMincho");
+// user_pref("font.name-list.serif.x-western"      , "Liberation Serif,FreeSerif,IPAexMincho");
+user_pref("font.name-list.monospace.ja"         , "Droid Sans Mono,IPAexGothic");
+user_pref("font.name-list.monospace.x-western"  , "Droid Sans Mono,IPAexGothic");
+user_pref("font.name-list.sans-serif.ja"        , "FreeSans,IPAexGothic");
+user_pref("font.name-list.sans-serif.x-western" , "FreeSans,IPAexGothic");
+user_pref("font.name-list.serif.ja"             , "Liberation Serif,FreeSerif,IPAexMincho");
+user_pref("font.name-list.serif.x-western"      , "Liberation Serif,FreeSerif,IPAexMincho");
+
 // url bar: these are domains, not search words
 user_pref("browser.fixup.domainsuffixwhitelist.server", true);
 
