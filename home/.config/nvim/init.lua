@@ -126,7 +126,8 @@ do -- Plugins <<<
     plug ('ggml-org/llama.vim', 1)
 
     -- Editing commands
-    plug "junegunn/vim-easy-align"
+    -- plug "junegunn/vim-easy-align"
+    plug "mg979/vim-visual-multi"
     plug "windwp/nvim-autopairs"
 
     -- Misc
@@ -396,12 +397,15 @@ if !env.vscode
 endif
 
 " Do not move cursor position on leaving insert mode
-aug vimrc_myesc
-au!
-" Two autocmds needed (for when cursor is at beginning or end of line)
-au InsertLeavePre * let myesc_col = col(".")
-au InsertLeave    * exe (myesc_col >= 2) ? "norm! l" : ""
-aug END
+" better version (https://stackoverflow.com/a/2296229)
+inoremap <silent> <Esc> <Esc>`^
+" old version (https://stackoverflow.com/a/2296229)
+" aug vimrc_myesc
+" au!
+" " Two autocmds needed (for when cursor is at beginning or end of line)
+" au InsertLeavePre * let myesc_col = col(".")
+" au InsertLeave    * exe (myesc_col >= 2) ? "norm! l" : ""
+" aug END
 " >>>
 
 " Keys (keyboard layout agnostic) <<<
@@ -1973,6 +1977,12 @@ if vim.fn.match(vim.o.rtp, "vim-easy-align") ~= -1 then -- vim-easy-align <<<
     vim.cmd [[
     xmap ga <Plug>(EasyAlign)
     xmap T  <Plug>(EasyAlign)
+    ]]
+end -- >>>
+
+if vim.fn.match(vim.o.rtp, "vim-visual-multi") ~= -1 then -- vim-visual-multi <<<
+    vim.cmd [[
+    nnore <c-d> <Plug>(VM-Add-Cursor-Down)
     ]]
 end -- >>>
 
