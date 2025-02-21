@@ -45,7 +45,9 @@ openbox_menu:
       item label="Firefox":
         action name="Execute" command="firefox":
       item label="Chromium":
-        action name="Execute" command="sh -c 'if command -v chromium; then chromium --ozone-platform-hint=auto --gtk-version=4; else flatpak run io.github.ungoogled_software.ungoogled_chromium --ozone-platform-hint=auto --gtk-version=4; fi'":
+        action name="Execute" command="sh -c 'if command -v chromium; then chromium --gtk-version=4; else flatpak run io.github.ungoogled_software.ungoogled_chromium --gtk-version=4; fi'":
+        # with ozone flag, it runs via Xwayland (ime works)
+        # --ozone-platform=wayland --ozone-platform-hint=auto --enable-wayland-ime
       item label="VNC Client":
         action name="Execute" command="~/script-local/vnc":
       item label="Claws Mail":
@@ -77,8 +79,10 @@ openbox_menu:
 
     menu id="Labwc" label="Labwc":
       menu id="Monitor" label="Monitor":
+        item label="HDMI-A-1 2160p 2x":
+          action name="Execute" command='sh -c "wlr-randr --output HDMI-A-1 --mode 3840x2160 --scale 2; pkill -x sfwbar; sfwbar -f myt2.config" -':
         item label="HDMI-A-2 2160p 2x":
-          action name="Execute" command="wlr-randr --output HDMI-A-2 --mode 3840x2160 --scale 2":
+          action name="Execute" command='sh -c "wlr-randr --output HDMI-A-2 --mode 3840x2160 --scale 2; pkill -x sfwbar; sfwbar -f myt2.config" -':
         item label="Magnifier":
           action name="ToggleMagnify":
         item label="wl-gammactl":
