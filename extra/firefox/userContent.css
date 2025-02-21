@@ -90,6 +90,13 @@
     }
 }
 
+.wy-body-for-nav { /* other readthedocs sites not under .readthedocs.io (docs.micropython.org)*/
+    span.pre, em { color: #bd1f1f }
+    @media (prefers-color-scheme: dark) {
+        span.pre, em { color: #ec5d5d }
+    }
+}
+
 @-moz-document regexp(".*//www.gnu.org/software/[^/]*/manual.*") {
     code, samp, var { color: #d22 }
     @media (prefers-color-scheme: dark) {

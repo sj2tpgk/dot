@@ -50,10 +50,13 @@ user_pref("xpinstall.whitelist.required", false);
 // user_pref("font.name-list.sans-serif.x-western" , "Droid Sans Japanese,Droid Sans,FreeSans,IPAexGothic");
 // user_pref("font.name-list.serif.ja"             , "Liberation Serif,FreeSerif,IPAexMincho");
 // user_pref("font.name-list.serif.x-western"      , "Liberation Serif,FreeSerif,IPAexMincho");
-user_pref("font.name-list.monospace.ja"         , "Droid Sans Mono,IPAexGothic");
-user_pref("font.name-list.monospace.x-western"  , "Droid Sans Mono,IPAexGothic");
-user_pref("font.name-list.sans-serif.ja"        , "FreeSans,IPAexGothic");
-user_pref("font.name-list.sans-serif.x-western" , "FreeSans,IPAexGothic");
+// Using:
+//   Droid Sans Mono Dotted.ttf
+//   YUGOTHM.TTC
+user_pref("font.name-list.monospace.ja"         , "Droid Sans Mono Dotted,Droid Sans Mono,IPAexGothic");
+user_pref("font.name-list.monospace.x-western"  , "Droid Sans Mono Dotted,Droid Sans Mono,IPAexGothic");
+user_pref("font.name-list.sans-serif.ja"        , "FreeSans,Yu Gothic,IPAexGothic");
+user_pref("font.name-list.sans-serif.x-western" , "FreeSans,Yu Gothic,IPAexGothic");
 user_pref("font.name-list.serif.ja"             , "Liberation Serif,FreeSerif,IPAexMincho");
 user_pref("font.name-list.serif.x-western"      , "Liberation Serif,FreeSerif,IPAexMincho");
 
