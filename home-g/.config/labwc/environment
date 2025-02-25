@@ -5,3 +5,5 @@ XMODIFIERS=@im=uim
 GTK_IM_MODULE=uim
 QT_IM_MODULE=uim
 MYKBD=colemakdh
+# to change cursor size, edit the value below and run labwc -r
+XCURSOR_SIZE=36
