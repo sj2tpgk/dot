@@ -27,7 +27,6 @@ let g:env = {
 
 ]] -- >>>
 
-
 function plug(url, lazy) -- Plugin manager <<<
     -- Example: plug "neovim/nvim-lspconfig"
     -- Just git clone repo, windows compatible
@@ -93,46 +92,24 @@ do -- Plugins <<<
 
     -- Better syntax highlighting and indent for langs
     plug "Vimjas/vim-python-pep8-indent"
-    -- plug "vim-python/python-syntax"
-    -- plug "pangloss/vim-javascript"
-    -- plug "udalov/kotlin-vim"
-    -- plug "bfrg/vim-cpp-modern"
-    -- plug "gutenye/json5.vim"
-    -- plug "dmix/elvish.vim"
-    -- plug "pearofducks/ansible-vim"
 
     -- Treesitter
-    -- plug "nvim-treesitter/nvim-treesitter"
     -- plug ("nvim-treesitter/nvim-treesitter", 1) -- lazy loading (experimental)
     -- vim.cmd("aug vimrc_loadts \n au! \n au FileType sh,c,css,cpp,go,html,javascript,kotlin,lua,python,vim,help lua lazy('packadd nvim-treesitter | call v:lua.ts_config() | au! vimrc_loadts') \n aug END")
-    -- plug "nvim-treesitter/playground"
-    -- plug "HiPhish/nvim-ts-rainbow2"
 
     -- LSP
-    -- plug "williamboman/mason.nvim"
-    -- plug "williamboman/mason-lspconfig.nvim"
     plug "neovim/nvim-lspconfig"
 
-    -- DAP
-    -- plug "jay-babu/mason-nvim-dap.nvim"
-    -- plug "mfussenegger/nvim-dap"
-
     -- AI
-    -- plug "David-Kunz/gen.nvim"
-    -- plug 'stevearc/dressing.nvim'
-    -- plug 'nvim-lua/plenary.nvim'
-    -- plug 'MunifTanjim/nui.nvim'
-    -- plug 'yetone/avante.nvim'
     plug ('ggml-org/llama.vim', 1)
 
-    -- Editing commands
+    -- Text editing
     -- plug "junegunn/vim-easy-align"
     plug "mg979/vim-visual-multi"
     plug "windwp/nvim-autopairs"
 
     -- Misc
     -- plug "stevearc/profile.nvim"
-    -- plug "ibhagwan/fzf-lua"
 
     -- My plugins
     plug "https://codeberg.org/sj2tpgk/vim-fast-syntax"
@@ -147,8 +124,7 @@ let g:python_highlight_func_calls   = 0
 let g:fastsyntax_enable_symbol      = 1
 ]] -- >>>
 
-
-vim.cmd [[
+vim.cmd [[ " Vim config <<<
 
 " Misc options <<<
 set nocompatible      " required in project.vim
@@ -408,7 +384,7 @@ inoremap <silent> <Esc> <Esc>`^
 " aug END
 " >>>
 
-" Keys (keyboard layout agnostic) <<<
+" Keys (keyboard layout independent) <<<
 
 " vimrc
 nnore <f5> :wa<cr>:sil source $MYVIMRC<cr>
@@ -1178,9 +1154,10 @@ aug END
 
 " >>>
 
-]]
+]] -- >>>
 
-do -- Keys (keyboard layout specific) <<<
+-- Keys (keyboard layout specific) <<<
+do
 
     local mykbd = (vim.env and vim.env.MYKBD == "colemakdh")
 
@@ -1235,7 +1212,9 @@ do -- Keys (keyboard layout specific) <<<
 
 end -- >>>
 
-function lsp_config() -- Lsp <<<
+-- LSP <<<
+
+function lsp_config() -- <<<
     if can_require"lspconfig" then
         lsp_config_1_misc()
         lsp_config_2_eldoc()
@@ -1546,6 +1525,10 @@ function lsp_config_4_servers() -- Lsp (4) configure servers <<<
 end -- >>>
 
 lsp_config()
+
+-- >>>
+
+-- TreeSitter <<<
 
 function ts_config() -- TreeSitter <<<
     ts_config_1()
@@ -1877,55 +1860,9 @@ function ts_config_3() -- TreeSitter (3) custom queries <<<
 
 end -- >>>
 
-if can_require"gen" then -- Ollama (experimental) <<<
-    local gen = require"gen"
-    vim.cmd [[ nnore <c-g> :G<cr> ]]
-    gen.setup {
-        model = "deepseek-coder-v2:16b",
-        host = "192.168.1.9",
-        port = "11434",
-        quit_map = "<esc>",
-        retry_map = "<c-r>",
-        init = function(options) end,
-        command = function(options)
-            local body = {model = options.model, stream = true}
-            return "curl --silent --no-buffer -X POST http://" .. options.host .. ":" .. options.port .. "/api/chat -d $body"
-        end,
-        display_mode = "float", -- float/split/horizontal-split
-        show_prompt = false,
-        show_model = false,
-        no_auto_close = false,
-        debug = false
-    }
-end -- >>>
+-- >>>
 
-if can_require"avante" then -- Avante (experimental) <<<
-    vim.cmd [[
-    vnore aa <Plug>(AvanteAsk)
-    vnore A  <Plug>(AvanteEdit)
-    ]]
-    require('avante_lib').load({})
-    require('avante').setup({
-        -- check M._defaults in ~/.local/share/nvim/site/pack/avante.nvim/opt/avante.nvim/lua/avante/config.lua
-        provider = "ollama",
-        vendors = {
-            ollama = {
-                __inherited_from = "openai",
-                api_key_name = "",
-                endpoint = "http://192.168.120.49:11434/v1",
-                model = "qwen2.5-coder:32b-instruct-q4_K_M",
-            },
-        },
-        mappings = {
-            submit = { normal = "<cr>", insert = "<cr>", },
-        },
-        windows = { -- options to nvim_win_open()
-            sidebar_header = { rounded = false, },
-            edit = { border = "single", },
-            ask = { floating = true, start_insert = true, border = "single", },
-        },
-    })
-end -- >>>
+-- Plugin config <<<
 
 vim.cmd [[ " llama.vim (experimental) <<<
     if g:env.llama
@@ -1948,31 +1885,6 @@ if can_require"nvim-autopairs" then -- nvim-autopairs <<<
     AutoPairs.get_rule("'")[1]:with_pair(Conds.not_after_text("["))
 end -- >>>
 
-if can_require"profile" then -- Profiler <<<
-    -- To open profile: https://ui.perfetto.dev/
-    local should_profile = "1" -- os.getenv("NVIM_PROFILE")
-    local profile = require("profile")
-    if should_profile then
-        profile.instrument_autocmds()
-        if should_profile:lower():match("^start") then
-            profile.start("*")
-        else
-            profile.instrument("*")
-        end
-    end
-    local function toggle_profile()
-        if profile.is_recording() then
-            profile.stop()
-            filename = os.date('profile-%Y%m%d-%H%M%S.json')
-            profile.export(filename)
-            vim.notify(string.format("Written to %s", filename))
-        else
-            profile.start("*")
-        end
-    end
-    vim.keymap.set("", "X", toggle_profile)
-end -- >>>
-
 if vim.fn.match(vim.o.rtp, "vim-easy-align") ~= -1 then -- vim-easy-align <<<
     vim.cmd [[
     xmap ga <Plug>(EasyAlign)
@@ -1986,27 +1898,7 @@ if vim.fn.match(vim.o.rtp, "vim-visual-multi") ~= -1 then -- vim-visual-multi <<
     ]]
 end -- >>>
 
-if can_require"fzf-lua" then -- fzf lua <<<
-    vim.cmd [[
-        nnore t  :FzfLua buffers<cr>
-        nnore T  :FzfLua live_grep<cr>
-        nnore sf :FzfLua files<cr>
-        nnore sn :FzfLua lsp_finder<cr>
-        nnore sz :FzfLua<cr>
-        hi link FzfLuaSearch Search
-    ]]
-    require'fzf-lua'.setup {
-        winopts = {
-            border = "single",
-            fullscreen = false,
-            preview = {
-                border = "single",
-                flip_columns = 180,
-                vertical = "down:55%",
-            },
-        }
-    }
-end -- >>>
+-- >>>
 
 -- My utils <<<
 
@@ -2272,7 +2164,8 @@ end -- >>>
 
 -- >>>
 
-vim.cmd [[ " Completion setup <<<
+-- Completion setup <<<
+vim.cmd [[
 inore <expr> <tab>       pumvisible() ? "\<c-n>" : "\<c-x>\<c-u>"
 inore <expr> <plug>MyTab pumvisible() ? "\<c-n>" : "\<c-x>\<c-u>"
 inore <expr> <s-tab>     pumvisible() ? "\<c-p>" : "\<c-x>\<c-u>"
