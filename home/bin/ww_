@@ -1,0 +1,54 @@
+#!/bin/sh
+
+w3m_dir=$(mktemp -d)
+mkdir -p "$w3m_dir"
+
+w3m_config='
+color       1
+use_history 1
+save_hist   0
+no_cache    1
+'
+
+w3m_bookmark_html='
+<html>
+  <head>
+    <title>Search</title>
+  </head>
+  <body>
+    Search<br><br>
+    <form method="get" action="https://lite.duckduckgo.com/lite">
+      <input type="text"   name="q" size="25">
+      <input type="submit" value="DuckDuckGo Lite">
+    </form>
+    <form method="get" action="https://www.wikipedia.jp/index.php">
+      <input type="text"   name="search" size="25">
+      <input type="submit" value="  Wikipedia    ">
+    </form>
+    <form method="get" action="https://en.wiktionary.org/w/index.php">
+      <input type="text"   name="search" size="25">
+      <input type="hidden" name="ns0"    value="1">
+      <input type="submit" value="  Wiktionary   ">
+    </form>
+    <br>Bookmarks<br>
+    <ul>
+        <li><a href="http://example.com">Example Domain</a></li>
+    </ul>
+  </body>
+</html>
+'
+
+w3m_keymap='
+'
+
+echo "$w3m_config"        > "$w3m_dir/config"
+echo "$w3m_bookmark_html" > "$w3m_dir/bookmark.html"
+echo "$w3m_keymap"        > "$w3m_dir/keymap"
+
+if [ $# -eq 0 ]; then
+    W3M_DIR="$w3m_dir" w3m "$w3m_dir/bookmark.html"
+else
+    W3M_DIR="$w3m_dir" w3m "$@"
+fi
+
+rm -rf "$w3m_dir"

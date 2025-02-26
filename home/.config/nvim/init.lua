@@ -1156,6 +1156,43 @@ aug END
 
 ]] -- >>>
 
+vim.cmd [[
+fu! I()
+    return stridx(getline(line(".")-1),getline(".")[col(".")-1])
+endfu
+fu! AlignCalc(prevline, curline, col, mode)
+    let col     = a:col - (a:col == len(a:curline) ? 1 : 0)
+    let comma   = a:curline[col - 1]
+    let prevpos = stridx(a:prevline, comma)
+    let align   = a:mode ? prevpos : match(a:prevline, '\v\_S', prevpos + 1)
+    let before  = a:curline[:a:col - (a:mode ? 2 : 1)]
+    let pad     = repeat(" ", align - a:col + (a:mode ? 1 : 0))
+    let after   = a:curline[a:col - (a:mode ? 1 : 0):]
+    let newcol  = len(before . pad) + 1
+    ec a:prevline . ";"
+    ec a:curline  . ";"
+    ec a:col      . ";"
+    ec "---"
+    ec comma      . ";"
+    ec prevpos    . ";"
+    ec align      . ";"
+    ec "---"
+    ec before     . ";"
+    ec pad        . ";"
+    ec after      . ";"
+    ec newcol     . ";"
+    return [before . pad . after, newcol]
+endfu
+fu! F(mode)
+    let [newline, newcol] = AlignCalc(getline(line(".") - 1), getline("."), col("."), a:mode)
+    cal setline(".", newline)
+    cal cursor(line("."), newcol)
+endfu
+inore <c-a> <c-o>:call F(0)<cr>
+inore <c-s> <c-o>:call F(1)<cr>
+" hello,    world
+]]
+
 -- Keys (keyboard layout specific) <<<
 do
 
@@ -1865,7 +1902,7 @@ end -- >>>
 -- Plugin config <<<
 
 vim.cmd [[ " llama.vim (experimental) <<<
-    if g:env.llama
+    if g:env.llama && !exists("g:llama_config")
         let g:llama_config = {
             \ 'endpoint': g:env.llama . "/infill",
             \ 'show_info': v:false,

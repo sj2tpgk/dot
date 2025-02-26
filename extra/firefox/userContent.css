@@ -150,6 +150,10 @@
   #content { border-left-width: 0 !important; border: none !important }
 }
 
+@-moz-document domain("geeksforgeeks.org") {
+    #secondary { display: none }
+}
+
 @-moz-document domain("qiita.com") {
   [id^=GlobalHeader],
   .style-ig1r0s, /* scores */
