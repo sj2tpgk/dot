@@ -103,6 +103,7 @@ do -- Plugins <<<
     -- AI
     plug ('ggml-org/llama.vim', 1)
 
+
     -- Text editing
     -- plug "junegunn/vim-easy-align"
     plug "mg979/vim-visual-multi"
