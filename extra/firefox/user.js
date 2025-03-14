@@ -31,6 +31,8 @@ user_pref("dom.event.clipboardevents.enabled", false);
 user_pref("extensions.pocket.enabled", false);
 user_pref("full-screen-api.warning.timeout", 0);
 user_pref("general.smoothScroll", false);
+user_pref("gfx.font_rendering.cleartype_params.enhanced_contrast", 100); // windows font rendering
+user_pref("gfx.font_rendering.cleartype_params.rendering_mode", 5); // windows font rendering
 user_pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
 user_pref("network.http.request.max-attempts", 2); // default 10, too many (possibly banned)
 user_pref("network.security.ports.banned.override", "1-65535");
@@ -96,6 +98,7 @@ user_pref("app.shield.optoutstudies.enabled", false);
 user_pref("app.update.auto", false);
 user_pref("app.update.checkInstallTime", false);
 user_pref("app.update.doorhanger", false);
+user_pref("browser.download.useDownloadDir", false);
 user_pref("browser.feeds.showFirstRunUI", false);
 // user_pref("browser.newtabpage.activity-stream.feeds.section.highlights", false); // Use in firefox home
 user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
@@ -138,6 +141,7 @@ user_pref("browser.search.searchEnginesURL", "https://localhost");
 // user_pref("browser.search.suggest.enabled", false); // I want suggestion in some profiles
 user_pref("browser.search.update", false);
 user_pref("browser.search.update.interval", 24000000);
+user_pref("browser.startup.page", 3); // 3 - restore previous tabs
 // user_pref("browser.startup.page", 0); // 0 - startup with single tab: about:blank
 // user_pref("browser.urlbar.suggest.bookmark", false); // I want to suggest bookmark
 // user_pref("browser.urlbar.suggest.history", false); // I want to suggest history

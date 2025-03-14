@@ -104,6 +104,11 @@
 
 [data-ctl=items] > [data-active] { background: #eee; font-weight: bold }
 [data-theme=dark] [data-ctl=items] > [data-active] { background: #38383d }
+
+[data-ctl=items] > [data-pinned] { border-right: none !important; font-style: normal }
+[data-ctl=items] > [data-pinned]:not([data-active]):not(:hover) { background: #8881 }
+
+[data-ctl=items] { font-family: sans-serif }
 */
 
 /* Markdown New Tab CSS

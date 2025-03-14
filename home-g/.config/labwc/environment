@@ -7,3 +7,4 @@ QT_IM_MODULE=uim
 MYKBD=colemakdh
 # to change cursor size, edit the value below and run labwc -r
 XCURSOR_SIZE=36
+PATH=$PATH:$HOME/bin
