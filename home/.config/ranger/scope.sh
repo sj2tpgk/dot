@@ -15,4 +15,4 @@ case "$FILE_EXTENSION_LOWER" in
         ;;
 esac
 
-exec "${RANGER_SCOPE:-/usr/share/doc/ranger/config/scope.sh}" "$@"
+timeout 1 "${RANGER_SCOPE:-/usr/share/doc/ranger/config/scope.sh}" "$@" || echo "large file"
