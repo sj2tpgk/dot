@@ -619,6 +619,7 @@ fu! MyHighlight_UI()
     hi LineNr      ctermfg=248
     hi NormalFloat ctermfg=white ctermbg=black " Floating window
     hi Search      ctermfg=black ctermbg=blue
+    hi Whitespace  ctermfg=magenta
     " hi MsgArea    ctermfg=blue cterm=reverse
     if g:env.dark
         hi LineNr       ctermfg=243
