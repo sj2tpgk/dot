@@ -2,7 +2,13 @@
 
 if [ -t 1 ]; then
     if command -v highlight >/dev/null 2>&1; then
-        exec highlight --out-format ansi --stdout --force "$@"
+        name=${1##*/}
+        case "$name" in
+            (Dockerfile*) args="-S dockerfile" ;;
+            (Makefile*) args="-S makefile" ;;
+            (*) args="" ;;
+        esac
+        exec highlight --out-format ansi --stdout --force $args "$@"
     elif command -v bat >/dev/null 2>&1; then
         exec bat --theme ansi -p -P "$@"
     else
