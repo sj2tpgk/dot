@@ -624,6 +624,10 @@ fu! MyHighlight_UI()
     if g:env.dark
         hi LineNr       ctermfg=243
     endif
+
+    " llama.vim
+    hi llama_hl_hint ctermfg=magenta
+    hi llama_hl_info ctermfg=blue
 endfu
 
 fu! MyHighlight_TS()
@@ -1907,7 +1911,7 @@ vim.cmd [[ " llama.vim (experimental) <<<
     if g:env.llama && !exists("g:llama_config")
         let g:llama_config = {
             \ 'endpoint': g:env.llama . "/infill",
-            \ 'show_info': v:false,
+            \ 'show_info': 0,
             \ 't_max_prompt_ms': 1000,
             \ 't_max_predict_ms': 1000,
             \ 'n_predict': 256,
