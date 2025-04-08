@@ -9,6 +9,7 @@
 
 # Media
 mime ^video|audio|ogg$, has mpv, X, flag f = mpv --geometry=58%x58%+50%+50% --force-window --sub=1 -- "$@"
+mime ^video|audio|ogg$, has ffplay, X, flag f = ffplay -- "$@"
 mime ^video|audio|ogg$, has ffprobe = ffprobe -- "$@"; read x
 mime ^image, !ext svg, has sxiv  , X, flag f = sxiv -A1 -- "$@"
 ext webp,              has sxiv  , X, flag f = sxiv -A1 -- "$@"

@@ -26,7 +26,7 @@ user_pref("devtools.chrome.enabled", true);
 user_pref("devtools.debugger.prompt-connection", false);
 user_pref("devtools.debugger.remote-enabled", true);
 user_pref("devtools.netmonitor.responseBodyLimit", 0);
-user_pref("dom.event.clipboardevents.enabled", false);
+user_pref("dom.event.clipboardevents.enabled", true); // false prevents pasting in Teams
 // user_pref("dom.event.contextmenu.enabled", false);
 user_pref("extensions.pocket.enabled", false);
 user_pref("full-screen-api.warning.timeout", 0);
@@ -57,8 +57,8 @@ user_pref("xpinstall.whitelist.required", false);
 //   YUGOTHM.TTC
 user_pref("font.name-list.monospace.ja"         , "Droid Sans Mono Dotted,Droid Sans Mono,IPAexGothic1,IPAexGothic");
 user_pref("font.name-list.monospace.x-western"  , "Droid Sans Mono Dotted,Droid Sans Mono,IPAexGothic1,IPAexGothic");
-user_pref("font.name-list.sans-serif.ja"        , "FreeSans,Yu Gothic,IPAexGothic1,IPAexGothic");
-user_pref("font.name-list.sans-serif.x-western" , "FreeSans,Yu Gothic,IPAexGothic1,IPAexGothic");
+user_pref("font.name-list.sans-serif.ja"        , "Segoe UI,FreeSans,Yu Gothic,IPAexGothic1,IPAexGothic");
+user_pref("font.name-list.sans-serif.x-western" , "Segoe UI,FreeSans,Yu Gothic,IPAexGothic1,IPAexGothic");
 user_pref("font.name-list.serif.ja"             , "Liberation Serif,FreeSerif,IPAexMincho");
 user_pref("font.name-list.serif.x-western"      , "Liberation Serif,FreeSerif,IPAexMincho");
 

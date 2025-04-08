@@ -21,14 +21,14 @@ v=$1
 # Check $v is number
 [ 0 = $(expr "x$v" : '^x[-+]\?[0-9]*%*$') ] && { echo "Not a number: $v" >&2; help; exit 1; }
 # Calc new value
-read max < "$max_brightness_file"
+read -r max < "$max_brightness_file"
 case "$v" in
-    (+*%) v=+$(( "$max" * "${v%%%}" / 100 )) ;; # +<n>%
-    (*%)  v=$(( "$max" * "${v%%%}" / 100 )) ;; # -<n>% or <n>%
+    (+*%) v=+$(( max * ${v%%%} / 100 )) ;; # +<n>%
+    (*%)  v=$(( max * ${v%%%} / 100 )) ;; # -<n>% or <n>%
 esac
 case "$v" in
-    (-*) read c < "$brightness_file"; b=$(( "$c" - "${v#-}" ));;
-    (+*) read c < "$brightness_file"; b=$(( "$c" + "${v#+}" ));;
+    (-*) read -r c < "$brightness_file"; b=$(( c - ${v#-} ));;
+    (+*) read -r c < "$brightness_file"; b=$(( c + ${v#+} ));;
     (*)  b=$v;;
 esac
 # Value range check
