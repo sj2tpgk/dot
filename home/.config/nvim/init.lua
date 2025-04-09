@@ -620,6 +620,7 @@ fu! MyHighlight_UI()
     hi NormalFloat ctermfg=white ctermbg=black " Floating window
     hi Search      ctermfg=black ctermbg=blue
     hi Whitespace  ctermfg=magenta
+    hi SignColumn  ctermfg=white ctermbg=none
     " hi MsgArea    ctermfg=blue cterm=reverse
     if g:env.dark
         hi LineNr       ctermfg=243
@@ -1509,7 +1510,7 @@ function lsp_config_2_eldoc() -- Lsp (2) eldoc <<<
         vim.lsp.buf_request(
             0,
             'textDocument/signatureHelp',
-            util.make_position_params(),
+            util.make_position_params(0, "utf-8"),
             vim.lsp.with(signature_handler, {})
         )
     end
@@ -2750,7 +2751,7 @@ function mycomp_lsp_omnifunc_sync(findstart, base) -- synchronous lsp omnifunc (
 
     -- Make request
     local bufnr = vim.api.nvim_get_current_buf()
-    local params = vim.lsp.util.make_position_params()
+    local params = vim.lsp.util.make_position_params(0, "utf-8")
     -- local result = vim.lsp.buf_request_sync(bufnr, 'textDocument/completion', params, 2000)
     local result = mycomp_lsp_omnifunc_prefetched or vim.lsp.buf_request_sync(bufnr, 'textDocument/completion', params, 2000)
     mycomp_lsp_omnifunc_prefetched = nil
@@ -2778,7 +2779,7 @@ function mycomp_lsp_omnifunc_prefetch()
     -- and (hopefully) result is ready when 3rd char is typed.
     -- Prefetched result is stored in mycomp_lsp_omnifunc_prefetched
     local bufnr = vim.api.nvim_get_current_buf()
-    local params = vim.lsp.util.make_position_params()
+    local params = vim.lsp.util.make_position_params(0, "utf-8")
     function callback(result) mycomp_lsp_omnifunc_prefetched = result end
     vim.lsp.buf_request_all(bufnr, 'textDocument/completion', params, callback)
 end

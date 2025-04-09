@@ -94,7 +94,8 @@ def rc_py_main():
     map '<any> enter_bookmark %any
     map '<bg>  draw_bookmarks
 
-    map R      eval fm.open_console("rename " + fm.thisfile.relative_path.replace("%", "%%"), position=7)
+    # map R      eval fm.open_console("rename " + fm.thisfile.relative_path.replace("%", "%%"), position=7)
+    map R      reload_cwd
     ''')
 
     # Keys (depends on keyboard layout)
