@@ -133,4 +133,10 @@
       <accelProfile>flat</accelProfile>
     </device>
   </libinput>
+  <windowRules>
+    <windowRule identifier="imv">
+      <action name="SetDecorations" decorations="full" forceSSD="yes">
+      </action>
+    </windowRule>
+  </windowRules>
 </labwc_config>

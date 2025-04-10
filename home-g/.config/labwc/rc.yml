@@ -95,4 +95,7 @@ labwc_config:
       pointerSpeed: 1.0
       accelProfile: flat
 
+  windowRules:
+    windowRule identifier="imv":
+      action name="SetDecorations" decorations="full" forceSSD="yes":
 
