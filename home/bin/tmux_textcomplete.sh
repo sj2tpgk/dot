@@ -18,7 +18,9 @@ if [[ $# -eq 0 ]]; then
     tmp=${info#*cursor_x=};      cx=${tmp%%:*}
     tmp=${info#*cursor_y=};      cy=${tmp%%:*}
 
-    query=$(tmux capture-pane -J -p -S "$cy" -E "$cy" | cut -c-"$cx" | grep -oE '\w+$' || echo)
+    query=$(tmux capture-pane -J -p -S "$cy" -E "$cy")
+    query=$(echo "${query:0:$cx}" | grep -oE '\w+$' || echo)
+    # do not use cut for substring, because it counts wide characters etc incorrectly
 
     if [[ $version -ge 33 ]] && command -v fzf >/dev/null; then
         # popup and fzf available

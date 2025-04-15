@@ -198,8 +198,8 @@ set fish_color_autosuggestion magenta
 set fish_color_command cyan
 #| function fish_greeting; end
 #| function mkcd; mkdir -p $argv[1] && cd $argv[1]; end
-#| for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i "" || bind -e $i; end
-#| for i in \e\[25\;2~ \e\[26\;5~; bind $i ""; end
+#| for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i "" || bind -e $i; end 2>/dev/null
+#| for i in \e\[25\;2~ \e\[26\;5~; bind $i "" || bind -e $i; end 2>/dev/null
 #| bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
 #| command -v doas >/dev/null 2>&1 && alias sudo doas
 #- }}}
@@ -286,7 +286,7 @@ bind -r <     swap-pane -d -t -1
 bind -r >     swap-pane -d -t +1
 
 # Completion using fzf
-bind    Tab      run "$TMUX_ROOT/bin/tmux-comp"
+bind    Tab      run "$TMUX_ROOT/bin/tmux_textcomplete.sh"
 
 # Use xcopy if exists (todo: add to main config)
 if-shell "command -v xcopy >/dev/null" "set -q copy-command xcopy"
@@ -411,7 +411,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     if test "$ask_answer" == y; then "$@"; fi
 #| }
 #| 
-#| ask pacman --noconfirm -S anthy atool bluez bluez-utils dash entr fish fzf git imagemagick jq man man-db neovim nawk nmap openssh pacman-contrib pv ranger rsync tmux unzip pv udiskie w3m wget zip
+#| ask pacman --noconfirm -S anthy atool bluez bluez-utils dash entr fish fzf git imagemagick jq man man-db mosh neovim nawk nmap openssh pacman-contrib pv ranger rsync tmux unzip pv udiskie w3m wget zip
 #| 
 #| ask pacman --noconfirm -S foot keyd wl-clipboard wlr-randr
 #| 
@@ -437,7 +437,13 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| 
 #| if [ -t 1 ]; then
 #|     if command -v highlight >/dev/null 2>&1; then
-#|         exec highlight --out-format ansi --stdout --force "$@"
+#|         name=${1##*/}
+#|         case "$name" in
+#|             (Dockerfile*) args="-S dockerfile" ;;
+#|             (Makefile*) args="-S makefile" ;;
+#|             (*) args="" ;;
+#|         esac
+#|         exec highlight --out-format ansi --stdout --force $args "$@"
 #|     elif command -v bat >/dev/null 2>&1; then
 #|         exec bat --theme ansi -p -P "$@"
 #|     else
@@ -810,6 +816,13 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+####FILE +x bin/im-sixel {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
+#| magick "$1" -geometry "x${2:-100}" sixel:-
+#- }}}
+
+
 ####FILE +x bin/img2txtfull {{{
 #| #!/usr/bin/perl
 #| 
@@ -835,13 +848,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| input=$*
 #| # echo "[$input]"
 #| rclip -f -t 30 "$input" 2>/dev/null | grep -v TensorList | sxiv -t -i -
-#- }}}
-
-
-####FILE +x bin/im-sixel {{{
-#| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
-#| magick "$1" -geometry "x${2:-100}" sixel:-
 #- }}}
 
 
@@ -2268,43 +2274,97 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
-####FILE +x bin/tmux-comp {{{
-#| #!/bin/sh
+####FILE +x bin/tmux_textcomplete.sh {{{
+#| #!/usr/bin/env bash
 #| 
-#| info=$(tmux display -pF 'pane_id=#{pane_id}:pane_left=#{pane_left}:pane_top=#{pane_top}:cursor_x=#{cursor_x}:cursor_y=#{cursor_y}:client_height=#{client_height}')
-#| tmp=${info#*pane_id=};       t=${tmp%%:*}
-#| tmp=${info#*pane_left=};     px=${tmp%%:*}
-#| tmp=${info#*pane_top=};      py=${tmp%%:*}
-#| tmp=${info#*cursor_x=};      cx=${tmp%%:*}
-#| tmp=${info#*cursor_y=};      cy=${tmp%%:*}
-#| tmp=${info#*client_height=}; h=${tmp%%:*}
+#| Regexes='[[:alnum:]]{4,}   [-+@._[:alnum:]]{4,}   [-+@._/:[:alnum:]]{4,}'
+#| FzfOpts="--no-color --color bw --info hidden"
+#| Scrollback=-5
+#| PopupWidth=35
+#| PopupHeight=8
 #| 
-#| export q
-#| q=$(tmux capturep -J -p -S "$cy" -E "$cy" | cut -c-"$cx" | grep -oE '\w+$' || echo)
+#| if [[ $# -eq 0 ]]; then
 #| 
-#| # get words matching either of those regex (matched by grep -E)
-#| p1='[[:alnum:]]{4,}'
-#| p2='[-+@._[:alnum:]]{4,}'
-#| p3='[-+@._/:[:alnum:]]{4,}'
+#|     # Get info and options (combine to single tmux call for performance)
+#|     info=$(tmux display-message -pF 'client_height=#{client_height}:version=#{version}:pane_id=#{pane_id}:pane_left=#{pane_left}:pane_top=#{pane_top}:cursor_x=#{cursor_x}:cursor_y=#{cursor_y}')
+#|     tmp=${info#*version=};       version=${tmp%%:*}; version=${version//[^0-9]/}
+#|     tmp=${info#*client_height=}; winheight=${tmp%%:*}
+#|     tmp=${info#*pane_id=};       curpane=${tmp%%:*}
+#|     tmp=${info#*pane_left=};     px=${tmp%%:*}
+#|     tmp=${info#*pane_top=};      py=${tmp%%:*}
+#|     tmp=${info#*cursor_x=};      cx=${tmp%%:*}
+#|     tmp=${info#*cursor_y=};      cy=${tmp%%:*}
 #| 
-#| cs="tmux "
-#| for i in $(tmux lsp -a -F '#D'); do cs="$cs capturep -J -pt $i \; "; done
-#| # cs="$cs | grep -oE '\w{4,}' | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
-#| # cs="$cs | { { { tee /dev/fd/3 | grep -oE '$p1' >&4; } 3>&1 | grep -oE '$p2'; } 4>&1; } | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
-#| cs="$cs | { { { { tee /dev/fd/4 /dev/fd/5 | grep -oE '$p1' >&3; } 4>&1 | grep -oE '$p2' >&3; } 5>&1 | grep -oE '$p3' >&3; } 3>&1; } | awk -v q=\"\$q\" 'substr(\$0,1,length(q))==q{print}' | sort -u"
+#|     query=$(tmux capture-pane -J -p -S "$cy" -E "$cy")
+#|     query=$(echo "${query:0:$cx}" | grep -oE '\w+$' || echo)
+#|     # do not use cut for substring, because it counts wide characters etc incorrectly
 #| 
-#| if ! command -v fzf >/dev/null; then
-#|     s=$(eval "$cs" | head -n $((h - 2)) | awk -v q="$q" -v l="${#q}" "{a=\$0; printf \"'%s' '%c' '\", a, NR+47+(NR>10)*39-(NR>36)*58; if (l) { printf \"send -N %d BSpace ; \", l } printf \"send -l \\\"%s\\\"' \", a}")
-#|     eval tmux menu "$s"
-#|     exit
+#|     if [[ $version -ge 33 ]] && command -v fzf >/dev/null; then
+#|         # popup and fzf available
+#|         tmux display-popup -EB \
+#|             -w "$PopupWidth" -h "$PopupHeight" \
+#|             -x $((px + cx - "${#query}" - 2)) -y $((py + cy + 2)) \
+#|             -e curpane="$curpane" -e winheight="$winheight" -e query="$query" \
+#|             -d "$PWD" "$0 popup"
+#|     else
+#|         # fallback to menu
+#|         curpane="$curpane" winheight="$winheight" query="$query" px="$px" py="$py" cx="$cx" cy="$cy" \
+#|             "$0" menu
+#|     fi
+#| 
+#| else
+#| 
+#|     # Capture contents of all panes
+#|     capture_cmd=(tmux)
+#|     for pane_id in $(tmux list-panes -a -F '#{pane_id}'); do
+#|         capture_cmd+=(capture-pane -J -p -S "$Scrollback" -t "$pane_id" ";")
+#|     done
+#|     capture=$("${capture_cmd[@]}")
+#| 
+#|     # Extract words (filter by regex, uniq, then prefix matching)
+#|     words=$(for regex in $Regexes; do echo "$capture" | grep -oE "$regex"; done | sort -u | awk -v query="$query" '(substr($0, 1, length(query)) == query) { print }')
+#| 
+#|     if [[ $1 = popup ]]; then
+#|         # Show completion popup with tmux display-popup and fzf
+#|         sel=$(echo "$words" | fzf $FzfOpts --prompt "  " --pointer " " --print-query -q "$query")
+#|         sel_code=$?
+#| 
+#|         if [[ "$sel_code" -ne 130 ]]; then
+#|             # User selected something
+#|             sel=$(echo "$sel" | tail -n1)
+#|             input_cmd=(tmux)
+#|             [[ "$query" ]] && input_cmd+=(send -t "$curpane" -N "${#query}" BSpace ";")
+#|             input_cmd+=(send -t "$curpane" -l "$sel ")
+#|             # Simulate key input
+#|             "${input_cmd[@]}" 2>/dev/null
+#|         fi
+#| 
+#|     elif [[ $1 = menu ]]; then
+#|         # Show completion popup with tmux display-menu
+#| 
+#|         # Construct menu command
+#|         menu_cmd=(tmux display-menu -M -T "Completion" -x $((px + cx - "${#query}" - 2)) -y $((py + cy + 1)))
+#|         OLDIFS=$IFS; IFS=$'\n'; i=0; imax=$((winheight - 4))
+#|         keys=0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+#|         for word in $words; do
+#|             action=""
+#|             [[ "$query" ]] && action="send -t '$curpane' -N '${#query}' BSpace ; "
+#|             word_esc=${word//"'"/"'\"'\"'"} # escape single quote
+#|             action="$action send -t '$curpane' -l '$word_esc '"
+#|             menu_cmd+=("$word" "${keys:$i:1}" "$action") # name, key, tmux command to execute (simulate key input)
+#| 
+#|             i=$((i + 1)); [[ "$i" -ge "$imax" ]] && break
+#|         done
+#|         IFS=$OLDIFS
+#| 
+#|         # Show menu
+#|         "${menu_cmd[@]}"
+#| 
+#|     fi
+#| 
 #| fi
 #| 
-#| cmd='
-#|   s=$(eval "$cs" | fzf --no-color --color bw --info hidden --prompt "  " --pointer " " --print-query -q "$q")
-#|   [ $? -ne 130 ] && { s=$(echo "$s" | tail -n1); tmux ${q:+send -t "$t" -N "${#q}" BSpace \;} send -t "$t" -l "$s " 2>/dev/null; }
-#|   exit 0'
-#| tmux popup -EB -e "cs=$cs" -e "t=$t" -e "q=$q" -w 35 -h 8 -x $(expr $px + $cx - "${#q}" - 2) -y $(expr $py + $cy + 1) "$cmd" \
-#|     || tmux splitw -e "cs=$cs" -e "t=$t" -e "q=$q" -l 8 "$cmd"
+#| exit
 #- }}}
 
 
@@ -2574,22 +2634,144 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| [ $# -eq 0 ] && { help; exit 1; }
 #| v=$1
 #| # Check $v is number
-#| [ 0 = $(expr "x$v" : '^x[-+]\?[0-9]*$') ] && { echo "Not a number: $v" >&2; help; exit 1; }
+#| [ 0 = $(expr "x$v" : '^x[-+]\?[0-9]*%*$') ] && { echo "Not a number: $v" >&2; help; exit 1; }
 #| # Calc new value
+#| read -r max < "$max_brightness_file"
 #| case "$v" in
-#|     -*) read c < "$brightness_file"; b=$(expr "$c" - "${v#-}");;
-#|     +*) read c < "$brightness_file"; b=$(expr "$c" + "${v#+}");;
-#|     *)  b=$v;;
+#|     (+*%) v=+$(( max * ${v%%%} / 100 )) ;; # +<n>%
+#|     (*%)  v=$(( max * ${v%%%} / 100 )) ;; # -<n>% or <n>%
+#| esac
+#| case "$v" in
+#|     (-*) read -r c < "$brightness_file"; b=$(( c - ${v#-} ));;
+#|     (+*) read -r c < "$brightness_file"; b=$(( c + ${v#+} ));;
+#|     (*)  b=$v;;
 #| esac
 #| # Value range check
 #| [ "$b" -lt 1 ] && b=1
-#| read max < "$max_brightness_file"
 #| [ "$b" -gt "$max" ] && b=$max
+#| echo "v=$v, c=$c, b=$b, max=$max"
 #| # Write value
 #| echo "$b" | as_root /usr/bin/tee "$brightness_file" >/dev/null
 #| 
 #| # note sudo's NOPASSWD won't work if there is a duplicate slash
 #| # note sudo's NOPASSWD must be in the last line
+#- }}}
+
+
+####FILE +x bin/x-gestures {{{
+#| #!/bin/sh
+#| pkill -x lisgd
+#| lisgd -d /dev/input/event1 \
+#|     -g '1,LR,T,*,R,pkill -x -SIGUSR2 wvkbd-mobintl' \
+#|     -g '1,RL,T,*,R,pkill -x -SIGUSR1 wvkbd-mobintl' \
+#|     -g '1,UD,R,*,P,~/bin/x-brightness -10' \
+#|     -g '1,DU,R,*,P,~/bin/x-brightness +10' \
+#|     -g '2,UD,T,M,R,swaymsg kill' \
+#|     -g '1,UD,T,*,R,~/bin/x-run'
+#- }}}
+
+
+####FILE +x bin/x-hibernate {{{
+#| #!/bin/sh
+#| 
+#| swaylock -c 888888 & sleep .1 && systemctl hibernate
+#- }}}
+
+
+####FILE +x bin/x-mute {{{
+#| #!/bin/sh
+#| # Usage: ./mute
+#| pactl set-sink-mute @DEFAULT_SINK@ toggle
+#- }}}
+
+
+####FILE +x bin/x-picom {{{
+#| #!/bin/bash
+#| 
+#| # To detach:
+#| #   ./x-picom -b
+#| 
+#| pkill --exact picom
+#| 
+#| picom_args=(
+#|     --config /dev/null         # no default config
+#|     --no-fading-destroyed-argb # prevent urxvt window from flashing on closing
+#|     --no-fading-openclose      # not working? use .config/compton.conf
+#|     --xrender-sync-fence       # Avoid "keyboard/mouse lag"; actually the display is not redrawing
+#|     --backend xrender          # "xrender" is less laggy than "glx"?
+#|     --vsync                    # Avoid tearing
+#|     -I1 -O1                    # No fading (workaround)
+#| 
+#|     # no shadow for maximized windows, unfocused windows and menu
+#|     # --shadow-exclude "(widthb > $wsmall || heightb > $hsmall) || !focused" # || (WM_WINDOW_ROLE@:s *= "fluxbox-menu")'
+#|     --shadow-exclude "!(window_type *= \"menu\") && (focused || !focused)"
+#| )
+#| 
+#| exec picom "${picom_args[@]}" "$@"
+#- }}}
+
+
+####FILE +x bin/x-run {{{
+#| #!/bin/sh
+#| 
+#| b="#000000dd"
+#| f="#00bbdd"
+#| hb="#333333"
+#| # pkill -x -SIGUSR2 wvkbd-mobintl
+#| # bemenu-run -i -l20 --scrollbar auto --counter always -W.3 --nb $b --ab $b --tf $f --hf $f --fbf $f --fbb $hb --hb $hb --fn "Noto Sans Mono 10"
+#| cd "$(dirname "$0")"/rundir
+#| cmd=$(find . -maxdepth 1 -not -type d | sed 's#^..##' | LC_ALL=C sort | bemenu -i -l20 -p ">" --scrollbar auto -W.33 --nb $b --ab $b --tf $f --hf $f --fbf "#ff3333" --fbb $hb --hb $hb --fn "Noto Sans Mono 33")
+#| cwd=$(pwd)
+#| cd ~
+#| case "$cmd" in
+#|     (*@) sh -c "${cmd%@}" ;;
+#|     ("") : ;;
+#|     (*) sh -c "$cwd/$cmd" & ;;
+#| esac
+#| # pkill -x -SIGUSR1 wvkbd-mobintl
+#- }}}
+
+
+####FILE +x bin/x-status {{{
+#| #!/bin/sh
+#| 
+#| read bat < /sys/class/power_supply/rk817-battery/capacity
+#| read sta < /sys/class/power_supply/rk817-battery/status
+#| case "$sta" in
+#|     (Charging)         sta=+ ;;
+#|     (Full|Discharging) sta=  ;;
+#|     (*)                sta=? ;;
+#| esac
+#| 
+#| vol=$(pactl get-sink-volume @DEFAULT_SINK@)
+#| vol=${vol% / *}; vol=${vol##* }
+#| 
+#| read br  < /sys/class/backlight/backlight/brightness
+#| read brm < /sys/class/backlight/backlight/max_brightness
+#| br=$((100 * br / brm))
+#| 
+#| dt=$(date +'%Y-%m-%d (%a) %H:%M:%S')
+#| 
+#| #net=$(echo $(ip a | sed -n '/state UP/s/^[^ ]* \([^ :]*\).*/\1/p'))
+#| net=$(echo $(ip -o a | awk '(!/ lo /)&&(!/ inet6 /){if(!a[$2]++){print $2}sub("/.*","",$4);print $4}'))
+#| #net=${net:--}
+#| 
+#| printf '%s  %s :%s *%s  %s\n' "$net" "[$sta$bat%]" "$vol" "$br%" "$dt"
+#- }}}
+
+
+####FILE +x bin/x-term {{{
+#| #!/bin/sh
+#| 
+#| font="Noto Sans Mono:size=10.5"
+#| footclient -o font="$font" -e tmux
+#- }}}
+
+
+####FILE +x bin/x-volume {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
+#| pactl set-sink-volume @DEFAULT_SINK@ "$1"
 #- }}}
 
 
@@ -2700,33 +2882,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
-####FILE +x bin/x-gestures {{{
-#| #!/bin/sh
-#| pkill -x lisgd
-#| lisgd -d /dev/input/event1 \
-#|     -g '1,LR,T,*,R,pkill -x -SIGUSR2 wvkbd-mobintl' \
-#|     -g '1,RL,T,*,R,pkill -x -SIGUSR1 wvkbd-mobintl' \
-#|     -g '1,UD,R,*,P,~/bin/x-brightness -10' \
-#|     -g '1,DU,R,*,P,~/bin/x-brightness +10' \
-#|     -g '2,UD,T,M,R,swaymsg kill' \
-#|     -g '1,UD,T,*,R,~/bin/x-run'
-#- }}}
-
-
-####FILE +x bin/x-hibernate {{{
-#| #!/bin/sh
-#| 
-#| swaylock -c 888888 & sleep .1 && systemctl hibernate
-#- }}}
-
-
-####FILE +x bin/x-mute {{{
-#| #!/bin/sh
-#| # Usage: ./mute
-#| pactl set-sink-mute @DEFAULT_SINK@ toggle
-#- }}}
-
-
 ####FILE +x bin/xpaste {{{
 #| #!/bin/sh
 #| 
@@ -2823,96 +2978,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     termux-clipboard-get
 #| 
 #| fi
-#- }}}
-
-
-####FILE +x bin/x-picom {{{
-#| #!/bin/bash
-#| 
-#| # To detach:
-#| #   ./x-picom -b
-#| 
-#| pkill --exact picom
-#| 
-#| picom_args=(
-#|     --config /dev/null         # no default config
-#|     --no-fading-destroyed-argb # prevent urxvt window from flashing on closing
-#|     --no-fading-openclose      # not working? use .config/compton.conf
-#|     --xrender-sync-fence       # Avoid "keyboard/mouse lag"; actually the display is not redrawing
-#|     --backend xrender          # "xrender" is less laggy than "glx"?
-#|     --vsync                    # Avoid tearing
-#|     -I1 -O1                    # No fading (workaround)
-#| 
-#|     # no shadow for maximized windows, unfocused windows and menu
-#|     # --shadow-exclude "(widthb > $wsmall || heightb > $hsmall) || !focused" # || (WM_WINDOW_ROLE@:s *= "fluxbox-menu")'
-#|     --shadow-exclude "!(window_type *= \"menu\") && (focused || !focused)"
-#| )
-#| 
-#| exec picom "${picom_args[@]}" "$@"
-#- }}}
-
-
-####FILE +x bin/x-run {{{
-#| #!/bin/sh
-#| 
-#| b="#000000dd"
-#| f="#00bbdd"
-#| hb="#333333"
-#| # pkill -x -SIGUSR2 wvkbd-mobintl
-#| # bemenu-run -i -l20 --scrollbar auto --counter always -W.3 --nb $b --ab $b --tf $f --hf $f --fbf $f --fbb $hb --hb $hb --fn "Noto Sans Mono 10"
-#| cd "$(dirname "$0")"/rundir
-#| cmd=$(find . -maxdepth 1 -not -type d | sed 's#^..##' | LC_ALL=C sort | bemenu -i -l20 -p ">" --scrollbar auto -W.33 --nb $b --ab $b --tf $f --hf $f --fbf "#ff3333" --fbb $hb --hb $hb --fn "Noto Sans Mono 33")
-#| cwd=$(pwd)
-#| cd ~
-#| case "$cmd" in
-#|     (*@) sh -c "${cmd%@}" ;;
-#|     ("") : ;;
-#|     (*) sh -c "$cwd/$cmd" & ;;
-#| esac
-#| # pkill -x -SIGUSR1 wvkbd-mobintl
-#- }}}
-
-
-####FILE +x bin/x-status {{{
-#| #!/bin/sh
-#| 
-#| read bat < /sys/class/power_supply/rk817-battery/capacity
-#| read sta < /sys/class/power_supply/rk817-battery/status
-#| case "$sta" in
-#|     (Charging)         sta=+ ;;
-#|     (Full|Discharging) sta=  ;;
-#|     (*)                sta=? ;;
-#| esac
-#| 
-#| vol=$(pactl get-sink-volume @DEFAULT_SINK@)
-#| vol=${vol% / *}; vol=${vol##* }
-#| 
-#| read br  < /sys/class/backlight/backlight/brightness
-#| read brm < /sys/class/backlight/backlight/max_brightness
-#| br=$((100 * br / brm))
-#| 
-#| dt=$(date +'%Y-%m-%d (%a) %H:%M:%S')
-#| 
-#| #net=$(echo $(ip a | sed -n '/state UP/s/^[^ ]* \([^ :]*\).*/\1/p'))
-#| net=$(echo $(ip -o a | awk '(!/ lo /)&&(!/ inet6 /){if(!a[$2]++){print $2}sub("/.*","",$4);print $4}'))
-#| #net=${net:--}
-#| 
-#| printf '%s  %s :%s *%s  %s\n' "$net" "[$sta$bat%]" "$vol" "$br%" "$dt"
-#- }}}
-
-
-####FILE +x bin/x-term {{{
-#| #!/bin/sh
-#| 
-#| font="Noto Sans Mono:size=10.5"
-#| footclient -o font="$font" -e tmux
-#- }}}
-
-
-####FILE +x bin/x-volume {{{
-#| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
-#| pactl set-sink-volume @DEFAULT_SINK@ "$1"
 #- }}}
 
 
