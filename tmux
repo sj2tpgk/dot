@@ -198,8 +198,8 @@ set fish_color_autosuggestion magenta
 set fish_color_command cyan
 #| function fish_greeting; end
 #| function mkcd; mkdir -p $argv[1] && cd $argv[1]; end
-#| for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i "" || bind -e $i; end
-#| for i in \e\[25\;2~ \e\[26\;5~; bind $i ""; end
+#| for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i "" || bind -e $i; end 2>/dev/null
+#| for i in \e\[25\;2~ \e\[26\;5~; bind $i "" || bind -e $i; end 2>/dev/null
 #| bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
 #| command -v doas >/dev/null 2>&1 && alias sudo doas
 #- }}}
@@ -286,7 +286,7 @@ bind -r <     swap-pane -d -t -1
 bind -r >     swap-pane -d -t +1
 
 # Completion using fzf
-bind    Tab      run "$TMUX_ROOT/bin/tmux-comp"
+bind    Tab      run "$TMUX_ROOT/bin/tmux_textcomplete.sh"
 
 # Use xcopy if exists (todo: add to main config)
 if-shell "command -v xcopy >/dev/null" "set -q copy-command xcopy"
