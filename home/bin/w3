@@ -1,28 +1,90 @@
 #!/bin/sh
 
-# Can view pdf
-# Set sxiv for image view
-# Help page (at search.html?, set homepage as search.html, add it to bookmark)
+w3m_dir=$(mktemp -d)
+mkdir -p "$w3m_dir"
 
-# raw w3m and w3mman command doesn't allow mouse
-# so set TERM
+w3m_config='
+color       1
+use_history 1
+save_hist   0
+no_cache    1
+'
 
-arg1=$1
+bookmark_html="$(echo "$MY_W3M_BOOKMARKS" | sed 's/&/\&amp;/g; s/"/\&quot;/g; s/</\&lt;/g; s/>/\&gt;/g; s/ /\&nbsp;/g; s#.*#<li><a href="&">&</a></li>#')"
 
-export WWW_HOME=~/.w3m/search.html
-export TERM=xterm
+w3m_bookmark_html='
+<html>
+  <head>
+    <title>Search</title>
+  </head>
+  <body>
+    Search<br><br>
+    <form method="get" action="https://lite.duckduckgo.com/lite">
+      <input type="text"   name="q" size="25">
+      <input type="submit" value="DuckDuckGo Lite">
+    </form>
+    <form method="get" action="https://www.wikipedia.jp/index.php">
+      <input type="text"   name="search" size="25">
+      <input type="submit" value="  Wikipedia    ">
+    </form>
+    <form method="get" action="https://en.wiktionary.org/w/index.php">
+      <input type="text"   name="search" size="25">
+      <input type="hidden" name="ns0"    value="1">
+      <input type="submit" value="  Wiktionary   ">
+    </form>
+    <br>Bookmarks<br>
+    <ul>
+        <li><a href="http://example.com">Example Domain</a></li>
+        '"$bookmark_html"'
+    </ul>
+  </body>
+</html>
+'
 
-[ "$MYKBD" = colemakdh ] && keymap_file=keymap_colemakdh || keymap_file=keymap_qwerty
-conf="-o keymap_file=$keymap_file"
-
-case "$arg1" in
-    __W3_MAN__)   shift; w3mman "$@" ;; # omitting $conf (not very correct)
-    __W3_PAGER__) shift; w3m $conf "$@" ;;
-    localhost:*)  shift; w3m $conf "$@" "http://$arg1" ;;
-    *.pdf)
-        command -v ls >/dev/null || { echo "pdftohtml not available!"; exit 1; }
-        shift
-        pdftohtml -q -s -i -p -stdout "$arg1" | w3m $conf -T text/html "$@" -
-        ;;
-    *) w3m $conf "$@" ~/.w3m/search.html ;;
+case "$MYKBD" in
+    (colemakdh) key_h=k key_j=n key_k=e key_l=i key_H=K key_J=N key_K=E key_L=I key_n=j key_N=J ;;
+    (*)         key_h=h key_j=j key_k=k key_l=l key_H=H key_J=J key_K=K key_L=L key_n=n key_N=N ;;
 esac
+
+
+w3m_keymap="
+keymap DEL    PREV_PAGE
+keymap $key_J NEXT_PAGE
+keymap $key_K PREV_PAGE
+keymap $key_j MOVE_DOWN1
+keymap $key_k MOVE_UP1
+keymap $key_h PREV_LINK
+keymap $key_l NEXT_LINK
+keymap DOWN   MOVE_DOWN1
+keymap UP     MOVE_UP1
+keymap $key_n SEARCH_NEXT
+keymap $key_N SEARCH_PREV
+keymap r      RESHAPE
+keymap u      GOTO
+keymap U      PEEK_LINK
+keymap f      SET_OPTION display_link_number=1
+keymap F      SET_OPTION display_link_number=0
+keymap ?      HELP
+"
+
+echo "$w3m_config"        > "$w3m_dir/config"
+echo "$w3m_bookmark_html" > "$w3m_dir/bookmark.html"
+echo "$w3m_keymap"        > "$w3m_dir/keymap"
+
+export TERM=xterm # needed for mouse in w3m and w3mman
+export W3M_DIR="$w3m_dir"
+
+if [ -t 0 ]; then
+    if [ $# -eq 0 ]; then
+        w3m "$w3m_dir/bookmark.html"
+    elif [ "$1" = __man__ ]; then
+        shift
+        w3mman "$@"
+    else
+        w3m "$@"
+    fi
+else
+    w3m "$@"
+fi
+
+rm -rf "$w3m_dir"
