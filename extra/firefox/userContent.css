@@ -186,6 +186,12 @@
 	article { width: 760px !important }
 }
 
+@-moz-document domain("chat.qwen.ai") {
+    body > .modal {
+        display: none !important;
+    }
+}
+
 @-moz-document domain("atmarkit.itmedia.co.jp") {
 	#mediaFooter, #masterFooter, #masterSub, #g_nav,
 	.cmsBodyItmidSeriesButtonRegist, .cmsBodyItmidSeriesButtonRegist ~ *,
