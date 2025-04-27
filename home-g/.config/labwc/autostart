@@ -1,9 +1,17 @@
-# Example autostart file
+#!/bin/sh
 
-# Set background color.
-swaybg -c '#21282b' >/dev/null 2>&1 &
+set_bg() {
+    for bg in ~/.config/background.*; do
+        if [ -f "$bg" ]; then
+            swaybg -b "$bg" >/dev/null 2>&1 &
+            return
+        fi
+    done
+    swaybg -c '#21282b' >/dev/null 2>&1 &
+}
+set_bg
+
 sfwbar -f myt2.config &
-# sudo /usr/bin/keyd &
 foot -s &
 uim-xim &
 

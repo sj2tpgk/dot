@@ -76,15 +76,14 @@ complete -c q     -xa '(__fish_complete_subcommand)'
 complete -c l     -xa '(__fish_complete_subcommand)'
 
 # Pager and Man ( -x (--export) is necessary )
-if has vimpager
-    set -xg PAGER vimpager
-    set -xg VIMPAGER_RC ~/.vimpagerrc
-else if has w3_pager && has w3_man
-    set -xg PAGER w3_pager
-    alias man w3_man
-else if has w3m && has w3mman
-    set -xg PAGER w3m
-    alias man w3mman
+if has w3m
+    if has w3
+        set -xg PAGER w3
+        alias man "w3 __man__"
+    else
+        set -xg PAGER w3m
+        alias man w3mman
+    end
 end
 
 # Editor
@@ -145,6 +144,9 @@ bind -k btab  nextd-or-forward-word # shift+tab
 # Unbind function keys (use fish_key_reader to find out key name)
 for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -e $i; end
 for i in \e\[25\;2~ \e\[26\;5~; bind -e $i; end
+
+# On ctrl-c don't remove commandline
+bind ctrl-c cancel-commandline
 
 # bind \ed my_fish_fzy
 # bind \ef "commandline -r hello"

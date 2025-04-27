@@ -1,6 +1,6 @@
 <labwc_config>
   <core>
-    <gap>3</gap>
+    <gap>4</gap>
     <xwaylandPersistence>true</xwaylandPersistence>
   </core>
   <focus>

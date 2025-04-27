@@ -202,6 +202,7 @@ set fish_color_command cyan
 #| for i in \e\[25\;2~ \e\[26\;5~; bind $i "" || bind -e $i; end 2>/dev/null
 #| bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
 #| command -v doas >/dev/null 2>&1 && alias sudo doas
+#| bind ctrl-c cancel-commandline
 #- }}}
 
 

@@ -1,7 +1,7 @@
 labwc_config:
 
   core:
-    gap:                 3
+    gap:                 4
     xwaylandPersistence: true
 
   focus:
