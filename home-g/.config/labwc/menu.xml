@@ -66,8 +66,8 @@
     </item>
   </menu>
   <menu id="root-menu">
-    <item label="Labwc 0.7.1">
-    </item>
+    <separator label="Labwc Menu">
+    </separator>
     <menu id="Internet" label="Internet">
       <item label="Firefox">
         <action name="Execute" command="firefox">

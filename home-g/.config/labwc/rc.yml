@@ -4,6 +4,8 @@ labwc_config:
     gap:                 4
     xwaylandPersistence: true
 
+  margin top="2" bottom="0" left="0" right="0":
+
   focus:
     followMouse: yes
 
@@ -20,7 +22,7 @@ labwc_config:
 
   theme:
     name:         themerc
-    cornerRadius: 6
+    cornerRadius: 0
     font:
       name:   Unifont JPMod
       size:   12
@@ -77,6 +79,9 @@ labwc_config:
     keybind key="W-d":
       action name="ToggleDecorations":
 
+    keybind key="W-i":
+      action name="Execute" command="~/status.sh fyi":
+
   mouse:
     default:
     context name="Root":
@@ -92,8 +97,8 @@ labwc_config:
   libinput:
     device category="touchpad":
       naturalScroll: false
-      pointerSpeed: 1.0
-      accelProfile: flat
+      pointerSpeed: 0.9
+      accelProfile: adaptive
 
   windowRules:
     windowRule identifier="imv":

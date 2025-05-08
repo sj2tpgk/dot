@@ -1,8 +1,17 @@
-border.width: 2
-window.active.title.bg.color: #bcccdc
-# window.active.label.text.color: #ffffff
-window.active.border.color: #bbbbbb
-window.inactive.border.color: #dddddd
-padding.height: 1
-window.titlebar.padding.height: 0
-window.button.height: 20
+window.button.height:                  20
+border.width:                          2
+window.active.title.bg.color:          #222299
+window.active.label.text.color:        #ffeeff
+window.active.border.color:            #bbbbcc
+window.inactive.title.bg.color:        #222222
+window.inactive.label.text.color:      #ddccdd
+window.inactive.border.color:          #887788
+window.*.button.unpressed.image.color: #ddccdd
+
+menu.items.bg.color:                   #222222
+menu.items.text.color:                 #ddccdd
+menu.items.active.bg.color:            #dddddd
+menu.items.active.text.color:          #222222
+menu.title.bg.color:                   #222299
+menu.title.text.color:                 #ffeeff
+menu.border.color:                     #ddddff

@@ -1,0 +1,9 @@
+[Unit]
+Description=Firefox profile and cache on RAM
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh %h/bin/firefox_ram.sh %i
+
+[Install]
+WantedBy=default.target

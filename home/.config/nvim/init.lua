@@ -2158,8 +2158,8 @@ function browseDoc(range, text) -- <<<
     local prefix = prefixes[vim.bo.ft] or (vim.bo.ft .. " doc")
     local query = prefix .. " " .. text
     -- TODO: w3m?
-    local cmd   = "sil! !firefox 'https://lite.duckduckgo.com/lite/?q=" .. query .. "'"
-    vim.cmd(cmd)
+    -- local cmd   = "sil! !firefox 'https://lite.duckduckgo.com/lite/?q=" .. query .. "'"
+    -- vim.cmd(cmd)
 end
 vim.cmd [[
 command! -range -nargs=* -range BrowseDoc lua browseDoc(<range>, <q-args>)

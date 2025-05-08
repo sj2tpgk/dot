@@ -1,0 +1,10 @@
+[Unit]
+Description=Timer for Firefox profile and cache on RAM
+
+[Timer]
+OnActiveSec=10s
+OnUnitInactiveSec=20min
+# need system restart to apply timer?
+
+[Install]
+WantedBy=timers.target

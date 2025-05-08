@@ -3,7 +3,7 @@
 set_bg() {
     for bg in ~/.config/background.*; do
         if [ -f "$bg" ]; then
-            swaybg -b "$bg" >/dev/null 2>&1 &
+            swaybg -m fill -i "$bg" >/dev/null 2>&1 &
             return
         fi
     done

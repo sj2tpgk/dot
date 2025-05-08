@@ -3,6 +3,8 @@
     <gap>4</gap>
     <xwaylandPersistence>true</xwaylandPersistence>
   </core>
+  <margin top="2" bottom="0" left="0" right="0">
+  </margin>
   <focus>
     <followMouse>yes</followMouse>
   </focus>
@@ -20,7 +22,7 @@
   </desktops>
   <theme>
     <name>themerc</name>
-    <cornerRadius>6</cornerRadius>
+    <cornerRadius>0</cornerRadius>
     <font>
       <name>Unifont JPMod</name>
       <size>12</size>
@@ -103,6 +105,10 @@
       <action name="ToggleDecorations">
       </action>
     </keybind>
+    <keybind key="W-i">
+      <action name="Execute" command="~/status.sh fyi">
+      </action>
+    </keybind>
   </keyboard>
   <mouse>
     <default>
@@ -129,8 +135,8 @@
   <libinput>
     <device category="touchpad">
       <naturalScroll>false</naturalScroll>
-      <pointerSpeed>1.0</pointerSpeed>
-      <accelProfile>flat</accelProfile>
+      <pointerSpeed>0.9</pointerSpeed>
+      <accelProfile>adaptive</accelProfile>
     </device>
   </libinput>
   <windowRules>

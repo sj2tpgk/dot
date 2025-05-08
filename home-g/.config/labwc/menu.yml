@@ -39,7 +39,7 @@ openbox_menu:
       action name="Close":
 
   menu id="root-menu":
-    item label="Labwc 0.7.1":
+    separator label="Labwc Menu":
 
     menu id="Internet" label="Internet":
       item label="Firefox":
