@@ -1,3 +1,31 @@
 #!/bin/sh
-[ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
-pactl set-sink-volume @DEFAULT_SINK@ "$1"
+L(){ echo "$*"; "$@"; }
+# L(){ echo "$*"; }
+case "$1" in
+    ("")
+        echo "Usage: $0 <volume>     (<volume> = 20%, +5%, -10% etc.)"
+        echo "Usage: $0 sink <sink>  (change sink; useful for eq settings)"
+        exit 1
+        ;;
+    (sink)
+        sink=$2
+        vol=$(pactl get-sink-volume @DEFAULT_SINK@ | sed -n 's/.* \([0-9][0-9]*%\).*/\1/p')
+        # change volume of this sink to current value
+        L pactl set-sink-volume "$sink" "$vol"
+        # change default sink
+        L pactl set-default-sink "$sink"
+        # change sink for existing programs
+        for id in $(pactl list short sink-inputs | cut -f1); do
+            L pactl move-sink-input "$id" "$sink"
+        done
+        # change volume of other sinks to 100%
+        for sink2 in $(pactl list short sinks | cut -f1); do
+            if [ "$sink2" != "$sink" ]; then
+                L pactl set-sink-volume "$sink2" 100%
+            fi
+        done
+        ;;
+    (*)
+        pactl set-sink-volume @DEFAULT_SINK@ "$1" ;;
+esac
+# [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }

@@ -125,6 +125,8 @@ end
 
 type -q fzf_key_bindings && fzf_key_bindings
 
+bind ctrl-c __fish_cancel_commandline # prints ^C and a new prompt on ctrl-c (don't erase input)
+
 # complete one WORD when end of line, otherwise forward-char
 # "commandline -b" may print multiple numbers. "head -n 1" is a temporary workaround
 bind \e\[C "if [ (commandline -C) = (commandline -b | string length | head -n 1) ]; commandline -f forward-bigword; commandline -f repaint; else; commandline -f forward-char; end"
