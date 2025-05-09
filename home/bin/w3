@@ -19,23 +19,23 @@ w3m_bookmark_html='
   </head>
   <body>
     Search<br><br>
-    <form method="get" action="https://lite.duckduckgo.com/lite">
+    <form method="POST" action="https://lite.duckduckgo.com/lite">
       <input type="text"   name="q" size="25">
       <input type="submit" value="DuckDuckGo Lite">
     </form>
-    <form method="get" action="https://www.wikipedia.jp/index.php">
+    <form method="GET" action="https://www.wikipedia.jp/index.php">
       <input type="text"   name="search" size="25">
       <input type="submit" value="  Wikipedia    ">
     </form>
-    <form method="get" action="https://en.wiktionary.org/w/index.php">
+    <form method="GET" action="https://en.wiktionary.org/w/index.php">
       <input type="text"   name="search" size="25">
       <input type="hidden" name="ns0"    value="1">
       <input type="submit" value="  Wiktionary   ">
     </form>
     <br>Bookmarks<br>
     <ul>
-        <li><a href="http://example.com">Example Domain</a></li>
-        '"$bookmark_html"'
+      <li><a href="http://example.com">Example Domain</a></li>
+      '"$bookmark_html"'
     </ul>
   </body>
 </html>
@@ -51,8 +51,8 @@ w3m_keymap="
 keymap DEL    PREV_PAGE
 keymap $key_J NEXT_PAGE
 keymap $key_K PREV_PAGE
-keymap $key_j MOVE_DOWN1
-keymap $key_k MOVE_UP1
+keymap $key_j UP
+keymap $key_k DOWN
 keymap $key_h PREV_LINK
 keymap $key_l NEXT_LINK
 keymap DOWN   MOVE_DOWN1

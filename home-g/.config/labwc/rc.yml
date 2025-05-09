@@ -1,10 +1,10 @@
 labwc_config:
 
   core:
-    gap:                 4
+    gap:                 3
     xwaylandPersistence: true
 
-  margin top="2" bottom="0" left="0" right="0":
+  margin top="1" bottom="0" left="0" right="0":
 
   focus:
     followMouse: yes

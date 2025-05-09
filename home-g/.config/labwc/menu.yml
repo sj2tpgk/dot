@@ -34,6 +34,14 @@ openbox_menu:
       action name="ToggleDecorations":
     item label="Always on Top":
       action name="ToggleAlwaysOnTop":
+    #item label="Always on Bottom":
+    #  action name="ToggleAlwaysOnBottom":
+    #item label="Top Bar Mode":
+    #  action name="Unshade":
+    #  action name="ResizeTo" width="1900":
+    #  action name="MoveTo" x="10" y="-2":
+    #  action name="Shade":
+    #  action name="ToggleAlwaysOnBottom":
 
     item label="Close":
       action name="Close":

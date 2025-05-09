@@ -1,9 +1,9 @@
 <labwc_config>
   <core>
-    <gap>4</gap>
+    <gap>3</gap>
     <xwaylandPersistence>true</xwaylandPersistence>
   </core>
-  <margin top="2" bottom="0" left="0" right="0">
+  <margin top="1" bottom="0" left="0" right="0">
   </margin>
   <focus>
     <followMouse>yes</followMouse>

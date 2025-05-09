@@ -98,7 +98,7 @@ do -- Plugins <<<
     -- vim.cmd("aug vimrc_loadts \n au! \n au FileType sh,c,css,cpp,go,html,javascript,kotlin,lua,python,vim,help lua lazy('packadd nvim-treesitter | call v:lua.ts_config() | au! vimrc_loadts') \n aug END")
 
     -- LSP
-    plug "neovim/nvim-lspconfig"
+    -- plug "neovim/nvim-lspconfig"
 
     -- AI
     plug ('ggml-org/llama.vim', 1)
@@ -106,7 +106,7 @@ do -- Plugins <<<
 
     -- Text editing
     -- plug "junegunn/vim-easy-align"
-    plug "mg979/vim-visual-multi"
+    -- plug "mg979/vim-visual-multi"
     plug "windwp/nvim-autopairs"
 
     -- Misc
