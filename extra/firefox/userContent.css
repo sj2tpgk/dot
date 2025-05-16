@@ -131,15 +131,17 @@
   .hnuser { font-size: 0 }
 
   /* Unscore */
-  .c5a, .c73, .c88, .cae { color: #000 }
+  html[data-darkreader-scheme=dark] .commtext { color: white !important }
+  @media (prefers-color-scheme: dark) { .commtext { color: white !important } }
+  .commtext { color: black !important }
+  /* (cannot get specificity to work; even the browser devtool shows my css specificity is higher but still not applied)  */
+  /* .default > .comment > .commtext { color: black }  */
 
   /* Misc */
   #pagespace + tr tr:nth-of-type(4) td { color: #000 }
-  td.ind[indent="0"]::after { content: ">"; }
-  td.ind[indent="1"]::after { content: ">>"; }
-  td.ind[indent="2"]::after { content: ">>>"; }
-  html[data-darkreader-scheme] .c5a { color: rgb(230, 228, 225) }
-  html[data-darkreader-scheme] #pagespace + tr tr:nth-of-type(4) td { color: rgb(230, 228, 225) }
+  td.ind[indent="0"] + td::after { writing-mode: sideways-lr; content: "*"; }
+  td.ind[indent="1"] + td::after { writing-mode: sideways-lr; content: "**"; }
+  td.ind[indent="2"] + td::after { writing-mode: sideways-lr; content: "***"; }
 }
 
 @-moz-document domain("askubuntu.com"), domain("serverfault.com"), domain("stackexchange.com"), domain("stackoverflow.com"), domain("superuser.com") {

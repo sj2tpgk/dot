@@ -1,8 +1,39 @@
 #!/bin/sh
 
-if [ $# -ne 1 ]; then echo "Usage: firefox_ram.sh <profilename>"; exit 1; fi
+if [ $# -ne 1 ] && [ $# -ne 2 ]; then echo "Usage: firefox_ram.sh PROFILE_NAME [MIN_INTERVAL]"; exit 1; fi
+
+# Systemd configuration guide
+#
+# 1. Create an unit file to run syncing:
+#    ~/.config/systemd/user/firefox_ram@.service
+#    [Unit]
+#    Description=Firefox profile and cache on RAM
+#
+#    [Service]
+#    Type=oneshot
+#    ExecStart=/bin/sh %h/bin/firefox_ram.sh %i
+#
+#    [Install]
+#    WantedBy=default.target
+#
+# 2. Create an timer file to periodically run syncing:
+#    ~/.config/systemd/user/firefox_ram@.timer
+#    [Unit]
+#    Description=Timer for Firefox profile and cache on RAM
+#
+#    [Timer]
+#    OnActiveSec=10s
+#    OnUnitInactiveSec=20min
+#    # need system restart to apply timer?
+#
+#    [Install]
+#    WantedBy=timers.target
+#
+# 3. Enable timer, giving a profile name as an argument:
+#    $ systemctl --user enable --now firefox_ram@xxxxxxxx.default-release.timer
 
 prof=$1
+min_interval=${2:-0}
 
 tmp_cache=/tmp/firefox/cache/$prof
 tmp_prof=/tmp/firefox/profile/$prof
@@ -30,5 +61,9 @@ if [ ! -d "$tmp_prof" ]; then
     L ln -sf "$tmp_prof" "$disk_prof"
     L rsync -a $rsync_flags "$disk_prof.static"/ "$disk_prof"/
 else
-    L rsync -a $rsync_flags --delete --bwlimit=500 "$disk_prof"/ "$disk_prof.static"/
+    mt=$(stat -c %Y "$tmp_prof")
+    ms=$(stat -c %Y "$disk_prof.static")
+    if [ $((mt - ms)) -ge "$min_interval" ]; then
+        L rsync -a $rsync_flags --delete --bwlimit=500 "$disk_prof"/ "$disk_prof.static"/
+    fi
 fi
