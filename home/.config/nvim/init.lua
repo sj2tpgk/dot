@@ -98,7 +98,7 @@ do -- Plugins <<<
     -- vim.cmd("aug vimrc_loadts \n au! \n au FileType sh,c,css,cpp,go,html,javascript,kotlin,lua,python,vim,help lua lazy('packadd nvim-treesitter | call v:lua.ts_config() | au! vimrc_loadts') \n aug END")
 
     -- LSP
-    -- plug "neovim/nvim-lspconfig"
+    plug "neovim/nvim-lspconfig"
 
     -- AI
     plug ('ggml-org/llama.vim', 1)
@@ -608,6 +608,7 @@ fu! MyHighlight_UI()
         hi StatusLineNC ctermfg=white ctermbg=253 cterm=NONE
         hi TabLine      ctermfg=white ctermbg=253 cterm=NONE
         hi TabLineFill  ctermfg=white ctermbg=253 cterm=NONE
+        hi TabLineSel   ctermfg=white ctermbg=251 cterm=NONE
     endif
 
     " Misc
@@ -1916,6 +1917,7 @@ vim.cmd [[ " llama.vim (experimental) <<<
             \ 't_max_prompt_ms': 1000,
             \ 't_max_predict_ms': 1000,
             \ 'n_predict': 256,
+            \ 'keymap_accept_word': "<C-Tab>",
             \ }
         packadd llama.vim
     endif

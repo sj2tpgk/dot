@@ -277,6 +277,9 @@ function popup_help_man
   set -g popup_help_man_last_cmd $cmd
 end
 
+function sshp; ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR $argv; end
+function scpp; scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR $argv; end
+
 # }}}
 
 # Greeting {{{
