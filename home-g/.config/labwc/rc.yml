@@ -69,6 +69,9 @@ labwc_config:
     keybind key="W-P":
       action name="Execute" command="grim":
 
+    keybind key="F10":
+      action name="ToggleMaximize":
+
     keybind key="W-F5":
       action name="Execute" command="sh -c 'cd ~/.config/labwc; ./_reload'":
     keybind key="W-F11":
