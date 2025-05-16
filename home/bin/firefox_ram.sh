@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ $# -ne 1 ]; then echo "Usage: firefox_ram.sh <profilename>"; exit 1; fi
+if [ $# -ne 1 ] && [ $# -ne 2 ]; then echo "Usage: firefox_ram.sh PROFILE_NAME [MIN_INTERVAL]"; exit 1; fi
 
 # Systemd configuration guide
 #
@@ -33,6 +33,7 @@ if [ $# -ne 1 ]; then echo "Usage: firefox_ram.sh <profilename>"; exit 1; fi
 #    $ systemctl --user enable --now firefox_ram@xxxxxxxx.default-release.timer
 
 prof=$1
+min_interval=${2:-0}
 
 tmp_cache=/tmp/firefox/cache/$prof
 tmp_prof=/tmp/firefox/profile/$prof
@@ -60,5 +61,9 @@ if [ ! -d "$tmp_prof" ]; then
     L ln -sf "$tmp_prof" "$disk_prof"
     L rsync -a $rsync_flags "$disk_prof.static"/ "$disk_prof"/
 else
-    L rsync -a $rsync_flags --delete --bwlimit=500 "$disk_prof"/ "$disk_prof.static"/
+    mt=$(stat -c %Y "$tmp_prof")
+    ms=$(stat -c %Y "$disk_prof.static")
+    if [ $((mt - ms)) -ge "$min_interval" ]; then
+        L rsync -a $rsync_flags --delete --bwlimit=500 "$disk_prof"/ "$disk_prof.static"/
+    fi
 fi
