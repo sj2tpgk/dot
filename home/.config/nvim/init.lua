@@ -27,7 +27,7 @@ let g:env = {
 
 ]] -- >>>
 
-function plug(url, lazy) -- Plugin manager <<<
+function plug(url, lazy, branch) -- Plugin manager <<<
     -- Example: plug "neovim/nvim-lspconfig"
     -- Just git clone repo, windows compatible
     -- Using /site/pack/**/opt/ instead of /site/pack/**/start/ to not automatically load packages
@@ -55,7 +55,10 @@ function plug(url, lazy) -- Plugin manager <<<
         vim.fn.mkdir(dir, "p")
 
         -- Run git clone
-        vim.fn.system({ "git", "-C", dir, "clone", "--depth", 1, url })
+        cmd = { "git", "-C", dir, "clone", "--depth", 1 }
+        if branch then table.insert(cmd, "-b") table.insert(cmd, branch) end
+        table.insert(cmd, url)
+        vim.fn.system(cmd)
 
         -- Regenerate help (after vim startup); needed for vim to recognize docs
         vim.cmd("aug plug \n au! \n au VimEnter * helpt ALL \n aug END")
@@ -101,7 +104,8 @@ do -- Plugins <<<
     plug "neovim/nvim-lspconfig"
 
     -- AI
-    plug ('ggml-org/llama.vim', 1)
+    -- plug ('ggml-org/llama.vim', 1)
+    plug ("https://codeberg.org/sj2tpgk/llama.vim", 0, "new")
 
 
     -- Text editing
@@ -1196,8 +1200,8 @@ fu! F(mode)
     cal setline(".", newline)
     cal cursor(line("."), newcol)
 endfu
-inore <c-a> <c-o>:call F(0)<cr>
-inore <c-s> <c-o>:call F(1)<cr>
+"inore <c-a> <c-o>:call F(0)<cr>
+"inore <c-s> <c-o>:call F(1)<cr>
 " hello,    world
 ]]
 
@@ -1498,7 +1502,7 @@ function lsp_config_2_eldoc() -- Lsp (2) eldoc <<<
 
         -- check signatureHelp provider exists
         local hasProvider = false
-        for _, client in pairs(vim.lsp.buf_get_clients()) do
+        for _, client in pairs(vim.lsp.get_clients({bufnr=0})) do
             if client.server_capabilities.signatureHelpProvider then
                 hasProvider = true
                 break
@@ -1917,7 +1921,7 @@ vim.cmd [[ " llama.vim (experimental) <<<
             \ 't_max_prompt_ms': 1000,
             \ 't_max_predict_ms': 1000,
             \ 'n_predict': 256,
-            \ 'keymap_accept_word': "<C-Tab>",
+            \ 'keymap_accept_word': "<C-S>",
             \ }
         packadd llama.vim
     endif
@@ -2696,6 +2700,18 @@ function mycomp_collect_omni() -- Collect from omnifunc <<<
     if (not vim.bo.omnifunc) or (vim.bo.omnifunc == "") then
         return {}
     end
+    local function getfunc_under_v_lua(fname)
+        -- Get function object from string
+        local obj = _G
+        for x in fname:gmatch("[^.]+") do
+            -- ("a.b"):gmatch("[^.]*") yields 2 strings "a","b" in 5.3 but yields 4 strings "a","","b","" in 5.2. Need to use "+" instead of "*".
+            obj = obj[x]
+            if not obj then
+               return error("Function " .. fname .. " does not exist")
+            end
+        end
+        return obj
+    end
     local function callOmnifunc(findstart, base)
         local enableLSP = false
         local ofu = vim.bo.omnifunc
@@ -2707,6 +2723,9 @@ function mycomp_collect_omni() -- Collect from omnifunc <<<
             else
                 return mycomp_lsp_dummy(findstart, base)
             end
+        elseif ofu:match("^v:lua%.") then
+            -- vim.call does not work with a function name starting with v:lua, so convert the function name to a lua object
+            return getfunc_under_v_lua(ofu:sub(7))(findstart, base)
         else
             return vim.call(ofu, findstart, base)
         end
