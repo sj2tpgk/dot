@@ -99,9 +99,9 @@ labwc_config:
 
   libinput:
     device category="touchpad":
-      naturalScroll: false
-      pointerSpeed: 0.9
-      accelProfile: adaptive
+      naturalScroll: no
+      pointerSpeed: 1
+      accelProfile: flat
 
   windowRules:
     windowRule identifier="imv":

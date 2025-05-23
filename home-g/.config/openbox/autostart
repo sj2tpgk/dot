@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# xset options
+xset r rate 185 45
+xset b off
+xset s off -dpms          # Don't use dpms for screen timeout
+xset s 7200 7200          # Specify screen timeout here
+xset dpms 1800 2700 3600  # DPMS standby/suspend/off time (?)
+
+# picom
+sleep 5 && x-picom -b & # without wait it does not start (?)
+
+# Background
+pkill -x feh
+feh --bg-scale ~/.config/background.jpg
+
+# Task bar
+pkill -x tint2
+tint2 &
+
+# Touchpad config
+dev="ELAN067D:00 04F3:3209 Touchpad"
+if xinput list --name-only | grep -q "$dev"; then
+    f(){ xinput set-prop "$dev" "$@"; }
+    if xinput list-props "$dev" | grep -q "libinput"; then
+        # libinput
+        f "libinput Accel Profile Enabled" 1 0 0
+        f "libinput Accel Speed"           0.9
+        f "libinput Tapping Enabled"       1
+        f "libinput Scroll Method Enabled" 0 1 0 # 2fg, edge, button
+    else
+        # Synaptics
+        f "Device Accel Profile"               -1 # (no synclient option)
+        f "Device Accel Constant Deceleration" 0.5 # (no synclient option)
+        f "Device Accel Adaptive Deceleration" 1.0 # (no synclient option)
+        f "Synaptics Edge Scrolling"           1 1 0 # VertEdgeScroll, HorizEdgeScroll, CornerCoasting
+        f "Synaptics Edges"                    141 3000 89 1576 # LeftEdge, RightEdge, TopEdge, BottomEdge
+        f "Synaptics Scrolling Distance"       30 78 # VertScrollDelta, HorizScrollDelta
+        f "Synaptics Tap Durations"            100 100 100 # SingleTapTimeout, MaxDoubleTapTime, MaxTapTime
+        f "Synaptics Tap Action"               9 0 8 0 1 3 2 # {RT, RB, LT, LB}CornerButton, TapButton{1, 2, 3} (click value: 1=left 2=middle 3=right 8=back 9=forward)
+    fi
+fi

@@ -138,9 +138,9 @@
   </mouse>
   <libinput>
     <device category="touchpad">
-      <naturalScroll>false</naturalScroll>
-      <pointerSpeed>0.9</pointerSpeed>
-      <accelProfile>adaptive</accelProfile>
+      <naturalScroll>no</naturalScroll>
+      <pointerSpeed>1</pointerSpeed>
+      <accelProfile>flat</accelProfile>
     </device>
   </libinput>
   <windowRules>

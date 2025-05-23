@@ -64,6 +64,7 @@ else
     mt=$(stat -c %Y "$tmp_prof")
     ms=$(stat -c %Y "$disk_prof.static")
     if [ $((mt - ms)) -ge "$min_interval" ]; then
-        L rsync -a $rsync_flags --delete --bwlimit=500 "$disk_prof"/ "$disk_prof.static"/
+        # L rsync -a $rsync_flags --delete --bwlimit=500 "$disk_prof"/ "$disk_prof.static"/
+        L rsync -a $rsync_flags --delete "$disk_prof"/ "$disk_prof.static"/
     fi
 fi
