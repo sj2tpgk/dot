@@ -11,7 +11,7 @@ as_root() { if command -v sudo >/dev/null; then sudo "$@"; elif command -v doas 
 help() {
     echo "Usage: $0 <brightness>" >&2
     echo "<brightness> = 1, +2, -2 etc. Max $(cat $max_brightness_file)" >&2
-    echo 'You should add the following line to /etc/sudoers (via "sudo visudo")' >&2
+    echo 'You should add the following line to the very end of /etc/sudoers (via "sudo visudo")' >&2
     echo "  ALL ALL=(ALL) NOPASSWD: /usr/bin/tee $brightness_file" >&2
     echo "Or doas.conf:" >&2
     echo "  permit nopass :wheel cmd /usr/bin/tee args $brightness_file" >&2
