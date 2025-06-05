@@ -44,6 +44,7 @@ json="{
     \"model\"      : \"$model\",
     \"prompt\"     : $prompt_withquote,
     \"keep_alive\" : \"99999m\",
+    \"think\"      : false,
     \"context\"    : $context
 }"
 # \"options\" : { \"num_ctx\" : 65536 },

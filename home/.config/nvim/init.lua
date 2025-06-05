@@ -720,6 +720,11 @@ fu! MyHighlight_RX()
     hi fastBuiltin ctermfg=cyan
     hi fastKeyword ctermfg=green
     hi fastReturn  ctermfg=red
+
+    " markdown
+    hi      markdownCode          ctermfg=blue
+    hi link markdownCodeBlock     markdownCode
+    hi link markdownCodeDelimiter markdownCode
 endfu
 
 fu! MyHighlight2()

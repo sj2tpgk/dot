@@ -6,7 +6,11 @@
 
 /* ==== Firefox special pages and extension pages ==== */
 
-@-moz-document url("about:newtab") { .logo-and-wordmark, .search-wrapper { display: none !important } }
+@-moz-document url("about:newtab") {
+  .logo-and-wordmark, .search-wrapper { display: none !important }
+  .tile, .icon-wrapper, .top-site-icon { border-radius: 4px !important }
+}
+
 @-moz-document url("about:privatebrowsing") { .showPrivate { display: none } }
 
 /* PDF: less brightness (add ? to url to disable) */

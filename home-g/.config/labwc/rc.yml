@@ -90,18 +90,14 @@ labwc_config:
     context name="Root":
       mousebind button="Right" action="Press":
         action name="ShowMenu" menu="root-menu":
-      mousebind button="Left" action="Press":
-        action name="ShowMenu" menu="some-custom-menu":
-    context name="Bottom":
-      mousebind button="Right" action="Press":
-        action name="NextWindow":
-        action name="Focus":
+      #mousebind button="Left" action="Press": # not working
+      #  action name="NextWindow":
 
   libinput:
     device category="touchpad":
       naturalScroll: no
-      pointerSpeed: 1
-      accelProfile: flat
+      pointerSpeed: .85
+      accelProfile: adaptive
 
   windowRules:
     windowRule identifier="imv":

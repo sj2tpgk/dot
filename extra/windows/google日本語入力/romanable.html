@@ -51,18 +51,24 @@ function load() {
 
 function save() {
     let out = [];
+    let out2 = [];
+    function add(from, to) {
+        out.push(`${from}\t${to}`);
+        out2.push(`("${from}" "" "${to}")`);
+    }
     for (let i = 0; i < vow.length; i++) {
         for (let j = 0; j < con.length; j++) {
             const val = Q(`#c${i}_${j}`).value;
             if (val.length > 0)
-                out.push(`${con[j]}${vow[i]}\t${val}`);
+                add(`${con[j]}${vow[i]}`, val);
         }
     }
     for (let [from, to] of Q("#extra").value.split("\n").map(s => s.split(/\s+/)))
         if (from && to)
-            out.push(`${from}\t${to}`);
+            add(from, to);
     out.sort();
     Q("#out").value = out.join("\n");
+    Q("#out_scm").value = "(define ja-rk-rule-table-basic '(" + out2.join(" ") + "))";
 }
 </script>
 </head>
@@ -81,6 +87,7 @@ function save() {
     <br>
     <textarea id="out" cols=50 rows=20>ka か
         hya ひゃ</textarea>
+    <textarea id="out_scm" cols=50 rows=20></textarea>
     <br>
     <b>Output may be erased when reloading page, be careful!</b>
 </div>

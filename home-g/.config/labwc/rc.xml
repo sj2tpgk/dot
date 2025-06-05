@@ -122,25 +122,13 @@
         <action name="ShowMenu" menu="root-menu">
         </action>
       </mousebind>
-      <mousebind button="Left" action="Press">
-        <action name="ShowMenu" menu="some-custom-menu">
-        </action>
-      </mousebind>
-    </context>
-    <context name="Bottom">
-      <mousebind button="Right" action="Press">
-        <action name="NextWindow">
-        </action>
-        <action name="Focus">
-        </action>
-      </mousebind>
     </context>
   </mouse>
   <libinput>
     <device category="touchpad">
       <naturalScroll>no</naturalScroll>
-      <pointerSpeed>1</pointerSpeed>
-      <accelProfile>flat</accelProfile>
+      <pointerSpeed>.85</pointerSpeed>
+      <accelProfile>adaptive</accelProfile>
     </device>
   </libinput>
   <windowRules>
