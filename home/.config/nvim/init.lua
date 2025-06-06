@@ -118,6 +118,7 @@ do -- Plugins <<<
 
     -- My plugins
     plug "https://codeberg.org/sj2tpgk/vim-fast-syntax"
+    plug "https://codeberg.org/sj2tpgk/nvim-eldoc"
 
 end -- >>>
 
@@ -1282,45 +1283,33 @@ end -- >>>
 
 function lsp_config_1_misc() -- Lsp (1) misc config <<<
 
-    vim.cmd [[ let g:diaglength = 30 ]]
-    function rightAlignFormatFunction(diagnostic)
+    local function rightAlignFormatFunction(diagnostic)
+        local diag_length = 30
         local line = diagnostic.lnum -- 0-based
-        local space = string.rep(" ", vim.o.columns - vim.fn.getline(1+line):len() - 11 - vim.g.diaglength)
+        local space = string.rep(" ", vim.o.columns - vim.fn.getline(1+line):len() - 11 - diag_length)
         return ""
     end
 
-    vim.cmd [[
-    " Toggle diagnostic
-    let g:myLspDiag = 1
-    fu! MyLspDiagToggle()
-        if g:myLspDiag
-            lua vim.diagnostic.hide()
+    -- Diagnostics functions
+    function diagShow()
+        vim.diagnostic.enable()
+        vim.diagnostic.show()
+        vim.diagnostic.setloclist()
+    end
+    diagLevel = 1
+    function diagToggleLevel()
+        local levels = { "disabled", "HINT", "INFO" }
+        diagLevel = (diagLevel + 1) % (#levels)
+        local level = levels[diagLevel + 1]
+        if level == "disabled" then
+            vim.diagnostic.hide()
+            vim.cmd("lclose")
         else
-            lua vim.diagnostic.enable()
-            lua vim.diagnostic.show()
-        endif
-        let g:myLspDiag = !g:myLspDiag
-    endfu
-
-    " Toggle diagnostic level
-    let g:myLspDiagLevels = [ "HINT", "INFO" ]
-    let g:myLspDiagLevel  = 0
-    fu! MyLspDiagLevel()
-        lua vim.diagnostic.enable()
-        lua vim.diagnostic.show()
-        let g:myLspDiagLevel = (g:myLspDiagLevel + 1) % len(g:myLspDiagLevels)
-        let g:myLspDiagLevelName = g:myLspDiagLevels[g:myLspDiagLevel]
-        " lua (function(x) vim.diagnostic.config({ underline=x, virtual_text=x }) end)({severity={min=vim.diagnostic.severity[vim.g.myLspDiagLevelName]}})
-        lua (function(x) vim.diagnostic.config({ virtual_text=x }) end)({severity={min=vim.diagnostic.severity[vim.g.myLspDiagLevelName]},prefix="",format=rightAlignFormatFunction})
-    endfu
-    call MyLspDiagLevel()
-
-    " Custom commands
-    com! LspToggleDiag      call MyLspDiagToggle()
-    com! LspToggleDiagLevel call MyLspDiagLevel()
-    com! LspLocList         lua vim.diagnostic.setloclist()
-    com! LspQuickFix        lua vim.diagnostic.setqflist()
-    ]]
+            local x = {severity={min=vim.diagnostic.severity[level]},prefix="",format=rightAlignFormatFunction}
+            vim.diagnostic.config({ virtual_text=x })
+        end
+    end
+    diagToggleLevel()
 
     -- Disable in insert mode
     vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
@@ -1330,23 +1319,44 @@ function lsp_config_1_misc() -- Lsp (1) misc config <<<
         }
     )
 
-    function my_lsp_setup(lsname, cmd, arg)
-        -- call language server setup function if server program is present
-        if vim.fn.executable(cmd or lsname) == 1 then
-            require'lspconfig'[lsname]["setup"](arg)
-        end
-    end
+    -- LSP action menu
+    vim.cmd [[
+        function! MyMenu(lis)
+            " lis = [ [KEY, NAME, VALUE], ... ]
+            " It prints a list of "KEY: NAME" and returns the VALUE of the selected item
+            echo join(mapnew(a:lis, 'v:val[0] .. ": " .. v:val[1]'), "\n") .. "\n"
+            let key = getcharstr()
+            call feedkeys("\<cr>") " erase hit-enter
+            let idx = indexof(a:lis, { i, v -> v[0][0] ==# key }) " ==# case sensitive equality
+            if idx != -1
+                return a:lis[idx][2]
+            endif
+        endfu
+        function! LspMenu()
+            let cmds = [
+                \ ["\r\\r",  "Hover",          "lua vim.lsp.buf.hover()"],
+                \ ["r",      "Rename",         "lua vim.lsp.buf.rename()"],
+                \ ["f",      "References",     "lua vim.lsp.buf.references()"],
+                \ ["d",      "Diag",           "lua diagShow()"],
+                \ ["D",      "Diag level",     "lua diagToggleLevel()"],
+                \ ["h",      "Hover+",         "lua for i=1,2 do vim.lsp.buf.hover() end"],
+                \ ["i",      "Implementation", "lua vim.lsp.buf.implementation()"],
+                \ ["s",      "Signature",      "lua vim.lsp.buf.signature_help()"],
+                \ ["S",      "Signature+",     "lua for i=1,2 do vim.lsp.buf.signature_help() end"],
+                \ ["y",      "Symbol",         "lua vim.lsp.buf.document_symbol()"],
+                \ ]
+            let cmd = MyMenu(cmds)
+            if cmd != v:null
+                call execute(cmd)
+            endif
+        endfu
+    ]]
 
     function my_lsp_on_attach(client, bufnr)
         vim.cmd [[
-        setl omnifunc=v:lua.vim.lsp.omnifunc
-        setl signcolumn=number
-        nnore <buffer> <enter> :lua vim.lsp.buf.hover()<cr>
-        nnore <buffer> sld :LspToggleDiag<cr>
-        nnore <buffer> slD :LspToggleDiagLevel<cr>
-        nnore <buffer> sll :LspLocList<cr>
-        nnore <buffer> slq :LspQuickFix<cr>
-        nnore <buffer> slr :lua vim.lsp.buf.rename()<cr>
+            setl omnifunc=v:lua.vim.lsp.omnifunc
+            setl signcolumn=number
+            nnore <buffer> <enter> :call LspMenu()<cr>
         ]]
         local cap = client.server_capabilities
         cap.semanticTokensProvider = false -- prevent my highlighting gettting overridden
@@ -1355,176 +1365,8 @@ function lsp_config_1_misc() -- Lsp (1) misc config <<<
 end -- >>>
 
 function lsp_config_2_eldoc() -- Lsp (2) eldoc <<<
-
-    vim.cmd [[
-    hi def link LspSig    Normal
-    hi def link LspSigCur Identifier
-    aug vimrc_lspsig
-    au!
-    au CursorHold,CursorHoldI,InsertEnter * lua lspsigUpdate()
-    aug END
-    set updatetime=700
-    set noshowmode
-    ]]
-
-    lspsig = "" -- can be used in statusline or winbar (e.g. set winbar=%{%luaeval('lspsig')%})
-    lspsig_cnt = 0
-    lspsig_last = nil
-
-    function lspsigUpdate()
-        function signature_handler(err, result, ctx, config)
-            -- save call count and params for debug
-            lspsig_cnt = lspsig_cnt + 1
-            lspsig_last = {
-                err=err,
-                result=result,
-                ctx=ctx,
-                config=config
-            }
-
-            -- not at function call
-            if err ~= nil or result == nil or result.signatures == nil or result.signatures[1] == nil then
-                if lspsig ~= "" then
-                    -- only erase message when lspsig is not empty yet
-                    -- if already empty, we should not erase msg, otherwise other messages gets overridden
-                    vim.cmd("echo ''")
-                end
-                lspsig = ""
-                return
-            end
-
-            -- highlight current param and show
-            -- note: in some langs (kotlin) result.activeSignature might be -1
-            local actSig = math.max(0, result.activeSignature or 0)
-            local sig    = result.signatures[1+actSig]
-            local sigLbl = sig.label
-            local params = sig.parameters
-            local actPar = sig.activeParameter or result.activeParameter
-            lspsig = "ERROR!"
-
-            --  gopls sets actPar to nil when a func has optional params but you haven't added one yet; we assume you are inputting the first param
-            if actPar == nil then actPar = 0 end
-
-            if (not params) or #params == 0 or #params <= actPar then -- no params (functions with no args etc.), or active param index is more than param count. None that in this case, value of params differ among server implementations
-                local chunks = { { " ", "None" }, { sigLbl, "LspSig" } }
-                nvim_echo_no_hitenter(chunks, true, {})
-                return
-            end
-
-            local toks = {} -- list of { type ("prefix"|"param"|"paramAct"|"delim"|"suffix"), text }
-            local tok
-            local function addTok(tok) table.insert(toks, tok) end
-
-            -- analyze signatures and construct toks
-            if type(params[1+actPar].label) == 'table' then -- param label is not string (e.g. pyright)
-
-                addTok({ "prefix", sigLbl:sub(1, params[1].label[1]) })
-                for i, par in ipairs(params) do
-                    if i >= 2 then
-                        addTok({ "delim", sigLbl:sub(params[i-1].label[2]+1, par.label[1]) })
-                    end
-                    addTok({ i == 1+actPar and "paramAct" or "param", sigLbl:sub(par.label[1]+1, par.label[2]) })
-                end
-                addTok({ "suffix", sigLbl:sub(params[#params].label[2]+1) })
-
-            else -- param label is string (e.g. tsserver)
-
-                local s = 1
-                local sePrev
-                for i = 1, #params do
-                    local parLbl = params[i].label
-                    local ss, se = sigLbl:find(parLbl, s, true) -- find parLbl in sigLbl
-                    if not ss then error("param " .. parLbl .. " not found") end
-                    if i == 1 then
-                        addTok({ "prefix", sigLbl:sub(1, ss-1) })
-                    else
-                        addTok({ "delim", sigLbl:sub(sePrev+1, ss-1) })
-                    end
-                    addTok({ i == 1+actPar and "paramAct" or "param", parLbl })
-                    if i == #params then
-                        addTok({ "suffix", sigLbl:sub(se+1) })
-                    end
-                    s = ss
-                    sePrev = se
-                end
-
-            end
-
-            toks1 = toks
-            -- if sigLbl is too long, omit type signatures (from last params until sigLbl is sufficiently short)
-            local maxw = (vim.fn.winwidth(0) - 12) + 5
-            local sigLblLen = sigLbl:len()
-            for i = #toks, 1, -1 do
-                if sigLblLen < maxw then break end
-                local tok = toks[i]
-                local type = tok[1]
-                local text = tok[2]
-                if type == "param" or type == "paramAct" then
-                    local colonIdx = text:find(":")
-                    if colonIdx then -- note: colonIdx may be nil if param does not have type signature
-                        tok[2] = text:sub(1, colonIdx - 1)
-                        sigLblLen = sigLblLen - (text:len() - colonIdx + 1)
-                    end
-                end
-            end
-
-            -- convert toks to chunks and echo
-            local chunks = { { " ", "None" } }
-            for i, tok in ipairs(toks) do
-                local type = tok[1]
-                if type == "prefix" or type == "delim" or type == "suffix" then
-                    table.insert(chunks, { tok[2], "None" })
-                elseif type == "param" then
-                    table.insert(chunks, { tok[2], "LspSig" })
-                elseif type == "paramAct" then
-                    table.insert(chunks, { tok[2], "LspSigCur" })
-                else
-                    error("invalid type", type)
-                end
-            end
-
-            nvim_echo_no_hitenter(chunks, true, {})
-
-            -- exmple value of "result"
-            -- {
-            --     ctx = ...,
-            --     result = {
-            --         activeParameter = 0,
-            --         activeSignature = 0,
-            --         signatures = { {
-            --             label = "f(a: any, b: any, c: any): any",
-            --             parameters = { {
-            --                 label = "a: any"
-            --             }, {
-            --                     label = "b: any"
-            --                 }, {
-            --                     label = "c: any"
-            --                 } }
-            --         } }
-            --     }
-            -- }
-        end
-
-        -- check signatureHelp provider exists
-        local hasProvider = false
-        for _, client in pairs(vim.lsp.get_clients({bufnr=0})) do
-            if client.server_capabilities.signatureHelpProvider then
-                hasProvider = true
-                break
-            end
-        end
-
-        -- send lsp request
-        if not hasProvider then return end
-        local util = require('vim.lsp.util')
-        vim.lsp.buf_request(
-            0,
-            'textDocument/signatureHelp',
-            util.make_position_params(0, "utf-8"),
-            vim.lsp.with(signature_handler, {})
-        )
-    end
-
+    vim.cmd [[ set updatetime=700 ]]
+    require("nvim-eldoc").setup()
 end -- >>>
 
 function lsp_config_3_mason() -- Lsp (3) install servers with meson <<<
@@ -2176,22 +2018,6 @@ vim.cmd [[
 command! -range -nargs=* -range BrowseDoc lua browseDoc(<range>, <q-args>)
 ]]
  -- >>>
-
-function nvim_echo_no_hitenter(chunks, history, opts) -- <<<
-    -- Similar to vim.api.nvim_echo but do not show hit-enter message
-    local len = 0
-    local maxw = vim.fn.winwidth(0) - 12
-    local chunks2 = {}
-    for i, v in ipairs(chunks) do
-        table.insert(chunks2, v)
-        if len + v[1]:len() > maxw then
-            v[1] = v[1]:sub(1, maxw - len)
-            break
-        end
-        len = len + v[1]:len()
-    end
-    vim.api.nvim_echo(chunks2, history, opts)
-end -- >>>
 
 function pp(input, doprint, maxdepth, ...) -- <<<
     local strs = {}
