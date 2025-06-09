@@ -393,6 +393,55 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+####FILE +x bin/aider-ollama {{{
+#| #!/bin/sh
+#| 
+#| if ! [ "$OLLAMA_API_BASE" ]; then
+#|     echo "OLLAMA_API_BASE is not set (example: http://localhost:11434)"
+#|     exit 1
+#| fi
+#| 
+#| if ! command -v aider >/dev/null; then
+#|     echo "Aider not found"
+#|     aider_dir=~/.local/share/aider
+#|     printf %s "install to $aider_dir now? [y/n] "
+#|     read -r answer
+#|     if [ "$answer" != y ]; then
+#|         exit 1
+#|     fi
+#|     mkdir -p "$aider_dir"
+#|     cd "$aider_dir" || exit 1
+#|     python -m venv .venv
+#|     .venv/bin/pip install aider-install
+#|     .venv/bin/aider-install
+#| fi
+#| 
+#| model_settings=/tmp/aider_model_settings
+#| 
+#| echo '
+#| - name: ollama/qwen3:30b-a3b-q4_K_M
+#| - name: ollama/qwen3:0.6b-q4_K_M
+#| ' > "$model_settings"
+#| 
+#| # note: extra_params sets .options.keepalive, .options.think etc. field of request body not the .keepalive or .think at the root of the json object
+#| 
+#| export TERM=linux
+#| 
+#| exec aider \
+#|     --user-input-color       white  \
+#|     --tool-warning-color     yellow \
+#|     --tool-error-color       red    \
+#|     --assistant-output-color green  \
+#|      --weak-model            ollama/qwen3:0.6b-q4_K_M    \
+#|      --model                 ollama/qwen3:30b-a3b-q4_K_M \
+#|      --model-settings-file   "$model_settings"           \
+#|      --no-check-update \
+#|      --no-show-release-notes \
+#|     "$@"
+#|      # --model                 ollama/qwen3:0.6b-q4_K_M    \
+#- }}}
+
+
 ####FILE +x bin/archsetup {{{
 #| #!/bin/sh
 #| 
@@ -414,7 +463,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| 
 #| ask pacman --noconfirm -S anthy atool bluez bluez-utils dash entr fish fzf git imagemagick jq man man-db mosh neovim nawk nmap openssh pacman-contrib pv ranger rsync tmux unzip pv w3m wget zip
 #| 
-#| ask pacman --noconfirm -S foot keyd labwc ly pipewire swaybg swaylock wl-clipboard wlr-randr
+#| ask pacman --noconfirm -S foot fyi keyd labwc ly pipewire swaybg swaylock wl-clipboard wlr-randr
 #| 
 #| ask pacman --noconfirm -S claws-mail firefox mousepad mpv udiskie pcmanfm
 #| 
@@ -442,6 +491,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|         case "$name" in
 #|             (Dockerfile*) args="-S dockerfile" ;;
 #|             (Makefile*) args="-S makefile" ;;
+#|             (*.service|*.automount|*.link|*.mount|*.network|*.path|*.slice|*.socket|*.target|*.timer) args="-S conf" ;;
 #|             (*) args="" ;;
 #|         esac
 #|         exec highlight --out-format ansi --stdout --force $args "$@"
@@ -677,6 +727,80 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| #!/bin/sh
 #| 
 #| find . -type f | sed -rn '/(bmp|gif|jpeg|jpg|png|webm)/Ip' | sort
+#- }}}
+
+
+####FILE +x bin/firefox_ram.sh {{{
+#| #!/bin/sh
+#| 
+#| if [ $# -ne 1 ] && [ $# -ne 2 ]; then echo "Usage: firefox_ram.sh PROFILE_NAME [MIN_INTERVAL]"; exit 1; fi
+#| 
+#| # Systemd configuration guide
+#| #
+#| # 1. Create an unit file to run syncing:
+#| #    ~/.config/systemd/user/firefox_ram@.service
+#| #    [Unit]
+#| #    Description=Firefox profile and cache on RAM
+#| #
+#| #    [Service]
+#| #    Type=oneshot
+#| #    ExecStart=/bin/sh %h/bin/firefox_ram.sh %i
+#| #
+#| #    [Install]
+#| #    WantedBy=default.target
+#| #
+#| # 2. Create an timer file to periodically run syncing:
+#| #    ~/.config/systemd/user/firefox_ram@.timer
+#| #    [Unit]
+#| #    Description=Timer for Firefox profile and cache on RAM
+#| #
+#| #    [Timer]
+#| #    OnActiveSec=10s
+#| #    OnUnitInactiveSec=20min
+#| #    # need system restart to apply timer?
+#| #
+#| #    [Install]
+#| #    WantedBy=timers.target
+#| #
+#| # 3. Enable timer, giving a profile name as an argument:
+#| #    $ systemctl --user enable --now firefox_ram@xxxxxxxx.default-release.timer
+#| 
+#| prof=$1
+#| min_interval=${2:-0}
+#| 
+#| tmp_cache=/tmp/firefox/cache/$prof
+#| tmp_prof=/tmp/firefox/profile/$prof
+#| disk_cache=~/.cache/mozilla/firefox/$prof
+#| disk_prof=~/.mozilla/firefox/$prof
+#| 
+#| rsync_flags="--info=stats2 --human-readable"
+#| 
+#| L(){ echo "[$(date +%Y%m%d-%H%M%S)] $*"; "$@"; }
+#| 
+#| if [ ! -d "$disk_cache.static" ]; then L mv "$disk_cache" "$disk_cache.static"; fi
+#| if [ ! -d "$disk_prof.static"  ]; then L mv "$disk_prof"  "$disk_prof.static";  fi
+#| 
+#| if [ ! -d "$tmp_cache" ]; then
+#|     L mkdir -p "$tmp_cache"
+#|     L ln -sf "$tmp_cache" "$disk_cache"
+#|     # L rsync -a $rsync_flags "$disk_cache.static"/ "$disk_cache"/
+#| else
+#|     :
+#|     # L rsync -a $rsync_flags --delete --bwlimit=500 "$disk_cache"/ "$disk_cache.static"/
+#| fi
+#| 
+#| if [ ! -d "$tmp_prof" ]; then
+#|     L mkdir -p "$tmp_prof"
+#|     L ln -sf "$tmp_prof" "$disk_prof"
+#|     L rsync -a $rsync_flags "$disk_prof.static"/ "$disk_prof"/
+#| else
+#|     mt=$(stat -c %Y "$tmp_prof")
+#|     ms=$(stat -c %Y "$disk_prof.static")
+#|     if [ $((mt - ms)) -ge "$min_interval" ]; then
+#|         # L rsync -a $rsync_flags --delete --bwlimit=500 "$disk_prof"/ "$disk_prof.static"/
+#|         L rsync -a $rsync_flags --delete "$disk_prof"/ "$disk_prof.static"/
+#|     fi
+#| fi
 #- }}}
 
 
@@ -1548,6 +1672,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     \"model\"      : \"$model\",
 #|     \"prompt\"     : $prompt_withquote,
 #|     \"keep_alive\" : \"99999m\",
+#|     \"think\"      : false,
 #|     \"context\"    : $context
 #| }"
 #| # \"options\" : { \"num_ctx\" : 65536 },
@@ -2391,23 +2516,23 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|   </head>
 #|   <body>
 #|     Search<br><br>
-#|     <form method="get" action="https://lite.duckduckgo.com/lite">
+#|     <form method="POST" action="https://lite.duckduckgo.com/lite">
 #|       <input type="text"   name="q" size="25">
 #|       <input type="submit" value="DuckDuckGo Lite">
 #|     </form>
-#|     <form method="get" action="https://www.wikipedia.jp/index.php">
+#|     <form method="GET" action="https://www.wikipedia.jp/index.php">
 #|       <input type="text"   name="search" size="25">
 #|       <input type="submit" value="  Wikipedia    ">
 #|     </form>
-#|     <form method="get" action="https://en.wiktionary.org/w/index.php">
+#|     <form method="GET" action="https://en.wiktionary.org/w/index.php">
 #|       <input type="text"   name="search" size="25">
 #|       <input type="hidden" name="ns0"    value="1">
 #|       <input type="submit" value="  Wiktionary   ">
 #|     </form>
 #|     <br>Bookmarks<br>
 #|     <ul>
-#|         <li><a href="http://example.com">Example Domain</a></li>
-#|         '"$bookmark_html"'
+#|       <li><a href="http://example.com">Example Domain</a></li>
+#|       '"$bookmark_html"'
 #|     </ul>
 #|   </body>
 #| </html>
@@ -2423,8 +2548,8 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| keymap DEL    PREV_PAGE
 #| keymap $key_J NEXT_PAGE
 #| keymap $key_K PREV_PAGE
-#| keymap $key_j MOVE_DOWN1
-#| keymap $key_k MOVE_UP1
+#| keymap $key_j UP
+#| keymap $key_k DOWN
 #| keymap $key_h PREV_LINK
 #| keymap $key_l NEXT_LINK
 #| keymap DOWN   MOVE_DOWN1
@@ -2617,7 +2742,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| help() {
 #|     echo "Usage: $0 <brightness>" >&2
 #|     echo "<brightness> = 1, +2, -2 etc. Max $(cat $max_brightness_file)" >&2
-#|     echo 'You should add the following line to /etc/sudoers (via "sudo visudo")' >&2
+#|     echo 'You should add the following line to the very end of /etc/sudoers (via "sudo visudo")' >&2
 #|     echo "  ALL ALL=(ALL) NOPASSWD: /usr/bin/tee $brightness_file" >&2
 #|     echo "Or doas.conf:" >&2
 #|     echo "  permit nopass :wheel cmd /usr/bin/tee args $brightness_file" >&2
@@ -2761,8 +2886,36 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 
 ####FILE +x bin/x-volume {{{
 #| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
-#| pactl set-sink-volume @DEFAULT_SINK@ "$1"
+#| L(){ echo "$*"; "$@"; }
+#| # L(){ echo "$*"; }
+#| case "$1" in
+#|     ("")
+#|         echo "Usage: $0 <volume>     (<volume> = 20%, +5%, -10% etc.)"
+#|         echo "Usage: $0 sink <sink>  (change sink; useful for eq settings)"
+#|         exit 1
+#|         ;;
+#|     (sink)
+#|         sink=$2
+#|         vol=$(pactl get-sink-volume @DEFAULT_SINK@ | sed -n 's/.* \([0-9][0-9]*%\).*/\1/p')
+#|         # change volume of this sink to current value
+#|         L pactl set-sink-volume "$sink" "$vol"
+#|         # change default sink
+#|         L pactl set-default-sink "$sink"
+#|         # change sink for existing programs
+#|         for id in $(pactl list short sink-inputs | cut -f1); do
+#|             L pactl move-sink-input "$id" "$sink"
+#|         done
+#|         # change volume of other sinks to 100%
+#|         for sink2 in $(pactl list short sinks | cut -f1); do
+#|             if [ "$sink2" != "$sink" ]; then
+#|                 L pactl set-sink-volume "$sink2" 100%
+#|             fi
+#|         done
+#|         ;;
+#|     (*)
+#|         pactl set-sink-volume @DEFAULT_SINK@ "$1" ;;
+#| esac
+#| # [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
 #- }}}
 
 

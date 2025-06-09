@@ -1294,7 +1294,10 @@ function lsp_config_1_misc() -- Lsp (1) misc config <<<
     function diagShow()
         vim.diagnostic.enable()
         vim.diagnostic.show()
-        vim.diagnostic.setloclist()
+        vim.diagnostic.setloclist({ open = false })
+        -- focus error next to cursor, open loclist, focus original window
+        -- unlike :lafter, this won't move cursor when it's on an error currently
+        vim.cmd("exe 'sil! ' . (indexof(getloclist(0), { v, i -> v:val.lnum >= line('.') }) + 1) . 'll | lopen | wincmd p'")
     end
     diagLevel = 1
     function diagToggleLevel()
@@ -1335,12 +1338,13 @@ function lsp_config_1_misc() -- Lsp (1) misc config <<<
         function! LspMenu()
             let cmds = [
                 \ ["\r\\r",  "Hover",          "lua vim.lsp.buf.hover()"],
+                \ ["d",      "Definition",     "lua vim.lsp.buf.definition()"],
                 \ ["r",      "Rename",         "lua vim.lsp.buf.rename()"],
                 \ ["f",      "References",     "lua vim.lsp.buf.references()"],
-                \ ["d",      "Diag",           "lua diagShow()"],
-                \ ["D",      "Diag level",     "lua diagToggleLevel()"],
+                \ ["i",      "Diag",           "lua diagShow()"],
+                \ ["I",      "Diag level",     "lua diagToggleLevel()"],
                 \ ["h",      "Hover+",         "lua for i=1,2 do vim.lsp.buf.hover() end"],
-                \ ["i",      "Implementation", "lua vim.lsp.buf.implementation()"],
+                \ ["m",      "Implementation", "lua vim.lsp.buf.implementation()"],
                 \ ["s",      "Signature",      "lua vim.lsp.buf.signature_help()"],
                 \ ["S",      "Signature+",     "lua for i=1,2 do vim.lsp.buf.signature_help() end"],
                 \ ["y",      "Symbol",         "lua vim.lsp.buf.document_symbol()"],
