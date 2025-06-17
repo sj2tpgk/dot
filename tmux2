@@ -491,7 +491,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|         case "$name" in
 #|             (Dockerfile*) args="-S dockerfile" ;;
 #|             (Makefile*) args="-S makefile" ;;
-#|             (*.service|*.automount|*.link|*.mount|*.network|*.path|*.slice|*.socket|*.target|*.timer) args="-S makefile" ;;
+#|             (*.service|*.automount|*.link|*.mount|*.network|*.path|*.slice|*.socket|*.target|*.timer) args="-S conf" ;;
 #|             (*) args="" ;;
 #|         esac
 #|         exec highlight --out-format ansi --stdout --force $args "$@"

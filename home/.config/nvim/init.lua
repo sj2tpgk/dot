@@ -1326,7 +1326,10 @@ function lsp_config_1_misc() -- Lsp (1) misc config <<<
     function diagShow()
         vim.diagnostic.enable()
         vim.diagnostic.show()
-        vim.diagnostic.setloclist()
+        vim.diagnostic.setloclist({ open = false })
+        -- focus error next to cursor, open loclist, focus original window
+        -- unlike :lafter, this won't move cursor when it's on an error currently
+        vim.cmd("exe 'sil! ' . (indexof(getloclist(0), { v, i -> v:val.lnum >= line('.') }) + 1) . 'll | lopen | wincmd p'")
     end
     diagLevel = 1
     function diagToggleLevel()
