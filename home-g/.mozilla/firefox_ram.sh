@@ -2,35 +2,17 @@
 
 if [ $# -ne 1 ] && [ $# -ne 2 ]; then echo "Usage: firefox_ram.sh PROFILE_NAME [MIN_INTERVAL]"; exit 1; fi
 
-# Systemd configuration guide
+# Run this script to:
+# (1) copy firefox profile to RAM (on boot or user login)
+# (2) sync profile from RAM to disk (on logout or shutdown, or periodically)
 #
-# 1. Create an unit file to run syncing:
-#    ~/.config/systemd/user/firefox_ram@.service
-#    [Unit]
-#    Description=Firefox profile and cache on RAM
+# See ~/.config/systemd/user/firefox_ram@.{service,timer}
 #
-#    [Service]
-#    Type=oneshot
-#    ExecStart=/bin/sh %h/bin/firefox_ram.sh %i
-#
-#    [Install]
-#    WantedBy=default.target
-#
-# 2. Create an timer file to periodically run syncing:
-#    ~/.config/systemd/user/firefox_ram@.timer
-#    [Unit]
-#    Description=Timer for Firefox profile and cache on RAM
-#
-#    [Timer]
-#    OnActiveSec=10s
-#    OnUnitInactiveSec=20min
-#    # need system restart to apply timer?
-#
-#    [Install]
-#    WantedBy=timers.target
-#
-# 3. Enable timer, giving a profile name as an argument:
-#    $ systemctl --user enable --now firefox_ram@xxxxxxxx.default-release.timer
+# To enable syncing,
+#   systemctl --user enable --now firefox_ram@PROFILE_NAME.service
+# Optionally, to enable periodic syncing,
+#   systemctl --user enable --now firefox_ram@PROFILE_NAME.timer
+# where PROFILE_NAME is the name of your firefox profile (i.e. xxxxxxxx.default-release)
 
 prof=$1
 min_interval=${2:-0}
@@ -40,7 +22,7 @@ tmp_prof=/tmp/firefox/profile/$prof
 disk_cache=~/.cache/mozilla/firefox/$prof
 disk_prof=~/.mozilla/firefox/$prof
 
-rsync_flags="--info=stats2 --human-readable"
+rsync_flags="--info=stats1 --human-readable"
 
 L(){ echo "[$(date +%Y%m%d-%H%M%S)] $*"; "$@"; }
 

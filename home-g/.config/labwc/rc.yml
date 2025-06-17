@@ -4,7 +4,7 @@ labwc_config:
     gap:                 3
     xwaylandPersistence: true
 
-  margin top="1" bottom="0" left="0" right="0":
+  margin top="1" bottom="1" left="0" right="0":
 
   focus:
     followMouse: yes
@@ -57,9 +57,9 @@ labwc_config:
     keybind key="XF86AudioMute":
       action name="Execute" command="x-mute":
     keybind key="XF86AudioLowerVolume":
-      action name="Execute" command="x-volume -4%":
+      action name="Execute" command="x-volume -5%":
     keybind key="XF86AudioRaiseVolume":
-      action name="Execute" command="x-volume +4%":
+      action name="Execute" command="x-volume +5%":
     keybind key="XF86MonBrightnessDown":
       action name="Execute" command="x-brightness -1%":
     keybind key="XF86MonBrightnessUp":

@@ -1,0 +1,89 @@
+#!/bin/awk -f
+
+# Usage:
+#     ./mystatus
+
+BEGIN {
+    DIR_BACKLIGHT = "/sys/class/backlight/intel_backlight/"
+    DIR_THERMAL   = "/sys/class/thermal/thermal_zone0/"
+    DIR_POWER     = "/sys/class/power_supply/"
+    CACHE_STAT    = "/tmp/mystatus_statold"
+
+    o_cpu       = get_cpu()
+    o_datetime  = get_datetime()
+    o_backlight = get_backlight()
+    o_volume    = get_volume()
+    o_thermal   = get_thermal()
+    o_power     = get_power()
+    o_memory    = get_memory()
+
+    printf "%s  B %s%%  V %s  T %sC  C %s  M %s  P %s\n", o_datetime, o_backlight, o_volume, o_thermal, o_cpu, o_memory, o_power
+    exit
+}
+
+function get_cpu(    line, ncpu, stat1, stat2, a, b) {
+    getline stat1 < "/proc/stat"
+    while ((getline line < "/proc/stat") == 1) {
+        if (line ~ /^cpu[0-9]+/) {
+            ncpu++
+        }
+    }
+    getline stat2 < CACHE_STAT
+    print stat1 > CACHE_STAT
+    if (split(stat2, b) >= 5 && split(stat1, a) >= 5) {
+        return int(100 * ((a[2]+a[4])-(b[2]+b[4]))/((a[2]+a[4]+a[5])-(b[2]+b[4]+b[5]))) "%:" ncpu "c"
+    } else {
+        return "?"
+    }
+}
+
+function get_backlight(    cur, max, val) {
+    getline cur < (DIR_BACKLIGHT "/brightness") # paren necessary
+    getline max < (DIR_BACKLIGHT "/max_brightness")
+    val = log(cur>0?cur:1)/log(max)
+    val = (val*val*val)*100
+    return int(val)
+}
+
+function get_datetime(    val) {
+    "date +'%Y-%m-%d (%a) %H:%M'" | getline val
+    return val
+}
+
+function get_volume(    val) {
+    if (("pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null" | getline val) != 1) return "?"
+    sub("%.*", "", val)
+    sub(".* ", "", val)
+    return val "%"
+}
+
+function get_thermal(    val) {
+    getline val < (DIR_THERMAL "/temp")
+    return val / 1000
+}
+
+function get_power(    capacity, charging) {
+    if ((getline capacity < (DIR_POWER "/BAT0/capacity")) != 1) return "?";
+    if ((getline charging < (DIR_POWER "/AC/online")) != 1) return "?";
+    return capacity "%" (charging ? "+" : "")
+}
+
+function get_memory(    line, total, avail, used) {
+    while ((getline line < "/proc/meminfo") == 1) {
+        if (line ~ /^MemTotal:/) {
+            total = line
+        } else if (line ~ /^MemAvailable:/) {
+            avail = line
+        }
+        if (total && avail) {
+            break
+        }
+    }
+    gsub("[^0-9]*", "", total)
+    gsub("[^0-9]*", "", avail)
+    used  = total - avail
+    total = int(total / 100000) / 10
+    # avail = int(avail / 100000) / 10
+    used  = int(used  / 100000) / 10
+    return used "/" total "GB"
+}

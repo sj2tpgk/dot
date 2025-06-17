@@ -114,13 +114,22 @@
 }
 
 @-moz-document domain("github.com") {
-	header { display: none !important }
-	main > div > nav { min-height: 0 !important }
-	.pt-3 { padding-top: 0 !important }
-	.mt-4 { margin-top: 0 !important }
-	.mb-3 { margin-bottom: 0 !important }
+    /* remove space around ... */
+    /* (login only?) user setting button etc */
+    .AppHeader-globalBar.pb-2.js-global-bar { padding: 0 !important }
+    /* issues etc */
+    .js-repo-nav.js-sidenav-container-pjax.js-responsive-underlinenav.overflow-hidden.UnderlineNav { min-height: 0 !important }
+    /* repo name, fork button etc */
+    #repository-container-header { padding: 0 !important }
+    .d-flex.flex-nowrap.flex-justify-end.mb-3.container-xl.px-3.px-lg-5 { margin: 0 !important }
+    /* branch name etc */
+    [partial-name="repos-overview"] > div { margin: 0 !important }
+    [partial-name="repos-overview"] > div > div { padding: 0 !important }
+    /* last commit */
+    [class^="DirectoryContent-module__Box_3"] > td,
+    [class^="DirectoryContent-module__Box_3"] > td > div { padding: 0 !important }
+    /* misc */
 	a { text-decoration: none !important }
-	.wiki-pages-box .wiki-more-pages { display: block !important }
     .vcard-fullname, .avatar-user { display: none !important }
 }
 
@@ -128,7 +137,7 @@
     .full.height > span:first-child { display: none !important }
 }
 
-@-moz-document domain("news.ycombinator.com") {
+@-moz-document domaen("news.ycombinator.com") {
   td, #hnmain { background: transparent !important }
   img { visibility: hidden }
   .hnuser::before { content: "user"; font-size: small }

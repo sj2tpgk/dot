@@ -3,7 +3,7 @@
     <gap>3</gap>
     <xwaylandPersistence>true</xwaylandPersistence>
   </core>
-  <margin top="1" bottom="0" left="0" right="0">
+  <margin top="1" bottom="1" left="0" right="0">
   </margin>
   <focus>
     <followMouse>yes</followMouse>
@@ -70,11 +70,11 @@
       </action>
     </keybind>
     <keybind key="XF86AudioLowerVolume">
-      <action name="Execute" command="x-volume -4%">
+      <action name="Execute" command="x-volume -5%">
       </action>
     </keybind>
     <keybind key="XF86AudioRaiseVolume">
-      <action name="Execute" command="x-volume +4%">
+      <action name="Execute" command="x-volume +5%">
       </action>
     </keybind>
     <keybind key="XF86MonBrightnessDown">

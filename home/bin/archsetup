@@ -18,7 +18,7 @@ ask() {
 
 ask pacman --noconfirm -S anthy atool bluez bluez-utils dash entr fish fzf git imagemagick jq man man-db mosh neovim nawk nmap openssh pacman-contrib pv ranger rsync tmux unzip pv w3m wget zip
 
-ask pacman --noconfirm -S foot fyi keyd labwc ly pipewire swaybg swaylock wl-clipboard wlr-randr
+ask pacman --noconfirm -S foot fyi grim keyd labwc ly pipewire swaybg swaylock wl-clipboard wlr-randr
 
 ask pacman --noconfirm -S claws-mail firefox mousepad mpv udiskie pcmanfm
 

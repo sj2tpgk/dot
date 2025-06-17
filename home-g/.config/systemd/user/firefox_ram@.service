@@ -2,8 +2,12 @@
 Description=Firefox profile and cache on RAM
 
 [Service]
+# Needs Type=oneshot and RemainAfterExit=yes so that ExecStop is executed right before shutdown/logout
 Type=oneshot
-ExecStart=/bin/sh %h/bin/firefox_ram.sh %i
+RemainAfterExit=yes
+
+ExecStart=/bin/sh %h/.mozilla/firefox_ram.sh %i
+ExecStop=/bin/sh %h/.mozilla/firefox_ram.sh %i
 
 [Install]
 WantedBy=default.target

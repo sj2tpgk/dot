@@ -393,6 +393,55 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+####FILE +x bin/aider-ollama {{{
+#| #!/bin/sh
+#| 
+#| if ! [ "$OLLAMA_API_BASE" ]; then
+#|     echo "OLLAMA_API_BASE is not set (example: http://localhost:11434)"
+#|     exit 1
+#| fi
+#| 
+#| if ! command -v aider >/dev/null; then
+#|     echo "Aider not found"
+#|     aider_dir=~/.local/share/aider
+#|     printf %s "install to $aider_dir now? [y/n] "
+#|     read -r answer
+#|     if [ "$answer" != y ]; then
+#|         exit 1
+#|     fi
+#|     mkdir -p "$aider_dir"
+#|     cd "$aider_dir" || exit 1
+#|     python -m venv .venv
+#|     .venv/bin/pip install aider-install
+#|     .venv/bin/aider-install
+#| fi
+#| 
+#| model_settings=/tmp/aider_model_settings
+#| 
+#| echo '
+#| - name: ollama/qwen3:30b-a3b-q4_K_M
+#| - name: ollama/qwen3:0.6b-q4_K_M
+#| ' > "$model_settings"
+#| 
+#| # note: extra_params sets .options.keepalive, .options.think etc. field of request body not the .keepalive or .think at the root of the json object
+#| 
+#| export TERM=linux
+#| 
+#| exec aider \
+#|     --user-input-color       white  \
+#|     --tool-warning-color     yellow \
+#|     --tool-error-color       red    \
+#|     --assistant-output-color green  \
+#|      --weak-model            ollama/qwen3:0.6b-q4_K_M    \
+#|      --model                 ollama/qwen3:30b-a3b-q4_K_M \
+#|      --model-settings-file   "$model_settings"           \
+#|      --no-check-update \
+#|      --no-show-release-notes \
+#|     "$@"
+#|      # --model                 ollama/qwen3:0.6b-q4_K_M    \
+#- }}}
+
+
 ####FILE +x bin/archsetup {{{
 #| #!/bin/sh
 #| 
@@ -414,7 +463,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| 
 #| ask pacman --noconfirm -S anthy atool bluez bluez-utils dash entr fish fzf git imagemagick jq man man-db mosh neovim nawk nmap openssh pacman-contrib pv ranger rsync tmux unzip pv w3m wget zip
 #| 
-#| ask pacman --noconfirm -S foot keyd labwc ly pipewire swaybg swaylock wl-clipboard wlr-randr
+#| ask pacman --noconfirm -S foot fyi grim keyd labwc ly pipewire swaybg swaylock wl-clipboard wlr-randr
 #| 
 #| ask pacman --noconfirm -S claws-mail firefox mousepad mpv udiskie pcmanfm
 #| 
@@ -442,6 +491,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|         case "$name" in
 #|             (Dockerfile*) args="-S dockerfile" ;;
 #|             (Makefile*) args="-S makefile" ;;
+#|             (*.service|*.automount|*.link|*.mount|*.network|*.path|*.slice|*.socket|*.target|*.timer) args="-S makefile" ;;
 #|             (*) args="" ;;
 #|         esac
 #|         exec highlight --out-format ansi --stdout --force $args "$@"
@@ -1297,6 +1347,99 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
+####FILE +x bin/mystatus {{{
+#| #!/bin/awk -f
+#| 
+#| # Usage:
+#| #     ./mystatus
+#| 
+#| BEGIN {
+#|     DIR_BACKLIGHT = "/sys/class/backlight/intel_backlight/"
+#|     DIR_THERMAL   = "/sys/class/thermal/thermal_zone0/"
+#|     DIR_POWER     = "/sys/class/power_supply/"
+#|     CACHE_STAT    = "/tmp/mystatus_statold"
+#| 
+#|     o_cpu       = get_cpu()
+#|     o_datetime  = get_datetime()
+#|     o_backlight = get_backlight()
+#|     o_volume    = get_volume()
+#|     o_thermal   = get_thermal()
+#|     o_power     = get_power()
+#|     o_memory    = get_memory()
+#| 
+#|     printf "%s  B %s%%  V %s  T %sC  C %s  M %s  P %s\n", o_datetime, o_backlight, o_volume, o_thermal, o_cpu, o_memory, o_power
+#|     exit
+#| }
+#| 
+#| function get_cpu(    line, ncpu, stat1, stat2, a, b) {
+#|     getline stat1 < "/proc/stat"
+#|     while ((getline line < "/proc/stat") == 1) {
+#|         if (line ~ /^cpu[0-9]+/) {
+#|             ncpu++
+#|         }
+#|     }
+#|     getline stat2 < CACHE_STAT
+#|     print stat1 > CACHE_STAT
+#|     if (split(stat2, b) >= 5 && split(stat1, a) >= 5) {
+#|         return int(100 * ((a[2]+a[4])-(b[2]+b[4]))/((a[2]+a[4]+a[5])-(b[2]+b[4]+b[5]))) "%:" ncpu "c"
+#|     } else {
+#|         return "?"
+#|     }
+#| }
+#| 
+#| function get_backlight(    cur, max, val) {
+#|     getline cur < (DIR_BACKLIGHT "/brightness") # paren necessary
+#|     getline max < (DIR_BACKLIGHT "/max_brightness")
+#|     val = log(cur>0?cur:1)/log(max)
+#|     val = (val*val*val)*100
+#|     return int(val)
+#| }
+#| 
+#| function get_datetime(    val) {
+#|     "date +'%Y-%m-%d (%a) %H:%M'" | getline val
+#|     return val
+#| }
+#| 
+#| function get_volume(    val) {
+#|     if (("pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null" | getline val) != 1) return "?"
+#|     sub("%.*", "", val)
+#|     sub(".* ", "", val)
+#|     return val "%"
+#| }
+#| 
+#| function get_thermal(    val) {
+#|     getline val < (DIR_THERMAL "/temp")
+#|     return val / 1000
+#| }
+#| 
+#| function get_power(    capacity, charging) {
+#|     if ((getline capacity < (DIR_POWER "/BAT0/capacity")) != 1) return "?";
+#|     if ((getline charging < (DIR_POWER "/AC/online")) != 1) return "?";
+#|     return capacity "%" (charging ? "+" : "")
+#| }
+#| 
+#| function get_memory(    line, total, avail, used) {
+#|     while ((getline line < "/proc/meminfo") == 1) {
+#|         if (line ~ /^MemTotal:/) {
+#|             total = line
+#|         } else if (line ~ /^MemAvailable:/) {
+#|             avail = line
+#|         }
+#|         if (total && avail) {
+#|             break
+#|         }
+#|     }
+#|     gsub("[^0-9]*", "", total)
+#|     gsub("[^0-9]*", "", avail)
+#|     used  = total - avail
+#|     total = int(total / 100000) / 10
+#|     # avail = int(avail / 100000) / 10
+#|     used  = int(used  / 100000) / 10
+#|     return used "/" total "GB"
+#| }
+#- }}}
+
+
 ####FILE +x bin/n {{{
 #| #!/bin/bash
 #| 
@@ -1548,6 +1691,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     \"model\"      : \"$model\",
 #|     \"prompt\"     : $prompt_withquote,
 #|     \"keep_alive\" : \"99999m\",
+#|     \"think\"      : false,
 #|     \"context\"    : $context
 #| }"
 #| # \"options\" : { \"num_ctx\" : 65536 },
@@ -2391,23 +2535,23 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|   </head>
 #|   <body>
 #|     Search<br><br>
-#|     <form method="get" action="https://lite.duckduckgo.com/lite">
+#|     <form method="POST" action="https://lite.duckduckgo.com/lite">
 #|       <input type="text"   name="q" size="25">
 #|       <input type="submit" value="DuckDuckGo Lite">
 #|     </form>
-#|     <form method="get" action="https://www.wikipedia.jp/index.php">
+#|     <form method="GET" action="https://www.wikipedia.jp/index.php">
 #|       <input type="text"   name="search" size="25">
 #|       <input type="submit" value="  Wikipedia    ">
 #|     </form>
-#|     <form method="get" action="https://en.wiktionary.org/w/index.php">
+#|     <form method="GET" action="https://en.wiktionary.org/w/index.php">
 #|       <input type="text"   name="search" size="25">
 #|       <input type="hidden" name="ns0"    value="1">
 #|       <input type="submit" value="  Wiktionary   ">
 #|     </form>
 #|     <br>Bookmarks<br>
 #|     <ul>
-#|         <li><a href="http://example.com">Example Domain</a></li>
-#|         '"$bookmark_html"'
+#|       <li><a href="http://example.com">Example Domain</a></li>
+#|       '"$bookmark_html"'
 #|     </ul>
 #|   </body>
 #| </html>
@@ -2423,8 +2567,8 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| keymap DEL    PREV_PAGE
 #| keymap $key_J NEXT_PAGE
 #| keymap $key_K PREV_PAGE
-#| keymap $key_j MOVE_DOWN1
-#| keymap $key_k MOVE_UP1
+#| keymap $key_j UP
+#| keymap $key_k DOWN
 #| keymap $key_h PREV_LINK
 #| keymap $key_l NEXT_LINK
 #| keymap DOWN   MOVE_DOWN1
@@ -2617,7 +2761,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| help() {
 #|     echo "Usage: $0 <brightness>" >&2
 #|     echo "<brightness> = 1, +2, -2 etc. Max $(cat $max_brightness_file)" >&2
-#|     echo 'You should add the following line to /etc/sudoers (via "sudo visudo")' >&2
+#|     echo 'You should add the following line to the very end of /etc/sudoers (via "sudo visudo")' >&2
 #|     echo "  ALL ALL=(ALL) NOPASSWD: /usr/bin/tee $brightness_file" >&2
 #|     echo "Or doas.conf:" >&2
 #|     echo "  permit nopass :wheel cmd /usr/bin/tee args $brightness_file" >&2
@@ -2761,8 +2905,36 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 
 ####FILE +x bin/x-volume {{{
 #| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
-#| pactl set-sink-volume @DEFAULT_SINK@ "$1"
+#| L(){ echo "$*"; "$@"; }
+#| # L(){ echo "$*"; }
+#| case "$1" in
+#|     ("")
+#|         echo "Usage: $0 <volume>     (<volume> = 20%, +5%, -10% etc.)"
+#|         echo "Usage: $0 sink <sink>  (change sink; useful for eq settings)"
+#|         exit 1
+#|         ;;
+#|     (sink)
+#|         sink=$2
+#|         vol=$(pactl get-sink-volume @DEFAULT_SINK@ | sed -n 's/.* \([0-9][0-9]*%\).*/\1/p')
+#|         # change volume of this sink to current value
+#|         L pactl set-sink-volume "$sink" "$vol"
+#|         # change default sink
+#|         L pactl set-default-sink "$sink"
+#|         # change sink for existing programs
+#|         for id in $(pactl list short sink-inputs | cut -f1); do
+#|             L pactl move-sink-input "$id" "$sink"
+#|         done
+#|         # change volume of other sinks to 100%
+#|         for sink2 in $(pactl list short sinks | cut -f1); do
+#|             if [ "$sink2" != "$sink" ]; then
+#|                 L pactl set-sink-volume "$sink2" 100%
+#|             fi
+#|         done
+#|         ;;
+#|     (*)
+#|         pactl set-sink-volume @DEFAULT_SINK@ "$1" ;;
+#| esac
+#| # [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
 #- }}}
 
 

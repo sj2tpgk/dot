@@ -297,26 +297,34 @@ fu! IsFirstCharInString(lnum)
     return len(synNames) > 0 && synNames[-1] == "String"
 endfu
 
-" Markdown folding (https://stackoverflow.com/a/4677454)
-fu! MarkdownLevel()
-    if getline(v:lnum) =~ '^# .*$'
-        return ">1"
+" Markdown/org-mode folding (https://stackoverflow.com/a/4677454)
+fu! MarkdownLikeFoldexpr(h)
+    " Perform markdown-like folding with header character h
+    " For markdown, set fdm=marker fde=MarkdownLikeFoldexpr('#')
+    " For org-mode, set fdm=marker fde=MarkdownLikeFoldexpr('\*')
+    " (note the backslash before the asterisk for regex escaping)
+
+    let l  = getline(v:lnum)
+    let lp = getline(v:lnum - 1)
+    let ln = getline(v:lnum + 1)
+
+    " if two empty lines before heading, one blank line between folds.
+    if l =~ '^\s*$' && lp =~ '^\s*$'
+        let leveln = matchstrpos(ln, '^' . a:h . '\+\s')[2] - 1
+        if leveln >= 1
+            " e.g. if ln='## foo' then return 1
+            return leveln - 1
+        endif
     endif
-    if getline(v:lnum) =~ '^## .*$'
-        return ">2"
+
+    " foldings start from headings
+    let level = matchstrpos(l, '^' . a:h . '\+\s')[2] - 1
+    if level >= 1
+        " e.g. if l='## foo' then return '>2'
+        return '>' . level
     endif
-    if getline(v:lnum) =~ '^### .*$'
-        return ">3"
-    endif
-    if getline(v:lnum) =~ '^#### .*$'
-        return ">4"
-    endif
-    if getline(v:lnum) =~ '^##### .*$'
-        return ">5"
-    endif
-    if getline(v:lnum) =~ '^###### .*$'
-        return ">6"
-    endif
+
+    " otherwise use previous line
     return "="
 endfu
 
@@ -331,9 +339,8 @@ fu! MyFolding()
         setl fdm=expr fde=MyFold(v:lnum,0)
     elseif ft == "python"
         setl fdm=expr fde=MyFold(v:lnum,1)
-    elseif ft == "Markdown"
-        setl fdm=expr fde=MarkdownLevel()
-    "elseif index(["lua", "javascript", "html", "perl", "c", "cpp", "awk"], ft) != -1
+    elseif ft == "markdown"
+        setl fdm=expr fde=MarkdownLikeFoldexpr('#')
     else
         setl fdm=expr fde=MyFold(v:lnum,0)
     endif
@@ -723,9 +730,20 @@ fu! MyHighlight_RX()
     hi fastReturn  ctermfg=red
 
     " markdown
-    hi      markdownCode          ctermfg=blue
+    hi      markdownCode          ctermfg=yellow
     hi link markdownCodeBlock     markdownCode
     hi link markdownCodeDelimiter markdownCode
+    hi      markdownH1            ctermfg=blue cterm=underline,bold
+    hi link markdownH2            markdownH1
+    hi link markdownH3            markdownH2
+    hi link markdownH4            markdownH3
+    hi      markdownH1Delimiter   ctermfg=blue
+    hi link markdownH2Delimiter   markdownH1Delimiter
+    hi link markdownH3Delimiter   markdownH1Delimiter
+    hi link markdownH4Delimiter   markdownH1Delimiter
+    hi      markdownBold          ctermfg=red
+    hi link markdownItalic        markdownBold
+    hi      markdownStrike        ctermfg=blue
 endfu
 
 fu! MyHighlight2()
@@ -1039,6 +1057,43 @@ au BufNewFile,BufRead *.lua iabbr <buffer> fn function
 au FileType lua             iabbr <buffer> fn function
 aug END
 
+" === Markdown ===
+let g:markdown_syntax_conceal = 1
+aug vimrc_ft_markdown
+au!
+au BufNewFile,BufRead *.md call MarkdownSyntax()
+au FileType markdown       call MarkdownSyntax()
+aug END
+fu! MarkdownSyntax()
+    " conceal noise (syntax definitions taken from nvim/runtime/syntax/markdown.vim and conceal/concealends added)
+    setl conceallevel=2
+
+    syn region markdownCode matchgroup=markdownCodeDelimiter start="`" end="`" keepend contains=markdownLineStart concealends
+    syn region markdownCode matchgroup=markdownCodeDelimiter start="`` \=" end=" \=``" keepend contains=markdownLineStart concealends
+    syn region markdownCodeBlock matchgroup=markdownCodeDelimiter start="^\s*\z(`\{3,\}\).*$" end="^\s*\z1\ze\s*$" keepend concealends
+    syn region markdownCodeBlock matchgroup=markdownCodeDelimiter start="^\s*\z(\~\{3,\}\).*$" end="^\s*\z1\ze\s*$" keepend concealends
+
+    syn region markdownH1 matchgroup=markdownH1Delimiter start=" \{,3}#\s"      end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
+    syn region markdownH2 matchgroup=markdownH2Delimiter start=" \{,3}##\s"     end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
+    syn region markdownH3 matchgroup=markdownH3Delimiter start=" \{,3}###\s"    end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
+    syn region markdownH4 matchgroup=markdownH4Delimiter start=" \{,3}####\s"   end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
+    syn region markdownH5 matchgroup=markdownH5Delimiter start=" \{,3}#####\s"  end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
+    syn region markdownH6 matchgroup=markdownH6Delimiter start=" \{,3}######\s" end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
+
+    syn region markdownIdDeclaration matchgroup=markdownLinkDelimiter start="^ \{0,3\}!\=\[" end="\]:" oneline keepend nextgroup=markdownUrl skipwhite concealends
+    syn match markdownUrl "\S\+" nextgroup=markdownUrlTitle skipwhite contained conceal
+    syn region markdownUrl matchgroup=markdownUrlDelimiter start="<" end=">" oneline keepend nextgroup=markdownUrlTitle skipwhite contained conceal
+    syn region markdownUrlTitle matchgroup=markdownUrlTitleDelimiter start=+"+ end=+"+ keepend contained conceal
+    syn region markdownUrlTitle matchgroup=markdownUrlTitleDelimiter start=+'+ end=+'+ keepend contained conceal
+    syn region markdownUrlTitle matchgroup=markdownUrlTitleDelimiter start=+(+ end=+)+ keepend contained conceal
+
+    syn region markdownLinkText matchgroup=markdownLinkTextDelimiter start="!\=\[\%(\_[^][]*\%(\[\_[^][]*\]\_[^][]*\)*]\%( \=[[(]\)\)\@=" end="\]\%( \=[[(]\)\@=" nextgroup=markdownLink,markdownId skipwhite contains=@markdownInline,markdownLineStart concealends
+    syn region markdownLink matchgroup=markdownLinkDelimiter start="(" end=")" contains=markdownUrl keepend contained concealends
+    syn region markdownId matchgroup=markdownIdDelimiter start="\[" end="\]" keepend contained concealends
+    syn region markdownAutomaticLink matchgroup=markdownUrlDelimiter start="<\%(\w\+:\|[[:alnum:]_+-]\+@\)\@=" end=">" keepend oneline concealends
+
+endfu
+
 " === JavaScript ===
 aug vimrc_ft_javascript
 au!
@@ -1057,35 +1112,12 @@ au FileType javascript,typescript setl iskeyword+=#
 aug END
 
 " === Org mode ===
-fu! OrgLevel()
-    let l  = getline(v:lnum)
-    let lp = getline(v:lnum - 1)
-    let ln = getline(v:lnum + 1)
-    " if two empty lines before heading, one blank line between folds.
-    if ln =~ '^\* .*$' && l =~ '^\s*$' && lp =~ '^\s*$'
-        return "0"
-    elseif ln =~ '^\*\* .*$' && l =~ '^\s*$' && lp =~ '^\s*$'
-        return "1"
-    elseif ln =~ '^\*\*\* .*$' && l =~ '^\s*$' && lp =~ '^\s*$'
-        return "2"
-    endif
-    " foldings start from headings
-    if l =~ '^\* .*$'
-        return ">1"
-    elseif l =~ '^\*\* .*$'
-        return ">2"
-    elseif l =~ '^\*\*\* .*$'
-        return ">3"
-    endif
-    " otherwise use previous line
-    return "="
-endfu
 fu! MyOrgIndent()
     return -1
 endfu
 fu! MyOrgSyntaxHighlight() " TODO reload syntax with bufdo fail
     set ft=org cms=#\ %s
-    setl fdm=expr fde=OrgLevel()
+    setl fdm=expr fde=MarkdownLikeFoldexpr('\*')
     setl inde=MyOrgIndent()
     sil! syn clear orgProperty orgComment orgHeading1 orgHeading2 orgHeading3 orgMathInline orgBold orgTex
     syn keyword orgKeyword   begin_src,end_src,macro,title,options,noexport,begin_quote,end_quote
@@ -1335,12 +1367,13 @@ function lsp_config_1_misc() -- Lsp (1) misc config <<<
         function! LspMenu()
             let cmds = [
                 \ ["\r\\r",  "Hover",          "lua vim.lsp.buf.hover()"],
+                \ ["d",      "Definition",     "lua vim.lsp.buf.definition()"],
                 \ ["r",      "Rename",         "lua vim.lsp.buf.rename()"],
                 \ ["f",      "References",     "lua vim.lsp.buf.references()"],
-                \ ["d",      "Diag",           "lua diagShow()"],
-                \ ["D",      "Diag level",     "lua diagToggleLevel()"],
+                \ ["i",      "Diag",           "lua diagShow()"],
+                \ ["I",      "Diag level",     "lua diagToggleLevel()"],
                 \ ["h",      "Hover+",         "lua for i=1,2 do vim.lsp.buf.hover() end"],
-                \ ["i",      "Implementation", "lua vim.lsp.buf.implementation()"],
+                \ ["m",      "Implementation", "lua vim.lsp.buf.implementation()"],
                 \ ["s",      "Signature",      "lua vim.lsp.buf.signature_help()"],
                 \ ["S",      "Signature+",     "lua for i=1,2 do vim.lsp.buf.signature_help() end"],
                 \ ["y",      "Symbol",         "lua vim.lsp.buf.document_symbol()"],
@@ -1407,12 +1440,14 @@ function lsp_config_4_servers() -- Lsp (4) configure servers <<<
     f("html",    "html",      { "vscode-html-language-server" },        a)
     f("js/ts",   "ts_ls",     { "typescript-language-server" },         a, s)
     f("lua",     "lua_ls",    { "lua-language-server" },                a)
-    -- f("python", "basedpyright", a)
     f("python",  "pyright",   { "pyright" },                            a)
     f("python",  "pylsp",     { "pylsp" },                              a)
+    f("rust",    "rust_analyzer", { "rust-analyzer" },                  a)
     f("shell",   "bashls",    { "bash-language-server", "shellcheck" }, a)
     f("zig",     "zls",       { "zls" },                                a)
 
+
+    -- f("python", "basedpyright", a)
     -- setup("pylsp",                  nil,                      { on_attach = on_attach, settings = { pylsp = { plugins = { pycodestyle = { ignore = {'W391'}, maxLineLength = 100 } } } } })
     -- setup("ruff_lsp",               "ruff",                   { on_attach = on_attach, init_options = { settings = { args = { "--config", 'lint.ignore = ["E401", "E731"]' } } } })
 
@@ -1768,6 +1803,8 @@ vim.cmd [[ " llama.vim (experimental) <<<
             \ 't_max_prompt_ms': 1000,
             \ 't_max_predict_ms': 1000,
             \ 'n_predict': 256,
+            \ 'keymap_accept_full': "<C-A>",
+            \ 'keymap_accept_line': "<C-E>",
             \ 'keymap_accept_word': "<C-S>",
             \ }
         packadd llama.vim
