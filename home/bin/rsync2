@@ -15,8 +15,13 @@ help() {
     echo "  - no leading slash = match any path component (not substring match)"
     echo
     echo "Examples:"
+    echo
     echo "1. Use --link-dest (incremental backup)"
-    echo "   rsync2 /path/to/mydir /dest/mydir/20230501 --link-dest=/dest/mydir/20230401 -i"
+    echo "   rsync2 /path/to/mydir/ /dest/mydir/20230501 --link-dest=/dest/mydir/20230401 -i"
+    echo
+    echo "2. Remote dir (rsync:// or -e ssh)"
+    echo "   rsync2 rsync://server/myentry/ /dest/mydir/0501 --link-dest=/dest/mydir/0401 -i"
+    echo "   rsync2 user@server:/path/to/mydir/ /dest/mydir/0501 --link-dest=/dest/mydir/0401 -i -e ssh"
 }
 
 from=
@@ -29,13 +34,16 @@ opts=(
     --info=stats2,progress2 -h # --human-readable
     --log-file="$(pwd)/rsync-$(date +"%Y%m%d-%H%M%S").log"
     --mkpath # link mkdir -p for TO
+    --exclude=/.Android/
     --exclude=/.cache/
     --exclude=/.cargo/
     --exclude=/.cpan/
     --exclude=/.go/
     --exclude=/.ipfs/
+    --exclude=/.local/share/uv/
     --exclude=/.npm/
     --exclude=.gradle/
+    --exclude=.mypy_cache/
     --exclude=.venv/
     --exclude=node_modules/
 )
@@ -44,37 +52,49 @@ opts=(
 [ $# -ge 2 ] || die "Not enough arguments"
 from=$1
 to=$2
+use_ssh=
 shift 2
 while [[ $# -ge 1 ]]; do
+    if [[ "$1" = -e || "$1" = --rsh ]] && [[ $2 =~ ^ssh ]]; then
+        use_ssh=1
+    fi
     case "$1" in
         (*) opts+=("$1"); shift ;;
     esac
 done
 
-# Make dest dir
-mkdir -p "$to"
+is_remote() {
+    [[ $use_ssh && $1 =~ ^[-a-zA-Z0-9_]+@[-a-zA-Z0-9_]+: ]] || [[ $1 =~ ^rsync:// ]]
+}
 
-# To absolute path
-from=$(cd "$from"; pwd)
-to=$(cd "$to"; pwd)
+# Normalize and check "from" path
+[[ "${from%/}" != "$from" ]] || die "$from does not end with /"
+if ! is_remote "$from"; then
+    from=$(cd "$from" && pwd)/ # Slash is necessary
+    [[ -d "$from" ]] || die "$from is not a directory"
+fi
 
-# Check args
-[[ "${from%/}" == "$from" ]] || die "$from ends with /"
-[[ "${to%/}" == "$to" ]] || die "$to ends with /"
-[[ -d "$from" ]] || die "$from is not a directory"
-[[ -d "$to" ]] || die "could not create directory $to"
+# Normalize and check "to" path
+if ! is_remote "$to"; then
+    if ! [[ -d "$to" ]]; then
+        mkdir -p "$to" || die "could not create directory $to"
+    fi
+    to=$(cd "$to" && pwd)/ # Slash is not necessary
+    [[ -d "$to" ]] || die "could not create directory $to"
+fi
 
 # Cd to FROM dir
-cd "$from" || die "Cannot cd to $from"
-echoB "Directory:"
-echo "  $from"
+echoB "Cloning:"
+echo  "  $from"
+echo  "  as"
+echo  "  $to"
 echo
 
 # Construct rsync command
 cmd=(
     rsync
     "${opts[@]}"
-    . "$to"
+    "$from" "$to"
 )
 
 # Show command

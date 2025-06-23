@@ -393,13 +393,11 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #- }}}
 
 
-####FILE +x bin/aider-ollama {{{
+####FILE +x bin/aider-local {{{
 #| #!/bin/sh
 #| 
-#| if ! [ "$OLLAMA_API_BASE" ]; then
-#|     echo "OLLAMA_API_BASE is not set (example: http://localhost:11434)"
-#|     exit 1
-#| fi
+#| export OPENAI_API_BASE="${OPENAI_API_BASE:-http://localhost:8888/v1}"
+#| export OPENAI_API_KEY="${OPENAI_API_BASE:-NONE}" # important: see https://github.com/Aider-AI/aider/issues/2209#issuecomment-2888776946
 #| 
 #| if ! command -v aider >/dev/null; then
 #|     echo "Aider not found"
@@ -416,29 +414,35 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     .venv/bin/aider-install
 #| fi
 #| 
-#| model_settings=/tmp/aider_model_settings
-#| 
-#| echo '
-#| - name: ollama/qwen3:30b-a3b-q4_K_M
-#| - name: ollama/qwen3:0.6b-q4_K_M
-#| ' > "$model_settings"
+#| #model_settings=/tmp/aider_model_settings
+#| #echo '
+#| #- name: llama_cpp/Qwen3-30B-A3B
+#| #  extra_params:
+#| #    api_key: NONE
+#| #- name: llama_cpp/Qwen3-0.6B
+#| #  extra_params:
+#| #    api_key: NONE
+#| #' > "$model_settings"
+#| # api_base: http://localhost:8889/ # seems setting different endpoint (port) per model is not working?
 #| 
 #| # note: extra_params sets .options.keepalive, .options.think etc. field of request body not the .keepalive or .think at the root of the json object
 #| 
-#| export TERM=linux
+#| export TERM=linux # force 16 colors
 #| 
 #| exec aider \
-#|     --user-input-color       white  \
-#|     --tool-warning-color     yellow \
-#|     --tool-error-color       red    \
-#|     --assistant-output-color green  \
-#|      --weak-model            ollama/qwen3:0.6b-q4_K_M    \
-#|      --model                 ollama/qwen3:30b-a3b-q4_K_M \
-#|      --model-settings-file   "$model_settings"           \
-#|      --no-check-update \
-#|      --no-show-release-notes \
+#|     --user-input-color       white   \
+#|     --tool-warning-color     yellow  \
+#|     --tool-error-color       red     \
+#|     --assistant-output-color green   \
+#|     --code-theme             monokai \
+#|     --weak-model             openai/Qwen3-0.6B \
+#|     --model                  openai/Qwen3-30B-A3B \
+#|     --no-check-update \
+#|     --no-show-release-notes \
+#|     --no-show-model-warnings \
+#|     --analytics-disable \
 #|     "$@"
-#|      # --model                 ollama/qwen3:0.6b-q4_K_M    \
+#|      # --model-settings-file   "$model_settings" \
 #- }}}
 
 
@@ -2173,8 +2177,13 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     echo "  - no leading slash = match any path component (not substring match)"
 #|     echo
 #|     echo "Examples:"
+#|     echo
 #|     echo "1. Use --link-dest (incremental backup)"
-#|     echo "   rsync2 /path/to/mydir /dest/mydir/20230501 --link-dest=/dest/mydir/20230401 -i"
+#|     echo "   rsync2 /path/to/mydir/ /dest/mydir/20230501 --link-dest=/dest/mydir/20230401 -i"
+#|     echo
+#|     echo "2. Remote dir (rsync:// or -e ssh)"
+#|     echo "   rsync2 rsync://server/myentry/ /dest/mydir/0501 --link-dest=/dest/mydir/0401 -i"
+#|     echo "   rsync2 user@server:/path/to/mydir/ /dest/mydir/0501 --link-dest=/dest/mydir/0401 -i -e ssh"
 #| }
 #| 
 #| from=
@@ -2187,13 +2196,16 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     --info=stats2,progress2 -h # --human-readable
 #|     --log-file="$(pwd)/rsync-$(date +"%Y%m%d-%H%M%S").log"
 #|     --mkpath # link mkdir -p for TO
+#|     --exclude=/.Android/
 #|     --exclude=/.cache/
 #|     --exclude=/.cargo/
 #|     --exclude=/.cpan/
 #|     --exclude=/.go/
 #|     --exclude=/.ipfs/
+#|     --exclude=/.local/share/uv/
 #|     --exclude=/.npm/
 #|     --exclude=.gradle/
+#|     --exclude=.mypy_cache/
 #|     --exclude=.venv/
 #|     --exclude=node_modules/
 #| )
@@ -2202,37 +2214,49 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| [ $# -ge 2 ] || die "Not enough arguments"
 #| from=$1
 #| to=$2
+#| use_ssh=
 #| shift 2
 #| while [[ $# -ge 1 ]]; do
+#|     if [[ "$1" = -e || "$1" = --rsh ]] && [[ $2 =~ ^ssh ]]; then
+#|         use_ssh=1
+#|     fi
 #|     case "$1" in
 #|         (*) opts+=("$1"); shift ;;
 #|     esac
 #| done
 #| 
-#| # Make dest dir
-#| mkdir -p "$to"
+#| is_remote() {
+#|     [[ $use_ssh && $1 =~ ^[-a-zA-Z0-9_]+@[-a-zA-Z0-9_]+: ]] || [[ $1 =~ ^rsync:// ]]
+#| }
 #| 
-#| # To absolute path
-#| from=$(cd "$from"; pwd)
-#| to=$(cd "$to"; pwd)
+#| # Normalize and check "from" path
+#| [[ "${from%/}" != "$from" ]] || die "$from does not end with /"
+#| if ! is_remote "$from"; then
+#|     from=$(cd "$from" && pwd)/ # Slash is necessary
+#|     [[ -d "$from" ]] || die "$from is not a directory"
+#| fi
 #| 
-#| # Check args
-#| [[ "${from%/}" == "$from" ]] || die "$from ends with /"
-#| [[ "${to%/}" == "$to" ]] || die "$to ends with /"
-#| [[ -d "$from" ]] || die "$from is not a directory"
-#| [[ -d "$to" ]] || die "could not create directory $to"
+#| # Normalize and check "to" path
+#| if ! is_remote "$to"; then
+#|     if ! [[ -d "$to" ]]; then
+#|         mkdir -p "$to" || die "could not create directory $to"
+#|     fi
+#|     to=$(cd "$to" && pwd)/ # Slash is not necessary
+#|     [[ -d "$to" ]] || die "could not create directory $to"
+#| fi
 #| 
 #| # Cd to FROM dir
-#| cd "$from" || die "Cannot cd to $from"
-#| echoB "Directory:"
-#| echo "  $from"
+#| echoB "Cloning:"
+#| echo  "  $from"
+#| echo  "  as"
+#| echo  "  $to"
 #| echo
 #| 
 #| # Construct rsync command
 #| cmd=(
 #|     rsync
 #|     "${opts[@]}"
-#|     . "$to"
+#|     "$from" "$to"
 #| )
 #| 
 #| # Show command
@@ -2510,6 +2534,130 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| fi
 #| 
 #| exit
+#- }}}
+
+
+####FILE +x bin/totp.py {{{
+#| #!/usr/bin/env python3
+#| # https://github.com/DarthJahus/SimpleTOTP
+#| 
+#| # Jahus
+#| # 2018-02-05 23:52
+#| #
+#| # Documentation:
+#| #   https://en.wikipedia.org/wiki/Time-based_One-time_Password_Algorithm
+#| #   HOTP (RFC 4226) https://tools.ietf.org/html/rfc4226
+#| #
+#| # 2023-11-21: Updated to Python 3, after all these years.
+#| #
+#| 
+#| import time
+#| import hmac, hashlib, base64
+#| import sys
+#| import argparse
+#| 
+#| 
+#| __debug = False
+#| 
+#| 
+#| def int_to_bytestring(i, padding=8):
+#| 	"""
+#| 	Turns an integer to the OATH specified
+#| 	bytestring, which is fed to the HMAC
+#| 	along with the secret
+#| 	"""
+#| 	result = bytearray()
+#| 	while i != 0:
+#| 		result.append(i & 0xFF)
+#| 		i >>= 8
+#| 	# It's necessary to convert the final result from bytearray to bytes
+#| 	# because the hmac functions in python 2.6 and 3.3 don't work with
+#| 	# bytearray
+#| 	return bytearray(reversed(result)).rjust(padding, b'\0')
+#| 
+#| 
+#| def key_check(key):
+#| 	key = key.replace('-', '').replace(' ', '')
+#| 	missing_padding = len(key) % 8
+#| 	if missing_padding != 0:
+#| 		key += '=' * (8 - missing_padding)
+#| 	return base64.b32decode(key, casefold=True)
+#| 
+#| 
+#| def get_key(k, t0=0, ti=30, h_alg=hashlib.sha1, n=6):
+#| 	try:
+#| 		k = key_check(k)
+#| 		digest_size = h_alg().digest_size
+#|         # Step 1: Calculate C, number of times TI has elapsed after T0.
+#| 		_c = int((time.time()-t0)/ti)
+#| 		if __debug: print("C = %i" % _c)
+#| 		# Step 2: Compute the HMAC hash H with C as the message and K as the key
+#| 		# (the HMAC algorithm is defined in the previous section, but also most cryptographical libraries support it).
+#| 		# K should be passed as it is,
+#| 		# C should be passed as a raw 64-bit unsigned integer.
+#| 		_hmac = hmac.new(key=k, msg=int_to_bytestring(_c), digestmod=h_alg)
+#| 		if __debug: print("H = " + _hmac.hexdigest())
+#| 		_hmac_digest = int(_hmac.hexdigest(), 16)
+#| 		# Step 3:
+#| 		# Take the least 4 significant bits of H and use it as an offset, O.
+#| 		_mask = (2**(2*2))-1
+#| 		_offset = (_hmac_digest >> 0) & _mask
+#| 		if __debug: print("O = " + str(_offset))
+#| 		# Step 4 :
+#| 		# Take 4 bytes from H starting at O bytes MSB,
+#| 		# discard the most significant bit and store the rest as an (unsigned) 32-bit integer, I.
+#| 		_mask = ((2**(8*4))-1) << ((digest_size - _offset - 4) * 8)
+#| 		if __debug: print("_mask = 0x%x" % _mask)
+#| 		_i = (_hmac_digest & _mask) >> ((digest_size - _offset - 4) * 8)
+#| 		if __debug: print("_res = 0x%x" % _i)
+#| 		_mask = 0x7fffffff
+#| 		_i = _i & _mask
+#| 		if __debug: print("_i = 0x%x\n_i = %i" % (_i,_i))
+#| 		# Step 5:
+#| 		# The token is the lowest N digits of I in base 10.
+#| 		# If the result has fewer digits than N, pad it with zeroes from the left.
+#| 		_token = _i % 10**n
+#| 		if __debug: print("_token = %i" % _token)
+#| 		# Check if n digits are returned
+#| 		_token_str = str(_token)
+#| 		if len(_token_str) < n:
+#| 			_token_str = ('0' * (n - len(_token_str))) + _token_str
+#| 		return {"success": True, "result": _token_str}
+#| 	except Exception as e:
+#| 		return {"success": False, "message": str(e)}
+#| 
+#| 
+#| if __name__ == "__main__":
+#| 	_parser = argparse.ArgumentParser(description='Generate a TOTP token.')
+#| 	# Define optional arguments
+#| 	_parser.add_argument('-i', '--init', type=int, default=0, help='The Unix time to start counting time steps (default: 0)', metavar="INITIAL_TIME")
+#| 	_parser.add_argument('-s', '--step', type=int, default=30, help='The time step in seconds (default: 30)', metavar="TIME_STEP")
+#| 	_parser.add_argument('-d', '--digits', type=int, default=6, help='The number of digits in the token (default: 6)', metavar="DIGITS")
+#| 	_parser.add_argument('-a', '--alg', default='SHA1', choices=['SHA1', 'SHA256', 'SHA512'], help='The hashing algorithm (default: SHA1)', metavar="HASH_ALGORITHM")
+#| 	_parser.add_argument('-v', '--verbose', action="store_true", help="Show debug messages")
+#| 	# Define the secret key as a positional argument
+#| 	_parser.add_argument('key', nargs='*', help='Secret key (spaces and dashes are tolerated)', metavar="KEY")
+#| 	
+#| 	_args = _parser.parse_args()
+#| 	
+#| 	# Convert alg to the actual hashlib algorithm
+#| 	hash_algorithms = {
+#| 		'SHA1': hashlib.sha1,
+#| 		'SHA256': hashlib.sha256,
+#| 		'SHA512': hashlib.sha512,
+#| 	}
+#| 	
+#| 	__debug = _args.verbose
+#| 	
+#| 	try:
+#| 		_result = get_key(k=''.join(_args.key), t0=_args.init, ti=_args.step, h_alg=hash_algorithms[_args.alg.upper()], n=_args.digits)
+#| 		if _result["success"]:
+#| 			print(_result["result"])
+#| 		else:
+#| 			print("Error\n\t%s" % _result["message"])
+#| 	except Exception as e:
+#| 		print(e)
+#| 		print("Incorrect arguments.\nUse:\n\ttotp \"SICRET_KEY\"")
 #- }}}
 
 
