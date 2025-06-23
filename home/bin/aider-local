@@ -1,0 +1,49 @@
+#!/bin/sh
+
+export OPENAI_API_BASE="${OPENAI_API_BASE:-http://localhost:8888/v1}"
+export OPENAI_API_KEY="${OPENAI_API_BASE:-NONE}" # important: see https://github.com/Aider-AI/aider/issues/2209#issuecomment-2888776946
+
+if ! command -v aider >/dev/null; then
+    echo "Aider not found"
+    aider_dir=~/.local/share/aider
+    printf %s "install to $aider_dir now? [y/n] "
+    read -r answer
+    if [ "$answer" != y ]; then
+        exit 1
+    fi
+    mkdir -p "$aider_dir"
+    cd "$aider_dir" || exit 1
+    python -m venv .venv
+    .venv/bin/pip install aider-install
+    .venv/bin/aider-install
+fi
+
+#model_settings=/tmp/aider_model_settings
+#echo '
+#- name: llama_cpp/Qwen3-30B-A3B
+#  extra_params:
+#    api_key: NONE
+#- name: llama_cpp/Qwen3-0.6B
+#  extra_params:
+#    api_key: NONE
+#' > "$model_settings"
+# api_base: http://localhost:8889/ # seems setting different endpoint (port) per model is not working?
+
+# note: extra_params sets .options.keepalive, .options.think etc. field of request body not the .keepalive or .think at the root of the json object
+
+export TERM=linux # force 16 colors
+
+exec aider \
+    --user-input-color       white   \
+    --tool-warning-color     yellow  \
+    --tool-error-color       red     \
+    --assistant-output-color green   \
+    --code-theme             monokai \
+    --weak-model             openai/Qwen3-0.6B \
+    --model                  openai/Qwen3-30B-A3B \
+    --no-check-update \
+    --no-show-release-notes \
+    --no-show-model-warnings \
+    --analytics-disable \
+    "$@"
+     # --model-settings-file   "$model_settings" \
