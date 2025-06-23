@@ -22,6 +22,8 @@ user_pref("browser.quitShortcut.disabled", true);
 user_pref("browser.toolbars.bookmarks.visibility", "never");
 user_pref("browser.urlbar.groupLabels.enabled", false);
 user_pref("browser.urlbar.suggest.engines", false);
+user_pref("datareporting.policy.dataSubmissionEnabled", false);
+user_pref("datareporting.usage.uploadEnabled", false);
 user_pref("devtools.chrome.enabled", true);
 user_pref("devtools.debugger.prompt-connection", false);
 user_pref("devtools.debugger.remote-enabled", true);
