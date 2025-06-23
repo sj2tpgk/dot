@@ -735,11 +735,11 @@ fu! MyHighlight_RX()
     hi link markdownCodeDelimiter markdownCode
     hi      markdownH1            ctermfg=blue cterm=underline,bold
     hi link markdownH2            markdownH1
-    hi link markdownH3            markdownH2
+    hi      markdownH3            ctermfg=green cterm=underline,bold
     hi link markdownH4            markdownH3
     hi      markdownH1Delimiter   ctermfg=blue
     hi link markdownH2Delimiter   markdownH1Delimiter
-    hi link markdownH3Delimiter   markdownH1Delimiter
+    hi      markdownH3Delimiter   ctermfg=green
     hi link markdownH4Delimiter   markdownH1Delimiter
     hi      markdownBold          ctermfg=red
     hi link markdownItalic        markdownBold
@@ -1206,7 +1206,7 @@ aug END
 
 ]] -- >>>
 
-vim.cmd [[
+vim.cmd [[ " My alignment plugin (wip) <<<
 fu! I()
     return stridx(getline(line(".")-1),getline(".")[col(".")-1])
 endfu
@@ -1241,7 +1241,7 @@ endfu
 "inore <c-a> <c-o>:call F(0)<cr>
 "inore <c-s> <c-o>:call F(1)<cr>
 " hello,    world
-]]
+]] -- >>>
 
 -- Keys (keyboard layout specific) <<<
 do
@@ -1807,7 +1807,7 @@ vim.cmd [[ " llama.vim (experimental) <<<
             \ 't_max_predict_ms': 1000,
             \ 'n_predict': 256,
             \ 'keymap_accept_full': "<C-A>",
-            \ 'keymap_accept_line': "<C-E>",
+            \ 'keymap_accept_line': "<C-R>",
             \ 'keymap_accept_word': "<C-S>",
             \ }
         packadd llama.vim
