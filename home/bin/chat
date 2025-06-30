@@ -1,0 +1,61 @@
+#!/bin/sh
+
+# call ollama api and streams response
+
+for cmd in curl jq stdbuf; do
+    command -v "$cmd" >/dev/null || { echo "Command $cmd is not available" >&2; exit 1; }
+done
+
+[ "$#" -eq 0 ] && {
+    echo >&2 "Usage: oll HOST:PORT MODEL PROMPT ..."
+    echo >&2 "       oll HOST:PORT list"
+    exit 1
+}
+
+if [ "$2" = list ]; then
+    curl -s "$1"/v1/models | jq -r '.data[].id'
+    exit
+fi
+
+addr="$1"
+model="$2"
+shift 2
+prompt="$*"
+prompt_quoted=$(printf %s "$prompt"|jq -Rs .)
+
+messages="
+[
+    {\"role\":\"system\",\"content\":\"Respond concisely. /no_think\"},
+    {\"role\":\"user\",\"content\":$prompt_quoted}
+]
+"
+
+json="{
+    \"model\"      : \"$model\",
+    \"stream\"     : true,
+    \"messages\"   : $messages,
+    \"tools\": [{
+        \"type\": \"function\",
+        \"function\": {
+            \"name\": \"get_time\",
+            \"description\": \"Get current time\",
+            \"parameters\": {
+                \"type\": \"object\",
+                \"properties\": {
+                    \"timezone\": { \"type\": \"string\", \"description\": \"timezone\" }
+                },
+                \"required\": [\"timezone\"]
+            }
+        }
+    }]
+}"
+
+printf "%s\n" "$json" > "/tmp/chat_request"
+
+S() { stdbuf -o0 "$@"; }
+
+#curl -vs "http://$addr/v1/chat/completions" -d "@/tmp/chat_request"
+S curl -s "http://$addr/v1/chat/completions" -d "@/tmp/chat_request" \
+    | S sed -n 's/data: {/{/p' \
+    | S jq -j --unbuffered '.choices[].delta|if .content then .content elif .tool_calls then .tool_calls[0]|(if .id then "tool: \(.function.name) " else .function.arguments end) else "" end'
+
