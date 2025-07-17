@@ -6,6 +6,7 @@
 user_pref("accessibility.blockautorefresh", true); // note: uMatrix "Spoof <noscript> tags" must be DISABLED to block <meta http-equiv="refresh"> inside <noscript>
 user_pref("browser.aboutConfig.showWarning", false);
 user_pref("browser.compactmode.show", true);
+user_pref("browser.display.use_document_fonts", 1); // remote font: 1 = enable (you can "Block remote fonts" in uBO config page and only allow on certain sites via its config panel)
 user_pref("browser.download.autohideButton", true);
 user_pref("browser.download.alwaysOpenPanel", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
