@@ -39,11 +39,12 @@ exec aider \
     --tool-error-color       red     \
     --assistant-output-color green   \
     --code-theme             monokai \
-    --weak-model             openai/Qwen3-0.6B \
-    --model                  openai/Qwen3-30B-A3B \
+    --weak-model             openai/Qwen3-32B \
+    --model                  openai/Qwen3-32B \
     --no-check-update \
     --no-show-release-notes \
     --no-show-model-warnings \
     --analytics-disable \
     "$@"
      # --model-settings-file   "$model_settings" \
+    # --weak-model             openai/Qwen3-0.6B \
