@@ -496,6 +496,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|             (Dockerfile*) args="-S dockerfile" ;;
 #|             (Makefile*) args="-S makefile" ;;
 #|             (*.service|*.automount|*.link|*.mount|*.network|*.path|*.slice|*.socket|*.target|*.timer) args="-S conf" ;;
+#|             (*.html|*.htm|*.php) exec w3m -dump -T text/html -cols "$(tput cols)" "$@" ;;
 #|             (*) args="" ;;
 #|         esac
 #|         exec highlight --out-format ansi --stdout --force $args "$@"
@@ -507,6 +508,71 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| else
 #|     exec cat "$@"
 #| fi
+#- }}}
+
+
+####FILE +x bin/chat {{{
+#| #!/bin/sh
+#| 
+#| # call ollama api and streams response
+#| 
+#| for cmd in curl jq stdbuf; do
+#|     command -v "$cmd" >/dev/null || { echo "Command $cmd is not available" >&2; exit 1; }
+#| done
+#| 
+#| [ "$#" -eq 0 ] && {
+#|     echo >&2 "Usage: oll HOST:PORT MODEL PROMPT ..."
+#|     echo >&2 "       oll HOST:PORT list"
+#|     exit 1
+#| }
+#| 
+#| if [ "$2" = list ]; then
+#|     curl -s "$1"/v1/models | jq -r '.data[].id'
+#|     exit
+#| fi
+#| 
+#| addr="$1"
+#| model="$2"
+#| shift 2
+#| prompt="$*"
+#| prompt_quoted=$(printf %s "$prompt"|jq -Rs .)
+#| 
+#| messages="
+#| [
+#|     {\"role\":\"system\",\"content\":\"Respond concisely. /no_think\"},
+#|     {\"role\":\"user\",\"content\":$prompt_quoted}
+#| ]
+#| "
+#| 
+#| json="{
+#|     \"model\"      : \"$model\",
+#|     \"stream\"     : true,
+#|     \"messages\"   : $messages,
+#|     \"tools\": [{
+#|         \"type\": \"function\",
+#|         \"function\": {
+#|             \"name\": \"get_time\",
+#|             \"description\": \"Get current time\",
+#|             \"parameters\": {
+#|                 \"type\": \"object\",
+#|                 \"properties\": {
+#|                     \"timezone\": { \"type\": \"string\", \"description\": \"timezone\" }
+#|                 },
+#|                 \"required\": [\"timezone\"]
+#|             }
+#|         }
+#|     }]
+#| }"
+#| 
+#| printf "%s\n" "$json" > "/tmp/chat_request"
+#| 
+#| S() { stdbuf -o0 "$@"; }
+#| 
+#| #curl -vs "http://$addr/v1/chat/completions" -d "@/tmp/chat_request"
+#| S curl -s "http://$addr/v1/chat/completions" -d "@/tmp/chat_request" \
+#|     | S sed -n 's/data: {/{/p' \
+#|     | S jq -j --unbuffered '.choices[].delta|if .content then .content elif .tool_calls then .tool_calls[0]|(if .id then "tool: \(.function.name) " else .function.arguments end) else "" end'
+#| 
 #- }}}
 
 
@@ -1645,69 +1711,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #| nvim -u NONE --headless -c "$cmds" "$in" 2>/dev/null \
 #|     | awk -v x="$head" '{ print } /<head>/ { print x }'
 #| 
-#- }}}
-
-
-####FILE +x bin/oll {{{
-#| #!/bin/sh
-#| 
-#| # call ollama api and streams response
-#| 
-#| for cmd in curl jq stdbuf; do
-#|     command -v "$cmd" >/dev/null || { echo "Command $cmd is not available" >&2; exit 1; }
-#| done
-#| 
-#| [ "$#" -eq 0 ] && {
-#|     echo >&2 "Usage: oll HOST:PORT MODEL PROMPT ..."
-#|     echo >&2 "       oll HOST:PORT list"
-#|     echo >&2 "       oll reset"
-#|     exit 1
-#| }
-#| 
-#| tmpdir=$(mktemp -d -u)
-#| tmpdir=${tmpdir%/*}/oll
-#| mkdir -p "$tmpdir"
-#| 
-#| if [ "$1" = reset ]; then
-#|     rm -f "$tmpdir/context"
-#|     exit
-#| fi
-#| 
-#| if [ "$2" = list ]; then
-#|     curl -s "$1"/api/tags | jq -r .models[].model
-#|     exit
-#| fi
-#| 
-#| addr="$1"
-#| model="$2"
-#| shift 2
-#| prompt="$*"
-#| prompt_withquote=$(printf %s "$prompt"|jq -Rs .)
-#| 
-#| context=null
-#| if [ -e "$tmpdir/context" ]; then
-#|     read -r context < "$tmpdir/context"
-#|     if ! echo "$context" | grep -qE '^\[[0-9]+(,[0-9]+)*\]$'; then context=null; fi
-#|     # context is like [123,45678,...,333,44444] or null
-#| fi
-#| 
-#| json="{
-#|     \"model\"      : \"$model\",
-#|     \"prompt\"     : $prompt_withquote,
-#|     \"keep_alive\" : \"99999m\",
-#|     \"think\"      : false,
-#|     \"context\"    : $context
-#| }"
-#| # \"options\" : { \"num_ctx\" : 65536 },
-#| 
-#| printf "%s\n" "$json" > "$tmpdir/request"
-#| 
-#| stdbuf -o0 \
-#|     curl -s "http://$addr/api/generate" -d "@$tmpdir/request" \
-#|     | jq -j --unbuffered 'if .context then .context|stderr|empty else .response end' \
-#|     2>"$tmpdir/context" | tee "$tmpdir/response"
-#| 
-#| # rm "$tmpdir/request" "$tmpdir/response"
 #- }}}
 
 
