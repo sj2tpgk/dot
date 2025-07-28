@@ -192,16 +192,16 @@ fi
 
 
 ####FILE -- config/fish/config.fish {{{
-[ -d "/data/data/com.termux/files/home/bin/" ] \
-    && set -x PATH $PATH:/data/data/com.termux/files/home/bin/
+# using older syntax for compatibility
+[ -d "/data/data/com.termux/files/home/bin/" ]; and set -x PATH $PATH:/data/data/com.termux/files/home/bin/
 set fish_color_autosuggestion magenta
 set fish_color_command cyan
 #| function fish_greeting; end
-#| function mkcd; mkdir -p $argv[1] && cd $argv[1]; end
-#| for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i "" || bind -e $i; end 2>/dev/null
-#| for i in \e\[25\;2~ \e\[26\;5~; bind $i "" || bind -e $i; end 2>/dev/null
+#| function mkcd; mkdir -p $argv[1]; and cd $argv[1]; end
+#| for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i ""; or bind -e $i; end 2>/dev/null
+#| for i in \e\[25\;2~ \e\[26\;5~; bind $i ""; or bind -e $i; end 2>/dev/null
 #| bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
-#| command -v doas >/dev/null 2>&1 && alias sudo doas
+#| command -v doas >/dev/null 2>&1; and alias sudo doas
 #| bind ctrl-c cancel-commandline
 #- }}}
 
@@ -245,13 +245,11 @@ EDITOR="$TMUX_ROOT/bin/v"
 VISUAL="$TMUX_ROOT/bin/v"
 
 # Set shell ( if $TMUX_SHELL is set, use that shell )
-if "if [ -n '#{TMUX_SHELL}' ]; then [ fish = '#{TMUX_SHELL}' ]; else command -v fish >/dev/null; fi" {
-    set -g default-command 'TMUX_fish'
+if "if [ -n '#{TMUX_SHELL}' ]; then [ fish = '#{TMUX_SHELL}' ]; else command -v fish >/dev/null; fi" \
+    "set -g default-command 'TMUX_fish'" \
+    "set -g default-command 'TMUX_bash'"
     # set -g default-command 'exec fish -C "function conf; sed \"0,/^#===\$argv[1]/d;/^#===/Q;s/^###//\" \"'"$TMUX_CONF"'\"; end; conf fish | source"' # exec needed? to change cwd of pane process
-} {
-    set -g default-command 'TMUX_bash'
     # set -g default-command 'd=$(mktemp -d "$PREFIX"/tmp/tmux-temp-conf-XXXXXX); sed "0,/^#===inputrc/d;/^#===/Q;s/^###//" '"$TMUX_CONF"' > "$d/1"; sed "0,/^#===bash/d;/^#===/Q;s/^###//" '"$TMUX_CONF"' > "$d/2"; INPUTRC="$d/1" bash --init-file "$d/2"; rm "$d/1" "$d/2"; rmdir "$d"'
-}
 
 set -g escape-time 0
 set -g mouse       on
@@ -296,7 +294,7 @@ if-shell "command -v xcopy >/dev/null" "set -q copy-command xcopy"
 set-hook -g after-resize-pane 'if "[ #{window_zoomed_flag} -eq 1 ]" "set -g status off" "set -g status on"'
 
 # Load local config
-if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
+if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #- }}}
 
 
@@ -435,14 +433,15 @@ if-shell "test -f '$HOME/.tmux.conf.local'" { source "$HOME/.tmux.conf.local" }
 #|     --tool-error-color       red     \
 #|     --assistant-output-color green   \
 #|     --code-theme             monokai \
-#|     --weak-model             openai/Qwen3-0.6B \
-#|     --model                  openai/Qwen3-30B-A3B \
+#|     --weak-model             openai/Qwen3-32B \
+#|     --model                  openai/Qwen3-32B \
 #|     --no-check-update \
 #|     --no-show-release-notes \
 #|     --no-show-model-warnings \
 #|     --analytics-disable \
 #|     "$@"
 #|      # --model-settings-file   "$model_settings" \
+#|     # --weak-model             openai/Qwen3-0.6B \
 #- }}}
 
 
