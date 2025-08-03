@@ -396,6 +396,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| 
 #| export OPENAI_API_BASE="${OPENAI_API_BASE:-http://localhost:8888/v1}"
 #| export OPENAI_API_KEY="${OPENAI_API_BASE:-NONE}" # important: see https://github.com/Aider-AI/aider/issues/2209#issuecomment-2888776946
+#| export OPENAI_API_KEY="${OPENAI_API_BASE:-NONE}" # important: see https://github.com/Aider-AI/aider/issues/2209#issuecomment-2888776946
 #| 
 #| if ! command -v aider >/dev/null; then
 #|     echo "Aider not found"
@@ -433,8 +434,8 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     --tool-error-color       red     \
 #|     --assistant-output-color green   \
 #|     --code-theme             monokai \
-#|     --weak-model             openai/Qwen3-32B \
-#|     --model                  openai/Qwen3-32B \
+#|     --weak-model             openai/"${WEAK_MODEL:-Qwen3-0.6B}" \
+#|     --model                  openai/"${MODEL:-Qwen3-32B}" \
 #|     --no-check-update \
 #|     --no-show-release-notes \
 #|     --no-show-model-warnings \
@@ -495,6 +496,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|             (Dockerfile*) args="-S dockerfile" ;;
 #|             (Makefile*) args="-S makefile" ;;
 #|             (*.service|*.automount|*.link|*.mount|*.network|*.path|*.slice|*.socket|*.target|*.timer) args="-S conf" ;;
+#|             (*.html|*.htm|*.php) exec w3m -dump -T text/html -cols "$(tput cols)" "$@" ;;
 #|             (*) args="" ;;
 #|         esac
 #|         exec highlight --out-format ansi --stdout --force $args "$@"
