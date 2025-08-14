@@ -1,61 +1,176 @@
 #!/bin/sh
 
-# call ollama api and streams response
+default_u=localhost:11434 default_m=Qwen3-0.6B default_s='Respond concisely /no_think'
+opt_u=$default_u opt_m=$default_m opt_s=$default_s
+flag_e= flag_l= flag_h=
+prompt=''
 
-for cmd in curl jq stdbuf; do
-    command -v "$cmd" >/dev/null || { echo "Command $cmd is not available" >&2; exit 1; }
+while [ $# -ge 1 ]; do
+    case "$1" in
+        (-u|--url)    opt_u="$2"; shift 2 ;;
+        (-m|--model)  opt_m="$2"; shift 2 ;;
+        (-s|--system) opt_s="$2"; shift 2 ;;
+        (-e|--erase)  flag_e=1 ; shift ;;
+        (-l|--list)   flag_l=1 ; shift ;;
+        (-h|--help)   flag_h=1 ; shift ;;
+        (*) prompt="$prompt$1 " ; shift ;;
+    esac
 done
 
-[ "$#" -eq 0 ] && {
-    echo >&2 "Usage: oll HOST:PORT MODEL PROMPT ..."
-    echo >&2 "       oll HOST:PORT list"
-    exit 1
+help(){
+    echo "Usage: $0 [options ...] [prompt ...]"
+    echo "       cmd | $0 [options ...]"
+    echo
+    echo "Options:"
+    echo "  -e, --erase            Erase history"
+    echo "  -h, --help             Help"
+    echo "  -l, --list             List models"
+    echo "  -m, --model <model>    Model         (default: $default_m)"
+    echo "  -s, --system <prompt>  System prompt (default: $default_s)"
+    echo "  -u, --url <url>        URL of server (default: $default_u)"
 }
 
-if [ "$2" = list ]; then
-    curl -s "$1"/v1/models | jq -r '.data[].id'
-    exit
-fi
+# echo "opt_u=$opt_u opt_m=$opt_m opt_s=$opt_s flag_e=$flag_e flag_l=$flag_l prompt=$prompt"
 
-addr="$1"
-model="$2"
-shift 2
-prompt="$*"
-prompt_quoted=$(printf %s "$prompt"|jq -Rs .)
+[ "$flag_h" ] && { help; exit; }
 
-messages="
-[
-    {\"role\":\"system\",\"content\":\"Respond concisely. /no_think\"},
-    {\"role\":\"user\",\"content\":$prompt_quoted}
-]
-"
+[ "$flag_l" ] && { curl -s "$opt_u"/v1/models | jq -r '.data[].id'; exit; }
 
-json="{
-    \"model\"      : \"$model\",
-    \"stream\"     : true,
-    \"messages\"   : $messages,
-    \"tools\": [{
-        \"type\": \"function\",
-        \"function\": {
-            \"name\": \"get_time\",
-            \"description\": \"Get current time\",
-            \"parameters\": {
-                \"type\": \"object\",
-                \"properties\": {
-                    \"timezone\": { \"type\": \"string\", \"description\": \"timezone\" }
-                },
-                \"required\": [\"timezone\"]
-            }
-        }
-    }]
-}"
+outfile=chat-"$(date +%Y%m%d-%H%M%S)".txt
 
-printf "%s\n" "$json" > "/tmp/chat_request"
+tmpfile=/tmp/chat-hist
+[ "$flag_e" ] && rm "$tmpfile"
+[ -f "$tmpfile" ] || touch "$tmpfile"
 
-S() { stdbuf -o0 "$@"; }
+# note: avoid including arbitrarily large strings in command parameter (use pipe instead)
 
-#curl -vs "http://$addr/v1/chat/completions" -d "@/tmp/chat_request"
-S curl -s "http://$addr/v1/chat/completions" -d "@/tmp/chat_request" \
-    | S sed -n 's/data: {/{/p' \
-    | S jq -j --unbuffered '.choices[].delta|if .content then .content elif .tool_calls then .tool_calls[0]|(if .id then "tool: \(.function.name) " else .function.arguments end) else "" end'
+#tools="[{
+#    \"type\": \"function\",
+#    \"function\": {
+#        \"name\": \"get_time\",
+#        \"description\": \"Get current time\",
+#        \"parameters\": {
+#            \"type\": \"object\",
+#            \"properties\": {
+#                \"timezone\": { \"type\": \"string\", \"description\": \"timezone\" }
+#            },
+#            \"required\": [\"timezone\"]
+#        }
+#    }
+#}]"
 
+if [ -t 0 ]; then printf %s "$prompt"; else cat; fi \
+    | jq -Rs '{role:"user",content:.}' \
+    >> "$tmpfile"
+
+jq -s --arg m "$opt_m" --arg s "$opt_s" --argjson t '[]' \
+    '{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}' \
+    "$tmpfile" \
+    | stdbuf -o0 curl -Ns "$opt_u"/v1/chat/completions -d @- \
+    | stdbuf -i0 -o0 jq -Rcj --unbuffered 'inputs|if startswith("data: {") then .[6:] else empty end|fromjson|if .choices[0].finish_reason then ["\n",(.timings|{prompt_ms,predicted_ms,predicted_n,predicted_per_second})][] else (.choices[].delta|if .reasoning_content then .reasoning_content elif .content then .content elif .tool_calls then .tool_calls[0]|(if .id then "TOOL: \(.function.name) " else .function.arguments end) else empty end) end' \
+    | stdbuf -i0 -o0 tee "$outfile"
+
+head -n -1 "$outfile" \
+    | jq -Rs '{role:"assistant",content:.}' \
+    >> "$tmpfile"
+
+##!/bin/sh
+#
+#MODEL=${MODEL:-Qwen3-32B}
+#SERVER=${SERVER:-localhost:18034}
+#NEWL='
+#'
+#S(){ stdbuf -o0 "$@"; }
+#
+#prompt=
+#tools=
+#while [ $# -ge 1 ]; do
+#    case "$1" in
+#        (-t) echo tool "$2" ; tools="$tools$NEWL$2" ; shift 2 ;;
+#        (*) prompt="$prompt$1 " ; shift ;;
+#    esac
+#done
+#tools='get_time:get current time:timezone=time zone:format=format (you can use %Y %m %d %H %M %S):TZ=$timezone date +"$format"
+#list_files:list files in dir:dir=directory:ls "$dir"
+#cat_file:show contents of a file:path=path to the file:cat "$path"'
+#
+#tools_api=$(echo "$tools" | jq -R 'split(":")|{type:"function",function:{name:.[0],description:.[1],parameters:.[2:-1]|{type:"object",required:[.[]|split("=")[0]],properties:[.[]|split("=")|{key:.[0],value:{type:"string",description:.[1]}}]|from_entries}}}' | jq -s .)
+#
+#echo "tools_api=$tools_api"
+#tools_int=$(echo "$tools" | jq -R 'split(":")|{key:.[0],value:.[-1]}' | jq -s 'from_entries')
+#echo "tools_int=$tools_int"
+#
+#now=$(date +%Y%m%d-%H%M%S)
+#tmp=./"$now"
+#
+#jq -n --arg prompt "$prompt" '[{"role":"user","content":$prompt}]' > "$tmp-msg1"
+#
+#while :; do
+#
+#    messages="$(cat "$tmp-msg1")"
+#
+#    req=$(jq -n --arg model "$MODEL" --argjson tools_api "$tools_api" --argjson messages "$messages" '{"model":$model,"stream":true,"tools":$tools_api,"messages":([{"role":"system","content":"Respond concisely. /no_think"}]+$messages)}')
+#
+#    # echo "req=$req"
+#    echo "Requesting $messages"
+#
+#    S curl -sN "$SERVER/v1/chat/completions" -d "$req" | jq --unbuffered -nR '
+#    reduce inputs as $y (
+#        { raw: "", msgs: [] };
+#        .raw+=$y+"\n" as $acc
+#        |if ($y|startswith("data: {")) then
+#           ($y|.[6:]|fromjson|.choices[0].delta) as $x
+#           |if $x.role then
+#               ($acc|.msgs+=[{role:$x.role,content:""}])
+#           elif ($x.reasoning_content // $x.content) then
+#               (($x.reasoning_content // $x.content) as $z|($z|stderr)|
+#                   $acc|.msgs[-1].content+=$z)
+#           elif $x.tool_calls then
+#               $x.tool_calls[0] as $y|(
+#                   if $y.function.name then
+#                       (("Tool: \($y.function.name) "|stderr)|
+#                           ($acc|.msgs+=[{role:"tool_call",name:$y.function.name,arguments:""}]))
+#                   else
+#                       (($y.function.arguments|stderr)|
+#                           ($acc|.msgs[-1].arguments+=$y.function.arguments))
+#                   end
+#               )
+#           else
+#               $acc # necessary
+#           end
+#        end
+#    )
+#    ' > "$tmp-res"
+#    echo
+#
+#    jq -r .raw "$tmp-res" > "$tmp-raw"
+#    jq .msgs "$tmp-res" > "$tmp-msg2"
+#    # cat "$tmp-msg2"
+#    jq -s 'flatten' "$tmp-msg1" "$tmp-msg2" > "$tmp-msg3"
+#
+#    tool_call=$(jq -r --argjson tools_int "$tools_int" '
+#    [.[]|select(.role == "tool_call")]
+#    |if length >= 1 then
+#        .[-1] | (([.arguments|fromjson|to_entries[]|"\(.key)=\(.value|@sh)"]|join("; ")) + "; " +  $tools_int[.name])
+#    else
+#        empty
+#    end
+#    ' "$tmp-msg3")
+#
+#    if [ "$tool_call" ]; then
+#        echo "Tool call: $tool_call"
+#        tool_result=$(eval "$tool_call" 2>&1)
+#        echo "Result: $tool_result"
+#        jq --arg tool_result "$tool_result" '[.[]|select(.role != "tool_call")] + [{role:"tool",content:$tool_result}]' "$tmp-msg3" > "$tmp-msg4"
+#        cat "$tmp-msg4" > "$tmp-msg1"
+#    else
+#        echo "Finished. More prompt? "
+#        read -r prompt
+#        if [ "$prompt" ]; then
+#            jq -n --arg prompt "$prompt" '.+[{"role":"user","content":$prompt}]' "$tmp-msg3" > "$tmp-msg1"
+#        else
+#            break
+#        fi
+#    fi
+#
+#done

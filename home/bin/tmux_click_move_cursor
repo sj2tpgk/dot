@@ -1,0 +1,118 @@
+#!/bin/sh
+
+# configuration:
+#    bind -n MouseDown3Pane run "path/to/tmux_click_move_cursor '#{mouse_x}' '#{mouse_y}'"
+
+log(){ echo "$*" >> ~/log; }
+# log(){ :; }
+
+log "$(date)"
+
+tmux select-pane
+
+
+cx0=$(tmux display -pF '#{cursor_x}')
+cy0=$(tmux display -pF '#{cursor_y}')
+cols=$(tmux display -pF '#{pane_width}')
+
+tx=$1
+ty=$2
+
+log "$cx0,$cy0,$tx,$ty"
+log "$cols"
+
+getdir(){
+    # cx cy tx ty
+    if [ "$2" -gt "$4" ]; then
+        echo Left
+    elif [ "$2" -lt "$4" ]; then
+        echo Right
+    elif [ "$1" -gt "$3" ]; then
+        echo Left
+    else
+        echo Right
+    fi
+}
+
+getspeed(){
+    # cx cy tx ty
+    if [ "$2" -eq "$4" ]; then
+        if [ "$1" -ge "$3" ]; then
+            echo $(($1 - $3))
+        else
+            echo $(($3 - $1))
+        fi
+    elif [ "$2" -lt "$4" ]; then
+        echo $((cols * ($4 - $2)))
+    else
+        echo $((cols * ($2 - $4)))
+    fi
+}
+
+getlatency(){
+    # cx cy
+    getlatency_t1=$(date +%s.%N)
+    for _ in $(seq 100); do
+        sleep 0.1
+        if [ "$1" -ne "$(tmux display -pF '#{cursor_x}')" ] || [ "$2" -ne "$(tmux display -pF '#{cursor_y}')" ]; then
+            break
+        fi
+    done
+    getlatency_t2=$(date +%s.%N)
+    awk -v t1="$getlatency_t1" -v t2="$getlatency_t2" 'BEGIN {print t2-t1}'
+}
+
+cx=$cx0
+cy=$cy0
+
+# measure latency
+# speed=8
+# go left/right
+#   if reached goal, exit
+#   if passed through goal or reached the boundary, switch direction and halve the speed (ensure it decreases by at least one)
+
+speed=$(getspeed "$cx" "$cy" "$tx" "$ty")
+dir=$(getdir "$cx" "$cy" "$tx" "$ty")
+latency=.3
+init=1
+
+for _ in $(seq 20); do
+    log "$tx $ty $cx $cy $dir $speed"
+    if [ "$cx" -eq "$tx" ] && [ "$cy" -eq "$ty" ]; then # reached goal
+        exit
+    fi
+    tmux send -N "$speed" "$dir"
+    sleep $latency
+    #if [ "$init" ]; then
+    #    latency=$(getlatency $cx $cy)
+    #    log "Latency is $latency"
+    #else
+    #    sleep $latency
+    #fi
+    cx2=$(tmux display -pF '#{cursor_x}')
+    cy2=$(tmux display -pF '#{cursor_y}')
+    if [ "$cx" = "$cx2" ] && [ "$cy" = "$cy2" ]; then # boundary
+        log "Error reached boundary"
+        exit
+    fi
+    dir=$(getdir "$cx2" "$cy2" "$tx" "$ty")
+    if [ "$cy2" -ne "$ty" ]; then
+        speed=$((speed / 2))
+    else
+        speed2=$(getspeed "$cx2" "$cy2" "$tx" "$ty")
+        log "speed2: $speed2"
+        if [ "$speed2" -lt "$speed" ]; then
+            speed=$speed2
+        else
+            speed=$((speed / 2))
+        fi
+    fi
+    if [ "$speed" -eq 0 ]; then
+        log "Error speed is 0"
+        exit
+    fi
+    cx=$cx2
+    cy=$cy2
+    init=
+done
+
