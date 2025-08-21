@@ -552,8 +552,8 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| 
 #| outfile=chat-"$(date +%Y%m%d-%H%M%S)".txt
 #| 
-#| tmpfile=/tmp/chat-hist
-#| [ "$flag_e" ] && rm "$tmpfile"
+#| tmpfile=${TMPDIR:-/tmp}/chat-hist
+#| [ "$flag_e" ] && rm -f "$tmpfile"
 #| [ -f "$tmpfile" ] || touch "$tmpfile"
 #| 
 #| # note: avoid including arbitrarily large strings in command parameter (use pipe instead)
@@ -574,15 +574,18 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| #}]"
 #| 
 #| if [ -t 0 ]; then printf %s "$prompt"; else cat; fi \
+#|     | tee "$outfile" \
 #|     | jq -Rs '{role:"user",content:.}' \
 #|     >> "$tmpfile"
+#| 
+#| printf "\n\n" >> "$outfile"
 #| 
 #| jq -s --arg m "$opt_m" --arg s "$opt_s" --argjson t '[]' \
 #|     '{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}' \
 #|     "$tmpfile" \
 #|     | stdbuf -o0 curl -Ns "$opt_u"/v1/chat/completions -d @- \
 #|     | stdbuf -i0 -o0 jq -Rcj --unbuffered 'inputs|if startswith("data: {") then .[6:] else empty end|fromjson|if .choices[0].finish_reason then ["\n",(.timings|{prompt_ms,predicted_ms,predicted_n,predicted_per_second})][] else (.choices[].delta|if .reasoning_content then .reasoning_content elif .content then .content elif .tool_calls then .tool_calls[0]|(if .id then "TOOL: \(.function.name) " else .function.arguments end) else empty end) end' \
-#|     | stdbuf -i0 -o0 tee "$outfile"
+#|     | stdbuf -i0 -o0 tee -a "$outfile"
 #| 
 #| head -n -1 "$outfile" \
 #|     | jq -Rs '{role:"assistant",content:.}' \
