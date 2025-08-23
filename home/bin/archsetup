@@ -23,3 +23,6 @@ ask pacman --noconfirm -S foot fyi grim keyd labwc ly pipewire swaybg swaylock w
 ask pacman --noconfirm -S claws-mail firefox mousepad mpv udiskie pcmanfm
 
 ask pacman --noconfirm -S docker
+
+# xorg
+# ask pacman -S openbox xterm xorg xorg-xinit arandr xclip picom rxvt-unicode feh tint2 lxappearance lxappearance-obconf
