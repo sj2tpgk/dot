@@ -105,8 +105,7 @@ do -- Plugins <<<
 
     -- AI
     -- plug ('ggml-org/llama.vim', 1)
-    plug ("https://codeberg.org/sj2tpgk/llama.vim", 0, "new")
-
+    plug ("https://codeberg.org/sj2tpgk/llama.vim", 0, "master")
 
     -- Text editing
     -- plug "junegunn/vim-easy-align"
