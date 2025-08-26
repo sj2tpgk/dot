@@ -168,7 +168,7 @@
 }
 
 @-moz-document domain("geeksforgeeks.org") {
-    #secondary { display: none }
+    body > nav, div[id^=header-main], #secondary, #scrollTopBtn, .footer-wrapper { display: none !important }
 }
 
 @-moz-document domain("qiita.com") {

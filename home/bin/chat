@@ -1,46 +1,81 @@
 #!/bin/sh
 
 default_u=localhost:11434 default_m=Qwen3-0.6B default_s='Respond concisely /no_think'
-opt_u=$default_u opt_m=$default_m opt_s=$default_s
-flag_e= flag_l= flag_h=
+flag_e= flag_h= flag_l= flag_n=
+opt_m=$default_m opt_s=$default_s opt_u=$default_u
 prompt=''
 
 while [ $# -ge 1 ]; do
     case "$1" in
-        (-u|--url)    opt_u="$2"; shift 2 ;;
-        (-m|--model)  opt_m="$2"; shift 2 ;;
-        (-s|--system) opt_s="$2"; shift 2 ;;
-        (-e|--erase)  flag_e=1 ; shift ;;
-        (-l|--list)   flag_l=1 ; shift ;;
-        (-h|--help)   flag_h=1 ; shift ;;
-        (*) prompt="$prompt$1 " ; shift ;;
+        (-[!-][!-]*)  _1=${1#?} ; shift ; set -- "-${_1%"${_1#?}"}" "-${_1#?}" "$@" ;;
+        (-e|--erase)   flag_e=1  ; shift ;;
+        (-h|--help)    flag_h=1  ; shift ;;
+        (-l|--list)    flag_l=1  ; shift ;;
+        (-n|--noout)   flag_n=1  ; shift ;;
+        (-m|--model)   opt_m="$2"; shift 2 ;;
+        (-s|--system)  opt_s="$2"; shift 2 ;;
+        (-u|--url)     opt_u="$2"; shift 2 ;;
+        (*) prompt="$*" ; break ;;
     esac
 done
+
+# echo "flag_e=[$flag_e] flag_h=[$flag_h] flag_l=[$flag_l] flag_n=[$flag_n] opt_m=[$opt_m] opt_u=[$opt_u] opt_s=[$opt_s] prompt=[$prompt]"; exit
 
 help(){
     echo "Usage: $0 [options ...] [prompt ...]"
     echo "       cmd | $0 [options ...]"
     echo
     echo "Options:"
-    echo "  -e, --erase            Erase history"
+    echo "  -e, --erase            Erase history before starting"
     echo "  -h, --help             Help"
     echo "  -l, --list             List models"
     echo "  -m, --model <model>    Model         (default: $default_m)"
+    echo "  -n, --noout            No chat output file (still creates history)"
     echo "  -s, --system <prompt>  System prompt (default: $default_s)"
     echo "  -u, --url <url>        URL of server (default: $default_u)"
 }
 
-# echo "opt_u=$opt_u opt_m=$opt_m opt_s=$opt_s flag_e=$flag_e flag_l=$flag_l prompt=$prompt"
+error(){
+    echo "Error: $*" >&2; exit 1
+}
 
-[ "$flag_h" ] && { help; exit; }
+missing=
+for i in curl jq stdbuf; do
+    if ! command -v "$i" >/dev/null; then
+        missing="$missing $i"
+    fi
+done
+[ "$missing" ] && error "command not available:$missing"
 
-[ "$flag_l" ] && { curl -s "$opt_u"/v1/models | jq -r '.data[].id'; exit; }
+[ "$flag_h" ] && { help; exit 0; }
 
-outfile=chat-"$(date +%Y%m%d-%H%M%S)".txt
+res=$(curl -fs "$opt_u"/v1/models 2>/dev/null)
+_sta=$?
+[ "$_sta" -ne 0 ] && error "getting model list: server error"
 
-tmpfile=/tmp/chat-hist
-[ "$flag_e" ] && rm "$tmpfile"
+models=$(echo "$res" | jq -r '.data[].id' 2>/dev/null) # do not care newlines
+_sta=$?
+[ "$_sta" -ne 0 ] && error "getting model list: format error"
+
+[ "$flag_l" ] && { echo "$models"; exit 0; }
+
+echo "$models" | grep -qFx "$opt_m" || error "model \"$opt_m\" is not available"
+
+outdir=$HOME/.cache/chat/
+mkdir -p "$outdir"
+
+outfile="$outdir"/chat-"$(date +%Y%m%d-%H%M%S)".txt
+[ "$flag_n" ] && outfile=${TMPDIR:-/tmp}/chat-out
+
+tmpfile=${TMPDIR:-/tmp}/chat-hist
+[ "$flag_e" ] && rm -f "$tmpfile"
 [ -f "$tmpfile" ] || touch "$tmpfile"
+
+cleanup(){
+    [ "$flag_n" ] && rm -f "$outfile"
+}
+
+trap cleanup INT TERM
 
 # note: avoid including arbitrarily large strings in command parameter (use pipe instead)
 
@@ -60,17 +95,22 @@ tmpfile=/tmp/chat-hist
 #}]"
 
 if [ -t 0 ]; then printf %s "$prompt"; else cat; fi \
+    | tee "$outfile" \
     | jq -Rs '{role:"user",content:.}' \
     >> "$tmpfile"
+
+printf "\n\n" >> "$outfile"
 
 jq -s --arg m "$opt_m" --arg s "$opt_s" --argjson t '[]' \
     '{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}' \
     "$tmpfile" \
-    | stdbuf -o0 curl -Ns "$opt_u"/v1/chat/completions -d @- \
-    | stdbuf -i0 -o0 jq -Rcj --unbuffered 'inputs|if startswith("data: {") then .[6:] else empty end|fromjson|if .choices[0].finish_reason then ["\n",(.timings|{prompt_ms,predicted_ms,predicted_n,predicted_per_second})][] else (.choices[].delta|if .reasoning_content then .reasoning_content elif .content then .content elif .tool_calls then .tool_calls[0]|(if .id then "TOOL: \(.function.name) " else .function.arguments end) else empty end) end' \
-    | stdbuf -i0 -o0 tee "$outfile"
+    | stdbuf -o0 curl -fNs "$opt_u"/v1/chat/completions -d @- \
+    | stdbuf -i0 -o0 jq -Rcj --unbuffered 'foreach (inputs|if startswith("data: {") then .[6:] else empty end|fromjson) as $x ([null];[$x,.[0]];.)|. as [$x,$y]|(try $y.choices[].delta.reasoning_content catch false) as $pr|if $x.choices[0].finish_reason then ["\n",($x.timings|{prompt_ms,predicted_ms,predicted_n,predicted_per_second})][] else ($x.choices[].delta|if .reasoning_content then (if $pr then .reasoning_content else ["\u001b[35m",.reasoning_content][] end) elif .content then (if $pr then ["\u001b[0m\n",.content][] else .content end) elif .tool_calls then .tool_calls[0]|(if .id then "TOOL: \(.function.name) " else .function.arguments end) else empty end) end' \
+    | stdbuf -i0 -o0 tee -a "$outfile"
 
-head -n -1 "$outfile" \
+[ -f "$outfile" ] || exit 0
+
+sed -n '$q;3,$p' "$outfile" \
     | jq -Rs '{role:"assistant",content:.}' \
     >> "$tmpfile"
 
