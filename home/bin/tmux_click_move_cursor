@@ -3,8 +3,8 @@
 # configuration:
 #    bind -n MouseDown3Pane run "path/to/tmux_click_move_cursor '#{mouse_x}' '#{mouse_y}'"
 
-log(){ echo "$*" >> ~/log; }
-# log(){ :; }
+# log(){ echo "$*" >> ~/log; }
+log(){ :; }
 
 log "$(date)"
 
