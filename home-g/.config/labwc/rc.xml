@@ -133,6 +133,8 @@
       <naturalScroll>no</naturalScroll>
       <pointerSpeed>.85</pointerSpeed>
       <accelProfile>adaptive</accelProfile>
+      <scrollMethod>edge</scrollMethod>
+      <scrollFactor>4.0</scrollFactor>
     </device>
   </libinput>
   <windowRules>

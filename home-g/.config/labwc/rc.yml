@@ -101,6 +101,8 @@ labwc_config:
       naturalScroll: no
       pointerSpeed: .85
       accelProfile: adaptive
+      scrollMethod: edge
+      scrollFactor: 4.0
 
   windowRules:
     windowRule identifier="imv":
