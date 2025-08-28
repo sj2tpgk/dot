@@ -1374,6 +1374,7 @@ function lsp_config_1_misc() -- Lsp (1) misc config <<<
                 \ ["f",      "References",     "lua vim.lsp.buf.references()"],
                 \ ["i",      "Diag",           "lua diagShow()"],
                 \ ["I",      "Diag level",     "lua diagToggleLevel()"],
+                \ ["x",      "Fix apply",      "lua vim.lsp.buf.code_action({ apply = true })"],
                 \ ["h",      "Hover+",         "lua for i=1,2 do vim.lsp.buf.hover() end"],
                 \ ["m",      "Implementation", "lua vim.lsp.buf.implementation()"],
                 \ ["s",      "Signature",      "lua vim.lsp.buf.signature_help()"],

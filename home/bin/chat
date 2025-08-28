@@ -1,8 +1,8 @@
 #!/bin/sh
 
-default_u=localhost:11434 default_m=Qwen3-0.6B default_s='Respond concisely /no_think'
+default_u=localhost:11434 default_s='Respond concisely /no_think'
 flag_e= flag_h= flag_l= flag_n=
-opt_m=$default_m opt_s=$default_s opt_u=$default_u
+opt_m= opt_s=$default_s opt_u=$default_u
 prompt=''
 
 while [ $# -ge 1 ]; do
@@ -29,7 +29,7 @@ help(){
     echo "  -e, --erase            Erase history before starting"
     echo "  -h, --help             Help"
     echo "  -l, --list             List models"
-    echo "  -m, --model <model>    Model         (default: $default_m)"
+    echo "  -m, --model <model>    Model         (default: auto)"
     echo "  -n, --noout            No chat output file (still creates history)"
     echo "  -s, --system <prompt>  System prompt (default: $default_s)"
     echo "  -u, --url <url>        URL of server (default: $default_u)"
@@ -56,6 +56,8 @@ _sta=$?
 models=$(echo "$res" | jq -r '.data[].id' 2>/dev/null) # do not care newlines
 _sta=$?
 [ "$_sta" -ne 0 ] && error "getting model list: format error"
+
+[ ! "$opt_m" ] && opt_m=$(echo "$models" | head -n1)
 
 [ "$flag_l" ] && { echo "$models"; exit 0; }
 
