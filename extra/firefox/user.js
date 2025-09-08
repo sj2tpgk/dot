@@ -29,6 +29,7 @@ user_pref("devtools.chrome.enabled", true);
 user_pref("devtools.debugger.prompt-connection", false);
 user_pref("devtools.debugger.remote-enabled", true);
 user_pref("devtools.netmonitor.responseBodyLimit", 0);
+user_pref("dom.block_download_insecure", false); // no prompt on http download
 user_pref("dom.event.clipboardevents.enabled", true); // false prevents pasting in Teams
 // user_pref("dom.event.contextmenu.enabled", false);
 user_pref("extensions.pocket.enabled", false);
