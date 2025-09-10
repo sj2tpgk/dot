@@ -107,7 +107,7 @@ jq -s --arg m "$opt_m" --arg s "$opt_s" --argjson t '[]' \
     '{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}' \
     "$tmpfile" \
     | stdbuf -o0 curl -fNs "$opt_u"/v1/chat/completions -d @- \
-    | stdbuf -i0 -o0 jq -Rcj --unbuffered 'foreach (inputs|if startswith("data: {") then .[6:] else empty end|fromjson) as $x ([null];[$x,.[0]];.)|. as [$x,$y]|(try $y.choices[].delta.reasoning_content catch false) as $pr|if $x.choices[0].finish_reason then ["\n",($x.timings|{model:$x.model,prompt_ms,predicted_ms,predicted_n,predicted_per_second})][] else ($x.choices[].delta|if .reasoning_content then (if $pr then .reasoning_content else ["\u001b[35m",.reasoning_content][] end) elif .content then (if $pr then ["\u001b[0m\n",.content][] else .content end) elif .tool_calls then .tool_calls[0]|(if .id then "TOOL: \(.function.name) " else .function.arguments end) else empty end) end' \
+    | stdbuf -i0 -o0 jq -Rcj --unbuffered 'foreach (inputs|if startswith("data: {") then .[6:] else empty end|fromjson) as $x ([null];[$x,.[0]];.)|. as [$x,$y]|(try $y.choices[].delta.reasoning_content catch false) as $pr|if $x.timings then ["\n",($x.timings|{model:$x.model,prompt_ms,predicted_ms,predicted_n,predicted_per_second})][] else ($x.choices[].delta|if .reasoning_content then (if $pr then .reasoning_content else ["\u001b[35m",.reasoning_content][] end) elif .content then (if $pr then ["\u001b[0m\n",.content][] else .content end) elif .tool_calls then .tool_calls[0]|(if .id then "TOOL: \(.function.name) " else .function.arguments end) else empty end) end' \
     | stdbuf -i0 -o0 tee -a "$outfile"
 
 [ -f "$outfile" ] || exit 0
