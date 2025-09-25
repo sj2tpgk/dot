@@ -31,7 +31,6 @@ aliasif nv   nvim
 aliasif v    nvim
 aliasif sudo doas
 aliasif ra   ranger
-has rlwrap && alias sh 'PS1="\$ " rlwrap -p"3;34" sh' # Dash has no history, arrow keys etc.
 
 # Abbr
 abbr psa "ps alx | grep -i"
@@ -103,6 +102,14 @@ end
 
 # Rlwrap
 set -xg RLWRAP_HOME ~/.config/rlwrap/
+function sh
+    set -l shpath (command -v sh)
+    if command -v rlwrap >/dev/null && [ -t 1 ] && [ (count $argv) -eq 0 ]
+        PS1="\$ " rlwrap -p"3;34" $shpath $argv # Dash has no history, arrow keys etc.
+    else
+        $shpath $argv
+    end
+end
 
 # Command not found
 function fish_command_not_found --on-event fish_command_not_found

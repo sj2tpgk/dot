@@ -1662,9 +1662,11 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     gsub("[^0-9]*", "", total)
 #|     gsub("[^0-9]*", "", avail)
 #|     used  = total - avail
-#|     total = int(total / 100000) / 10
+#|     # total = int(total / 100000) / 10
 #|     # avail = int(avail / 100000) / 10
-#|     used  = int(used  / 100000) / 10
+#|     # used  = int(used  / 100000) / 10
+#|     total = int(((total / 100000) + 5) / 10) # round at GB
+#|     used  = int(((used  / 100000) + 5) / 10) # round at GB
 #|     return used "/" total "GB"
 #| }
 #- }}}
