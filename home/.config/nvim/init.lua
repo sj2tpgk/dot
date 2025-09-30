@@ -257,7 +257,7 @@ nnore <tab> za
 
 "set nofoldenable
 
-set foldminlines=3
+set foldminlines=1
 set fillchars=fold:\  foldtext='\ '.substitute(getline(v:foldstart),'{{{','','g').'\ \ '.(v:foldend-v:foldstart).'\ '
 
 " Better indent-based folding; alto take 'fdn' into account
