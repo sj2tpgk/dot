@@ -31,7 +31,6 @@ aliasif nv   nvim
 aliasif v    nvim
 aliasif sudo doas
 aliasif ra   ranger
-has rlwrap && alias sh 'PS1="\$ " rlwrap -p"3;34" sh' # Dash has no history, arrow keys etc.
 
 # Abbr
 abbr psa "ps alx | grep -i"
@@ -103,6 +102,14 @@ end
 
 # Rlwrap
 set -xg RLWRAP_HOME ~/.config/rlwrap/
+function sh
+    set -l shpath (command -v sh)
+    if command -v rlwrap >/dev/null && [ -t 1 ] && [ (count $argv) -eq 0 ]
+        PS1="\$ " rlwrap -p"3;34" $shpath $argv # Dash has no history, arrow keys etc.
+    else
+        $shpath $argv
+    end
+end
 
 # Command not found
 function fish_command_not_found --on-event fish_command_not_found
@@ -137,9 +144,9 @@ bind \es "commandline -r (commandline -b | sed 's#\s*\$##; s#^\s*#sudo #; s#pacm
 bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
 bind \eh "commandline -r (commandline -b | sed 's#\s*\$# --help#')"
 bind \em popup_help_man
-bind -k ppage prevd-or-backward-word
-bind -k npage nextd-or-forward-word
-bind -k btab  nextd-or-forward-word # shift+tab
+bind pageup    prevd-or-backward-word
+bind pagedown  nextd-or-forward-word
+bind shift-tab nextd-or-forward-word # shift+tab
 
 # Unbind function keys (use fish_key_reader to find out key name)
 for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -e $i; end

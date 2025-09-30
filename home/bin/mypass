@@ -1,0 +1,78 @@
+#!/bin/sh -e
+
+MYPASS_DATADIR=${MYPASS_DATADIR:-~/.config/mypass}
+
+error(){ echo "ERROR: $*" >&2; exit 1; }
+has(){ command -v "$1" >/dev/null; }
+hasinit(){ for i in cipher key key.pub list; do [ -e "$MYPASS_DATADIR/$i" ] || return 1; done; }
+help(){ printf "Usage: %s <e|edit>\n       pass.sh <h|help>\n       pass.sh <i|init>\n       pass.sh <l|list>\n       pass.sh <s|show> NAME\n\nTo generate a key, use \"ssh-keygen -f <path>\" (you should set a passphrase (which is not supported by age-keygen btw))\n\n" "$0"; }
+
+has age || error "age not available"
+
+[ -d "$MYPASS_DATADIR" ] || mkdir -p "$MYPASS_DATADIR"
+
+cd "$MYPASS_DATADIR" || error "the directory $MYPASS_DATADIR does not exist or not accessible. use \"$0 i\" to initialize the database"
+
+case "$1" in
+
+    (e|edit)
+        hasinit || error "database not initialized"
+        has nano || has vim || has nvim || error "no suitable editor found (nano/vim/nvim)"
+        bakdir="backup/$(date +%Y%m%d-%H%M%S)"
+        mkdir -p "$bakdir"
+        cp cipher key key.pub "$bakdir/"
+        tmp=$(mktemp -p /dev/shm/)
+        trap 'rm -f "$tmp"' INT TERM EXIT
+        age -i key -d -o "$tmp" cipher || error "decryption failed"
+        vimcmd="set noswf nobk nowb vi= noudf bdir= pm= nocp | syn on"
+        # TERM and LANG workaroud (should configure sshd_config AcceptEnv and use SendEnv/SetEnv)
+        if command -v vim; then
+            LANG=en_US.UTF-8 vim  -n -u NONE -i NONE --cmd "$vimcmd" "$tmp"
+        elif command -v nvim; then
+            LANG=en_US.UTF-8 nvim -n -u NONE -i NONE --cmd "$vimcmd" "$tmp"
+        elif command -v nano; then
+            LANG=en_US.UTF-8 TERM=xterm nano -R -C /dev/null "$tmp"
+        else
+            error "no suitable editor found"
+        fi
+        encok=
+        for i in 1 2 3; do
+            echo "Encrypting ..."
+            if age -i key -e -o cipher "$tmp"; then
+                encok=1
+                break
+            fi
+        done
+        [ "$encok" ] || error "encryption failed"
+        awk '/^\[.*\]$/{p=substr($0,2,length($0)-2)}/^%.*=.*/{sub("=.*","");print p"."substr($0,2)}' "$tmp" > list
+        rm "$tmp"
+        ;;
+
+    (h|help|"")
+        help
+        ;;
+
+    (i|init)
+        [ -e cipher ] && error "cipher file already exists: $MYPASS_DATADIR/cipher"
+        [ ! -e key ] && { help; error "please generate a key first at $MYPASS_DATADIR/key"; }
+        printf "" | age -i key -e -o cipher
+        printf "" > list
+        ;;
+
+    (l|list)
+        hasinit || error "database not initialized"
+        cat list
+        ;;
+
+    (s|show)
+        hasinit || error "database not initialized"
+        name=$2
+        [ "$name" ] || { help; error "name not specified"; }
+        age -i key -d cipher | awk -F= -v name="$name" '/^\[.*\]$/{p=substr($0,2,length($0)-2)}(index($1,"%")==1&&index(p"."substr($1,2),name)){sub("^%[^=]*=","");print;m=1}END{if(!m)exit 1}' || error "could not read database or no matching password"
+        ;;
+
+    (*)
+        help; error "bad command: $1"
+        ;;
+
+esac
