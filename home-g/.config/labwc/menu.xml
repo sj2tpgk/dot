@@ -92,11 +92,11 @@
         </action>
       </item>
       <item label="tmux">
-        <action name="Execute" command="footclient -e uim-fep -e tmux">
+        <action name="Execute" command="footclient -o line-height=18px -e uim-fep -e tmux">
         </action>
       </item>
       <item label="tmux light">
-        <action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=Unifont\\ JPMod:style=bold:pixelsize=16 -e sh -c MY_DARK=0\\ exec\\ uim-fep\\ -e\\ tmux" -'>
+        <action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=Unifont\\ JPMod:style=bold:pixelsize=16 -o line-height=18px -e sh -c MY_DARK=0\\ exec\\ uim-fep\\ -e\\ tmux" -'>
         </action>
       </item>
       <item label="dark">
@@ -108,7 +108,7 @@
         </action>
       </item>
       <item label="big">
-        <action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=Droid\\ Sans\\ Mono\\ Dotted:size=24 -e sh -c MY_DARK=0\\ exec\\ /bin/fish" -'>
+        <action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=Droid\\ Sans\\ Mono\\ Dotted:size=24 -o line-height=18px -e sh -c MY_DARK=0\\ exec\\ /bin/fish" -'>
         </action>
       </item>
       <item label="Mousepad">

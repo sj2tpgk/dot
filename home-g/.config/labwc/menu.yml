@@ -65,15 +65,15 @@ openbox_menu:
       item label="PCManFM":
         action name="Execute" command="pcmanfm":
       item label="tmux":
-        action name="Execute" command="footclient -e uim-fep -e tmux":
+        action name="Execute" command="footclient -o line-height=18px -e uim-fep -e tmux":
       item label="tmux light":
-        action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=Unifont\\ JPMod<COLON>style=bold<COLON>pixelsize=16 -e sh -c MY_DARK=0\\ exec\\ uim-fep\\ -e\\ tmux" -':
+        action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=Unifont\\ JPMod<COLON>style=bold<COLON>pixelsize=16 -o line-height=18px -e sh -c MY_DARK=0\\ exec\\ uim-fep\\ -e\\ tmux" -':
       item label="dark":
         action name="Execute" command="foot -e /bin/sh":
       item label="light":
         action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=Unifont\\ JPMod<COLON>style=bold<COLON>pixelsize=16 -o line-height=18px -e sh -c MY_DARK=0\\ exec\\ /bin/sh" -':
       item label="big":
-        action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=Droid\\ Sans\\ Mono\\ Dotted<COLON>size=24 -e sh -c MY_DARK=0\\ exec\\ /bin/fish" -':
+        action name="Execute" command='sh -c "exec footclient \$(colorscheme myb foot) -o font=Droid\\ Sans\\ Mono\\ Dotted<COLON>size=24 -o line-height=18px -e sh -c MY_DARK=0\\ exec\\ /bin/fish" -':
       item label="Mousepad":
         action name="Execute" command="mousepad":
       item label="VirtualBox":
