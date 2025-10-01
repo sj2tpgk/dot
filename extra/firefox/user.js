@@ -6,7 +6,7 @@
 user_pref("accessibility.blockautorefresh", true); // note: uMatrix "Spoof <noscript> tags" must be DISABLED to block <meta http-equiv="refresh"> inside <noscript>
 user_pref("browser.aboutConfig.showWarning", false);
 user_pref("browser.compactmode.show", true);
-user_pref("browser.display.use_document_fonts", 0); // remote font: 1 = enable (you can "Block remote fonts" in uBO config page and only allow on certain sites via its config panel; however this is not suitable when uBO is not installed)
+user_pref("browser.display.use_document_fonts", 1); // remote font: 1 = enable (you can "Block remote fonts" in uBO config page and only allow on certain sites via its config panel; however this is not suitable when uBO is not installed. note: when remote font is disabled some PDFs will not render properly (ms office web too if I remember correctly))
 user_pref("browser.download.autohideButton", true);
 user_pref("browser.download.alwaysOpenPanel", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
@@ -29,7 +29,6 @@ user_pref("devtools.chrome.enabled", true);
 user_pref("devtools.debugger.prompt-connection", false);
 user_pref("devtools.debugger.remote-enabled", true);
 user_pref("devtools.netmonitor.responseBodyLimit", 0);
-user_pref("dom.block_download_insecure", false); // no prompt on http download
 user_pref("dom.event.clipboardevents.enabled", true); // false prevents pasting in Teams
 // user_pref("dom.event.contextmenu.enabled", false);
 user_pref("extensions.pocket.enabled", false);
