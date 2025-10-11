@@ -23,14 +23,21 @@ function has; command -v $argv[1] >/dev/null 2>&1; end
 # Alias
 function aliasif; has $argv[2] && alias $argv[1] $argv[2]; end
 alias   cp   'cp -i'
-aliasif gstd gst-discoverer-1.0
-aliasif gsti gst-inspect-1.0
-aliasif gstl gst-launch-1.0
 aliasif js   node
 aliasif nv   nvim
 aliasif v    nvim
 aliasif sudo doas
 aliasif ra   ranger
+
+# Gstreamer
+aliasif gstd gst-discoverer-1.0
+aliasif gsti gst-inspect-1.0
+if has gst-launch-1.0
+    function gstl
+        # colorize element name (when -v is used)
+        time stdbuf -o0 gst-launch-1.0 $argv | grep ':[a-zA-Z0-9]*\.\|$'
+    end
+end
 
 # Abbr
 abbr psa "ps alx | grep -i"
