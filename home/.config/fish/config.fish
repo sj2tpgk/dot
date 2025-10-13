@@ -39,6 +39,9 @@ if has gst-launch-1.0
     end
 end
 
+# String/math
+alias sr "string replace"
+
 # Abbr
 abbr psa "ps alx | grep -i"
 if has sudo
