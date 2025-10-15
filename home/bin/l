@@ -2,9 +2,10 @@
 
 # Argument transposer
 
-l_PIPE=${l_PIPE:-"!"}
-l_ONE=${l_ONE:-"--"}
-l_MANY=${l_MANY:-"---"}
+L_PIPE=${L_PIPE:-"!"}
+L_ONE=${L_ONE:-"--"}
+L_MANY=${L_MANY:-"---"}
+L_DRY=${L_DRY:-}
 
 die(){ echo "ERROR: $*" >&2; exit 1; }
 
@@ -14,8 +15,8 @@ f(){
     many=  # is --- used?
     for i in "$@"; do
         case "$i" in
-            ("$l_MANY") [ "$many" ] && die "multiple $l_MANY"; many=1; nph=$((nph+1)); nval=0 ;;
-            ("$l_ONE") nph=$((nph+1)); nval=0 ;;
+            ("$L_MANY") [ "$many" ] && die "multiple $L_MANY"; many=1; nph=$((nph+1)); nval=0 ;;
+            ("$L_ONE") nph=$((nph+1)); nval=0 ;;
             (*) eval "val_$nval=\$i"; nval=$((nval+1)) ;;
         esac
     done
@@ -35,32 +36,38 @@ f(){
     idxV=0 # number of values used so far
     for i in "$@"; do
         case "$i" in
-            ("$l_PIPE")
-                cmd="$cmd | "
+            ("$L_PIPE")
+                cmd="$cmd| "
                 ;;
-            ("$l_ONE")
+            ("$L_ONE")
                 [ "$idxV" -eq "$nval" ] && break # found the last --
-                cmd="$cmd \"\$val_$idxV\""
+                cmd="$cmd\"\$val_$idxV\" "
                 idxV=$((idxV+1))
                 ;;
-            ("$l_MANY")
+            ("$L_MANY")
                 # note: --- consumes multiple values but still leave as many needed for later --'s
                 j=$((nval-nph+1))
                 while [ "$j" -gt 0 ]; do
-                    cmd="$cmd \"\$val_$idxV\""
+                    cmd="$cmd\"\$val_$idxV\" "
                     idxV=$((idxV+1))
                     j=$((j-1))
                 done
                 ;;
             (*)
-                cmd="$cmd \"\$arg_$idxA\""
+                cmd="$cmd\"\$arg_$idxA\" "
                 eval "arg_$idxA=\$i"
                 idxA=$((idxA+1))
                 ;;
         esac
     done
-    # echo "$cmd" >&2
-    eval "$cmd" # equivalent to e.g. eval '"$arg_0" "$val_0" ..'; shell keywords and special chars are in $arg_0 etc will be interpreted as literal string. also shell variables won't leak
+
+    if [ "$L_DRY" ]; then
+        echo "$cmd" >&2
+        i=0; printf "arg: "; while [ "$i" -lt "$idxA" ]; do eval "printf \"$i=%s \" \"\$arg_$i\""; i=$((i+1)); done; echo
+        i=0; printf "val: "; while [ "$i" -lt "$idxV" ]; do eval "printf \"$i=%s \" \"\$val_$i\""; i=$((i+1)); done; echo
+    else
+        eval "$cmd" # equivalent to e.g. eval '"$arg_0" "$val_0" ..'; shell keywords and special chars are in $arg_0 etc will be interpreted as literal string. also shell variables won't leak
+    fi
 }
 
 f "$@"
