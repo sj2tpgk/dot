@@ -1,21 +1,39 @@
 #!/bin/sh
 
-if [ -t 1 ]; then
-    if command -v highlight >/dev/null 2>&1; then
-        name=${1##*/}
+has(){
+    command -v "$1" >/dev/null 2>&1
+}
+
+show(){
+    path="$1"
+    case "$path" in
+        (!*) path=$(command -v "${path#?}") ;;
+    esac
+    # output is piped etc
+    if ! [ -t 1 ]; then
+        cat "$path"
+        return
+    fi
+    # do not use exec to invoke highlight to etc so show() can be called multiple times
+    if has highlight; then
+        name=${path##*/}
+        args=
         case "$name" in
             (Dockerfile*) args="-S dockerfile" ;;
             (Makefile*) args="-S makefile" ;;
             (*.service|*.automount|*.link|*.mount|*.network|*.path|*.slice|*.socket|*.target|*.timer) args="-S conf" ;;
-            (*.html|*.htm|*.php) exec w3m -dump -T text/html -cols "$(tput cols)" "$@" ;;
-            (*) args="" ;;
+            (*.html|*.htm|*.php) has w3m && { w3m -dump -T text/html -cols "$(tput cols)" "$path"; return; } ;;
         esac
-        exec highlight --out-format ansi --stdout --force $args "$@"
-    elif command -v bat >/dev/null 2>&1; then
-        exec bat --theme ansi -p -P "$@"
+        highlight --out-format ansi --stdout --force $args "$path"
+    elif has bat; then
+        bat --theme ansi -p -P "$path"
     else
-        exec cat "$@"
+        cat "$path"
     fi
-else
-    exec cat "$@"
-fi
+}
+
+case $# in
+    (0) cat ;;
+    (1) show "$1" ;;
+    (*) echo "Usage: $0 [[!]file]" ; exit 1 ;;
+esac
