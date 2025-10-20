@@ -492,46 +492,75 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 ####FILE +x bin/c {{{
 #| #!/bin/sh
 #| 
-#| if [ -t 1 ]; then
-#|     if command -v highlight >/dev/null 2>&1; then
-#|         name=${1##*/}
+#| has(){
+#|     command -v "$1" >/dev/null 2>&1
+#| }
+#| 
+#| show(){
+#|     path="$1"
+#|     case "$path" in
+#|         (!*) path=$(command -v "${path#?}") ;;
+#|     esac
+#|     # output is piped etc
+#|     if ! [ -t 1 ]; then
+#|         cat "$path"
+#|         return
+#|     fi
+#|     # do not use exec to invoke highlight to etc so show() can be called multiple times
+#|     if has highlight; then
+#|         name=${path##*/}
+#|         args=
 #|         case "$name" in
 #|             (Dockerfile*) args="-S dockerfile" ;;
 #|             (Makefile*) args="-S makefile" ;;
 #|             (*.service|*.automount|*.link|*.mount|*.network|*.path|*.slice|*.socket|*.target|*.timer) args="-S conf" ;;
-#|             (*.html|*.htm|*.php) exec w3m -dump -T text/html -cols "$(tput cols)" "$@" ;;
-#|             (*) args="" ;;
+#|             (*.html|*.htm|*.php) has w3m && { w3m -dump -T text/html -cols "$(tput cols)" "$path"; return; } ;;
 #|         esac
-#|         exec highlight --out-format ansi --stdout --force $args "$@"
-#|     elif command -v bat >/dev/null 2>&1; then
-#|         exec bat --theme ansi -p -P "$@"
+#|         highlight --out-format ansi --stdout --force $args "$path"
+#|     elif has bat; then
+#|         bat --theme ansi -p -P "$path"
 #|     else
-#|         exec cat "$@"
+#|         cat "$path"
 #|     fi
-#| else
-#|     exec cat "$@"
-#| fi
+#| }
+#| 
+#| case $# in
+#|     (0) cat ;;
+#|     (1) show "$1" ;;
+#|     (*) echo "Usage: $0 [[!]file]" ; exit 1 ;;
+#| esac
 #- }}}
 
 
 ####FILE +x bin/chat {{{
 #| #!/bin/sh
 #| 
-#| default_u=localhost:11434 default_s='Respond concisely /no_think'
-#| flag_e= flag_h= flag_l= flag_n=
-#| opt_m= opt_s=$default_s opt_u=$default_u
+#| NEWL='
+#| '
+#| 
+#| default_u=localhost:11434; default_s='Respond concisely /no_think'
+#| flag_c=; flag_e=; flag_h=; flag_l=; flag_n=
+#| opt_m=; opt_s=$default_s; opt_u=$default_u
 #| prompt=''
+#| # shellcheck disable=SC2016
+#| # Duplicate : to escape it
+#| tools='get_time:get current time:timezone=time zone:format=format (you can use %Y %m %d %H %M %S):TZ=$timezone date +"$format"
+#| list_files:list files in dir:dir=directory (use . for current dir):recursive=if nonempty, list files recusively:ls "${recursive::+-R}" "$dir"
+#| cat_file:show contents of a file:path=path to the file:cat "$path"'
+#| # TODO require tool confirm (e.g. by prefix its name with !)
 #| 
 #| while [ $# -ge 1 ]; do
 #|     case "$1" in
 #|         (-[!-][!-]*)  _1=${1#?} ; shift ; set -- "-${_1%"${_1#?}"}" "-${_1#?}" "$@" ;;
-#|         (-e|--erase)   flag_e=1  ; shift ;;
-#|         (-h|--help)    flag_h=1  ; shift ;;
-#|         (-l|--list)    flag_l=1  ; shift ;;
-#|         (-n|--noout)   flag_n=1  ; shift ;;
-#|         (-m|--model)   opt_m="$2"; shift 2 ;;
-#|         (-s|--system)  opt_s="$2"; shift 2 ;;
-#|         (-u|--url)     opt_u="$2"; shift 2 ;;
+#|         (-c|--continue) flag_c=1  ; shift ;;
+#|         (-e|--erase)    flag_e=1  ; shift ;;
+#|         (-h|--help)     flag_h=1  ; shift ;;
+#|         (-l|--list)     flag_l=1  ; shift ;;
+#|         (-n|--noout)    flag_n=1  ; shift ;;
+#|         (-m|--model)    opt_m="$2"; shift 2 ;;
+#|         (-s|--system)   opt_s="$2"; shift 2 ;;
+#|         (-u|--url)      opt_u="$2"; shift 2 ;;
+#|         (-t|--tool)     tools="$tools$NEWL$2"; shift 2 ;;
 #|         (*) prompt="$*" ; break ;;
 #|     esac
 #| done
@@ -543,18 +572,26 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     echo "       cmd | $0 [options ...]"
 #|     echo
 #|     echo "Options:"
+#|     echo "  -c, --continue         Continue upon previous tool calling"
 #|     echo "  -e, --erase            Erase history before starting"
 #|     echo "  -h, --help             Help"
 #|     echo "  -l, --list             List models"
 #|     echo "  -m, --model <model>    Model         (default: auto)"
 #|     echo "  -n, --noout            No chat output file (still creates history)"
 #|     echo "  -s, --system <prompt>  System prompt (default: $default_s)"
+#|     echo "  -t, --tool <spec>      Define additional tools"
 #|     echo "  -u, --url <url>        URL of server (default: $default_u)"
+#|     echo
+#|     echo "Tool spec example:"
+#|     echo "$tools"
 #| }
 #| 
 #| error(){
 #|     echo "Error: $*" >&2; exit 1
 #| }
+#| 
+#| 
+#| ## Various checks
 #| 
 #| missing=
 #| for i in curl jq stdbuf; do
@@ -580,25 +617,15 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| 
 #| echo "$models" | grep -qFx "$opt_m" || error "model \"$opt_m\" is not available"
 #| 
-#| outdir=$HOME/.cache/chat/
-#| mkdir -p "$outdir"
 #| 
-#| outfile="$outdir"/chat-"$(date +%Y%m%d-%H%M%S)".txt
-#| [ "$flag_n" ] && outfile=${TMPDIR:-/tmp}/chat-out
+#| ## Tools
 #| 
-#| tmpfile=${TMPDIR:-/tmp}/chat-hist
-#| [ "$flag_e" ] && rm -f "$tmpfile"
-#| [ -f "$tmpfile" ] || touch "$tmpfile"
+#| tools_api=$(echo "$tools" | jq -R '[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{type:"function",function:{name:.[0],description:.[1],parameters:.[2:-1]|{type:"object",required:[.[]|split("=")[0]],properties:[.[]|split("=")|{key:.[0],value:{type:"string",description:.[1]}}]|from_entries}}}' | jq -s .)
+#| tools_int=$(echo "$tools" | jq -R '[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{key:.[0],value:.[-1]}' | jq -s 'from_entries')
 #| 
-#| cleanup(){
-#|     [ "$flag_n" ] && rm -f "$outfile"
-#| }
+#| # printf "tools_api=%s\ntools_int=%s\n" "$tools_api" "$tools_int" >&2; exit
 #| 
-#| trap cleanup INT TERM
-#| 
-#| # note: avoid including arbitrarily large strings in command parameter (use pipe instead)
-#| 
-#| #tools="[{
+#| # tools="[{
 #| #    \"type\": \"function\",
 #| #    \"function\": {
 #| #        \"name\": \"get_time\",
@@ -611,128 +638,70 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| #            \"required\": [\"timezone\"]
 #| #        }
 #| #    }
-#| #}]"
+#| # }]"
 #| 
-#| if [ -t 0 ]; then printf %s "$prompt"; else cat; fi \
-#|     | tee "$outfile" \
-#|     | jq -Rs '{role:"user",content:.}' \
-#|     >> "$tmpfile"
 #| 
-#| printf "\n\n" >> "$outfile"
+#| ## Build query
 #| 
-#| jq -s --arg m "$opt_m" --arg s "$opt_s" --argjson t '[]' \
+#| histfile=${TMPDIR:-/tmp}/chat-hist
+#| [ "$flag_e" ] && rm -f "$histfile"
+#| touch "$histfile"
+#| 
+#| if [ ! "$flag_c" ]; then
+#|     if [ -t 0 ]; then printf %s "$prompt"; else cat; fi \
+#|         | jq -Rs '{role:"user",content:.}' \
+#|         >> "$histfile"
+#| fi
+#| 
+#| outdir=$HOME/.cache/chat/
+#| mkdir -p "$outdir"
+#| outfile="$outdir"/chat-"$(date +%Y%m%d-%H%M%S)".txt
+#| [ "$flag_n" ] && outfile=${TMPDIR:-/tmp}/chat-out
+#| {
+#|     jq -r 'if .content then "<\(.role)>\n\(.content)\n" else empty end' "$histfile"
+#|     printf "<assistant>\n"
+#| } > "$outfile"
+#| 
+#| cleanup(){ [ ! "$flag_n" ] || rm -f "$outfile"; }
+#| trap cleanup INT TERM
+#| 
+#| 
+#| ## Main API call
+#| 
+#| # note: avoid including arbitrarily large strings in command parameter (use pipe instead)
+#| 
+#| # shellcheck disable=SC2016
+#| jq -s --arg m "$opt_m" --arg s "$opt_s" --argjson t "$tools_api" \
 #|     '{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}' \
-#|     "$tmpfile" \
+#|     "$histfile" \
 #|     | stdbuf -o0 curl -fNs "$opt_u"/v1/chat/completions -d @- \
-#|     | stdbuf -i0 -o0 jq -Rcj --unbuffered 'foreach (inputs|if startswith("data: {") then .[6:] else empty end|fromjson) as $x ([null];[$x,.[0]];.)|. as [$x,$y]|(try $y.choices[].delta.reasoning_content catch false) as $pr|if $x.timings then ["\n",($x.timings|{model:$x.model,prompt_ms,predicted_ms,predicted_n,predicted_per_second})][] else ($x.choices[].delta|if .reasoning_content then (if $pr then .reasoning_content else ["\u001b[35m",.reasoning_content][] end) elif .content then (if $pr then ["\u001b[0m\n",.content][] else .content end) elif .tool_calls then .tool_calls[0]|(if .id then "TOOL: \(.function.name) " else .function.arguments end) else empty end) end' \
+#|     | stdbuf -i0 -o0 tee /tmp/chat-res-"$(date +%s)" \
+#|     | stdbuf -i0 -o0 jq -Rcj --unbuffered 'foreach (inputs|if startswith("data: {") then .[6:] else empty end|fromjson) as $x ([null];[$x,.[0]];.)|. as [$x,$y]|(try $y.choices[].delta.reasoning_content catch false) as $pr|if $x.timings then [(if $pr then "\u001b[0m\n" else empty end),"\nTIME: ",($x.timings|{model:$x.model,prompt_ms,predicted_ms,predicted_n,predicted_per_second}),"\n"][] else ($x.choices[].delta|if .reasoning_content then .reasoning_content|[(if $pr then empty else "\u001b[35m" end),.][] else (if .content then .content elif .tool_calls then .tool_calls[0]|((if .id then "TOOL: \(.function.name) " else "" end)+.function.arguments) else empty end)|[(if $pr then "\u001b[0m\n" else empty end),.][] end) end' \
 #|     | stdbuf -i0 -o0 tee -a "$outfile"
 #| 
-#| [ -f "$outfile" ] || exit 0
-#| 
-#| sed -n '$q;3,$p' "$outfile" \
+#| # shellcheck disable=SC2016
+#| tac "$outfile" | awk -v a="$(printf '\033[35m')" -v b="$(printf '\033[0m')" '/^(TIME|TOOL): /{next}/^<assistant>$/{exit}index($0,b){f=1}(!f){print}index($0,a){f=0}' | tac \
 #|     | jq -Rs '{role:"assistant",content:.}' \
-#|     >> "$tmpfile"
+#|     >> "$histfile"
 #| 
-#| ##!/bin/sh
-#| #
-#| #MODEL=${MODEL:-Qwen3-32B}
-#| #SERVER=${SERVER:-localhost:18034}
-#| #NEWL='
-#| #'
-#| #S(){ stdbuf -o0 "$@"; }
-#| #
-#| #prompt=
-#| #tools=
-#| #while [ $# -ge 1 ]; do
-#| #    case "$1" in
-#| #        (-t) echo tool "$2" ; tools="$tools$NEWL$2" ; shift 2 ;;
-#| #        (*) prompt="$prompt$1 " ; shift ;;
-#| #    esac
-#| #done
-#| #tools='get_time:get current time:timezone=time zone:format=format (you can use %Y %m %d %H %M %S):TZ=$timezone date +"$format"
-#| #list_files:list files in dir:dir=directory:ls "$dir"
-#| #cat_file:show contents of a file:path=path to the file:cat "$path"'
-#| #
-#| #tools_api=$(echo "$tools" | jq -R 'split(":")|{type:"function",function:{name:.[0],description:.[1],parameters:.[2:-1]|{type:"object",required:[.[]|split("=")[0]],properties:[.[]|split("=")|{key:.[0],value:{type:"string",description:.[1]}}]|from_entries}}}' | jq -s .)
-#| #
-#| #echo "tools_api=$tools_api"
-#| #tools_int=$(echo "$tools" | jq -R 'split(":")|{key:.[0],value:.[-1]}' | jq -s 'from_entries')
-#| #echo "tools_int=$tools_int"
-#| #
-#| #now=$(date +%Y%m%d-%H%M%S)
-#| #tmp=./"$now"
-#| #
-#| #jq -n --arg prompt "$prompt" '[{"role":"user","content":$prompt}]' > "$tmp-msg1"
-#| #
-#| #while :; do
-#| #
-#| #    messages="$(cat "$tmp-msg1")"
-#| #
-#| #    req=$(jq -n --arg model "$MODEL" --argjson tools_api "$tools_api" --argjson messages "$messages" '{"model":$model,"stream":true,"tools":$tools_api,"messages":([{"role":"system","content":"Respond concisely. /no_think"}]+$messages)}')
-#| #
-#| #    # echo "req=$req"
-#| #    echo "Requesting $messages"
-#| #
-#| #    S curl -sN "$SERVER/v1/chat/completions" -d "$req" | jq --unbuffered -nR '
-#| #    reduce inputs as $y (
-#| #        { raw: "", msgs: [] };
-#| #        .raw+=$y+"\n" as $acc
-#| #        |if ($y|startswith("data: {")) then
-#| #           ($y|.[6:]|fromjson|.choices[0].delta) as $x
-#| #           |if $x.role then
-#| #               ($acc|.msgs+=[{role:$x.role,content:""}])
-#| #           elif ($x.reasoning_content // $x.content) then
-#| #               (($x.reasoning_content // $x.content) as $z|($z|stderr)|
-#| #                   $acc|.msgs[-1].content+=$z)
-#| #           elif $x.tool_calls then
-#| #               $x.tool_calls[0] as $y|(
-#| #                   if $y.function.name then
-#| #                       (("Tool: \($y.function.name) "|stderr)|
-#| #                           ($acc|.msgs+=[{role:"tool_call",name:$y.function.name,arguments:""}]))
-#| #                   else
-#| #                       (($y.function.arguments|stderr)|
-#| #                           ($acc|.msgs[-1].arguments+=$y.function.arguments))
-#| #                   end
-#| #               )
-#| #           else
-#| #               $acc # necessary
-#| #           end
-#| #        end
-#| #    )
-#| #    ' > "$tmp-res"
-#| #    echo
-#| #
-#| #    jq -r .raw "$tmp-res" > "$tmp-raw"
-#| #    jq .msgs "$tmp-res" > "$tmp-msg2"
-#| #    # cat "$tmp-msg2"
-#| #    jq -s 'flatten' "$tmp-msg1" "$tmp-msg2" > "$tmp-msg3"
-#| #
-#| #    tool_call=$(jq -r --argjson tools_int "$tools_int" '
-#| #    [.[]|select(.role == "tool_call")]
-#| #    |if length >= 1 then
-#| #        .[-1] | (([.arguments|fromjson|to_entries[]|"\(.key)=\(.value|@sh)"]|join("; ")) + "; " +  $tools_int[.name])
-#| #    else
-#| #        empty
-#| #    end
-#| #    ' "$tmp-msg3")
-#| #
-#| #    if [ "$tool_call" ]; then
-#| #        echo "Tool call: $tool_call"
-#| #        tool_result=$(eval "$tool_call" 2>&1)
-#| #        echo "Result: $tool_result"
-#| #        jq --arg tool_result "$tool_result" '[.[]|select(.role != "tool_call")] + [{role:"tool",content:$tool_result}]' "$tmp-msg3" > "$tmp-msg4"
-#| #        cat "$tmp-msg4" > "$tmp-msg1"
-#| #    else
-#| #        echo "Finished. More prompt? "
-#| #        read -r prompt
-#| #        if [ "$prompt" ]; then
-#| #            jq -n --arg prompt "$prompt" '.+[{"role":"user","content":$prompt}]' "$tmp-msg3" > "$tmp-msg1"
-#| #        else
-#| #            break
-#| #        fi
-#| #    fi
-#| #
-#| #done
+#| 
+#| ## Tool call
+#| 
+#| tool_call=$(sed -n 's/^TOOL: //p' "$outfile")
+#| if [ "$tool_call" ]; then
+#|     tool_cmd=$(echo "$tool_call" | jq -rR --argjson t "$tools_int" 'split(" ")|[.[0],(.[1:]|join(" ")|fromjson|[to_entries[]|"\(.key|@sh)=\(.value|@sh)"]|join(" "))]|"env \(.[1]) sh -c \($t[.[0]]|@sh)"')
+#|     tool_result=$(eval "$tool_cmd")
+#|     printf "\ncmd:  %s\nout:  %s\n\n" "$tool_cmd" "$tool_result" >&2
+#|     id=$(date +"tc_%Y%m%d_%H%M%S")
+#|     printf %s "$tool_call" | jq -Rsr --arg id "$id" 'split(" ")|{role:"assistant",tool_calls:[{id:$id,type:"function",function:{name:.[0],arguments:(.[1:]|join(" "))}}]}' >> "$histfile"
+#|     printf %s "$tool_result" | jq -Rsr --arg id "$id" '{role:"tool",tool_call_id:$id,content:.}' >> "$histfile"
+#|     "$0" -u "$opt_u" -m "$opt_m" -c "${flag_n:+-n}"
+#| fi
+#| 
+#| 
+#| ## Cleanup
+#| 
+#| cleanup
 #- }}}
 
 
@@ -846,7 +815,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 ####FILE +x bin/du1 {{{
 #| #!/bin/sh
 #| 
-#| du -d1 -BM $1 | sort -n
+#| du -d1 -BM "${1:-.}" | sort -n
 #- }}}
 
 
@@ -1144,54 +1113,140 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 
 
 ####FILE +x bin/l {{{
-#| #!/bin/bash
+#| #!/bin/sh
 #| 
 #| # Argument transposer
 #| 
-#| die() { echo "Error: $*" >&2; exit 1; }
+#| L_PIPE=${L_PIPE:-"!"}
+#| L_ONE=${L_ONE:-"--"}
+#| L_MANY=${L_MANY:-"---"}
+#| L_DRY=${L_DRY:-}
 #| 
-#| f() {
-#|     local a=()
-#|     local b=()
-#|     local c=()
-#|     # Separate at last --
-#|     # l x1 -- x2 x3 -- x4 x5 ==> a=(x1 -- x2 x3), b=(-- x4 x5)
+#| die(){ echo "ERROR: $*" >&2; exit 1; }
+#| 
+#| f(){
+#|     nph=0  # number of placeholders (both -- and ---, excludes the last --)
+#|     nval=0 # number of values after the last --
+#|     many=  # is --- used?
 #|     for i in "$@"; do
-#|         if [[ "$i" = -- ]]; then
-#|             a+=("${b[@]}")
-#|             b=()
-#|         fi
-#|         b+=("$i")
+#|         case "$i" in
+#|             ("$L_MANY") [ "$many" ] && die "multiple $L_MANY"; many=1; nph=$((nph+1)); nval=0 ;;
+#|             ("$L_ONE") nph=$((nph+1)); nval=0 ;;
+#|             (*) eval "val_$nval=\$i"; nval=$((nval+1)) ;;
+#|         esac
 #|     done
-#|     # No -- ==> exit
-#|     [[ "${#a[@]}" -eq 0 ]] && die "no -- found"
-#|     # Remove -- from b
-#|     b=("${b[@]:1}")
-#|     # Substitute -- and --- in a
-#|     for i in "${a[@]}"; do
-#|         if [[ "$i" = -- ]]; then
-#|             [[ "${#b[@]}" -eq 0 ]] && die "too few args"
-#|             c+=("${b[0]}")
-#|             b=("${b[@]:1}")
-#|         elif [[ "$i" = --- ]]; then
-#|             [[ "${#b[@]}" -eq 0 ]] && die "too few args"
-#|             c+=("${b[@]}")
-#|             b=()
-#|         else
-#|             c+=("$i")
-#|         fi
+#|     nph=$((nph-1))
+#|     [ "$nph" -eq 0 ] && die "split given but no placeholder found"
+#|     if [ "$nph" -eq -1 ]; then
+#|         :
+#|     elif [ "$many" ]; then
+#|         [ "$nval" -ge "$nph" ] || die "$nval values given for $((nph))+ placeholders"
+#|     else
+#|         [ "$nval" -eq "$nph" ] || die "$nval values given for $((nph)) placeholders"
+#|     fi
+#|     # echo "nph=$nph nval=$nval val_0=$val_0 val_1=$val_1 val_2=$val_2 val_3=$val_3" >&2
+#| 
+#|     cmd=""
+#|     idxA=0 # number of non-placeholder args seen so far
+#|     idxV=0 # number of values used so far
+#|     for i in "$@"; do
+#|         case "$i" in
+#|             ("$L_PIPE")
+#|                 cmd="$cmd| "
+#|                 ;;
+#|             ("$L_ONE")
+#|                 [ "$idxV" -eq "$nval" ] && break # found the last --
+#|                 cmd="$cmd\"\$val_$idxV\" "
+#|                 idxV=$((idxV+1))
+#|                 ;;
+#|             ("$L_MANY")
+#|                 # note: --- consumes multiple values but still leave as many needed for later --'s
+#|                 j=$((nval-nph+1))
+#|                 while [ "$j" -gt 0 ]; do
+#|                     cmd="$cmd\"\$val_$idxV\" "
+#|                     idxV=$((idxV+1))
+#|                     j=$((j-1))
+#|                 done
+#|                 ;;
+#|             (*)
+#|                 cmd="$cmd\"\$arg_$idxA\" "
+#|                 eval "arg_$idxA=\$i"
+#|                 idxA=$((idxA+1))
+#|                 ;;
+#|         esac
 #|     done
-#|     [[ "${#b[@]}" -gt 0 ]] && die "too many args"
-#|     # echo "a=(${a[*]}), b=(${b[*]}), c=(${c[*]})"
-#|     # Run command
-#|     "${c[@]}"
+#| 
+#|     if [ "$L_DRY" ]; then
+#|         echo "$cmd" >&2
+#|         i=0; printf "arg: "; while [ "$i" -lt "$idxA" ]; do eval "printf \"$i=%s \" \"\$arg_$i\""; i=$((i+1)); done; echo
+#|         i=0; printf "val: "; while [ "$i" -lt "$idxV" ]; do eval "printf \"$i=%s \" \"\$val_$i\""; i=$((i+1)); done; echo
+#|     else
+#|         eval "$cmd" # equivalent to e.g. eval '"$arg_0" "$val_0" ..'; shell keywords and special chars are in $arg_0 etc will be interpreted as literal string. also shell variables won't leak
+#|     fi
 #| }
 #| 
-#| # [[ "$(f echo a -- b -- c)"      == "a c b"   ]] || echo fail
-#| # [[ "$(f echo a -- -- b -- c d)" == "a c d b" ]] || echo fail
-#| # [[ "$(f echo a --- b -- c d)"   == "a c d b" ]] || echo fail
-#| 
 #| f "$@"
+#| 
+#| # echo; date
+#| # [ "$(f echo -- b -- a)"             = "a b"         ] || echo fail 1
+#| # [ "$(f echo -- b -- -- a c)"        = "a b c"       ] || echo fail 2
+#| # [ "$(f echo a -- c --- f -- b d e)" = "a b c d e f" ] || echo fail 3
+#| # [ "$(f echo a b c ! rev)"           = "c b a"       ] || echo fail 4
+#| # [ "$(f echo a -- c ! rev -- b)"     = "c b a"       ] || echo fail 5
+#| # [ "$(f echo a -- b -- c)"           = "a c b"       ] || echo fail 6
+#| # [ "$(f echo a -- -- b -- c d)"      = "a c d b"     ] || echo fail 7
+#| # [ "$(f echo a --- b -- c d)"        = "a c d b"     ] || echo fail 8
+#| # [ "$(f echo a --- d -- -- b c e)"   = "a b c d e"   ] || echo fail 9
+#| # [ "$(f echo a -- d -- "b c")"       = "a b c d"     ] || echo fail 10
+#| 
+#| ##!/bin/bash
+#| #
+#| ## Argument transposer
+#| #
+#| #die() { echo "Error: $*" >&2; exit 1; }
+#| #
+#| #f() {
+#| #    local a=()
+#| #    local b=()
+#| #    local c=()
+#| #    # Separate at last --
+#| #    # l x1 -- x2 x3 -- x4 x5 ==> a=(x1 -- x2 x3), b=(-- x4 x5)
+#| #    for i in "$@"; do
+#| #        if [[ "$i" = -- ]]; then
+#| #            a+=("${b[@]}")
+#| #            b=()
+#| #        fi
+#| #        b+=("$i")
+#| #    done
+#| #    # No -- ==> exit
+#| #    [[ "${#a[@]}" -eq 0 ]] && die "no -- found"
+#| #    # Remove -- from b
+#| #    b=("${b[@]:1}")
+#| #    # Substitute -- and --- in a
+#| #    for i in "${a[@]}"; do
+#| #        if [[ "$i" = -- ]]; then
+#| #            [[ "${#b[@]}" -eq 0 ]] && die "too few args"
+#| #            c+=("${b[0]}")
+#| #            b=("${b[@]:1}")
+#| #        elif [[ "$i" = --- ]]; then
+#| #            [[ "${#b[@]}" -eq 0 ]] && die "too few args"
+#| #            c+=("${b[@]}")
+#| #            b=()
+#| #        else
+#| #            c+=("$i")
+#| #        fi
+#| #    done
+#| #    [[ "${#b[@]}" -gt 0 ]] && die "too many args"
+#| #    # echo "a=(${a[*]}), b=(${b[*]}), c=(${c[*]})"
+#| #    # Run command
+#| #    "${c[@]}"
+#| #}
+#| #
+#| ## [[ "$(f echo a -- b -- c)"      == "a c b"   ]] || echo fail
+#| ## [[ "$(f echo a -- -- b -- c d)" == "a c d b" ]] || echo fail
+#| ## [[ "$(f echo a --- b -- c d)"   == "a c d b" ]] || echo fail
+#| #
+#| #f "$@"
 #- }}}
 
 
@@ -2431,7 +2486,11 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     echo "2. Remote dir (rsync:// or -e ssh)"
 #|     echo "   rsync2 rsync://server/myentry/ /dest/mydir/0501 --link-dest=/dest/mydir/0401 -i"
 #|     echo "   rsync2 user@server:/path/to/mydir/ /dest/mydir/0501 --link-dest=/dest/mydir/0401 -i -e ssh"
+#|     echo
+#|     echo "TODO allow ssh: as destination"
 #| }
+#| 
+#| logfile="$(pwd)/rsync-$(date +"%Y%m%d-%H%M%S").log"
 #| 
 #| from=
 #| to=
@@ -2441,7 +2500,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     -H # --hard-links (hard linked two files in source will not be duplicated in the destination)
 #|     # -AX # --progress --acls --xattrs
 #|     --info=stats2,progress2 -h # --human-readable
-#|     --log-file="$(pwd)/rsync-$(date +"%Y%m%d-%H%M%S").log"
+#|     --log-file="$logfile.1"
 #|     --mkpath # link mkdir -p for TO
 #|     --exclude=/.Android/
 #|     --exclude=/.cache/
@@ -2452,9 +2511,12 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     --exclude=/.local/share/uv/
 #|     --exclude=/.npm/
 #|     --exclude=.gradle/
+#|     --exclude=.mozilla/firefox/*/storage/
 #|     --exclude=.mypy_cache/
+#|     --exclude=.thumbnails/
 #|     --exclude=.venv/
 #|     --exclude=node_modules/
+#|     --exclude=site-packages/
 #| )
 #| 
 #| # Parse args
@@ -2517,7 +2579,21 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| echoB -n "Run this command? [y/n] "; read -r ans
 #| [[ "$ans" == y ]] || die "cancelled by user"
 #| # echo "${cmd[*]}"
-#| "${cmd[@]}"
+#| # Log deletion to a separate file (rsync does not log deletion to --log-file when --link-dest is used (even with -v)) and merge later
+#| grep0(){ grep "$@"; return 0; }
+#| if "${cmd[@]}" | tee /dev/stderr | grep0 '^\*deleting' > "$logfile.2"; then s=$?; else s=$?; fi # avoid errexit/pipefail terminating script
+#| {
+#|     #      2025/10/18 08:55:12 [123456]
+#|     sed '/^.......... ........ \[[0-9]*\] Number of files:/Q' "$logfile.1"
+#|     echo
+#|     echo "===== Deletion log ====="
+#|     cat "$logfile.2"
+#|     echo "===== Deletion log END ====="
+#|     echo
+#|     sed -n '/^.......... ........ \[[0-9]*\] Number of files:/,$p' "$logfile.1"
+#| } > "$logfile"
+#| rm "$logfile.1" "$logfile.2"
+#| exit "$s"
 #- }}}
 
 

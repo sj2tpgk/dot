@@ -1,48 +1,134 @@
-#!/bin/bash
+#!/bin/sh
 
 # Argument transposer
 
-die() { echo "Error: $*" >&2; exit 1; }
+L_PIPE=${L_PIPE:-"!"}
+L_ONE=${L_ONE:-"--"}
+L_MANY=${L_MANY:-"---"}
+L_DRY=${L_DRY:-}
 
-f() {
-    local a=()
-    local b=()
-    local c=()
-    # Separate at last --
-    # l x1 -- x2 x3 -- x4 x5 ==> a=(x1 -- x2 x3), b=(-- x4 x5)
+die(){ echo "ERROR: $*" >&2; exit 1; }
+
+f(){
+    nph=0  # number of placeholders (both -- and ---, excludes the last --)
+    nval=0 # number of values after the last --
+    many=  # is --- used?
     for i in "$@"; do
-        if [[ "$i" = -- ]]; then
-            a+=("${b[@]}")
-            b=()
-        fi
-        b+=("$i")
+        case "$i" in
+            ("$L_MANY") [ "$many" ] && die "multiple $L_MANY"; many=1; nph=$((nph+1)); nval=0 ;;
+            ("$L_ONE") nph=$((nph+1)); nval=0 ;;
+            (*) eval "val_$nval=\$i"; nval=$((nval+1)) ;;
+        esac
     done
-    # No -- ==> exit
-    [[ "${#a[@]}" -eq 0 ]] && die "no -- found"
-    # Remove -- from b
-    b=("${b[@]:1}")
-    # Substitute -- and --- in a
-    for i in "${a[@]}"; do
-        if [[ "$i" = -- ]]; then
-            [[ "${#b[@]}" -eq 0 ]] && die "too few args"
-            c+=("${b[0]}")
-            b=("${b[@]:1}")
-        elif [[ "$i" = --- ]]; then
-            [[ "${#b[@]}" -eq 0 ]] && die "too few args"
-            c+=("${b[@]}")
-            b=()
-        else
-            c+=("$i")
-        fi
+    nph=$((nph-1))
+    [ "$nph" -eq 0 ] && die "split given but no placeholder found"
+    if [ "$nph" -eq -1 ]; then
+        :
+    elif [ "$many" ]; then
+        [ "$nval" -ge "$nph" ] || die "$nval values given for $((nph))+ placeholders"
+    else
+        [ "$nval" -eq "$nph" ] || die "$nval values given for $((nph)) placeholders"
+    fi
+    # echo "nph=$nph nval=$nval val_0=$val_0 val_1=$val_1 val_2=$val_2 val_3=$val_3" >&2
+
+    cmd=""
+    idxA=0 # number of non-placeholder args seen so far
+    idxV=0 # number of values used so far
+    for i in "$@"; do
+        case "$i" in
+            ("$L_PIPE")
+                cmd="$cmd| "
+                ;;
+            ("$L_ONE")
+                [ "$idxV" -eq "$nval" ] && break # found the last --
+                cmd="$cmd\"\$val_$idxV\" "
+                idxV=$((idxV+1))
+                ;;
+            ("$L_MANY")
+                # note: --- consumes multiple values but still leave as many needed for later --'s
+                j=$((nval-nph+1))
+                while [ "$j" -gt 0 ]; do
+                    cmd="$cmd\"\$val_$idxV\" "
+                    idxV=$((idxV+1))
+                    j=$((j-1))
+                done
+                ;;
+            (*)
+                cmd="$cmd\"\$arg_$idxA\" "
+                eval "arg_$idxA=\$i"
+                idxA=$((idxA+1))
+                ;;
+        esac
     done
-    [[ "${#b[@]}" -gt 0 ]] && die "too many args"
-    # echo "a=(${a[*]}), b=(${b[*]}), c=(${c[*]})"
-    # Run command
-    "${c[@]}"
+
+    if [ "$L_DRY" ]; then
+        echo "$cmd" >&2
+        i=0; printf "arg: "; while [ "$i" -lt "$idxA" ]; do eval "printf \"$i=%s \" \"\$arg_$i\""; i=$((i+1)); done; echo
+        i=0; printf "val: "; while [ "$i" -lt "$idxV" ]; do eval "printf \"$i=%s \" \"\$val_$i\""; i=$((i+1)); done; echo
+    else
+        eval "$cmd" # equivalent to e.g. eval '"$arg_0" "$val_0" ..'; shell keywords and special chars are in $arg_0 etc will be interpreted as literal string. also shell variables won't leak
+    fi
 }
 
-# [[ "$(f echo a -- b -- c)"      == "a c b"   ]] || echo fail
-# [[ "$(f echo a -- -- b -- c d)" == "a c d b" ]] || echo fail
-# [[ "$(f echo a --- b -- c d)"   == "a c d b" ]] || echo fail
-
 f "$@"
+
+# echo; date
+# [ "$(f echo -- b -- a)"             = "a b"         ] || echo fail 1
+# [ "$(f echo -- b -- -- a c)"        = "a b c"       ] || echo fail 2
+# [ "$(f echo a -- c --- f -- b d e)" = "a b c d e f" ] || echo fail 3
+# [ "$(f echo a b c ! rev)"           = "c b a"       ] || echo fail 4
+# [ "$(f echo a -- c ! rev -- b)"     = "c b a"       ] || echo fail 5
+# [ "$(f echo a -- b -- c)"           = "a c b"       ] || echo fail 6
+# [ "$(f echo a -- -- b -- c d)"      = "a c d b"     ] || echo fail 7
+# [ "$(f echo a --- b -- c d)"        = "a c d b"     ] || echo fail 8
+# [ "$(f echo a --- d -- -- b c e)"   = "a b c d e"   ] || echo fail 9
+# [ "$(f echo a -- d -- "b c")"       = "a b c d"     ] || echo fail 10
+
+##!/bin/bash
+#
+## Argument transposer
+#
+#die() { echo "Error: $*" >&2; exit 1; }
+#
+#f() {
+#    local a=()
+#    local b=()
+#    local c=()
+#    # Separate at last --
+#    # l x1 -- x2 x3 -- x4 x5 ==> a=(x1 -- x2 x3), b=(-- x4 x5)
+#    for i in "$@"; do
+#        if [[ "$i" = -- ]]; then
+#            a+=("${b[@]}")
+#            b=()
+#        fi
+#        b+=("$i")
+#    done
+#    # No -- ==> exit
+#    [[ "${#a[@]}" -eq 0 ]] && die "no -- found"
+#    # Remove -- from b
+#    b=("${b[@]:1}")
+#    # Substitute -- and --- in a
+#    for i in "${a[@]}"; do
+#        if [[ "$i" = -- ]]; then
+#            [[ "${#b[@]}" -eq 0 ]] && die "too few args"
+#            c+=("${b[0]}")
+#            b=("${b[@]:1}")
+#        elif [[ "$i" = --- ]]; then
+#            [[ "${#b[@]}" -eq 0 ]] && die "too few args"
+#            c+=("${b[@]}")
+#            b=()
+#        else
+#            c+=("$i")
+#        fi
+#    done
+#    [[ "${#b[@]}" -gt 0 ]] && die "too many args"
+#    # echo "a=(${a[*]}), b=(${b[*]}), c=(${c[*]})"
+#    # Run command
+#    "${c[@]}"
+#}
+#
+## [[ "$(f echo a -- b -- c)"      == "a c b"   ]] || echo fail
+## [[ "$(f echo a -- -- b -- c d)" == "a c d b" ]] || echo fail
+## [[ "$(f echo a --- b -- c d)"   == "a c d b" ]] || echo fail
+#
+#f "$@"

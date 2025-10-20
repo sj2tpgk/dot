@@ -22,7 +22,11 @@ help() {
     echo "2. Remote dir (rsync:// or -e ssh)"
     echo "   rsync2 rsync://server/myentry/ /dest/mydir/0501 --link-dest=/dest/mydir/0401 -i"
     echo "   rsync2 user@server:/path/to/mydir/ /dest/mydir/0501 --link-dest=/dest/mydir/0401 -i -e ssh"
+    echo
+    echo "TODO allow ssh: as destination"
 }
+
+logfile="$(pwd)/rsync-$(date +"%Y%m%d-%H%M%S").log"
 
 from=
 to=
@@ -32,7 +36,7 @@ opts=(
     -H # --hard-links (hard linked two files in source will not be duplicated in the destination)
     # -AX # --progress --acls --xattrs
     --info=stats2,progress2 -h # --human-readable
-    --log-file="$(pwd)/rsync-$(date +"%Y%m%d-%H%M%S").log"
+    --log-file="$logfile.1"
     --mkpath # link mkdir -p for TO
     --exclude=/.Android/
     --exclude=/.cache/
@@ -43,9 +47,12 @@ opts=(
     --exclude=/.local/share/uv/
     --exclude=/.npm/
     --exclude=.gradle/
+    --exclude=.mozilla/firefox/*/storage/
     --exclude=.mypy_cache/
+    --exclude=.thumbnails/
     --exclude=.venv/
     --exclude=node_modules/
+    --exclude=site-packages/
 )
 
 # Parse args
@@ -108,4 +115,18 @@ echo
 echoB -n "Run this command? [y/n] "; read -r ans
 [[ "$ans" == y ]] || die "cancelled by user"
 # echo "${cmd[*]}"
-"${cmd[@]}"
+# Log deletion to a separate file (rsync does not log deletion to --log-file when --link-dest is used (even with -v)) and merge later
+grep0(){ grep "$@"; return 0; }
+if "${cmd[@]}" | tee /dev/stderr | grep0 '^\*deleting' > "$logfile.2"; then s=$?; else s=$?; fi # avoid errexit/pipefail terminating script
+{
+    #      2025/10/18 08:55:12 [123456]
+    sed '/^.......... ........ \[[0-9]*\] Number of files:/Q' "$logfile.1"
+    echo
+    echo "===== Deletion log ====="
+    cat "$logfile.2"
+    echo "===== Deletion log END ====="
+    echo
+    sed -n '/^.......... ........ \[[0-9]*\] Number of files:/,$p' "$logfile.1"
+} > "$logfile"
+rm "$logfile.1" "$logfile.2"
+exit "$s"
