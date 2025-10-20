@@ -41,6 +41,7 @@ end
 
 # String/math
 alias sr "string replace"
+alias s0 "string split0"
 
 # Abbr
 abbr psa "ps alx | grep -i"
