@@ -31,6 +31,8 @@
 
 .scroll-hint-icon-wrap { display: none } /* disable horizontal scroll hint finger icon */
 
+.with-timeline, .with-topic-progress { display: none !important } /* hide progress in forums */
+
 @-moz-document domain("reddit.com") {
   /* hide logo */
   #header-img { display: none !important; }
@@ -248,6 +250,8 @@
     /* remove right space */
     #bodyContent { min-width: 75vw }
     .vector-column-end { display: none }
+    /* italic in red */
+    .mw-body-content i { color: #c22 }
 }
 
 @-moz-document domain("chiebukuro.yahoo.co.jp") {
