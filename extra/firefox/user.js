@@ -36,8 +36,10 @@ user_pref("full-screen-api.warning.timeout", 0);
 user_pref("general.smoothScroll", false);
 user_pref("gfx.font_rendering.cleartype_params.enhanced_contrast", 100); // windows font rendering
 user_pref("gfx.font_rendering.cleartype_params.rendering_mode", 5); // windows font rendering
+user_pref("layout.css.scrollbar-width-thin.disabled", "true");
+user_pref("layout.testing.overlay-scrollbars.always-visible", "true");
 user_pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
-user_pref("network.http.request.max-attempts", 2); // default 10, too many (possibly banned)
+user_pref("network.http.request.max-attempts", 2); // default 10, too many (leads to a ban from server)
 user_pref("network.security.ports.banned.override", "1-65535");
 user_pref("pointer-lock-api.warning.timeout", 0);
 user_pref("privacy.file_unique_origin", false); // Allow local script access local iframe's document
