@@ -9,9 +9,10 @@ opt_m=; opt_s=$default_s; opt_u=$default_u
 prompt=''
 # shellcheck disable=SC2016
 # Duplicate : to escape it
-tools='get_time:get current time:timezone=time zone:format=format (you can use %Y %m %d %H %M %S):TZ=$timezone date +"$format"
-list_files:list files in dir:dir=directory (use . for current dir):recursive=if nonempty, list files recusively:ls "${recursive::+-R}" "$dir"
-cat_file:show contents of a file:path=path to the file:cat "$path"'
+#tools='get_time:get current time:timezone=time zone:format=format (you can use %Y %m %d %H %M %S):TZ=$timezone date +"$format"
+#list_files:list files in dir:dir=directory (use . for current dir):recursive=if nonempty, list files recusively:ls "${recursive::+-R}" "$dir"
+#cat_file:show contents of a file:path=path to the file:cat "$path"'
+tools='shell:run shell command (allowed commands:: date ls find cat grep head tail):cmd=command to run:if echo " date ls find cat grep head tail "|grep -q " ${cmd%% *} ";then sh -c "$cmd";else echo forbidden command;fi'
 # TODO require tool confirm (e.g. by prefix its name with !)
 
 while [ $# -ge 1 ]; do
@@ -86,7 +87,7 @@ echo "$models" | grep -qFx "$opt_m" || error "model \"$opt_m\" is not available"
 ## Tools
 
 tools_api=$(echo "$tools" | jq -R '[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{type:"function",function:{name:.[0],description:.[1],parameters:.[2:-1]|{type:"object",required:[.[]|split("=")[0]],properties:[.[]|split("=")|{key:.[0],value:{type:"string",description:.[1]}}]|from_entries}}}' | jq -s .)
-tools_int=$(echo "$tools" | jq -R '[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{key:.[0],value:.[-1]}' | jq -s 'from_entries')
+tools_int=$(echo "$tools" | jq -R '[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{key:.[0],value:{flags:"",cmd:.[-1]}}' | jq -s 'from_entries')
 
 # printf "tools_api=%s\ntools_int=%s\n" "$tools_api" "$tools_int" >&2; exit
 
@@ -154,8 +155,8 @@ tac "$outfile" | awk -v a="$(printf '\033[35m')" -v b="$(printf '\033[0m')" '/^(
 
 tool_call=$(sed -n 's/^TOOL: //p' "$outfile")
 if [ "$tool_call" ]; then
-    tool_cmd=$(echo "$tool_call" | jq -rR --argjson t "$tools_int" 'split(" ")|[.[0],(.[1:]|join(" ")|fromjson|[to_entries[]|"\(.key|@sh)=\(.value|@sh)"]|join(" "))]|"env \(.[1]) sh -c \($t[.[0]]|@sh)"')
-    tool_result=$(eval "$tool_cmd")
+    tool_cmd=$(echo "$tool_call" | jq -rR --argjson t "$tools_int" 'split(" ")|[.[0],(.[1:]|join(" ")|fromjson|[to_entries[]|"\(.key|@sh)=\(.value|@sh)"]|join(" "))]|"env \(.[1]) sh -c \($t[.[0]].cmd|@sh)"')
+    tool_result=$(eval "$tool_cmd" 2>&1)
     printf "\ncmd:  %s\nout:  %s\n\n" "$tool_cmd" "$tool_result" >&2
     id=$(date +"tc_%Y%m%d_%H%M%S")
     printf %s "$tool_call" | jq -Rsr --arg id "$id" 'split(" ")|{role:"assistant",tool_calls:[{id:$id,type:"function",function:{name:.[0],arguments:(.[1:]|join(" "))}}]}' >> "$histfile"
