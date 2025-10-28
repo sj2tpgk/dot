@@ -12,7 +12,8 @@ prompt=''
 #tools='get_time:get current time:timezone=time zone:format=format (you can use %Y %m %d %H %M %S):TZ=$timezone date +"$format"
 #list_files:list files in dir:dir=directory (use . for current dir):recursive=if nonempty, list files recusively:ls "${recursive::+-R}" "$dir"
 #cat_file:show contents of a file:path=path to the file:cat "$path"'
-tools='shell:run shell command (allowed commands:: date ls find cat grep head tail):cmd=command to run:if echo " date ls find cat grep head tail "|grep -q " ${cmd%% *} ";then sh -c "$cmd";else echo forbidden command;fi'
+toolsDefault='shell:run shell command (allowed commands:: date ls find cat grep head tail):cmd=command to run:if echo " date ls find cat grep head tail "|grep -q " ${cmd%% *} ";then sh -c "$cmd";else echo forbidden command;fi'
+tools=
 # TODO require tool confirm (e.g. by prefix its name with !)
 
 while [ $# -ge 1 ]; do
@@ -26,7 +27,7 @@ while [ $# -ge 1 ]; do
         (-m|--model)    opt_m="$2"; shift 2 ;;
         (-s|--system)   opt_s="$2"; shift 2 ;;
         (-u|--url)      opt_u="$2"; shift 2 ;;
-        (-t|--tool)     tools="$tools$NEWL$2"; shift 2 ;;
+        (-t|--tool)     [ "$2" ] && tools="$tools$NEWL$2" || tools="$tools$NEWL$toolsDefault"; shift 2 ;;
         (*) prompt="$*" ; break ;;
     esac
 done
@@ -45,11 +46,11 @@ help(){
     echo "  -m, --model <model>    Model         (default: auto)"
     echo "  -n, --noout            No chat output file (still creates history)"
     echo "  -s, --system <prompt>  System prompt (default: $default_s)"
-    echo "  -t, --tool <spec>      Define additional tools"
+    echo "  -t, --tool <spec>      Define additional tools (empty <spec> will enable default tools)"
     echo "  -u, --url <url>        URL of server (default: $default_u)"
     echo
     echo "Tool spec example:"
-    echo "$tools"
+    echo "$toolsDefault"
 }
 
 error(){
@@ -86,8 +87,8 @@ echo "$models" | grep -qFx "$opt_m" || error "model \"$opt_m\" is not available"
 
 ## Tools
 
-tools_api=$(echo "$tools" | jq -R '[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{type:"function",function:{name:.[0],description:.[1],parameters:.[2:-1]|{type:"object",required:[.[]|split("=")[0]],properties:[.[]|split("=")|{key:.[0],value:{type:"string",description:.[1]}}]|from_entries}}}' | jq -s .)
-tools_int=$(echo "$tools" | jq -R '[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{key:.[0],value:{flags:"",cmd:.[-1]}}' | jq -s 'from_entries')
+tools_api=$(echo "$tools" | jq -R 'select(length>0)|[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{type:"function",function:{name:.[0],description:.[1],parameters:.[2:-1]|{type:"object",required:[.[]|split("=")[0]],properties:[.[]|split("=")|{key:.[0],value:{type:"string",description:.[1]}}]|from_entries}}}' | jq -s .)
+tools_int=$(echo "$tools" | jq -R 'select(length>0)|[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{key:.[0],value:{flags:"",cmd:.[-1]}}' | jq -s 'from_entries')
 
 # printf "tools_api=%s\ntools_int=%s\n" "$tools_api" "$tools_int" >&2; exit
 

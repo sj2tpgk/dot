@@ -430,6 +430,7 @@ nnore yc :let @+=printf("%s:%s\n%s\n", expand("%:p"), line("."), getline(line(".
 nnore db ggVGd
 nnore s= :call SaveExcursion("ggVG=")<cr>
 nnore <a-j> J
+nnore M J
 nnore <silent> ; :lua toggleCmt(false)<cr>
 vnore <silent> ; :lua toggleCmt(true)<cr>
 nnore <lt> <lt><lt>

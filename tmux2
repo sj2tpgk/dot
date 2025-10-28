@@ -203,6 +203,7 @@ set fish_color_command cyan
 #| bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
 #| command -v doas >/dev/null 2>&1; and alias sudo doas
 #| bind ctrl-c cancel-commandline
+#| alias sr "string replace"; alias s0 "cat | string split0"
 #- }}}
 
 
@@ -308,7 +309,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| " neovim
 #| set ai sw=4 ts=4 sr mouse=av so=1 siso=5 tw=0 nu sb spr cf acd wic ic scs is hls ttm=0 t_Co=16
 #| for i in range(1, 16) | for j in ["", "s-", "c-"] | for k in ["", "i", "c"] | exe k . "nore <" . j . "f" . i . "> <nop>" | endfor | endfor | endfor
-#| nn Q :q<cr>| ino <s-f13> <nop>| ino <c-f14> <nop>| nn D dd| nn Y yy| nn ss :sp<cr>| nn sv :vsp<cr>| nn sb :bd<cr>| nn so <c-w>o| nn :<cr> :wa<cr>| nn <a-j> J| nn - <c-w>w| nnore + :tabnext<cr>| nn > >>| nn <lt> <lt><lt>| nn U <c-r>| nno <space> <c-d>| nno <backspace> <c-u>| no <cr> K
+#| nn Q :q<cr>| ino <s-f13> <nop>| ino <c-f14> <nop>| nn D dd| nn Y yy| nn ss :sp<cr>| nn sv :vsp<cr>| nn sb :bd<cr>| nn so <c-w>o| nn :<cr> :wa<cr>| nn <a-j> J| nn M J| nn - <c-w>w| nnore + :tabnext<cr>| nn > >>| nn <lt> <lt><lt>| nn U <c-r>| nno <space> <c-d>| nno <backspace> <c-u>| no <cr> K
 #| " no <esc>[25;2~ <nop>| ino <esc>[25;2~ <nop>| no <esc>[26;5~ <nop>| ino <esc>[26;5~ <nop>
 #| no j gj| no k gk| no gj j| no gk k| no J <c-d>| no K <c-u>| no h h| no l l| no gh 0| no gl <end>| no i i| no I I| no si s| no n n| no N N| no e e| no E E| ono e e| ono E E| ono h 0| ono l $| ono iw iw| ono iW iW| nno H <c-o> |nno L <c-i>
 #| if $MYKBD == "colemakdh" | no n gj| no e gk| no gn j| no ge k| no N <c-d>| no E <c-u>| no k h| no i l| no gk 0| no gi <end>| no l i| no L I| no sl s| no j n| no J N| no h e| no H E| ono h e| ono H E| ono k 0| ono i $| ono lw iw| ono lW iW| nno K <c-o> |nno I <c-i> | endif
@@ -544,9 +545,11 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| prompt=''
 #| # shellcheck disable=SC2016
 #| # Duplicate : to escape it
-#| tools='get_time:get current time:timezone=time zone:format=format (you can use %Y %m %d %H %M %S):TZ=$timezone date +"$format"
-#| list_files:list files in dir:dir=directory (use . for current dir):recursive=if nonempty, list files recusively:ls "${recursive::+-R}" "$dir"
-#| cat_file:show contents of a file:path=path to the file:cat "$path"'
+#| #tools='get_time:get current time:timezone=time zone:format=format (you can use %Y %m %d %H %M %S):TZ=$timezone date +"$format"
+#| #list_files:list files in dir:dir=directory (use . for current dir):recursive=if nonempty, list files recusively:ls "${recursive::+-R}" "$dir"
+#| #cat_file:show contents of a file:path=path to the file:cat "$path"'
+#| toolsDefault='shell:run shell command (allowed commands:: date ls find cat grep head tail):cmd=command to run:if echo " date ls find cat grep head tail "|grep -q " ${cmd%% *} ";then sh -c "$cmd";else echo forbidden command;fi'
+#| tools=
 #| # TODO require tool confirm (e.g. by prefix its name with !)
 #| 
 #| while [ $# -ge 1 ]; do
@@ -560,7 +563,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|         (-m|--model)    opt_m="$2"; shift 2 ;;
 #|         (-s|--system)   opt_s="$2"; shift 2 ;;
 #|         (-u|--url)      opt_u="$2"; shift 2 ;;
-#|         (-t|--tool)     tools="$tools$NEWL$2"; shift 2 ;;
+#|         (-t|--tool)     [ "$2" ] && tools="$tools$NEWL$2" || tools="$tools$NEWL$toolsDefault"; shift 2 ;;
 #|         (*) prompt="$*" ; break ;;
 #|     esac
 #| done
@@ -579,11 +582,11 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     echo "  -m, --model <model>    Model         (default: auto)"
 #|     echo "  -n, --noout            No chat output file (still creates history)"
 #|     echo "  -s, --system <prompt>  System prompt (default: $default_s)"
-#|     echo "  -t, --tool <spec>      Define additional tools"
+#|     echo "  -t, --tool <spec>      Define additional tools (empty <spec> will enable default tools)"
 #|     echo "  -u, --url <url>        URL of server (default: $default_u)"
 #|     echo
 #|     echo "Tool spec example:"
-#|     echo "$tools"
+#|     echo "$toolsDefault"
 #| }
 #| 
 #| error(){
@@ -620,8 +623,8 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| 
 #| ## Tools
 #| 
-#| tools_api=$(echo "$tools" | jq -R '[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{type:"function",function:{name:.[0],description:.[1],parameters:.[2:-1]|{type:"object",required:[.[]|split("=")[0]],properties:[.[]|split("=")|{key:.[0],value:{type:"string",description:.[1]}}]|from_entries}}}' | jq -s .)
-#| tools_int=$(echo "$tools" | jq -R '[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{key:.[0],value:.[-1]}' | jq -s 'from_entries')
+#| tools_api=$(echo "$tools" | jq -R 'select(length>0)|[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{type:"function",function:{name:.[0],description:.[1],parameters:.[2:-1]|{type:"object",required:[.[]|split("=")[0]],properties:[.[]|split("=")|{key:.[0],value:{type:"string",description:.[1]}}]|from_entries}}}' | jq -s .)
+#| tools_int=$(echo "$tools" | jq -R 'select(length>0)|[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{key:.[0],value:{flags:"",cmd:.[-1]}}' | jq -s 'from_entries')
 #| 
 #| # printf "tools_api=%s\ntools_int=%s\n" "$tools_api" "$tools_int" >&2; exit
 #| 
@@ -689,8 +692,8 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| 
 #| tool_call=$(sed -n 's/^TOOL: //p' "$outfile")
 #| if [ "$tool_call" ]; then
-#|     tool_cmd=$(echo "$tool_call" | jq -rR --argjson t "$tools_int" 'split(" ")|[.[0],(.[1:]|join(" ")|fromjson|[to_entries[]|"\(.key|@sh)=\(.value|@sh)"]|join(" "))]|"env \(.[1]) sh -c \($t[.[0]]|@sh)"')
-#|     tool_result=$(eval "$tool_cmd")
+#|     tool_cmd=$(echo "$tool_call" | jq -rR --argjson t "$tools_int" 'split(" ")|[.[0],(.[1:]|join(" ")|fromjson|[to_entries[]|"\(.key|@sh)=\(.value|@sh)"]|join(" "))]|"env \(.[1]) sh -c \($t[.[0]].cmd|@sh)"')
+#|     tool_result=$(eval "$tool_cmd" 2>&1)
 #|     printf "\ncmd:  %s\nout:  %s\n\n" "$tool_cmd" "$tool_result" >&2
 #|     id=$(date +"tc_%Y%m%d_%H%M%S")
 #|     printf %s "$tool_call" | jq -Rsr --arg id "$id" 'split(" ")|{role:"assistant",tool_calls:[{id:$id,type:"function",function:{name:.[0],arguments:(.[1:]|join(" "))}}]}' >> "$histfile"

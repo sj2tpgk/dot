@@ -41,7 +41,7 @@ end
 
 # String/math
 alias sr "string replace"
-alias s0 "string split0"
+alias s0 "cat | string split0" # need cat to force read from stdin in a function
 
 # Abbr
 abbr psa "ps alx | grep -i"
