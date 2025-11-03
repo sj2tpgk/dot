@@ -203,7 +203,7 @@ set fish_color_command cyan
 #| bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
 #| command -v doas >/dev/null 2>&1; and alias sudo doas
 #| bind ctrl-c cancel-commandline
-#| alias sr "string replace"; alias s0 "cat | string split0"
+#| alias sr "string replace"; function s0;begin;string match -qr '^[1-9][0-9]*$' $argv[1]; and string repeat -Nn $argv[1] \n;cat;end|string split0;true;end # need cat to force read from stdin in a function
 #- }}}
 
 

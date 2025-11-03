@@ -41,7 +41,7 @@ end
 
 # String/math
 alias sr "string replace"
-alias s0 "cat | string split0" # need cat to force read from stdin in a function
+function s0;begin;string match -qr '^[1-9][0-9]*$' $argv[1]; and string repeat -Nn $argv[1] \n;cat;end|string split0;true;end # need cat to force read from stdin in a function
 
 # Abbr
 abbr psa "ps alx | grep -i"

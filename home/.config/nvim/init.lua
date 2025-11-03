@@ -615,6 +615,8 @@ fu! MyHighlight_UI()
     " Status and tabs
     hi StatusLine   ctermbg=white ctermfg=black cterm=bold
     hi StatusLineNC ctermbg=white ctermfg=black cterm=NONE
+    hi TabLine      ctermfg=white ctermbg=black cterm=NONE
+    hi TabLineSel   ctermfg=white ctermbg=black cterm=bold,underline
     if !g:env.dark
         hi StatusLine   ctermfg=white ctermbg=249 cterm=bold
         hi StatusLineNC ctermfg=white ctermbg=251 cterm=NONE
@@ -1969,10 +1971,11 @@ function toggleCmt(visual) -- <<<
     end
     local function comment(line, indTo)
         -- Optionally indent to indTo'th column
-        local indCur,text = line:match("^(%s*)(.*)") -- note that %s* is greedy
-        indTo = indTo or indCur:len()
-        local ind = string.rep(" ", indTo)
-        local sp = string.rep(" ", indCur:len() - indTo) -- nonempty if current indent is larger than indTo; so need extra space after "#", "//" etc.
+        local indCur, text = line:match("^(%s*)(.*)") -- note that %s* is greedy
+        -- indTo = indTo or indCur:len()
+        local indChr = vim.bo.expandtab and " " or "\t"
+        local ind = string.rep(indChr, indTo)
+        local sp = string.rep(indChr, indCur:len() - indTo) -- nonempty if current indent is larger than indTo; so need extra space after "#", "//" etc.
         local y1 = (y == "") and " " or y -- at least one space after "#", "//" etc.
         -- If line is "      echo", shiftwidth=2 and indTo=2 then ...
         -- ind="  ", x="#", y1=" ", sp="    ", text="echo", z=""

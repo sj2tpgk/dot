@@ -203,7 +203,7 @@ set fish_color_command cyan
 #| bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
 #| command -v doas >/dev/null 2>&1; and alias sudo doas
 #| bind ctrl-c cancel-commandline
-#| alias sr "string replace"; alias s0 "cat | string split0"
+#| alias sr "string replace"; function s0;begin;string match -qr '^[1-9][0-9]*$' $argv[1]; and string repeat -Nn $argv[1] \n;cat;end|string split0;true;end # need cat to force read from stdin in a function
 #- }}}
 
 
@@ -563,7 +563,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|         (-m|--model)    opt_m="$2"; shift 2 ;;
 #|         (-s|--system)   opt_s="$2"; shift 2 ;;
 #|         (-u|--url)      opt_u="$2"; shift 2 ;;
-#|         (-t|--tool)     [ "$2" ] && tools="$tools$NEWL$2" || tools="$tools$NEWL$toolsDefault"; shift 2 ;;
+#|         (-t|--tool)     [ "$2" = default ] && tools="$tools$NEWL$toolsDefault" || tools="$tools$NEWL$2"; shift 2 ;;
 #|         (*) prompt="$*" ; break ;;
 #|     esac
 #| done
@@ -582,7 +582,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     echo "  -m, --model <model>    Model         (default: auto)"
 #|     echo "  -n, --noout            No chat output file (still creates history)"
 #|     echo "  -s, --system <prompt>  System prompt (default: $default_s)"
-#|     echo "  -t, --tool <spec>      Define additional tools (empty <spec> will enable default tools)"
+#|     echo "  -t, --tool <spec>      Define additional tools (\"default\" will enable default tools)"
 #|     echo "  -u, --url <url>        URL of server (default: $default_u)"
 #|     echo
 #|     echo "Tool spec example:"

@@ -11,6 +11,7 @@
 mime ^video|audio|ogg$, has mpv, X, flag f = mpv --geometry=58%x58%+50%+50% --force-window --sub=1 -- "$@"
 mime ^video|audio|ogg$, has ffplay, X, flag f = ffplay -- "$@"
 mime ^video|audio|ogg$, has ffprobe = ffprobe -- "$@"; read x
+# do not add nsxiv here, instead symlink nsxiv to sxiv and let ranger applies its sxiv_workaround_hook() in core/fm.py
 mime ^image, !ext svg, has sxiv     , X, flag f = sxiv -A1 -- "$@"
 ext webp,              has sxiv     , X, flag f = sxiv -A1 -- "$@"
 mime ^image, !ext svg, has geeqie   , X, flag f = geeqie -- "$@"
