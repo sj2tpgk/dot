@@ -67,8 +67,8 @@ keymap F      SET_OPTION display_link_number=0
 keymap ?      HELP
 keymap [      PREV_PAGE
 keymap ]      NEXT_PAGE
-keymap {      BACK
-keymap }      GOTO_LINK
+keymap ~      BACK
+keymap |      GOTO_LINK
 "
 
 echo "$w3m_config"        > "$w3m_dir/config"
