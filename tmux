@@ -173,24 +173,6 @@ fi
 #- }}}
 
 
-####FILE +x bin/v {{{
-#!/bin/sh
-if command -v vim >/dev/null; then
-    SHELL=sh exec vim -u "$TMUX_ROOT/vimrc" "$@"
-elif command -v nvim >/dev/null; then
-    SHELL=sh exec nvim -u "$TMUX_ROOT/vimrc" "$@"
-elif command -v nano >/dev/null; then
-    exec nano "$@"
-elif command -v emacs >/dev/null; then
-    exec emacs -nw -Q --color=yes "$@"
-elif command -v vi >/dev/null; then
-    exec vi "$@"
-else
-    echo "No editor found"
-fi
-#- }}}
-
-
 ####FILE -- config/fish/config.fish {{{
 # using older syntax for compatibility
 [ -d "/data/data/com.termux/files/home/bin/" ]; and set -x PATH $PATH:/data/data/com.termux/files/home/bin/
