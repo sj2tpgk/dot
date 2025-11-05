@@ -1,0 +1,18 @@
+#!/bin/sh
+if [ $# -eq 1 ] && [ "${1#!}" != "$1" ]; then
+    set -- "$(command -v "${1#!}")"
+fi
+if command -v vim >/dev/null; then
+    SHELL=sh exec vim "$@"
+elif command -v nvim >/dev/null; then
+    SHELL=sh exec nvim "$@"
+elif command -v nano >/dev/null; then
+    exec nano "$@"
+elif command -v emacs >/dev/null; then
+    exec emacs -nw -Q --color=yes "$@"
+elif command -v vi >/dev/null; then
+    exec vi "$@"
+else
+    echo "No editor found"
+fi
+

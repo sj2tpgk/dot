@@ -198,6 +198,7 @@ set fish_color_autosuggestion magenta
 set fish_color_command cyan
 #| function fish_greeting; end
 #| function mkcd; mkdir -p $argv[1]; and cd $argv[1]; end
+#| function ssh; SHELL=/bin/sh command ssh $argv; end # avoid TMUX_fish error when using ssh -J (not proper fix)
 #| for i in f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12; bind -k $i ""; or bind -e $i; end 2>/dev/null
 #| for i in \e\[25\;2~ \e\[26\;5~; bind $i ""; or bind -e $i; end 2>/dev/null
 #| bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"

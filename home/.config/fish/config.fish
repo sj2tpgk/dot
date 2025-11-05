@@ -25,7 +25,6 @@ function aliasif; has $argv[2] && alias $argv[1] $argv[2]; end
 alias   cp   'cp -i'
 aliasif js   node
 aliasif nv   nvim
-aliasif v    nvim
 aliasif sudo doas
 aliasif ra   ranger
 
