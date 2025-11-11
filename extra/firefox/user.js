@@ -45,7 +45,9 @@ user_pref("pointer-lock-api.warning.timeout", 0);
 user_pref("privacy.file_unique_origin", false); // Allow local script access local iframe's document
 user_pref("security.dialog_enable_delay", 0);
 user_pref("security.sandbox.content.level", 2); // needed for reading symlinked userContent.css (but not neeed  for reading symlinked userChrome.css)
+user_pref("sidebar.animation.enabled", false);
 user_pref("sidebar.position_start", false);
+user_pref("sidebar.revamp", false);
 user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
 user_pref("toolkit.tabbox.switchByScrolling", true);
 user_pref("ui.key.menuAccessKeyFocuses", false);

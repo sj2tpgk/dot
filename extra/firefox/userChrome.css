@@ -1,6 +1,10 @@
 @import url("userChrome-local.css");
 /* Note: @import must be at the BEGINNING of file */
 
+:root {
+    --panelui-subview-transition-duration: 1ms !important;
+}
+
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
 /* UI font */
@@ -46,7 +50,15 @@
 
 /* Disable firefox update notification (2022/12, v107) */
 #appMenu-update-restart-notification, #appMenu-update-manual-notification, #appMenu-update-available-notification, .toolbarbutton-badge { display: none !important; }
-.toolbarbutton-badge { display: none }
+
+/* No fade-in effect when opening hamburger menu */
+.animatable-menupopup, panel[type="arrow"] { transition-duration: 0s !important }
+
+/* No slide effect when pressing "More Tools" etc in hamburger menu */
+/* #appMenu-popup */
+/* Note this must be set before @namespace to take effect */
+/* Also, 0ms won't work (cannot go back) */
+/* :root { --panelui-subview-transition-duration: 1ms !important } */
 
 /* force thin url bar */
 /* toolbar#nav-bar { */

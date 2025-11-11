@@ -33,7 +33,7 @@
  [app] (class=mpv)
 [end]
 [group]  (workspace=[current])
- [app] (name=sxiv)
+ [app] (name=sxiv|nsxiv)
 [end]
 [app] (name=Navigator) (class=Pale moon) (role=browser)
   [Alpha]	{255}

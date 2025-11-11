@@ -3,7 +3,7 @@
 NEWL='
 '
 
-default_u=localhost:11434; default_s='Respond concisely /no_think'
+default_u=localhost:11434; default_s='Respond concisely. Do not overuse tables. /no_think /nothink'
 flag_c=; flag_e=; flag_h=; flag_l=; flag_n=
 opt_m=; opt_s=$default_s; opt_u=$default_u
 prompt=''
