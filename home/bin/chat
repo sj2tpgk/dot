@@ -5,7 +5,7 @@ NEWL='
 
 default_u=localhost:11434; default_s='Respond concisely. Do not overuse tables. /no_think /nothink'
 flag_c=; flag_e=; flag_h=; flag_l=; flag_n=
-opt_m=; opt_s=$default_s; opt_u=$default_u
+opt_i=; opt_m=; opt_s=$default_s; opt_u=$default_u
 prompt=''
 # shellcheck disable=SC2016
 # Duplicate : to escape it
@@ -24,6 +24,7 @@ while [ $# -ge 1 ]; do
         (-h|--help)     flag_h=1  ; shift ;;
         (-l|--list)     flag_l=1  ; shift ;;
         (-n|--noout)    flag_n=1  ; shift ;;
+        (-i|--image)    opt_i="$2"; shift 2 ;;
         (-m|--model)    opt_m="$2"; shift 2 ;;
         (-s|--system)   opt_s="$2"; shift 2 ;;
         (-u|--url)      opt_u="$2"; shift 2 ;;
@@ -43,6 +44,7 @@ help(){
     echo "  -e, --erase            Erase history before starting"
     echo "  -h, --help             Help"
     echo "  -l, --list             List models"
+    echo "  -i, --image            Image file (local)"
     echo "  -m, --model <model>    Model         (default: auto)"
     echo "  -n, --noout            No chat output file (still creates history)"
     echo "  -s, --system <prompt>  System prompt (default: $default_s)"
@@ -118,6 +120,14 @@ if [ ! "$flag_c" ]; then
     if [ -t 0 ]; then printf %s "$prompt"; else cat; fi \
         | jq -Rs '{role:"user",content:.}' \
         >> "$histfile"
+    if [ "$opt_i" ]; then
+        [ -e "$opt_i" ] || error "Image file does not exist: $opt_i"
+        # Example from docs uses content:[{type:text,..},{type:image_url,..}] form, but it seems separate message entries also work
+        # Note: \n in image_url is not allowed at least in llama-server (e.g. "data:image/jpeg;base64,xxx...yyy\nzzz"). Use base64's --wrap flag (or tr -d '\n') to convert to a single line string
+        base64 --wrap=0 "$opt_i" \
+            | jq -Rs '{role:"user",content:[{"type":"image_url","image_url":{"url":("data:image/jpeg;base64,"+.)}}]}' \
+            >> "$histfile"
+    fi
 fi
 
 outdir=$HOME/.cache/chat/
