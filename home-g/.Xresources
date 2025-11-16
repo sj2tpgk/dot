@@ -328,10 +328,10 @@ Sxiv.foreground: #aaaaaa
 Sxiv.font: UnifontMy:style=Bold:size=12:rgba=none
 Nsxiv.window.background: #000
 Nsxiv.window.foreground: #aaa
-Nsxiv.bar.background: #111
-Nsxiv.bar.foreground: #6f6
-! Nsxiv.bar.font: Migu 2M:size=13
-Nsxiv.bar.font: UnifontMy:style=Bold:size=12:rgba=none
+Nsxiv.bar.background: #aaa
+Nsxiv.bar.foreground: #000
+Nsxiv.bar.font: Unifont\\ JPMod:style=Bold:size=12:rgba=none
+Nsxiv.keys: 
 ! }}}
 
 xterm*faceName: Unifont\\-JP:style=Regular:size=12
