@@ -60,6 +60,7 @@ if has pacman
 end
 if has git
     abbr ga   git add .
+    abbr gaa  "git add .; git commit -m misc; git push --all origin"
     abbr gc   git commit -m
     abbr gcl  git clone
     abbr gd   git diff HEAD

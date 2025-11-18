@@ -3,6 +3,13 @@
 
 :root {
     --panelui-subview-transition-duration: 1ms !important;
+    /* various border radius (TODO check if this applies to web page) */
+	--border-radius-xsmall              : 2px;
+	--border-radius-small               : 2px;
+	--border-radius-medium              : 2px;
+	--border-radius-large               : 2px;
+	--arrowpanel-border-radius          : 2px;
+	--arrowpanel-menuitem-border-radius : 2px;
 }
 
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
