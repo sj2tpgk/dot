@@ -157,6 +157,8 @@ function get_arrow() {
         return C["g"] ">>" C["w"] ">"
     if (0 != index(SHELL, "bash"))
         return C["y"] ">>" C["r"] ">"
+    if (0 != index(SHELL, "nu"))
+        return C["r"] ">>" C["w"] ">"
     return C["w"] ">>>"
 }
 
