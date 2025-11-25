@@ -41,7 +41,7 @@ let fish_like_theme = {
     shape_datetime             : cyan_bold
     shape_directory            : cyan
     shape_external             : r # unmatched commands
-    shape_external_resolved    : def
+    shape_external_resolved    : c
     shape_externalarg          : u
     shape_filepath             : u
     shape_flag                 : u
