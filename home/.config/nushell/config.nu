@@ -5,6 +5,7 @@ $env.PROMPT_INDICATOR = ""
 
 def j [...args] { to json|^jq ...$args|from json }
 def ll [...args] { ls -la }
+alias sb = sort-by
 
 let fish_like_theme = {
     # check https://raw.githubusercontent.com/nushell/nushell/refs/heads/main/crates/nu-utils/src/default_files/default_config.nu
@@ -103,3 +104,4 @@ $env.config = {
     }
 }
 
+$env.LS_COLORS = "di=1;34"

@@ -75,6 +75,8 @@ openbox_menu:
       item label="big":
         action name="Execute" command='sh -c "exec foot \$(colorscheme myb foot) -o font=Droid\\ Sans\\ Mono\\ Dotted<COLON>size=24 -o line-height=40px -e sh -c MY_DARK=0\\ exec\\ /bin/fish" -':
         # footclient somehow cannot apply droid font??
+      item label="uzura":
+        action name="Execute" command='sh -c "exec foot \$(colorscheme myb foot) -o font=ComicShannsMono\\ Nerd\\ Font\\ Mono<COLON>size=14,azuki_font<COLON>size=15<COLON>embolden=true -o vertical-letter-offset=2px -o line-height=23px -o letter-spacing=0px -e sh -c MY_DARK=0\\ exec\\ /bin/sh" -':
       item label="Mousepad":
         action name="Execute" command="mousepad":
       item label="VirtualBox":
