@@ -84,17 +84,18 @@ _sta=$?
 
 [ "$flag_l" ] && { echo "$models"; exit 0; }
 
-# echo "$models" | grep -qFx "$opt_m" || error "model \"$opt_m\" is not available"
+echo "$models" | grep -qFx "$opt_m" || error "model \"$opt_m\" is not available"
+model="$opt_m"
 # opt_m_fuzzy=$(echo "$opt_m" | sed 's/./.*&/g')
-model=$(echo "$models" | grep -Fi "$opt_m")
-case "$?" in
-    (0) ;;
-    (*) error "model \"$opt_m\" is not found" ;;
-esac
-case "$(echo "$model" | wc -l)" in
-    (1) ;;
-    (*) error "model \"$opt_m\" is ambiguous" ;;
-esac
+# model=$(echo "$models" | grep -Fi "$opt_m")
+# case "$?" in
+#     (0) ;;
+#     (*) error "model \"$opt_m\" is not found" ;;
+# esac
+# case "$(echo "$model" | wc -l)" in
+#     (1) ;;
+#     (*) error "model \"$opt_m\" is ambiguous" ;;
+# esac
 
 
 ## Tools

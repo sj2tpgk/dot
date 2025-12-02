@@ -95,6 +95,7 @@ do -- Plugins <<<
 
     -- Better syntax highlighting and indent for langs
     plug "Vimjas/vim-python-pep8-indent"
+    plug "elkasztano/nushell-syntax-vim"
 
     -- Treesitter
     -- plug ("nvim-treesitter/nvim-treesitter", 1) -- lazy loading (experimental)
@@ -1075,12 +1076,12 @@ fu! MarkdownSyntax()
     syn region markdownCodeBlock matchgroup=markdownCodeDelimiter start="^\s*\z(`\{3,\}\).*$" end="^\s*\z1\ze\s*$" keepend concealends
     syn region markdownCodeBlock matchgroup=markdownCodeDelimiter start="^\s*\z(\~\{3,\}\).*$" end="^\s*\z1\ze\s*$" keepend concealends
 
-    syn region markdownH1 matchgroup=markdownH1Delimiter start=" \{,3}#\s"      end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
-    syn region markdownH2 matchgroup=markdownH2Delimiter start=" \{,3}##\s"     end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
-    syn region markdownH3 matchgroup=markdownH3Delimiter start=" \{,3}###\s"    end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
-    syn region markdownH4 matchgroup=markdownH4Delimiter start=" \{,3}####\s"   end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
-    syn region markdownH5 matchgroup=markdownH5Delimiter start=" \{,3}#####\s"  end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
-    syn region markdownH6 matchgroup=markdownH6Delimiter start=" \{,3}######\s" end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
+    syn region markdownH1 matchgroup=markdownH1Delimiter start=" \{,3}#\s\ze\S"      end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
+    syn region markdownH2 matchgroup=markdownH2Delimiter start=" \{,3}##\s\ze\S"     end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
+    syn region markdownH3 matchgroup=markdownH3Delimiter start=" \{,3}###\s\ze\S"    end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
+    syn region markdownH4 matchgroup=markdownH4Delimiter start=" \{,3}####\s\ze\S"   end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
+    syn region markdownH5 matchgroup=markdownH5Delimiter start=" \{,3}#####\s\ze\S"  end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
+    syn region markdownH6 matchgroup=markdownH6Delimiter start=" \{,3}######\s\ze\S" end="#*\s*$" keepend oneline contains=@markdownInline,markdownAutomaticLink contained concealends
 
     syn region markdownIdDeclaration matchgroup=markdownLinkDelimiter start="^ \{0,3\}!\=\[" end="\]:" oneline keepend nextgroup=markdownUrl skipwhite concealends
     syn match markdownUrl "\S\+" nextgroup=markdownUrlTitle skipwhite contained conceal
