@@ -2,17 +2,17 @@
 if [ $# -eq 1 ] && [ "${1#!}" != "$1" ]; then
     set -- "$(command -v "${1#!}")"
 fi
-if command -v vim >/dev/null; then
-    if [ "$TMUX_ROOT" ]; then
-        SHELL=sh exec vim -u "$TMUX_ROOT/vimrc" "$@"
-    else
-        SHELL=sh exec vim "$@"
-    fi
-elif command -v nvim >/dev/null; then
+if command -v nvim >/dev/null; then
     if [ "$TMUX_ROOT" ]; then
         SHELL=sh exec nvim -u "$TMUX_ROOT/vimrc" "$@"
     else
         SHELL=sh exec nvim "$@"
+    fi
+elif command -v vim >/dev/null; then
+    if [ "$TMUX_ROOT" ]; then
+        SHELL=sh exec vim -u "$TMUX_ROOT/vimrc" "$@"
+    else
+        SHELL=sh exec vim "$@"
     fi
 elif command -v nano >/dev/null; then
     exec nano "$@"

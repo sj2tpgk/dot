@@ -3,8 +3,10 @@ $env.PROMPT_COMMAND = { myprompt }
 $env.PROMPT_COMMAND_RIGHT = ""
 $env.PROMPT_INDICATOR = ""
 
-def j [...args] { to json|^jq ...$args|from json }
+def --wrapped j [...args] { let a = (to json -r | ^jq -c ...$args); if $env.LAST_EXIT_CODE != 0 { error make { msg: "jq error" } }; let b = ($a | from json -o); if ($b | length) == 1 { $b | get 0 } else { $b }; }
 def ll [...args] { ls -la }
+alias d = describe
+alias s = sort-by
 
 let fish_like_theme = {
     # check https://raw.githubusercontent.com/nushell/nushell/refs/heads/main/crates/nu-utils/src/default_files/default_config.nu
@@ -103,3 +105,4 @@ $env.config = {
     }
 }
 
+$env.LS_COLORS = "di=1;34"
