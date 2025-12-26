@@ -1278,10 +1278,6 @@ do
 
         "nvo e  h  E",
         "nvo E  H  e",
-        "nvo w  w  W", -- for clarity, here
-        "nvo W  W  w",
-        "nvo b  b  B",
-        "nvo B  B  b",
 
         "o   h  k  0",
         "o   l  i  $",
