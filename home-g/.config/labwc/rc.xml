@@ -117,6 +117,10 @@
       <action name="Execute" command="~/status.sh fyi">
       </action>
     </keybind>
+    <keybind key="W-m">
+      <action name="ToggleMagnify">
+      </action>
+    </keybind>
   </keyboard>
   <mouse>
     <default>
@@ -143,4 +147,8 @@
       </action>
     </windowRule>
   </windowRules>
+  <magnifier>
+    <useFilter>false</useFilter>
+    <width>500</width>
+  </magnifier>
 </labwc_config>
