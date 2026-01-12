@@ -2218,6 +2218,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| 
 #| range=${1:-192.168.1}
 #| tout=${2:-1}
+#| maxjobs=512
 #| 
 #| listip='
 #| BEGIN {
@@ -2260,12 +2261,15 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| 
 #| # xargs -P is not universally available
 #| while read -r ip; do
+#|     # n=$(jobs|wc -l) won't work, because jobs will run in a subshell (due to $() and pipe)
+#|     # or touch "$tmpd"/jobs-$ip and count files
+#|     while jobs > "$tmpd/jobs"; [ "$(wc -l < "$tmpd/jobs")" -ge "$maxjobs" ]; do sleep 1; done
 #|     { timeout "$tout" ping -c1 "$ip" && touch "$tmpd/$ip"; } >/dev/null 2>&1 &
 #|     ps="$ps $!"
 #| done < "$tmpd/fifo"
 #| wait $ps
 #| 
-#| rm -f "$tmpd/fifo"
+#| rm -f "$tmpd/fifo" "$tmpd/jobs"
 #| find "$tmpd" -maxdepth 1 -type f | sed 's#.*/##' | sort -t. -k1,1n -k2,2n -k3,3n -k4,4n \
 #|     | awk -v w1=16 -v w="$(tput cols)" 'BEGIN{n=int(w/w1)}{if(NR%n!=0){printf"%-"w1"s",$0}else{printf"%s\n",$0}}END{if(NR%n!=0)print""}'
 #| 
