@@ -14,6 +14,7 @@ user_pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons", fa
 user_pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", false);
 user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
 user_pref("browser.tabs.closeWindowWithLastTab", false);
+user_pref("browser.tabs.groups.smart.userEnabled", false);
 user_pref("browser.tabs.warnOnClose", false);
 user_pref("browser.theme.dark-private-windows", false);
 user_pref("browser.urlbar.suggest.trending", false);
@@ -92,6 +93,9 @@ user_pref("browser.ml.chat.enabled", false);
 user_pref("browser.ml.chat.menu", false);
 user_pref("browser.ml.enable", false);
 user_pref("extensions.ml.enabled", false);
+
+// firefox 146?
+user_pref("browser.ml.linkPreview.enabled", false);
 
 
 // Copied from https://gist.github.com/AetherEternity/5a6bb6e493a3d34988fc7342013f2ea6
