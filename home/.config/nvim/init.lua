@@ -1276,8 +1276,8 @@ do
         "nv  n  j  n",
         "nv  N  J  N",
 
-        "nvo e  h  E",
-        "nvo E  H  e",
+        "nvo e  h  e",
+        "nvo E  H  E",
 
         "o   h  k  0",
         "o   l  i  $",
