@@ -87,6 +87,9 @@ labwc_config:
     keybind key="W-i":
       action name="Execute" command="~/status.sh fyi":
 
+    keybind key="W-m":
+      action name="ToggleMagnify":
+
   mouse:
     default:
     context name="Root":
@@ -108,3 +111,6 @@ labwc_config:
     windowRule identifier="imv":
       action name="SetDecorations" decorations="full" forceSSD="yes":
 
+  magnifier:
+    useFilter: false
+    width: 500

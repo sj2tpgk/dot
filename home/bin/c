@@ -14,15 +14,19 @@ show(){
         cat "$path"
         return
     fi
-    # do not use exec to invoke highlight to etc so show() can be called multiple times
+    case "$path" in
+        (*.html|*.htm|*.php) has w3m && { w3m -dump -T text/html -cols "$(tput cols)" "$path"; return; } ;;
+        (*.csv) awk -F,    '{for(i=1;i<=NF;i++)printf"%s\033[3%dm"$i,(i>=2?FS:""),(i-1)%7+1;print""}END{printf"\033[0m"}' "$path"; return ;;
+        (*.tsv) awk -F'\t' '{for(i=1;i<=NF;i++)printf"%s\033[3%dm"$i,(i>=2?FS:""),(i-1)%7+1;print""}END{printf"\033[0m"}' "$path"; return ;;
+    esac
+    # do not use exec to invoke highlight to etc (show() can be called multiple times)
     if has highlight; then
         name=${path##*/}
         args=
         case "$name" in
             (Dockerfile*) args="-S dockerfile" ;;
-            (Makefile*) args="-S makefile" ;;
-            (*.service|*.automount|*.link|*.mount|*.network|*.path|*.slice|*.socket|*.target|*.timer) args="-S conf" ;;
-            (*.html|*.htm|*.php) has w3m && { w3m -dump -T text/html -cols "$(tput cols)" "$path"; return; } ;;
+            (Makefile*|[jJ]ustfile*) args="-S makefile" ;;
+            (*.service|*.automount|*.link|*.mount|*.network|*.path|*.slice|*.socket|*.target|*.timer) args="-S conf" ;; # systemd
             (*)
                 case "$path" in
                     (/etc/netctl/*) args="-S conf" ;;
@@ -38,6 +42,6 @@ show(){
 
 case $# in
     (0) cat ;;
-    (1) show "$1" ;;
+    (1) show "$@" ;;
     (*) echo "Usage: $0 [[!]file]" ; exit 1 ;;
 esac
