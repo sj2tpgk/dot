@@ -94,8 +94,12 @@ user_pref("browser.ml.chat.menu", false);
 user_pref("browser.ml.enable", false);
 user_pref("extensions.ml.enabled", false);
 
-// firefox 146?
+// firefox 146? link preview etc
 user_pref("browser.ml.linkPreview.enabled", false);
+user_pref("browser.ml.linkPreview.longPress", false);
+user_pref("browser.tabs.groups.smart.userEnabled", false);
+user_pref("browser.tabs.hoverPreview.showThumbnails", false);
+
 
 
 // Copied from https://gist.github.com/AetherEternity/5a6bb6e493a3d34988fc7342013f2ea6
