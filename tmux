@@ -260,6 +260,8 @@ bind    r     run "$TMUX_SCRIPT" \; source "$TMUX_ROOT/tmux.conf" \; display "Re
 bind -r o     select-pane -t :.+
 bind -r n     next-window
 bind -n F3    next-window
+bind -r N     previous-window
+bind -n C-n   "send-prefix ; send n"
 bind -n F4    select-pane -t :.+
 bind -r Left  resize-pane -L 1
 bind -r Down  resize-pane -D 1
