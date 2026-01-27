@@ -84,7 +84,7 @@ if [ "$1" = pack ]; then
     for i in ~/bin/*; do
         [ -f "$i" ] || continue
         echo "####FILE +x $(echo "$i" | sed 's#.*/\(bin/[^/]*\)$#\1#') {{""{"
-        cat "$i" | sed 's/^/#| /' # space after bar is needed
+        cat "$i" | sed 's/^/#| /' # space after bar is mandatory
         printf "#- }}""}\n\n\n"
     done >> "$dest"
 
@@ -186,7 +186,7 @@ set fish_color_command cyan
 #| bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
 #| command -v doas >/dev/null 2>&1; and alias sudo doas
 #| bind ctrl-c cancel-commandline
-#| alias sr "string replace"; function s0;begin;string match -qr '^[1-9][0-9]*$' $argv[1]; and string repeat -Nn $argv[1] \n;cat;end|string split0;true;end # need cat to force read from stdin in a function
+#| alias sr "string replace -r"; function s0;begin;string match -qr '^[1-9][0-9]*$' $argv[1]; and string repeat -Nn $argv[1] \n;cat;end|string split0;true;end # need cat to force read from stdin in a function
 #- }}}
 
 
@@ -261,7 +261,7 @@ bind -r o     select-pane -t :.+
 bind -r n     next-window
 bind -n F3    next-window
 bind -r N     previous-window
-bind -n C-n   "send-prefix ; send n"
+bind -n C-n   "send-prefix ; send n" # nested
 bind -n F4    select-pane -t :.+
 bind -r Left  resize-pane -L 1
 bind -r Down  resize-pane -D 1

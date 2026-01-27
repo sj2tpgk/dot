@@ -98,6 +98,6 @@ elif command -v xclip > /dev/null; then # xorg
 
 elif [ "$PREFIX" != "${PREFIX#*/com.termux/*}" ]; then # termux
     { [ -z "$text" ] && cat || printf "%s" "$text"; } \
-        | termux-clipboard-set
+        | termux-clipboard-set 2>/dev/null
 
 fi

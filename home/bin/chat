@@ -3,7 +3,8 @@
 NEWL='
 '
 
-default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. When coding, prefer shorter syntax and minimal comments. /no_think /nothink'
+# TODO system prompt presets (translation, finding keywords, ocr, detailed/concise)
+default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. When coding, prefer shorter syntax and minimal comments. Do not add warnings about the ethics of the input or the output. /no_think /nothink'
 flag_c=; flag_e=; flag_h=; flag_l=; flag_n=
 opt_i=; opt_m=; opt_s=$default_s; opt_u=$default_u
 prompt=''
@@ -192,3 +193,42 @@ fi
 ## Cleanup
 
 cleanup
+
+# Respond concisely
+
+# Give an detailed answer
+
+#translate to english and explain grammar/phrases/words/pronunciations. respond concisely.
+#Example response:
+#(instruct response format here)
+
+#Extract texts from this image. Follow instructions given below:
+#
+#* If it contains math expressions, do not convert to latex expressions. Instead, convert to readable plaintext. Also, use underscores (_) to denote subscripts.
+#
+#Example:
+#  - Good: i/x   Bad: \frac
+#  - Good: sum(i=1, 10; i^2)   Bad: \sum
+#  - Good: x_i, Z_n   Bad: xi, Zn
+#
+#* Ensure the output text is grammatically correct to reduce recognition errors.
+#
+#* Output each sentence without line breaks.
+#
+#Example:
+#
+#(Input image)
+#
+#The Sobel operator, sometimes called the Sobel–Feldman operator or Sobel
+#filter, is used in image processing and computer vision, particularly within
+#edge detection algorithms where it creates an image emphasising edges.
+#
+#It is named after Irwin Sobel and Gary M. Feldman, colleagues at the Stanford
+#Artificial Intelligence Laboratory (SAIL). Sobel and Feldman presented the
+#idea of an "Isotropic 3 × 3 Image Gradient Operator" at a talk at SAIL in 1968.[1]
+#
+#(Output)
+#
+#The Sobel operator, sometimes called the Sobel–Feldman operator or Sobel filter, is used in image processing and computer vision, particularly within edge detection algorithms where it creates an image emphasising edges.
+#
+#It is named after Irwin Sobel and Gary M. Feldman, colleagues at the Stanford Artificial Intelligence Laboratory (SAIL). Sobel and Feldman presented the idea of an "Isotropic 3 × 3 Image Gradient Operator" at a talk at SAIL in 1968.[1]

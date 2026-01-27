@@ -84,7 +84,7 @@ if [ "$1" = pack ]; then
     for i in ~/bin/*; do
         [ -f "$i" ] || continue
         echo "####FILE +x $(echo "$i" | sed 's#.*/\(bin/[^/]*\)$#\1#') {{""{"
-        cat "$i" | sed 's/^/#| /' # space after bar is needed
+        cat "$i" | sed 's/^/#| /' # space after bar is mandatory
         printf "#- }}""}\n\n\n"
     done >> "$dest"
 
@@ -186,7 +186,7 @@ set fish_color_command cyan
 #| bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"
 #| command -v doas >/dev/null 2>&1; and alias sudo doas
 #| bind ctrl-c cancel-commandline
-#| alias sr "string replace"; function s0;begin;string match -qr '^[1-9][0-9]*$' $argv[1]; and string repeat -Nn $argv[1] \n;cat;end|string split0;true;end # need cat to force read from stdin in a function
+#| alias sr "string replace -r"; function s0;begin;string match -qr '^[1-9][0-9]*$' $argv[1]; and string repeat -Nn $argv[1] \n;cat;end|string split0;true;end # need cat to force read from stdin in a function
 #- }}}
 
 
@@ -261,7 +261,7 @@ bind -r o     select-pane -t :.+
 bind -r n     next-window
 bind -n F3    next-window
 bind -r N     previous-window
-bind -n C-n   "send-prefix ; send n"
+bind -n C-n   "send-prefix ; send n" # nested
 bind -n F4    select-pane -t :.+
 bind -r Left  resize-pane -L 1
 bind -r Down  resize-pane -D 1
@@ -647,7 +647,8 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| NEWL='
 #| '
 #| 
-#| default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. When coding, prefer shorter syntax and minimal comments. /no_think /nothink'
+#| # TODO system prompt presets (translation, finding keywords, ocr, detailed/concise)
+#| default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. When coding, prefer shorter syntax and minimal comments. Do not add warnings about the ethics of the input or the output. /no_think /nothink'
 #| flag_c=; flag_e=; flag_h=; flag_l=; flag_n=
 #| opt_i=; opt_m=; opt_s=$default_s; opt_u=$default_u
 #| prompt=''
@@ -836,6 +837,45 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| ## Cleanup
 #| 
 #| cleanup
+#| 
+#| # Respond concisely
+#| 
+#| # Give an detailed answer
+#| 
+#| #translate to english and explain grammar/phrases/words/pronunciations. respond concisely.
+#| #Example response:
+#| #(instruct response format here)
+#| 
+#| #Extract texts from this image. Follow instructions given below:
+#| #
+#| #* If it contains math expressions, do not convert to latex expressions. Instead, convert to readable plaintext. Also, use underscores (_) to denote subscripts.
+#| #
+#| #Example:
+#| #  - Good: i/x   Bad: \frac
+#| #  - Good: sum(i=1, 10; i^2)   Bad: \sum
+#| #  - Good: x_i, Z_n   Bad: xi, Zn
+#| #
+#| #* Ensure the output text is grammatically correct to reduce recognition errors.
+#| #
+#| #* Output each sentence without line breaks.
+#| #
+#| #Example:
+#| #
+#| #(Input image)
+#| #
+#| #The Sobel operator, sometimes called the Sobel–Feldman operator or Sobel
+#| #filter, is used in image processing and computer vision, particularly within
+#| #edge detection algorithms where it creates an image emphasising edges.
+#| #
+#| #It is named after Irwin Sobel and Gary M. Feldman, colleagues at the Stanford
+#| #Artificial Intelligence Laboratory (SAIL). Sobel and Feldman presented the
+#| #idea of an "Isotropic 3 × 3 Image Gradient Operator" at a talk at SAIL in 1968.[1]
+#| #
+#| #(Output)
+#| #
+#| #The Sobel operator, sometimes called the Sobel–Feldman operator or Sobel filter, is used in image processing and computer vision, particularly within edge detection algorithms where it creates an image emphasising edges.
+#| #
+#| #It is named after Irwin Sobel and Gary M. Feldman, colleagues at the Stanford Artificial Intelligence Laboratory (SAIL). Sobel and Feldman presented the idea of an "Isotropic 3 × 3 Image Gradient Operator" at a talk at SAIL in 1968.[1]
 #- }}}
 
 
@@ -1204,6 +1244,13 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #- }}}
 
 
+####FILE +x bin/im-sixel {{{
+#| #!/bin/sh
+#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
+#| magick "$1" -geometry "x${2:-100}" sixel:-
+#- }}}
+
+
 ####FILE +x bin/img2txtfull {{{
 #| #!/usr/bin/perl
 #| 
@@ -1229,13 +1276,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| input=$*
 #| # echo "[$input]"
 #| rclip -f -t 30 "$input" 2>/dev/null | grep -v TensorList | sxiv -t -i -
-#- }}}
-
-
-####FILE +x bin/im-sixel {{{
-#| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
-#| magick "$1" -geometry "x${2:-100}" sixel:-
 #- }}}
 
 
@@ -3600,113 +3640,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #- }}}
 
 
-####FILE +x bin/xcopy {{{
-#| #!/bin/sh
-#| 
-#| text=$*
-#| 
-#| wsl_copy() {
-#|     # win32yank -i; return
-#|     cd /
-#| 
-#|     magic=ac7i6ma0
-#|     tmpdir=/tmp/wslclip
-#|     [ ! -d "$tmpdir" ] && mkdir -p "$tmpdir"
-#|     pidfile="$tmpdir/copy_pid"
-#|     inputfile="$tmpdir/copy_input"
-#|     oninitfile="$tmpdir/copy_oninit"
-#|     logfile="$tmpdir/copy_log"
-#|     log() { printf "%s (sh) %s\n" "$(date +'%Y/%m/%d %H:%M:%S.%3N')" "$*" >> "$logfile"; }
-#|     printf "%s\n" "------" >> "$logfile"
-#| 
-#|     # if "pidfile cannot be read" or "pid written in pidfile no longer exists", start new daemon
-#|     if ! read -r pid < "$pidfile" 2>/dev/null || [ ! -e "/proc/$pid/fd/0" ]; then
-#|         log "pid=[$pid], $([ -z "$pid" ] && printf "%s" "read $pidfile failed"), $([ -n "$pid" ] && [ ! -e "/proc/$pid/fd/0" ] && printf "%s" "/proc/$pid/fd/0 does not exist")"
-#| 
-#|         # shellcheck disable=SC2016
-#|         pwsh='
-#|         # '$magic' wsl-xcopy-pwsh # For pgrep purpose
-#|         $wslroot="//wsl$/'"$WSL_DISTRO_NAME"'"
-#|         echo a > "$wslroot/'"$oninitfile"'"
-#|         function log{ param($msg); $d=$(get-date -Format "yyyy/MM/dd HH:mm:ss.fff"); echo "$d (PS) $msg" >> "$wslroot/'"$logfile"'"}
-#|         log init
-#|         while(1){
-#|             $got = Read-Host
-#|             log "read-host done"
-#| 
-#|             # Assumes base64 encoded UTF-8 data is in $inputfile
-#|             #$b64 = Get-Content "$wslroot/'"$inputfile"'"
-#|             #$bin = [System.Convert]::FromBase64String($b64)
-#|             #$str = [System.Text.Encoding]::UTF8.GetString($bin)
-#|             #Set-Clipboard $str
-#|             # echo "b64=$b64,str=$str"
-#| 
-#|             $str = (Get-Content -Raw -Encoding utf8 "$wslroot/'"$inputfile"'")
-#|             log "get-content done, str is [$str]"
-#|             Set-Clipboard $str
-#|             log "set-clipboard done"
-#| 
-#|         }
-#|         '
-#| 
-#|         mkdir -p "$tmpdir"
-#|         touch "$inputfile"
-#|         rm "$oninitfile" 2>/dev/null
-#| 
-#|         # Run powershell and save pid
-#|         # This reads $inputfile and save it to clipboard whenever something is written in stdin.
-#|         # An alternative is clip.exe, but has encoding problem, not works on some directories, slower than this background-powershell method etc.
-#|         # A dummy process is piped to powershell.exe, otherwise we cannot write to its stdin with /proc/$pid/fd/0.
-#|         # Also powershell.exe must be piped to something other than stdout, otherwise it does not persist when not launched from terminal (e.g. from vim).
-#|         # Replacing "while ..." with "cat" works in terminal, but not in script (infinite loop)
-#|         log "starting powershell"
-#|         while true; do sleep 100000; done | powershell.exe "$pwsh" > /dev/null &
-#|         pid=$!
-#|         echo $pid > "$pidfile"
-#|         log "PID $pid is written to $pidfile"
-#| 
-#|         # wait until $oninitfile is created (powershell startup is slow)
-#|         # i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$oninitfile" ]; do sleep .01; done
-#|         i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$oninitfile" ]; do sleep 0; done
-#|         log "$oninitfile created."
-#| 
-#|     fi
-#| 
-#|     # { [ -z "$text" ] && cat || printf "%s" "$text"; } | base64 > "$inputfile"
-#|     # echo > "/proc/$pid/fd/0"
-#|     log "writing to $inputfile"
-#|     { [ -z "$text" ] && cat || printf "%s" "$text"; } > "$inputfile"
-#|     log "writing to /proc/$pid/fd/0"
-#|     echo > "/proc/$pid/fd/0"
-#| 
-#| }
-#| 
-#| 
-#| ## Main program
-#| 
-#| if [ -n "${IS_WSL}${WSL_DISTRO_NAME}${WSL_INTEROP}${WSL_ENV}" ]; then # wsl
-#|     wsl_copy
-#| 
-#| elif [ -n "${WAYLAND_DISPLAY}" ]; then # wayland
-#|     { [ -z "$text" ] && cat || printf "%s" "$text"; } \
-#|         | wl-copy
-#|     wl-paste 2>/dev/null | xclip -selection clipboard -i 2>/dev/null &
-#|     # note: wl-clipboard-rs is faster than wl-clipboard
-#|     # (`time echo a | wl-copy` is 10ms vs 35ms)
-#|     # but wl-clipboard-rs does not work on gnome as of early 2024
-#| 
-#| elif command -v xclip > /dev/null; then # xorg
-#|     { [ -z "$text" ] && cat || printf "%s" "$text"; } \
-#|         | xclip -selection clipboard -i
-#| 
-#| elif [ "$PREFIX" != "${PREFIX#*/com.termux/*}" ]; then # termux
-#|     { [ -z "$text" ] && cat || printf "%s" "$text"; } \
-#|         | termux-clipboard-set
-#| 
-#| fi
-#- }}}
-
-
 ####FILE +x bin/x-gestures {{{
 #| #!/bin/sh
 #| pkill -x lisgd
@@ -3731,105 +3664,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| #!/bin/sh
 #| # Usage: ./mute
 #| pactl set-sink-mute @DEFAULT_SINK@ toggle
-#- }}}
-
-
-####FILE +x bin/xpaste {{{
-#| #!/bin/sh
-#| 
-#| wsl_paste() {
-#|     # win32yank -o; return
-#|     cd /
-#| 
-#|     magic=pklgds25
-#|     tmpdir=/tmp/wslclip
-#|     [ ! -d "$tmpdir" ] && mkdir -p "$tmpdir"
-#|     pidfile="$tmpdir/paste_pid"
-#|     outputfile="$tmpdir/paste_output"
-#|     readyfile="$tmpdir/paste_ready"
-#|     logfile="$tmpdir/paste_log"
-#|     log() { printf "%s (sh) %s\n" "$(date +'%Y/%m/%d %H:%M:%S.%3N')" "$*" >> "$logfile"; }
-#|     printf "%s\n" "------" >> "$logfile"
-#| 
-#|     # if "pidfile cannot be read" or "pid written in pidfile no longer exists", start new daemon
-#|     if ! read -r pid < "$pidfile" 2>/dev/null || [ ! -e "/proc/$pid/fd/0" ]; then
-#|         log "pid=[$pid], $([ -z "$pid" ] && printf "%s" "read $pidfile failed"), $([ -n "$pid" ] && [ ! -e "/proc/$pid/fd/0" ] && printf "%s" "/proc/$pid/fd/0 does not exist")"
-#| 
-#|         # shellcheck disable=SC2016
-#|         pwsh='
-#|         # '$magic' wsl-xpaste-pwsh # For pgrep purpose
-#|         $wslroot="//wsl$/'"$WSL_DISTRO_NAME"'"
-#|         function log{ param($msg); $d=$(get-date -Format "yyyy/MM/dd HH:mm:ss.fff"); echo "$d (PS) $msg" >> "$wslroot/'"$logfile"'"}
-#|         log "init"
-#|         while(1){
-#|             $got = Read-Host
-#|             log "read-host done"
-#| 
-#|             # Encode string as utf8 and then convert to base64
-#|             #$str = Get-Clipboard -Raw # without -Raw we get an array of strings
-#|             #$bin = ([System.Text.Encoding]::UTF8).GetBytes($str)
-#|             #$b64 = [Convert]::ToBase64String($bin)
-#|             #echo $b64 > "$wslroot/'"$outputfile"'"
-#|             #echo a > "$wslroot/'"$readyfile"'"
-#| 
-#|             $a = (gcb -Raw).Replace("`r`n", "`n")                   # CRLF to LF
-#|             log "a is [$a]"
-#|             [IO.File]::WriteAllText("$wslroot/'"$outputfile"'", $a) # no trailing CRLF
-#|             log "written to '"$outputfile"'"
-#|             echo a > "$wslroot/'"$readyfile"'"
-#|             log "written to '"$readyfile"'"
-#| 
-#|             # "Get-Clipboard -Raw > file" has an encoding problem (which can be fixed with out-file -encoding utf8), and it also adds some garbage leading/trailing bytes
-#|             # $str = Get-Clipboard
-#|         }
-#|         '
-#| 
-#|         mkdir -p "$tmpdir"
-#| 
-#|         # Run powershell and save pid
-#|         # This writes clipboard content to $outputfile whenever something is written in stdin.
-#|         # Simple "powershell.exe Get-Clipboard" works, but very slow
-#|         # A dummy process is piped to powershell.exe, otherwise we cannot write to its stdin with /proc/$pid/fd/0.
-#|         # Also powershell.exe must be piped to something other than stdout, otherwise it does not persist when not launched from terminal (e.g. from vim).
-#|         # Replacing "while ..." with "cat" works in terminal, but not in script (infinite loop)
-#|         log "starting powershell"
-#|         while true; do sleep 100000; done | powershell.exe "$pwsh" >/dev/null &
-#|         pid=$!
-#|         echo $pid > "$pidfile"
-#|         log "PID $pid is written to $pidfile"
-#| 
-#|     fi
-#| 
-#| 
-#|     log "removing $outputfile and $readyfile"
-#|     rm "$outputfile" "$readyfile" 2>/dev/null
-#|     log "writing to /proc/$pid/fd/0"
-#|     echo > "/proc/$pid/fd/0"
-#|     # i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$readyfile" ]; do sleep .001; done
-#|     i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$readyfile" ]; do sleep 0; done
-#|     # first tr removes non-base64 characters, second tr fixes CRLF
-#|     #cat "$outputfile" | tr -c -d "[:alnum:][+/=]" | base64 -d | tr -d ''
-#|     log "$readyfile found, now cat'ing it"
-#|     cat "$outputfile"
-#| 
-#| }
-#| 
-#| 
-#| ## Main program
-#| 
-#| if [ -n "${IS_WSL}${WSL_DISTRO_NAME}${WSL_INTEROP}${WSL_ENV}" ]; then # wsl
-#|     wsl_paste
-#| 
-#| elif [ -n "${WAYLAND_DISPLAY}" ]; then # wayland
-#|     wl-paste -n # must wall wl-copy WITHOUT -n, and wl-paste WITH -n
-#| 
-#| elif command -v xclip > /dev/null; then # xorg
-#|     xclip -selection clipboard -o
-#| 
-#| elif [ "$PREFIX" != "${PREFIX#*/com.termux/*}" ]; then # termux
-#|     termux-clipboard-get
-#| 
-#| fi
 #- }}}
 
 
@@ -3948,6 +3782,212 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|         pactl set-sink-volume @DEFAULT_SINK@ "$1" ;;
 #| esac
 #| # [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
+#- }}}
+
+
+####FILE +x bin/xcopy {{{
+#| #!/bin/sh
+#| 
+#| text=$*
+#| 
+#| wsl_copy() {
+#|     # win32yank -i; return
+#|     cd /
+#| 
+#|     magic=ac7i6ma0
+#|     tmpdir=/tmp/wslclip
+#|     [ ! -d "$tmpdir" ] && mkdir -p "$tmpdir"
+#|     pidfile="$tmpdir/copy_pid"
+#|     inputfile="$tmpdir/copy_input"
+#|     oninitfile="$tmpdir/copy_oninit"
+#|     logfile="$tmpdir/copy_log"
+#|     log() { printf "%s (sh) %s\n" "$(date +'%Y/%m/%d %H:%M:%S.%3N')" "$*" >> "$logfile"; }
+#|     printf "%s\n" "------" >> "$logfile"
+#| 
+#|     # if "pidfile cannot be read" or "pid written in pidfile no longer exists", start new daemon
+#|     if ! read -r pid < "$pidfile" 2>/dev/null || [ ! -e "/proc/$pid/fd/0" ]; then
+#|         log "pid=[$pid], $([ -z "$pid" ] && printf "%s" "read $pidfile failed"), $([ -n "$pid" ] && [ ! -e "/proc/$pid/fd/0" ] && printf "%s" "/proc/$pid/fd/0 does not exist")"
+#| 
+#|         # shellcheck disable=SC2016
+#|         pwsh='
+#|         # '$magic' wsl-xcopy-pwsh # For pgrep purpose
+#|         $wslroot="//wsl$/'"$WSL_DISTRO_NAME"'"
+#|         echo a > "$wslroot/'"$oninitfile"'"
+#|         function log{ param($msg); $d=$(get-date -Format "yyyy/MM/dd HH:mm:ss.fff"); echo "$d (PS) $msg" >> "$wslroot/'"$logfile"'"}
+#|         log init
+#|         while(1){
+#|             $got = Read-Host
+#|             log "read-host done"
+#| 
+#|             # Assumes base64 encoded UTF-8 data is in $inputfile
+#|             #$b64 = Get-Content "$wslroot/'"$inputfile"'"
+#|             #$bin = [System.Convert]::FromBase64String($b64)
+#|             #$str = [System.Text.Encoding]::UTF8.GetString($bin)
+#|             #Set-Clipboard $str
+#|             # echo "b64=$b64,str=$str"
+#| 
+#|             $str = (Get-Content -Raw -Encoding utf8 "$wslroot/'"$inputfile"'")
+#|             log "get-content done, str is [$str]"
+#|             Set-Clipboard $str
+#|             log "set-clipboard done"
+#| 
+#|         }
+#|         '
+#| 
+#|         mkdir -p "$tmpdir"
+#|         touch "$inputfile"
+#|         rm "$oninitfile" 2>/dev/null
+#| 
+#|         # Run powershell and save pid
+#|         # This reads $inputfile and save it to clipboard whenever something is written in stdin.
+#|         # An alternative is clip.exe, but has encoding problem, not works on some directories, slower than this background-powershell method etc.
+#|         # A dummy process is piped to powershell.exe, otherwise we cannot write to its stdin with /proc/$pid/fd/0.
+#|         # Also powershell.exe must be piped to something other than stdout, otherwise it does not persist when not launched from terminal (e.g. from vim).
+#|         # Replacing "while ..." with "cat" works in terminal, but not in script (infinite loop)
+#|         log "starting powershell"
+#|         while true; do sleep 100000; done | powershell.exe "$pwsh" > /dev/null &
+#|         pid=$!
+#|         echo $pid > "$pidfile"
+#|         log "PID $pid is written to $pidfile"
+#| 
+#|         # wait until $oninitfile is created (powershell startup is slow)
+#|         # i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$oninitfile" ]; do sleep .01; done
+#|         i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$oninitfile" ]; do sleep 0; done
+#|         log "$oninitfile created."
+#| 
+#|     fi
+#| 
+#|     # { [ -z "$text" ] && cat || printf "%s" "$text"; } | base64 > "$inputfile"
+#|     # echo > "/proc/$pid/fd/0"
+#|     log "writing to $inputfile"
+#|     { [ -z "$text" ] && cat || printf "%s" "$text"; } > "$inputfile"
+#|     log "writing to /proc/$pid/fd/0"
+#|     echo > "/proc/$pid/fd/0"
+#| 
+#| }
+#| 
+#| 
+#| ## Main program
+#| 
+#| if [ -n "${IS_WSL}${WSL_DISTRO_NAME}${WSL_INTEROP}${WSL_ENV}" ]; then # wsl
+#|     wsl_copy
+#| 
+#| elif [ -n "${WAYLAND_DISPLAY}" ]; then # wayland
+#|     { [ -z "$text" ] && cat || printf "%s" "$text"; } \
+#|         | wl-copy
+#|     wl-paste 2>/dev/null | xclip -selection clipboard -i 2>/dev/null &
+#|     # note: wl-clipboard-rs is faster than wl-clipboard
+#|     # (`time echo a | wl-copy` is 10ms vs 35ms)
+#|     # but wl-clipboard-rs does not work on gnome as of early 2024
+#| 
+#| elif command -v xclip > /dev/null; then # xorg
+#|     { [ -z "$text" ] && cat || printf "%s" "$text"; } \
+#|         | xclip -selection clipboard -i
+#| 
+#| elif [ "$PREFIX" != "${PREFIX#*/com.termux/*}" ]; then # termux
+#|     { [ -z "$text" ] && cat || printf "%s" "$text"; } \
+#|         | termux-clipboard-set 2>/dev/null
+#| 
+#| fi
+#- }}}
+
+
+####FILE +x bin/xpaste {{{
+#| #!/bin/sh
+#| 
+#| wsl_paste() {
+#|     # win32yank -o; return
+#|     cd /
+#| 
+#|     magic=pklgds25
+#|     tmpdir=/tmp/wslclip
+#|     [ ! -d "$tmpdir" ] && mkdir -p "$tmpdir"
+#|     pidfile="$tmpdir/paste_pid"
+#|     outputfile="$tmpdir/paste_output"
+#|     readyfile="$tmpdir/paste_ready"
+#|     logfile="$tmpdir/paste_log"
+#|     log() { printf "%s (sh) %s\n" "$(date +'%Y/%m/%d %H:%M:%S.%3N')" "$*" >> "$logfile"; }
+#|     printf "%s\n" "------" >> "$logfile"
+#| 
+#|     # if "pidfile cannot be read" or "pid written in pidfile no longer exists", start new daemon
+#|     if ! read -r pid < "$pidfile" 2>/dev/null || [ ! -e "/proc/$pid/fd/0" ]; then
+#|         log "pid=[$pid], $([ -z "$pid" ] && printf "%s" "read $pidfile failed"), $([ -n "$pid" ] && [ ! -e "/proc/$pid/fd/0" ] && printf "%s" "/proc/$pid/fd/0 does not exist")"
+#| 
+#|         # shellcheck disable=SC2016
+#|         pwsh='
+#|         # '$magic' wsl-xpaste-pwsh # For pgrep purpose
+#|         $wslroot="//wsl$/'"$WSL_DISTRO_NAME"'"
+#|         function log{ param($msg); $d=$(get-date -Format "yyyy/MM/dd HH:mm:ss.fff"); echo "$d (PS) $msg" >> "$wslroot/'"$logfile"'"}
+#|         log "init"
+#|         while(1){
+#|             $got = Read-Host
+#|             log "read-host done"
+#| 
+#|             # Encode string as utf8 and then convert to base64
+#|             #$str = Get-Clipboard -Raw # without -Raw we get an array of strings
+#|             #$bin = ([System.Text.Encoding]::UTF8).GetBytes($str)
+#|             #$b64 = [Convert]::ToBase64String($bin)
+#|             #echo $b64 > "$wslroot/'"$outputfile"'"
+#|             #echo a > "$wslroot/'"$readyfile"'"
+#| 
+#|             $a = (gcb -Raw).Replace("`r`n", "`n")                   # CRLF to LF
+#|             log "a is [$a]"
+#|             [IO.File]::WriteAllText("$wslroot/'"$outputfile"'", $a) # no trailing CRLF
+#|             log "written to '"$outputfile"'"
+#|             echo a > "$wslroot/'"$readyfile"'"
+#|             log "written to '"$readyfile"'"
+#| 
+#|             # "Get-Clipboard -Raw > file" has an encoding problem (which can be fixed with out-file -encoding utf8), and it also adds some garbage leading/trailing bytes
+#|             # $str = Get-Clipboard
+#|         }
+#|         '
+#| 
+#|         mkdir -p "$tmpdir"
+#| 
+#|         # Run powershell and save pid
+#|         # This writes clipboard content to $outputfile whenever something is written in stdin.
+#|         # Simple "powershell.exe Get-Clipboard" works, but very slow
+#|         # A dummy process is piped to powershell.exe, otherwise we cannot write to its stdin with /proc/$pid/fd/0.
+#|         # Also powershell.exe must be piped to something other than stdout, otherwise it does not persist when not launched from terminal (e.g. from vim).
+#|         # Replacing "while ..." with "cat" works in terminal, but not in script (infinite loop)
+#|         log "starting powershell"
+#|         while true; do sleep 100000; done | powershell.exe "$pwsh" >/dev/null &
+#|         pid=$!
+#|         echo $pid > "$pidfile"
+#|         log "PID $pid is written to $pidfile"
+#| 
+#|     fi
+#| 
+#| 
+#|     log "removing $outputfile and $readyfile"
+#|     rm "$outputfile" "$readyfile" 2>/dev/null
+#|     log "writing to /proc/$pid/fd/0"
+#|     echo > "/proc/$pid/fd/0"
+#|     # i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$readyfile" ]; do sleep .001; done
+#|     i=0; while [ $((i += 1)) -lt 5000 ] && [ ! -e "$readyfile" ]; do sleep 0; done
+#|     # first tr removes non-base64 characters, second tr fixes CRLF
+#|     #cat "$outputfile" | tr -c -d "[:alnum:][+/=]" | base64 -d | tr -d ''
+#|     log "$readyfile found, now cat'ing it"
+#|     cat "$outputfile"
+#| 
+#| }
+#| 
+#| 
+#| ## Main program
+#| 
+#| if [ -n "${IS_WSL}${WSL_DISTRO_NAME}${WSL_INTEROP}${WSL_ENV}" ]; then # wsl
+#|     wsl_paste
+#| 
+#| elif [ -n "${WAYLAND_DISPLAY}" ]; then # wayland
+#|     wl-paste -n # must call wl-copy WITHOUT -n, and wl-paste WITH -n
+#| 
+#| elif command -v xclip > /dev/null; then # xorg
+#|     xclip -selection clipboard -o
+#| 
+#| elif [ "$PREFIX" != "${PREFIX#*/com.termux/*}" ]; then # termux
+#|     termux-clipboard-get 2>/dev/null
+#| 
+#| fi
 #- }}}
 
 
