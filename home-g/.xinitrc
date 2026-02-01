@@ -68,7 +68,7 @@ amixer set Master 40%
 # /usr/bin/syncthing & # use `systemctl --user enable --now syncthing`
 
 # Auto mount USB etc.
-udiskie &
+udiskie --no-automount &
 
 # Pulseaudio
 # /usr/bin/start-pulseaudio-x11
