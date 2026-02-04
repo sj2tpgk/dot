@@ -263,7 +263,7 @@ set -g fish_color_valid_path     '--underline' # (underline if file exist (color
 function mkcd -d 'mkdir plus cd'
   set -l dirname $argv[1]
   mkdir -p $dirname
-  eval "cd" $dirname
+  cd $dirname
 end
 
 function tmuxcd -d 'cd to pwd of tmux last-pane'

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+[ $# -ge 2 ] || { echo "Usage: $0 OUT IN1 [IN2 ...]"; exit 1; }
+tmp=$(mktemp "ffconcat.XXXXXX")
+trap 'rm "$tmp"' INT TERM EXIT
+out=$1
+shift
+for i in "$@"; do
+    echo "file '$i'"
+done > "$tmp"
+ffmpeg -y -v 8 -stats -f concat -safe 0 -i "$tmp" -c copy "$out"
+
