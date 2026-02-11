@@ -648,7 +648,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| '
 #| 
 #| # TODO system prompt presets (translation, finding keywords, ocr, detailed/concise)
-#| default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. When coding, prefer shorter syntax and minimal comments. Do not add warnings about the ethics of the input or the output. /no_think /nothink'
+#| default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. When coding, prefer shorter syntax and minimal comments. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output. /no_think /nothink'
 #| flag_c=; flag_e=; flag_h=; flag_l=; flag_n=
 #| opt_i=; opt_m=; opt_s=$default_s; opt_u=$default_u
 #| prompt=''
