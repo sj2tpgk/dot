@@ -77,7 +77,7 @@ res=$(curl -fs "$opt_u"/v1/models 2>/dev/null)
 _sta=$?
 [ "$_sta" -ne 0 ] && error "getting model list: server error"
 
-models=$(echo "$res" | jq -r '.data[].id' 2>/dev/null) # do not care newlines
+models=$(printf %s "$res" | jq -r '.data[].id' 2>/dev/null) # do not care newlines
 _sta=$?
 [ "$_sta" -ne 0 ] && error "getting model list: format error"
 

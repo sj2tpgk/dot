@@ -21,7 +21,7 @@ set -xg PATH   $GOPATH/bin $PATH
 function has; command -v $argv[1] >/dev/null 2>&1; end
 
 # Alias
-function aliasif; has $argv[2] && alias $argv[1] $argv[2]; end
+function aliasif; has (string split ' ' $argv[2])[1] && alias $argv[1] $argv[2]; end
 alias   cp   'cp -i'
 aliasif js   node
 aliasif nv   nvim
@@ -76,6 +76,11 @@ if has flatpak
     abbr fls       flatpak search
     abbr flui      flatpak uninstall
     abbr flup      flatpak update
+end
+if has udiskie-mount
+    abbr udm udiskie-mount  -a
+    abbr udu udiskie-umount -a
+    abbr udi udiskie-info   -a
 end
 has magick && abbr mg magick
 

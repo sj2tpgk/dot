@@ -721,7 +721,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| _sta=$?
 #| [ "$_sta" -ne 0 ] && error "getting model list: server error"
 #| 
-#| models=$(echo "$res" | jq -r '.data[].id' 2>/dev/null) # do not care newlines
+#| models=$(printf %s "$res" | jq -r '.data[].id' 2>/dev/null) # do not care newlines
 #| _sta=$?
 #| [ "$_sta" -ne 0 ] && error "getting model list: format error"
 #| 
