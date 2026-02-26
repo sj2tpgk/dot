@@ -67,14 +67,14 @@ def scan(d:bytes) -> None:
             if x.path in cache_all:
                 cache1 = cache_all[x.path]
                 if stat.st_mtime_ns == cache1[0]:
-                    warn(Exception("Cache used (whole line)"), x.path)
+                    # warn(Exception("Cache used (whole line)"), x.path)
                     sys.stdout.buffer.write(cache1[2])
                     sys.stdout.buffer.flush()
                     if stat.st_nlink >= 2:
                         cache_hash[inode] = cache1[1]
                     continue
             if inode in cache_hash:
-                warn(Exception("Cache used (hash)"), x.path)
+                # warn(Exception("Cache used (hash)"), x.path)
                 digest = cache_hash[inode]
             else:
                 try:
