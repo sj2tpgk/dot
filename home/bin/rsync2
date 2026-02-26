@@ -50,7 +50,7 @@ opts=(
     --exclude=.mozilla/firefox/*/storage/
     --exclude=.mypy_cache/
     --exclude=.thumbnails/
-    --exclude=.venv/
+    --exclude=.venv'*'/
     --exclude=node_modules/
     --exclude=site-packages/
 )

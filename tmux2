@@ -648,7 +648,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| '
 #| 
 #| # TODO system prompt presets (translation, finding keywords, ocr, detailed/concise)
-#| default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. When coding, prefer shorter syntax and minimal comments. Do not add warnings about the ethics of the input or the output. /no_think /nothink'
+#| default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. When coding, prefer shorter syntax and minimal comments. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output. /no_think /nothink'
 #| flag_c=; flag_e=; flag_h=; flag_l=; flag_n=
 #| opt_i=; opt_m=; opt_s=$default_s; opt_u=$default_u
 #| prompt=''
@@ -721,7 +721,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| _sta=$?
 #| [ "$_sta" -ne 0 ] && error "getting model list: server error"
 #| 
-#| models=$(echo "$res" | jq -r '.data[].id' 2>/dev/null) # do not care newlines
+#| models=$(printf %s "$res" | jq -r '.data[].id' 2>/dev/null) # do not care newlines
 #| _sta=$?
 #| [ "$_sta" -ne 0 ] && error "getting model list: format error"
 #| 
@@ -1227,6 +1227,129 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|             f.write(postData)
 #| 
 #| 
+#- }}}
+
+
+####FILE +x bin/hashdir {{{
+#| #!/usr/bin/env python3
+#| 
+#| import argparse, hashlib, os, sys
+#| 
+#| statistics = { "hash_calc_n": 0 }
+#| 
+#| def file_digest(p:bytes) -> bytes:
+#|     # warn(Exception("Computing hash"), p)
+#|     statistics["hash_calc_n"] += 1
+#|     with open(p, "rb") as f:
+#|         return hashlib.file_digest(f, "sha256").hexdigest().encode()
+#|     # TODO use O_DIRECT io
+#|     # see this SO post (it seems the buffer you are reading into needs certain alignment condition)
+#|     #     https://stackoverflow.com/questions/76291845/how-can-i-do-an-unbuffered-disk-read-in-python
+#|     # see CPython hashlib impl
+#|     #     https://github.com/python/cpython/blob/1decc7ee20cf6dce61e07cd8463ed87c1eb5fcd7/Lib/hashlib.py#L195
+#| 
+#| #out = datetime.datetime.now().strftime("hashdir-%Y%m%d-%H%M%S")
+#| 
+#| def parse_prev(p:bytes) -> dict[bytes, tuple[int, bytes, bytes]]:
+#|     ret = {}
+#|     with open(p, "rb") as f:
+#|         for i in f:
+#|             sp = i.split(b" ", 4)
+#|             if len(sp) != 5:
+#|                 sys.stderr.buffer.write(b"Invalid line: " + i)
+#|                 sys.stderr.buffer.flush()
+#|                 exit(1)
+#|             if sp[-1][-1:] == b'\n':
+#|                 sp[-1] = sp[-1][:-1]
+#|             ret[sp[-1]] = (int(sp[3]), sp[0], i)
+#|     return ret
+#| 
+#| def warn(e:Exception, p:bytes) -> None:
+#|     sys.stderr.buffer.write(type(e).__name__.encode() + b": [" + str(e).encode() + b"] at " + p + b"\n")
+#|     sys.stderr.buffer.flush()
+#| 
+#| def num_bytes(n:float) -> bytes:
+#|     return str(n).encode()
+#| 
+#| cache_all = {} # type: dict[bytes, tuple[int, bytes, bytes]] # st_mtime_ns, hash, path
+#| cache_hash = {} # type: dict[int, bytes]
+#| 
+#| def scan(d:bytes) -> None:
+#|     try:
+#|         it = os.scandir(d)
+#|     except PermissionError as e:
+#|         warn(e, d)
+#|         return
+#|     for x in it:
+#|         try:
+#|             is_dir = x.is_dir()
+#|         except OSError as e:
+#|             if e.errno == 40: # Too many levels of symbolic link
+#|                 warn(e, x.path)
+#|                 continue
+#|             raise e
+#|         if is_dir:
+#|             scan(x.path)
+#|         elif x.is_file() or x.is_symlink():
+#|             inode = x.inode()
+#|             try:
+#|                 stat = x.stat()
+#|             except FileNotFoundError as e: # e.g. symlink to a non-existent file
+#|                 warn(e, x.path)
+#|                 continue
+#|             if x.path in cache_all:
+#|                 cache1 = cache_all[x.path]
+#|                 if stat.st_mtime_ns == cache1[0]:
+#|                     warn(Exception("Cache used (whole line)"), x.path)
+#|                     sys.stdout.buffer.write(cache1[2])
+#|                     sys.stdout.buffer.flush()
+#|                     if stat.st_nlink >= 2:
+#|                         cache_hash[inode] = cache1[1]
+#|                     continue
+#|             if inode in cache_hash:
+#|                 warn(Exception("Cache used (hash)"), x.path)
+#|                 digest = cache_hash[inode]
+#|             else:
+#|                 try:
+#|                     digest = file_digest(x.path)
+#|                     if stat.st_nlink >= 2:
+#|                         cache_hash[inode] = digest
+#|                 except PermissionError as e:
+#|                     warn(e, x.path)
+#|                     continue
+#|             path_esc = x.path.replace(b"\\", b"\\\\").replace(b"\n", b"\\n").replace(b"\r", b"\\r")
+#|             line = digest + b" " + num_bytes(inode) + b" " + num_bytes(stat.st_size) + b" " + num_bytes(stat.st_mtime_ns) + b" " + path_esc + b"\n"
+#|             sys.stdout.buffer.write(line) # using bytes to avoid print error
+#|             sys.stdout.buffer.flush()
+#|         elif x.is_junction():
+#|             warn(Exception("Junction is not allowed"), x.path)
+#|         else:
+#|             warn(Exception("Unsupported file object"), x.path) # socket, device etc
+#| 
+#| def main() -> None:
+#|     global cache_all
+#|     parser = argparse.ArgumentParser()
+#|     parser.add_argument("indir", default=".", nargs="?", help="Directory to check")
+#|     parser.add_argument("-p", "--prev", help="Previous output file")
+#|     args = parser.parse_args()
+#|     if args.prev:
+#|         if not os.path.exists(args.prev):
+#|             sys.stderr.write(f"Error: prev file does not exist: {args.prev}\n")
+#|             exit(1)
+#|         cache_all = parse_prev(os.fsencode(args.prev))
+#|     # print(cache_all);exit(1)
+#|     if not os.path.isdir(args.indir):
+#|         sys.stderr.write(f"Error: {args.indir} is not a directory\n")
+#|         exit(1)
+#|     os.chdir(args.indir)
+#|     try:
+#|         scan(b".")
+#|     except KeyboardInterrupt:
+#|         pass
+#|     sys.stderr.write(f"Statistics: hash_calc_n={statistics['hash_calc_n']}\n")
+#| 
+#| if __name__ == "__main__":
+#|     main()
 #- }}}
 
 
@@ -2751,7 +2874,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     --exclude=.mozilla/firefox/*/storage/
 #|     --exclude=.mypy_cache/
 #|     --exclude=.thumbnails/
-#|     --exclude=.venv/
+#|     --exclude=.venv'*'/
 #|     --exclude=node_modules/
 #|     --exclude=site-packages/
 #| )

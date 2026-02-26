@@ -106,7 +106,7 @@ do -- Plugins <<<
 
     -- AI
     -- plug ('ggml-org/llama.vim', 1)
-    plug ("https://codeberg.org/sj2tpgk/llama.vim", 0, "master")
+    plug ("https://codeberg.org/sj2tpgk/llama.vim", 0, "bettersuggest")
 
     -- Text editing
     -- plug "junegunn/vim-easy-align"
@@ -643,8 +643,13 @@ fu! MyHighlight_UI()
     endif
 
     " llama.vim
-    hi llama_hl_hint ctermfg=magenta
-    hi llama_hl_info ctermfg=blue
+    hi llama_hl_fim_hint ctermfg=magenta
+    hi llama_hl_fim_info ctermfg=blue
+    hi llama_hl_inst_src        ctermfg=yellow cterm=bold " old code
+    hi llama_hl_inst_virt_proc  ctermfg=magenta           " stat when prompt processing
+    hi llama_hl_inst_virt_gen   ctermfg=magenta           " stat when generating
+    hi llama_hl_inst_virt_ready ctermfg=green  cterm=bold " new code (yellow/green scheme is taken from highlight command ansi format)
+
 endfu
 
 fu! MyHighlight_TS()
@@ -1805,14 +1810,23 @@ end -- >>>
 vim.cmd [[ " llama.vim (experimental) <<<
     if g:env.llama && !exists("g:llama_config")
         let g:llama_config = {
-            \ 'endpoint': g:env.llama . "/infill",
+            \ 'endpoint_fim': g:env.llama . "/infill",
+            \ 'endpoint_inst': g:env.llama . "/v1/chat/completions",
+            \ 'model_fim': "Qwen3-VL",
+            \ 'model_inst': "Qwen3-VL",
             \ 'show_info': 0,
             \ 't_max_prompt_ms': 1000,
             \ 't_max_predict_ms': 1000,
             \ 'n_predict': 256,
-            \ 'keymap_accept_full': "<C-A>",
-            \ 'keymap_accept_line': "<C-R>",
-            \ 'keymap_accept_word': "<C-S>",
+            \ 'keymap_fim_trigger':     "",
+            \ 'keymap_fim_accept_full': "<C-A>",
+            \ 'keymap_fim_accept_line': "<C-R>",
+            \ 'keymap_fim_accept_word': "<C-S>",
+            \ 'keymap_inst_trigger':    "t",
+            \ 'keymap_inst_rerun':      "",
+            \ 'keymap_inst_continue':   "",
+            \ 'keymap_inst_accept':     "<Tab>",
+            \ 'keymap_inst_cancel':     "<Esc>",
             \ }
         packadd llama.vim
     endif

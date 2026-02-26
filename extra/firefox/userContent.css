@@ -231,6 +231,10 @@
 	#extra, .to-top { display: none !important }
 }
 
+@-moz-document domain("dic.nicovideo.jp") {
+    .res_reaction, #right-column { display: none !important }
+}
+
 @-moz-document domain("developer.mozilla.org") {
 	.top-banner, .top-navigation, .localized-content-note, .main-document-header-container, .article-footer, #nav-footer { display: none }
 	#sidebar-quicklinks { top: 20px !important }
