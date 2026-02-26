@@ -141,7 +141,7 @@
     .full.height > span:first-child { display: none !important }
 }
 
-@-moz-document domaen("news.ycombinator.com") {
+@-moz-document domain("news.ycombinator.com") {
   td, #hnmain { background: transparent !important }
   img { visibility: hidden }
   .hnuser::before { content: "user"; font-size: small }
