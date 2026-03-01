@@ -1239,9 +1239,10 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| 
 #| def file_digest(p:bytes) -> bytes:
 #|     # warn(Exception("Computing hash"), p)
-#|     statistics["hash_calc_n"] += 1
 #|     with open(p, "rb") as f:
-#|         return hashlib.file_digest(f, "sha256").hexdigest().encode()
+#|         res = hashlib.file_digest(f, "sha256").hexdigest().encode()
+#|         statistics["hash_calc_n"] += 1
+#|         return res
 #|     # TODO use O_DIRECT io
 #|     # see this SO post (it seems the buffer you are reading into needs certain alignment condition)
 #|     #     https://stackoverflow.com/questions/76291845/how-can-i-do-an-unbuffered-disk-read-in-python
@@ -1292,7 +1293,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|             if x.is_symlink() or x.is_junction():
 #|                 continue
 #|             scan(x.path)
-#|         elif x.is_file() or x.is_symlink():
+#|         elif x.is_file() or (x.is_file() and x.is_symlink()): # "is_symlink but not is_file" entry causes program stuck (e.g. wine dosdevices/com13)
 #|             inode = x.inode()
 #|             try:
 #|                 stat = x.stat()
