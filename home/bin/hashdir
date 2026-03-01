@@ -56,6 +56,8 @@ def scan(d:bytes) -> None:
                 continue
             raise e
         if is_dir:
+            if x.is_symlink() or x.is_junction():
+                continue
             scan(x.path)
         elif x.is_file() or x.is_symlink():
             inode = x.inode()
@@ -84,6 +86,11 @@ def scan(d:bytes) -> None:
                 except PermissionError as e:
                     warn(e, x.path)
                     continue
+                except OSError as e:
+                    if e.errno == 5: # Input/output error
+                        warn(e, x.path)
+                        continue
+                    raise e
             path_esc = x.path.replace(b"\\", b"\\\\").replace(b"\n", b"\\n").replace(b"\r", b"\\r")
             line = digest + b" " + num_bytes(inode) + b" " + num_bytes(stat.st_size) + b" " + num_bytes(stat.st_mtime_ns) + b" " + path_esc + b"\n"
             sys.stdout.buffer.write(line) # using bytes to avoid print error
