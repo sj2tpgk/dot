@@ -155,6 +155,9 @@ bind ctrl-c __fish_cancel_commandline # prints ^C and a new prompt on ctrl-c (do
 bind \e\[C "if [ (commandline -C) = (commandline -b | string length | head -n 1) ]; commandline -f forward-bigword; commandline -f repaint; else; commandline -f forward-char; end"
 bind \ei 'commandline -r "function f; "(commandline -b | awk "BEGIN{i=0}{while(sub(/--/,\"\$argv[\"i\"]\")){i++}print}")"; end"'
 
+function cd_before;set x (commandline -b) && read -Sc (pwd)/ y && cd $y && commandline -r $x && commandline -f repaint;end
+bind alt-d cd_before
+
 # \es for sudo is builtin, but I enhance it
 bind \es "commandline -r (commandline -b | sed 's#\s*\$##; s#^\s*#sudo #; s#pacman -Ss#pacman -S#')"
 bind \eg "commandline -r (commandline -b | sed 's#\s*\$# | grep -i #')"

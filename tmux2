@@ -3043,6 +3043,18 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #- }}}
 
 
+####FILE +x bin/setop {{{
+#| #!/bin/bash
+#| 
+#| case "$1" in
+#|     # comm: 1=unique to file1, 2=unique to file2, 3=common to both. -<n> means not outputting <n>
+#|     (mul|intersect) comm -12 <(sort "$2") <(sort "$3") ;;
+#|     (sub|diff)      comm -23 <(sort "$2") <(sort "$3") ;;
+#|     (add|union)     comm -3  <(sort "$2") <(sort "$3") ;;
+#| esac
+#- }}}
+
+
 ####FILE +x bin/termux-my-config {{{
 #| #!/bin/sh
 #| command -v termux-reload-settings || { echo "termux-reload-settings is not available"; exit 1; }
