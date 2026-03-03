@@ -1812,8 +1812,8 @@ vim.cmd [[ " llama.vim (experimental) <<<
         let g:llama_config = {
             \ 'endpoint_fim': g:env.llama . "/infill",
             \ 'endpoint_inst': g:env.llama . "/v1/chat/completions",
-            \ 'model_fim': "Qwen3-Coder",
-            \ 'model_inst': "Qwen3-Coder",
+            \ 'model_fim': "fim",
+            \ 'model_inst': "fim",
             \ 'show_info': 0,
             \ 't_max_prompt_ms': 1000,
             \ 't_max_predict_ms': 1000,
