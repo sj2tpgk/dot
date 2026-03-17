@@ -2048,10 +2048,11 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| #     ./mystatus
 #| 
 #| BEGIN {
-#|     DIR_BACKLIGHT = "/sys/class/backlight/intel_backlight/"
-#|     DIR_THERMAL   = "/sys/class/thermal/thermal_zone0/"
-#|     DIR_POWER     = "/sys/class/power_supply/"
-#|     CACHE_STAT    = "/tmp/mystatus_statold"
+#|     DIR_BACKLIGHT = get_env("MYSTATUS_DIR_BACKLIGHT", "/sys/class/backlight/intel_backlight/")
+#|     DIR_THERMAL   = get_env("MYSTATUS_DIR_THERMAL",   "/sys/class/thermal/thermal_zone0/")
+#|     DIR_POWER_BAT = get_env("MYSTATUS_DIR_POWER_BAT", "/sys/class/power_supply/BAT0")
+#|     DIR_POWER_AC  = get_env("MYSTATUS_DIR_POWER_AC",  "/sys/class/power_supply/AC")
+#|     CACHE_STAT    = get_env("TMPDIR", "/tmp") "/mystatus_statold"
 #| 
 #|     o_cpu       = get_cpu()
 #|     o_datetime  = get_datetime()
@@ -2063,6 +2064,10 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| 
 #|     printf "%s  B %s%%  V %s  T %sC  C %s  M %s  P %s\n", o_datetime, o_backlight, o_volume, o_thermal, o_cpu, o_memory, o_power
 #|     exit
+#| }
+#| 
+#| function get_env(var, fallback) {
+#|     return (length(ENVIRON[var]) > 0) ? ENVIRON[var] : fallback
 #| }
 #| 
 #| function get_cpu(    line, ncpu, stat1, stat2, a, b) {
@@ -2107,8 +2112,8 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| }
 #| 
 #| function get_power(    capacity, charging) {
-#|     if ((getline capacity < (DIR_POWER "/BAT0/capacity")) != 1) return "?";
-#|     if ((getline charging < (DIR_POWER "/AC/online")) != 1) return "?";
+#|     if ((getline capacity < (DIR_POWER_BAT "/capacity")) != 1) return "?";
+#|     if ((getline charging < (DIR_POWER_AC "/online")) != 1) return "?";
 #|     return capacity "%" (charging ? "+" : "")
 #| }
 #| 
