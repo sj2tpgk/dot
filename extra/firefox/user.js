@@ -23,6 +23,7 @@ user_pref("browser.privatebrowsing.enable-new-logo", false);
 user_pref("browser.quitShortcut.disabled", true);
 user_pref("browser.toolbars.bookmarks.visibility", "never");
 user_pref("browser.urlbar.groupLabels.enabled", false);
+user_pref("browser.urlbar.richSuggestions.featureGate", false);
 user_pref("browser.urlbar.suggest.engines", false);
 user_pref("datareporting.policy.dataSubmissionEnabled", false);
 user_pref("datareporting.usage.uploadEnabled", false);
