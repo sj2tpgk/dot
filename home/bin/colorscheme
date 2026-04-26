@@ -70,11 +70,11 @@ copy_colors() {
 
 output_foot() {
     # echo \-o colors.regular2=ff0000
-    for i in $(seq 0 7); do eval "printf '%s ' \"-o colors.regular$i=\$c_d_$i\""; done
-    for i in $(seq 0 7); do eval "printf '%s ' \"-o colors.bright$i=\$c_b_$i\""; done
-    printf '%s ' "-o colors.foreground=$fore"
-    printf '%s ' "-o colors.background=$back"
-    printf '%s ' "-o colors.alpha=$(f_rangef 100 1.0 "$alph")"
+    for i in $(seq 0 7); do eval "printf '%s ' \"-o colors-dark.regular$i=\$c_d_$i\""; done
+    for i in $(seq 0 7); do eval "printf '%s ' \"-o colors-dark.bright$i=\$c_b_$i\""; done
+    printf '%s ' "-o colors-dark.foreground=$fore"
+    printf '%s ' "-o colors-dark.background=$back"
+    printf '%s ' "-o colors-dark.alpha=$(f_rangef 100 1.0 "$alph")"
 }
 
 output_osc4() {

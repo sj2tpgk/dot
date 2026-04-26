@@ -9,7 +9,8 @@ labwc_config:
   focus:
     followMouse: yes
 
-  windowSwitcher show="no" preview="yes" outlines="no":
+  windowSwitcher preview="yes" outlines="no":
+    osd show="yes":
 
   desktops:
     names:

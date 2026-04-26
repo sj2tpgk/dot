@@ -8,7 +8,9 @@
   <focus>
     <followMouse>yes</followMouse>
   </focus>
-  <windowSwitcher show="no" preview="yes" outlines="no">
+  <windowSwitcher preview="yes" outlines="no">
+    <osd show="yes">
+    </osd>
   </windowSwitcher>
   <desktops>
     <names>
