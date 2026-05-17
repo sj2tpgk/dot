@@ -650,7 +650,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| # TODO system prompt presets (translation, finding keywords, ocr, detailed/concise)
 #| default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. Do not use bold or italic text. When coding, prefer shorter syntax and minimal comments. When writing math expressions, avoid using tex notations and make it easy to read in plaintext. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output. /no_think /nothink'
 #| flag_c=; flag_e=; flag_h=; flag_l=; flag_n=
-#| opt_i=; opt_m=; opt_s=$default_s; opt_u=$default_u
+#| opt_i=; opt_m=; opt_r=; opt_s=$default_s; opt_u=$default_u
 #| prompt=''
 #| # shellcheck disable=SC2016
 #| # Duplicate : to escape it
@@ -671,6 +671,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|         (-n|--noout)    flag_n=1  ; shift ;;
 #|         (-i|--image)    opt_i="$2"; shift 2 ;;
 #|         (-m|--model)    opt_m="$2"; shift 2 ;;
+#|         (-r|--reason)   opt_r="$2"; shift 2 ;;
 #|         (-s|--system)   opt_s="$2"; shift 2 ;;
 #|         (-u|--url)      opt_u="$2"; shift 2 ;;
 #|         (-t|--tool)     [ "$2" = default ] && tools="$tools$NEWL$toolsDefault" || tools="$tools$NEWL$2"; shift 2 ;;
@@ -692,6 +693,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     echo "  -i, --image            Image file (local)"
 #|     echo "  -m, --model <model>    Model         (default: auto)"
 #|     echo "  -n, --noout            No chat output file (still creates history)"
+#|     echo "  -r, --reason <val>     Reasoning effort (none,minimal,low,medium,high,xhigh) (default: not set)"
 #|     echo "  -s, --system <prompt>  System prompt (default: $default_s)"
 #|     echo "  -t, --tool <spec>      Define additional tools (\"default\" will enable default tools)"
 #|     echo "  -u, --url <url>        URL of server (default: $default_u)"
@@ -716,6 +718,8 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| [ "$missing" ] && error "command not available:$missing"
 #| 
 #| [ "$flag_h" ] && { help; exit 0; }
+#| 
+#| case "$opt_r" in ("") ;; (none|minimal|low|medium|high|xhigh) ;; (*) error "Bad reasoning effort" ;; esac
 #| 
 #| res=$(curl -fs "$opt_u"/v1/models 2>/dev/null)
 #| _sta=$?
@@ -802,13 +806,15 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| ## Main API call
 #| 
 #| # note: avoid including arbitrarily large strings in command parameter (use pipe instead)
+#| # note: {chat_template_kwargs:{reasoning_effort:xxx}} is needed for llama-server https://github.com/ggml-org/llama.cpp/issues/15130#issuecomment-3162984669
 #| 
 #| # shellcheck disable=SC2016
-#| jq -s --arg m "$model" --arg s "$opt_s" --argjson t "$tools_api" \
-#|     '{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}' \
+#| jq -s --arg m "$model" --arg r "$opt_r" --arg s "$opt_s" --argjson t "$tools_api" \
+#|     '{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}+(if($r|length>0)then{"chat_template_kwargs":{reasoning_effort:$r}}else{}end)' \
 #|     "$histfile" \
+#|     | tee /tmp/a \
 #|     | stdbuf -o0 curl -fNs "$opt_u"/v1/chat/completions -d @- \
-#|     | stdbuf -i0 -o0 jq -Rcj --unbuffered 'foreach (inputs|if startswith("data: {") then .[6:] else empty end|fromjson) as $x ([null];[$x,.[0]];.)|. as [$x,$y]|(try $y.choices[].delta.reasoning_content catch false) as $pr|if $x.timings then [(if $pr then "\u001b[0m\n" else empty end),"\nTIME: ",($x.timings|"model=\($x.model), n=(\(.cache_n) \(.prompt_n) \(.predicted_n)), time=(\(.prompt_ms/100|round/10) \(.predicted_ms/100|round/10)), tps=(\(.prompt_per_second*10|round/10) \(.predicted_per_second*10|round/10))"),"\n"][] else ($x.choices[].delta|if .reasoning_content then .reasoning_content|[(if $pr then empty else "\u001b[35m" end),.][] else (if .content then .content elif .tool_calls then .tool_calls[0]|((if .id then "TOOL: \(.function.name) " else "" end)+.function.arguments) else empty end)|[(if $pr then "\u001b[0m\n" else empty end),.][] end) end' \
+#|     | stdbuf -i0 -o0 jq -Rcj --unbuffered 'foreach (inputs|if startswith("data: {") then .[6:] else empty end|fromjson) as $x ([null];[$x,.[0]];.)|. as [$x,$y]|(try $y.choices[].delta.reasoning_content catch false) as $pr|if $x.timings then [(if $pr then "\u001b[0m\n" else empty end),"\nTIME: ",($x.timings|{model:$x.model,prompt_ms,predicted_ms,predicted_n,predicted_per_second}),"\n"][] else ($x.choices[].delta|if .reasoning_content then .reasoning_content|[(if $pr then empty else "\u001b[35m" end),.][] else (if .content then .content elif .tool_calls then .tool_calls[0]|((if .id then "TOOL: \(.function.name) " else "" end)+.function.arguments) else empty end)|[(if $pr then "\u001b[0m\n" else empty end),.][] end) end' \
 #|     | stdbuf -i0 -o0 tee -a "$outfile"
 #| 
 #| # shellcheck disable=SC2016
@@ -1072,6 +1078,93 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| done > "$tmp"
 #| ffmpeg -y -v 8 -stats -f concat -safe 0 -i "$tmp" -c copy "$out"
 #| 
+#- }}}
+
+
+####FILE +x bin/file_save_server.py {{{
+#| #!/usr/bin/python3
+#| import argparse, io, os, pathlib, urllib.parse
+#| from http.server import HTTPServer, BaseHTTPRequestHandler
+#| 
+#| MAX_UPLOAD_SIZE = 100 * 1024 * 1024
+#| SAFE_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
+#| 
+#| UPLOAD_ROOT = pathlib.Path(".").resolve()
+#| 
+#| class FileHandler(BaseHTTPRequestHandler):
+#|     def do_POST(self) -> None:
+#|         path = self.path.lstrip('/')
+#|         try:
+#|             size = int(self.headers.get("Content-Length", ""))
+#|         except Exception:
+#|             return self.error(411, "Length Required")
+#|         if size > MAX_UPLOAD_SIZE:
+#|             return self.error(413, "Payload Too Large")
+#|         self._save_file(path, self.rfile, size)  # will read body later
+#| 
+#|     def do_GET(self) -> None:
+#|         parsed = urllib.parse.urlparse(self.path)
+#|         path = parsed.path.lstrip('/')
+#|         query = urllib.parse.parse_qs(parsed.query)
+#|         if len(query.get("b", [])) != 1:
+#|             return self.error(400, "Bad Request: missing or multiple b parameters")
+#|         try:
+#|             body = urllib.parse.unquote(query["b"][0]).encode()
+#|         except Exception:
+#|             return self.error(400, "Bad Request: invalid body encoding")
+#|         if len(body) > MAX_UPLOAD_SIZE:
+#|             return self.error(413, "Payload Too Large")
+#|         self._save_file(path, io.BytesIO(body), len(body))
+#| 
+#|     def _save_file(self, path:str, reader:io.BufferedIOBase, size:int) -> None:
+#|         target = (UPLOAD_ROOT / path).resolve()
+#|         if not target.is_relative_to(UPLOAD_ROOT):
+#|             return self.error(400, "Bad Request: unsafe path")
+#| 
+#|         # Write to temp file in same directory for atomic rename
+#|         try:
+#|             os.makedirs(target.parent, exist_ok=True)
+#|             with open(target, 'xb') as f:
+#|                 remaining = size
+#|                 while remaining > 0:
+#|                     chunk = reader.read(min(8192, remaining))
+#|                     if not chunk:
+#|                         return self.error(400, "Bad Request: incomplete body")
+#|                     f.write(chunk)
+#|                     remaining -= len(chunk)
+#|             # Atomic move (works across filesystems on Unix if same device)
+#|             self.log_message(f"Saved {size} bytes to {target}")
+#|             self.send_response(200)
+#|             self.end_headers()
+#|         except FileExistsError:
+#|             return self.error(409, "Conflict: file already exists")
+#|         except Exception:
+#|             return self.error(500, "Internal Server Error")
+#| 
+#|     def error(self, code:int, message:str) -> None:
+#|         self.log_error(f"Error {code}: {message}")
+#|         self.send_response(code)
+#|         self.send_header('Content-Type', 'text/plain')
+#|         self.end_headers()
+#|         self.wfile.write(f"{code} {message} \n".encode())
+#| 
+#| def main() -> None:
+#|     description = """File upload server. To upload:
+#| 
+#| curl 'localhost:8000/path/to/file?b=BODY'
+#| curl 'localhost:8000/path/to/file' --data-binary @FILE"""
+#|     parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
+#|     parser.add_argument("port", type=int)
+#|     args = parser.parse_args()
+#|     print(f"Server at :{args.port}")
+#|     server = HTTPServer(('', args.port), FileHandler)
+#|     server.serve_forever()
+#| 
+#| if __name__ == '__main__':
+#|     try:
+#|         main()
+#|     except KeyboardInterrupt:
+#|         pass
 #- }}}
 
 
@@ -2062,7 +2155,13 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     o_power     = get_power()
 #|     o_memory    = get_memory()
 #| 
-#|     printf "%s  B %s%%  V %s  T %sC  C %s  M %s  P %s\n", o_datetime, o_backlight, o_volume, o_thermal, o_cpu, o_memory, o_power
+#|     if (error) {
+#|         printf "%s\n", error
+#|     } else {
+#|         printf "%s  B %s%%  V %s  T %sC  P %s\n", o_datetime, o_backlight, o_volume, o_thermal, o_power
+#|         # printf "%s  B %s%%  V %s  T %sC  C %s  M %s  P %s\n", o_datetime, o_backlight, o_volume, o_thermal, o_cpu, o_memory, o_power
+#|     }
+#| 
 #|     exit
 #| }
 #| 
@@ -2114,6 +2213,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| function get_power(    capacity, charging) {
 #|     if ((getline capacity < (DIR_POWER_BAT "/capacity")) != 1) return "?";
 #|     if ((getline charging < (DIR_POWER_AC "/online")) != 1) return "?";
+#|     if (capacity < 10 && !charging) error = "Battery low";
 #|     return capacity "%" (charging ? "+" : "")
 #| }
 #| 

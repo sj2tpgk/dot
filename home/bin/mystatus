@@ -18,7 +18,13 @@ BEGIN {
     o_power     = get_power()
     o_memory    = get_memory()
 
-    printf "%s  B %s%%  V %s  T %sC  C %s  M %s  P %s\n", o_datetime, o_backlight, o_volume, o_thermal, o_cpu, o_memory, o_power
+    if (error) {
+        printf "%s\n", error
+    } else {
+        printf "%s  B %s%%  V %s  T %sC  P %s\n", o_datetime, o_backlight, o_volume, o_thermal, o_power
+        # printf "%s  B %s%%  V %s  T %sC  C %s  M %s  P %s\n", o_datetime, o_backlight, o_volume, o_thermal, o_cpu, o_memory, o_power
+    }
+
     exit
 }
 
@@ -70,6 +76,7 @@ function get_thermal(    val) {
 function get_power(    capacity, charging) {
     if ((getline capacity < (DIR_POWER_BAT "/capacity")) != 1) return "?";
     if ((getline charging < (DIR_POWER_AC "/online")) != 1) return "?";
+    if (capacity < 10 && !charging) error = "Battery low";
     return capacity "%" (charging ? "+" : "")
 }
 
