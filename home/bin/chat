@@ -14,6 +14,10 @@ prompt=''
 #list_files:list files in dir:dir=directory (use . for current dir):recursive=if nonempty, list files recusively:ls "${recursive::+-R}" "$dir"
 #cat_file:show contents of a file:path=path to the file:cat "$path"'
 toolsDefault='shell:run shell command (allowed commands:: date ls find cat grep head tail):cmd=command to run:if echo " date ls find cat grep head tail "|grep -q " ${cmd%% *} ";then sh -c "$cmd";else echo forbidden command;fi'
+# shellcheck disable=SC2016
+toolsDefault='ls:safe ls command:path=directory to inspect:l_flag=if true, pass -l flag to ls command:if [ ! -d "$dir" ]; then echo "Directory does not exist:: $dir"; else ls ${l_flag::+-l} -- "$dir"; fi
+grep:safe grep command:pat=pattern (extended regular expressions):path=path to grep (if directory, grep recursively):if [ ! -e "$path" ]; then echo "Path does not exist:: $path"; elif [ -f "$path" ]; then grep -Ee "$pat" -- "$path"; elif [ -d "$path" ]; then grep -rEe "$pat" -- "$path"; fi
+sed:safe sed command:quiet_flag=if true, pass --quiet flag to suppress automatic printing of pattern space:script=sed script:file=file to run sed on:if [ ! -e "$file" ]; then echo "File does not exist:: $path"; else sed ${quiet_flag::+-n} -e "$script" -- "$file"; fi'
 tools=
 # TODO require tool confirm (e.g. by prefix its name with !)
 
@@ -47,14 +51,17 @@ help(){
     echo "  -h, --help             Help"
     echo "  -l, --list             List models"
     echo "  -i, --image            Image file (local)"
-    echo "  -m, --model <model>    Model         (default: auto)"
-    echo "  -n, --noout            No chat output file (still creates history)"
+    echo "  -m, --model <model>    Model (default: auto)"
+    echo "  -n, --noout            No chat output file (still create history)"
     echo "  -r, --reason <val>     Reasoning effort (none,minimal,low,medium,high,xhigh) (default: not set)"
-    echo "  -s, --system <prompt>  System prompt (default: $default_s)"
+    echo "  -s, --system <prompt>  System prompt"
     echo "  -t, --tool <spec>      Define additional tools (\"default\" will enable default tools)"
     echo "  -u, --url <url>        URL of server (default: $default_u)"
     echo
-    echo "Tool spec example:"
+    echo "Default system prompt:"
+    echo "$default_s"
+    echo
+    echo "Tool spec when \"default\" is specified:"
     echo "$toolsDefault"
 }
 
