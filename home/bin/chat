@@ -8,17 +8,13 @@ default_u=localhost:11434; default_s='Respond concisely. Use lists instead of ta
 flag_c=; flag_e=; flag_h=; flag_l=; flag_n=
 opt_i=; opt_m=; opt_r=; opt_s=$default_s; opt_u=$default_u
 prompt=''
-# shellcheck disable=SC2016
-# Duplicate : to escape it
-#tools='get_time:get current time:timezone=time zone:format=format (you can use %Y %m %d %H %M %S):TZ=$timezone date +"$format"
-#list_files:list files in dir:dir=directory (use . for current dir):recursive=if nonempty, list files recusively:ls "${recursive::+-R}" "$dir"
-#cat_file:show contents of a file:path=path to the file:cat "$path"'
-toolsDefault='shell:run shell command (allowed commands:: date ls find cat grep head tail):cmd=command to run:if echo " date ls find cat grep head tail "|grep -q " ${cmd%% *} ";then sh -c "$cmd";else echo forbidden command;fi'
+
 # shellcheck disable=SC2016
 toolsDefault='ls:safe ls command:path=directory to inspect:l_flag=if true, pass -l flag to ls command:if [ ! -d "$dir" ]; then echo "Directory does not exist:: $dir"; else ls ${l_flag::+-l} -- "$dir"; fi
 grep:safe grep command:pat=pattern (extended regular expressions):path=path to grep (if directory, grep recursively):if [ ! -e "$path" ]; then echo "Path does not exist:: $path"; elif [ -f "$path" ]; then grep -Ee "$pat" -- "$path"; elif [ -d "$path" ]; then grep -rEe "$pat" -- "$path"; fi
 sed:safe sed command:quiet_flag=if true, pass --quiet flag to suppress automatic printing of pattern space:script=sed script:file=file to run sed on:if [ ! -e "$file" ]; then echo "File does not exist:: $path"; else sed ${quiet_flag::+-n} -e "$script" -- "$file"; fi'
 tools=
+
 # TODO require tool confirm (e.g. by prefix its name with !)
 
 while [ $# -ge 1 ]; do
@@ -98,16 +94,6 @@ _sta=$?
 
 echo "$models" | grep -qFx "$opt_m" || error "model \"$opt_m\" is not available"
 model="$opt_m"
-# opt_m_fuzzy=$(echo "$opt_m" | sed 's/./.*&/g')
-# model=$(echo "$models" | grep -Fi "$opt_m")
-# case "$?" in
-#     (0) ;;
-#     (*) error "model \"$opt_m\" is not found" ;;
-# esac
-# case "$(echo "$model" | wc -l)" in
-#     (1) ;;
-#     (*) error "model \"$opt_m\" is ambiguous" ;;
-# esac
 
 
 ## Tools
@@ -117,20 +103,20 @@ tools_int=$(echo "$tools" | jq -R 'select(length>0)|[sub("::";"=x=x=";"g")|split
 
 # printf "tools_api=%s\ntools_int=%s\n" "$tools_api" "$tools_int" >&2; exit
 
-# tools="[{
-#    \"type\": \"function\",
-#    \"function\": {
-#        \"name\": \"get_time\",
-#        \"description\": \"Get current time\",
-#        \"parameters\": {
-#            \"type\": \"object\",
-#            \"properties\": {
-#                \"timezone\": { \"type\": \"string\", \"description\": \"timezone\" }
+# tools='[{
+#    "type": "function",
+#    "function": {
+#        "name": "get_time",
+#        "description": "Get current time",
+#        "parameters": {
+#            "type": "object",
+#            "properties": {
+#                "timezone": { "type": "string", "description": "timezone" }
 #            },
-#            \"required\": [\"timezone\"]
+#            "required": ["timezone"]
 #        }
 #    }
-# }]"
+# }]'
 
 
 ## Build query
@@ -163,7 +149,7 @@ outfile="$outdir"/chat-"$(date +%Y%m%d-%H%M%S)".txt
 } > "$outfile"
 
 cleanup(){ [ ! "$flag_n" ] || rm -f "$outfile"; }
-trap cleanup INT TERM
+trap cleanup INT TERM EXIT
 
 
 ## Main API call
@@ -201,46 +187,3 @@ if [ "$tool_call" ]; then
     "$0" -u "$opt_u" -m "$opt_m" -c "${flag_n:+-n}"
 fi
 
-
-## Cleanup
-
-cleanup
-
-# Respond concisely
-
-# Give an detailed answer
-
-#translate to english and explain grammar/phrases/words/pronunciations. respond concisely.
-#Example response:
-#(instruct response format here)
-
-#Extract texts from this image. Follow instructions given below:
-#
-#* If it contains math expressions, do not convert to latex expressions. Instead, convert to readable plaintext. Also, use underscores (_) to denote subscripts.
-#
-#Example:
-#  - Good: i/x   Bad: \frac
-#  - Good: sum(i=1, 10; i^2)   Bad: \sum
-#  - Good: x_i, Z_n   Bad: xi, Zn
-#
-#* Ensure the output text is grammatically correct to reduce recognition errors.
-#
-#* Output each sentence without line breaks.
-#
-#Example:
-#
-#(Input image)
-#
-#The Sobel operator, sometimes called the Sobel–Feldman operator or Sobel
-#filter, is used in image processing and computer vision, particularly within
-#edge detection algorithms where it creates an image emphasising edges.
-#
-#It is named after Irwin Sobel and Gary M. Feldman, colleagues at the Stanford
-#Artificial Intelligence Laboratory (SAIL). Sobel and Feldman presented the
-#idea of an "Isotropic 3 × 3 Image Gradient Operator" at a talk at SAIL in 1968.[1]
-#
-#(Output)
-#
-#The Sobel operator, sometimes called the Sobel–Feldman operator or Sobel filter, is used in image processing and computer vision, particularly within edge detection algorithms where it creates an image emphasising edges.
-#
-#It is named after Irwin Sobel and Gary M. Feldman, colleagues at the Stanford Artificial Intelligence Laboratory (SAIL). Sobel and Feldman presented the idea of an "Isotropic 3 × 3 Image Gradient Operator" at a talk at SAIL in 1968.[1]

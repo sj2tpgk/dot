@@ -320,6 +320,9 @@
     body > p:first-child, .header0, .header + p, input.submit,
     .filters > table:nth-child(6) { display: none !important; }
 
+    .header { visibility: hidden }
+    .link-text { color: #888 !important }
+
     .header { font-size: large !important; text-align: center !important; }
     input.query { padding: 0 6px !important; font-size: 17px !important }
     select.submit { height: unset !important }
