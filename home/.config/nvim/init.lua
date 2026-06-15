@@ -1075,6 +1075,10 @@ aug END
 fu! MarkdownSyntax()
     " conceal noise (syntax definitions taken from nvim/runtime/syntax/markdown.vim and conceal/concealends added)
     setl conceallevel=2
+endfu
+fu! MarkdownSyntax1()
+    " conceal noise (syntax definitions taken from nvim/runtime/syntax/markdown.vim and conceal/concealends added)
+    setl conceallevel=2
 
     syn region markdownCode matchgroup=markdownCodeDelimiter start="`" end="`" keepend contains=markdownLineStart concealends
     syn region markdownCode matchgroup=markdownCodeDelimiter start="`` \=" end=" \=``" keepend contains=markdownLineStart concealends
@@ -1822,9 +1826,9 @@ vim.cmd [[ " llama.vim (experimental) <<<
             \ 'keymap_fim_accept_full': "<C-A>",
             \ 'keymap_fim_accept_line': "<C-R>",
             \ 'keymap_fim_accept_word': "<C-S>",
-            \ 'keymap_inst_trigger':    "t",
-            \ 'keymap_inst_rerun':      "",
-            \ 'keymap_inst_continue':   "",
+            \ 'keymap_inst_trigger':    "<C-A>",
+            \ 'keymap_inst_rerun':      "<C-R>",
+            \ 'keymap_inst_continue':   "<C-S>",
             \ 'keymap_inst_accept':     "<Tab>",
             \ 'keymap_inst_cancel':     "<Esc>",
             \ }

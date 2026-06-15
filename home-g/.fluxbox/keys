@@ -28,6 +28,9 @@ OnWindowBorder Move1  :StartMoving
 Mod4 u :Unclutter (layer=Normal)
 Mod4 o :ToggleCmd {ArrangeWindowsStackLeft (layer=Normal)} {ArrangeWindowsStackRight (layer=Normal)}
 # Mod4 o :ArrangeWindows (layer!=Top) (layer!=AboveDock) (layer!=Dock) (layer!=Desktop)
+
+Mod4 r       :Exec ~/bin/xx-movewin counterclock
+Mod4 shift r :Exec ~/bin/xx-movewin clock
 # }}}
 ## Resizing windows {{{
 # Basic Bindings
