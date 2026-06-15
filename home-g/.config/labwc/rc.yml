@@ -91,6 +91,9 @@ labwc_config:
     keybind key="W-m":
       action name="ToggleMagnify":
 
+    keybind key="W-w":
+      action name="Execute" command='sh -c "sleep 1; wlopm --toggle \*"':
+
   mouse:
     default:
     context name="Root":

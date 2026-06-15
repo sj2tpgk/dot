@@ -105,8 +105,8 @@ do -- Plugins <<<
     plug "neovim/nvim-lspconfig"
 
     -- AI
-    -- plug ('ggml-org/llama.vim', 1)
-    plug ("https://codeberg.org/sj2tpgk/llama.vim", 0, "bettersuggest")
+    -- plug ('ggml-org/llama.vim', true)
+    plug ("https://codeberg.org/sj2tpgk/llama.vim", false, "bettersuggest")
 
     -- Text editing
     -- plug "junegunn/vim-easy-align"
