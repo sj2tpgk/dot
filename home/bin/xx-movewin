@@ -1,0 +1,23 @@
+#!/bin/sh
+
+arg=${1:-clock}
+sleep 0.1
+border=80
+geom=$(xdotool getwindowfocus getwindowgeometry | awk -v border="$border" '/Position:/{sub("[^0-9]*",""); sub(" .*",""); split($0,A,","); x=A[1]; y=A[2]; print (x<border?0:1) (y<border?0:1)}')
+case "$arg" in
+    (clock)
+        case "$geom" in
+            (11) dir=BottomLeft ;;
+            (10) dir=BottomRight ;;
+            (00) dir=TopRight ;;
+            (01) dir=TopLeft ;;
+        esac ;;
+    (*)
+        case "$geom" in
+            (00) dir=BottomLeft ;;
+            (01) dir=BottomRight ;;
+            (11) dir=TopRight ;;
+            (10) dir=TopLeft ;;
+        esac ;;
+esac
+fluxbox-remote "MoveTo 0 0 $dir"
