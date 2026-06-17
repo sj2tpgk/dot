@@ -4,7 +4,7 @@ NEWL='
 '
 
 # TODO system prompt presets (translation, finding keywords, ocr, detailed/concise)
-default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. Do not use bold or italic text. When coding, prefer shorter syntax and minimal comments. When writing math expressions, avoid using tex notations and make it easy to read in plaintext. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output. /no_think /nothink'
+default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. Do not use bold or italic text. When coding, prefer shorter syntax and minimal comments. When writing math expressions, avoid using tex notations and make it easy to read in plaintext. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output'
 flag_c=; flag_e=; flag_h=; flag_l=; flag_n=
 opt_i=; opt_m=; opt_r=; opt_s=$default_s; opt_u=$default_u
 prompt=''
@@ -49,7 +49,7 @@ help(){
     echo "  -i, --image            Image file (local)"
     echo "  -m, --model <model>    Model (default: auto)"
     echo "  -n, --noout            No chat output file (still create history)"
-    echo "  -r, --reason <val>     Reasoning effort (none,minimal,low,medium,high,xhigh) (default: not set)"
+    echo "  -r, --reason <val>     Reasoning effort (off,none,minimal,low,on,medium,high,xhigh,on) (default: not set)"
     echo "  -s, --system <prompt>  System prompt"
     echo "  -t, --tool <spec>      Define additional tools (\"default\" will enable default tools)"
     echo "  -u, --url <url>        URL of server (default: $default_u)"
@@ -78,7 +78,7 @@ done
 
 [ "$flag_h" ] && { help; exit 0; }
 
-case "$opt_r" in ("") ;; (none|minimal|low|medium|high|xhigh) ;; (*) error "Bad reasoning effort" ;; esac
+case "$opt_r" in ("") ;; (off|none|minimal|low|on|medium|high|xhigh) ;; (*) error "Bad reasoning effort" ;; esac
 
 res=$(curl -fs "$opt_u"/v1/models 2>/dev/null) || error "getting model list: server error"
 
@@ -149,14 +149,17 @@ trap cleanup INT TERM EXIT
 
 # note: avoid including arbitrarily large strings in command parameter (use pipe instead)
 # note: {chat_template_kwargs:{reasoning_effort:xxx}} is needed for llama-server https://github.com/ggml-org/llama.cpp/issues/15130#issuecomment-3162984669
+# note: reasoning_effort for gpt-oss, enable_thinking for qwen3.6
 
 # shellcheck disable=SC2016
 jq -s --arg m "$model" --arg r "$opt_r" --arg s "$opt_s" --argjson t "$tools_api" \
-    '{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}+(if($r|length>0)then{"chat_template_kwargs":{reasoning_effort:$r}}else{}end)' \
+    '({off:"none",on:"medium"}[$r] // $r) as $r|{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}+(if($r|length>0)then{"chat_template_kwargs":{reasoning_effort:$r,enable_thinking:(if($r=="none")then false else true end)}}else{}end)' \
     "$histfile" \
     | stdbuf -o0 curl -fNs "$opt_u"/v1/chat/completions -d @- \
     | stdbuf -i0 -o0 jq -Rcj --unbuffered 'foreach (inputs|if startswith("data: {") then .[6:] else empty end|fromjson) as $x ([null];[$x,.[0]];.)|. as [$x,$y]|(try $y.choices[].delta.reasoning_content catch false) as $pr|if $x.timings then [(if $pr then "\u001b[0m\n" else empty end),"\nTIME: ",($x.timings|{model:$x.model,prompt_ms,predicted_ms,predicted_n,predicted_per_second}),"\n"][] else ($x.choices[].delta|if .reasoning_content then .reasoning_content|[(if $pr then empty else "\u001b[35m" end),.][] else (if .content then .content elif .tool_calls then .tool_calls[0]|((if .id then "TOOL: \(.function.name) " else "" end)+.function.arguments) else empty end)|[(if $pr then "\u001b[0m\n" else empty end),.][] end) end' \
     | stdbuf -i0 -o0 tee -a "$outfile"
+
+[ -f "$outfile" ] || { printf "\n\033[0m"; error "aborted"; }
 
 # shellcheck disable=SC2016
 tac "$outfile" | awk -v a="$(printf '\033[35m')" -v b="$(printf '\033[0m')" '/^(TIME|TOOL): /{next}/^<assistant>$/{exit}index($0,b){f=1}(!f){print}index($0,a){f=0}' | tac \
