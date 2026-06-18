@@ -65,14 +65,14 @@ class FileHandler(BaseHTTPRequestHandler):
         self.wfile.write(f"{code} {message} \n".encode())
 
 def main() -> None:
-    description = """File upload server. To upload:
+    description = """To upload files:
 
 curl 'localhost:8000/path/to/file?b=BODY'
 curl 'localhost:8000/path/to/file' --data-binary @FILE"""
     parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("port", type=int)
+    parser.add_argument("-p", "--port", type=int, default=8000)
     args = parser.parse_args()
-    print(f"Server at :{args.port}")
+    print(f"Server at :{args.port}. {description}")
     server = HTTPServer(('', args.port), FileHandler)
     server.serve_forever()
 

@@ -5,7 +5,7 @@ NEWL='
 
 # TODO system prompt presets (translation, finding keywords, ocr, detailed/concise)
 default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. Do not use bold or italic text. When coding, prefer shorter syntax and minimal comments. When writing math expressions, avoid using tex notations and make it easy to read in plaintext. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output'
-flag_c=; flag_e=; flag_h=; flag_l=; flag_n=
+flag_c=; flag_e=; flag_h=; flag_l=; flag_n=; flag_helpall=
 opt_i=; opt_m=; opt_r=; opt_s=$default_s; opt_u=$default_u
 prompt=''
 
@@ -31,6 +31,7 @@ while [ $# -ge 1 ]; do
         (-s|--system)   opt_s="$2"; shift 2 ;;
         (-u|--url)      opt_u="$2"; shift 2 ;;
         (-t|--tool)     [ "$2" = default ] && tools="$tools$NEWL$toolsDefault" || tools="$tools$NEWL$2"; shift 2 ;;
+        (--help-all)    flag_helpall=1 ; shift ;;
         (*) prompt="$*" ; break ;;
     esac
 done
@@ -38,13 +39,15 @@ done
 # echo "flag_e=[$flag_e] flag_h=[$flag_h] flag_l=[$flag_l] flag_n=[$flag_n] opt_m=[$opt_m] opt_u=[$opt_u] opt_s=[$opt_s] prompt=[$prompt]"; exit
 
 help(){
-    echo "Usage: $0 [options ...] [prompt ...]"
-    echo "       cmd | $0 [options ...]"
+    basename0=$(basename "$0")
+    echo "Usage: $basename0 [options ...] [prompt ...]"
+    echo "       cmd | $basename0 [options ...]"
     echo
     echo "Options:"
     echo "  -c, --continue         Continue upon previous tool calling"
     echo "  -e, --erase            Erase history before starting"
     echo "  -h, --help             Help"
+    echo "      --help-all         Help (extended)"
     echo "  -l, --list             List models"
     echo "  -i, --image            Image file (local)"
     echo "  -m, --model <model>    Model (default: auto)"
@@ -53,6 +56,7 @@ help(){
     echo "  -s, --system <prompt>  System prompt"
     echo "  -t, --tool <spec>      Define additional tools (\"default\" will enable default tools)"
     echo "  -u, --url <url>        URL of server (default: $default_u)"
+    [ -n "$1" ] || return
     echo
     echo "Default system prompt:"
     echo "$default_s"
@@ -77,12 +81,13 @@ done
 [ "$missing" ] && error "command not available:$missing"
 
 [ "$flag_h" ] && { help; exit 0; }
+[ "$flag_helpall" ] && { help all; exit 0; }
 
 case "$opt_r" in ("") ;; (off|none|minimal|low|on|medium|high|xhigh) ;; (*) error "Bad reasoning effort" ;; esac
 
-res=$(curl -fs "$opt_u"/v1/models 2>/dev/null) || error "getting model list: server error"
+res=$(curl -fs -H 'Content-Type: application/json' "$opt_u"/v1/models 2>/dev/null) || error "getting model list: server error"
 
-[ "$flag_l" ] && { jq --argjson res "$res" -nr '$res|([.data[]|"\(.id)\(.aliases|if(length>0)then" (\(join(", ")))"else""end)"]|join("\n"))'; exit 0; }
+[ "$flag_l" ] && { jq --argjson res "$res" -nr '$res|([.data[]|"\(.id)\(.aliases|if(length>0)then" (\(join(", ")))"else""end)\(.status.value|if(.=="loaded")then" L"else""end)"]|join("\n"))'; exit 0; }
 
 jq --argjson res "$res" --arg m "$opt_m" -n '$res|halt_error(if(($m|length==0)or([.data[]|[.id,.aliases[]][]]|index($m)))then 0 else 1 end)' >/dev/null 2>&1 || error "model \"$opt_m\" is not available"
 
@@ -150,12 +155,13 @@ trap cleanup INT TERM EXIT
 # note: avoid including arbitrarily large strings in command parameter (use pipe instead)
 # note: {chat_template_kwargs:{reasoning_effort:xxx}} is needed for llama-server https://github.com/ggml-org/llama.cpp/issues/15130#issuecomment-3162984669
 # note: reasoning_effort for gpt-oss, enable_thinking for qwen3.6
+# note: 'Content-Type: application/json' is important, otherwise the server (cpp-httplib) interprets the request body as a query string (key=val&...), which causes error in router mode
 
 # shellcheck disable=SC2016
 jq -s --arg m "$model" --arg r "$opt_r" --arg s "$opt_s" --argjson t "$tools_api" \
     '({off:"none",on:"medium"}[$r] // $r) as $r|{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}+(if($r|length>0)then{"chat_template_kwargs":{reasoning_effort:$r,enable_thinking:(if($r=="none")then false else true end)}}else{}end)' \
     "$histfile" \
-    | stdbuf -o0 curl -fNs "$opt_u"/v1/chat/completions -d @- \
+    | stdbuf -o0 curl -fNs -H 'Content-Type: application/json' "$opt_u"/v1/chat/completions -d @- \
     | stdbuf -i0 -o0 jq -Rcj --unbuffered 'foreach (inputs|if startswith("data: {") then .[6:] else empty end|fromjson) as $x ([null];[$x,.[0]];.)|. as [$x,$y]|(try $y.choices[].delta.reasoning_content catch false) as $pr|if $x.timings then [(if $pr then "\u001b[0m\n" else empty end),"\nTIME: ",($x.timings|{model:$x.model,prompt_ms,predicted_ms,predicted_n,predicted_per_second}),"\n"][] else ($x.choices[].delta|if .reasoning_content then .reasoning_content|[(if $pr then empty else "\u001b[35m" end),.][] else (if .content then .content elif .tool_calls then .tool_calls[0]|((if .id then "TOOL: \(.function.name) " else "" end)+.function.arguments) else empty end)|[(if $pr then "\u001b[0m\n" else empty end),.][] end) end' \
     | stdbuf -i0 -o0 tee -a "$outfile"
 
