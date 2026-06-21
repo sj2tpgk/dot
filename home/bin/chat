@@ -5,8 +5,8 @@ NEWL='
 
 # TODO system prompt presets (translation, finding keywords, ocr, detailed/concise)
 default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. Do not use bold or italic text. When coding, prefer shorter syntax and minimal comments. When writing math expressions, avoid using tex notations and make it easy to read in plaintext. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output'
-flag_c=; flag_e=; flag_h=; flag_l=; flag_n=; flag_helpall=
-opt_i=; opt_m=; opt_r=; opt_s=$default_s; opt_u=$default_u
+flag_e=; flag_h=; flag_l=; flag_n=; flag_continue=; flag_helpall=
+opt_c=; opt_i=; opt_m=; opt_r=; opt_s=$default_s; opt_u=$default_u
 prompt=''
 
 # shellcheck disable=SC2016
@@ -20,18 +20,19 @@ tools=
 while [ $# -ge 1 ]; do
     case "$1" in
         (-[!-][!-]*)  _1=${1#?} ; shift ; set -- "-${_1%"${_1#?}"}" "-${_1#?}" "$@" ;;
-        (-c|--continue) flag_c=1  ; shift ;;
         (-e|--erase)    flag_e=1  ; shift ;;
         (-h|--help)     flag_h=1  ; shift ;;
         (-l|--list)     flag_l=1  ; shift ;;
         (-n|--noout)    flag_n=1  ; shift ;;
+        (-c|--curlopts) opt_c="$2"; shift 2 ;;
         (-i|--image)    opt_i="$2"; shift 2 ;;
         (-m|--model)    opt_m="$2"; shift 2 ;;
         (-r|--reason)   opt_r="$2"; shift 2 ;;
         (-s|--system)   opt_s="$2"; shift 2 ;;
         (-u|--url)      opt_u="$2"; shift 2 ;;
         (-t|--tool)     [ "$2" = default ] && tools="$tools$NEWL$toolsDefault" || tools="$tools$NEWL$2"; shift 2 ;;
-        (--help-all)    flag_helpall=1 ; shift ;;
+        (--continue)    flag_continue=1 ; shift ;;
+        (--help-all)    flag_helpall=1  ; shift ;;
         (*) prompt="$*" ; break ;;
     esac
 done
@@ -44,7 +45,8 @@ help(){
     echo "       cmd | $basename0 [options ...]"
     echo
     echo "Options:"
-    echo "  -c, --continue         Continue upon previous tool calling"
+    echo "  -c, --curlopts <opts>  Curl options (splitted at spaces)"
+    echo "      --continue         Continue upon previous tool calling"
     echo "  -e, --erase            Erase history before starting"
     echo "  -h, --help             Help"
     echo "      --help-all         Help (extended)"
@@ -85,7 +87,8 @@ done
 
 case "$opt_r" in ("") ;; (off|none|minimal|low|on|medium|high|xhigh) ;; (*) error "Bad reasoning effort" ;; esac
 
-res=$(curl -fs -H 'Content-Type: application/json' "$opt_u"/v1/models 2>/dev/null) || error "getting model list: server error"
+# shellcheck disable=SC2086
+res=$(curl $opt_c -fs -H 'Content-Type: application/json' "$opt_u"/v1/models) || error "getting model list: server error"
 
 [ "$flag_l" ] && { jq --argjson res "$res" -nr '$res|([.data[]|"\(.id)\(.aliases|if(length>0)then" (\(join(", ")))"else""end)\(.status.value|if(.=="loaded")then" L"else""end)"]|join("\n"))'; exit 0; }
 
@@ -123,7 +126,7 @@ histfile=${TMPDIR:-/tmp}/chat-hist
 [ "$flag_e" ] && rm -f "$histfile"
 touch "$histfile"
 
-if [ ! "$flag_c" ]; then
+if [ ! "$flag_continue" ]; then
     if [ -t 0 ]; then printf %s "$prompt"; else cat; fi \
         | jq -Rs '{role:"user",content:.}' \
         >> "$histfile"
@@ -157,11 +160,11 @@ trap cleanup INT TERM EXIT
 # note: reasoning_effort for gpt-oss, enable_thinking for qwen3.6
 # note: 'Content-Type: application/json' is important, otherwise the server (cpp-httplib) interprets the request body as a query string (key=val&...), which causes error in router mode
 
-# shellcheck disable=SC2016
+# shellcheck disable=SC2016,SC2086
 jq -s --arg m "$model" --arg r "$opt_r" --arg s "$opt_s" --argjson t "$tools_api" \
     '({off:"none",on:"medium"}[$r] // $r) as $r|{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}+(if($r|length>0)then{"chat_template_kwargs":{reasoning_effort:$r,enable_thinking:(if($r=="none")then false else true end)}}else{}end)' \
     "$histfile" \
-    | stdbuf -o0 curl -fNs -H 'Content-Type: application/json' "$opt_u"/v1/chat/completions -d @- \
+    | stdbuf -o0 curl $opt_c -fNs -H 'Content-Type: application/json' "$opt_u"/v1/chat/completions -d @- \
     | stdbuf -i0 -o0 jq -Rcj --unbuffered 'foreach (inputs|if startswith("data: {") then .[6:] else empty end|fromjson) as $x ([null];[$x,.[0]];.)|. as [$x,$y]|(try $y.choices[].delta.reasoning_content catch false) as $pr|if $x.timings then [(if $pr then "\u001b[0m\n" else empty end),"\nTIME: ",($x.timings|{model:$x.model,prompt_ms,predicted_ms,predicted_n,predicted_per_second}),"\n"][] else ($x.choices[].delta|if .reasoning_content then .reasoning_content|[(if $pr then empty else "\u001b[35m" end),.][] else (if .content then .content elif .tool_calls then .tool_calls[0]|((if .id then "TOOL: \(.function.name) " else "" end)+.function.arguments) else empty end)|[(if $pr then "\u001b[0m\n" else empty end),.][] end) end' \
     | stdbuf -i0 -o0 tee -a "$outfile"
 
@@ -186,6 +189,6 @@ if [ "$tool_call" ]; then
     # fold consequtive role=assistant
     jq -s '{a:[],b:.}|until(.b|length==0;if((.b|length>=2)and(.b[0].role=="assistant")and(.b[1].role=="assistant"))then{a:(.a+[.b[0]+.b[1]]),b:.b[2:]}else{a:(.a+.b[:1]),b:.b[1:]}end)|.a[]' "$histfile" > "$histfile.1"
     mv -f "$histfile.1" "$histfile"
-    "$0" -u "$opt_u" -m "$opt_m" -c "${flag_n:+-n}"
+    "$0" -u "$opt_u" -m "$opt_m" --continue "${flag_n:+-n}"
 fi
 
