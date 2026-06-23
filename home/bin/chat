@@ -92,7 +92,7 @@ res=$(curl $opt_c -fs -H 'Content-Type: application/json' "$opt_u"/v1/models) ||
 
 [ "$flag_l" ] && { jq --argjson res "$res" -nr '$res|([.data[]|"\(.id)\(.aliases|if(length>0)then" (\(join(", ")))"else""end)\(.status.value|if(.=="loaded")then" L"else""end)"]|join("\n"))'; exit 0; }
 
-jq --argjson res "$res" --arg m "$opt_m" -n '$res|halt_error(if(($m|length==0)or([.data[]|[.id,.aliases[]][]]|index($m)))then 0 else 1 end)' >/dev/null 2>&1 || error "model \"$opt_m\" is not available"
+jq --argjson res "$res" --arg m "$opt_m" -n '$res|halt_error(if(($m|length==0)or([.data[]|[.id,(.aliases//[])[]][]]|index($m)))then 0 else 1 end)' >/dev/null 2>&1 || error "model \"$opt_m\" is not available"
 
 model="$opt_m"
 
