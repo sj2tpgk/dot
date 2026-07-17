@@ -53,6 +53,7 @@ if has pacman
     abbr pql       pacman -Ql
     abbr pqs       pacman -Qs
     abbr pi   sudo pacman -S
+    abbr psi       pacman -Si
     abbr pss       pacman -Ss
     abbr psu  sudo pacman -Su
     abbr psy  sudo pacman -Sy

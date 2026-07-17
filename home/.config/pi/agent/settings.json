@@ -1,0 +1,14 @@
+{
+  "lastChangelogVersion": "0.80.7",
+  "defaultProvider": "oai-compat",
+  "defaultModel": "agent",
+  "enableInstallTelemetry": false,
+  "quietStartup": true,
+  "images": {
+    "blockImages": true
+  },
+  "theme": "ansi-terminal",
+  "transport": "auto",
+  "collapseChangelog": true,
+  "defaultThinkingLevel": "medium"
+}

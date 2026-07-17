@@ -8,6 +8,7 @@ BEGIN {
     DIR_THERMAL   = get_env("MYSTATUS_DIR_THERMAL",   "/sys/class/thermal/thermal_zone0/")
     DIR_POWER_BAT = get_env("MYSTATUS_DIR_POWER_BAT", "/sys/class/power_supply/BAT0")
     DIR_POWER_AC  = get_env("MYSTATUS_DIR_POWER_AC",  "/sys/class/power_supply/AC")
+    MAX_WIDTH     = get_env("MYSTATUS_MAX_WIDTH", "99999")
     CACHE_STAT    = get_env("TMPDIR", "/tmp") "/mystatus_statold"
 
     o_cpu       = get_cpu()
@@ -18,11 +19,28 @@ BEGIN {
     o_power     = get_power()
     o_memory    = get_memory()
 
+    split(o_datetime, o_date_day_time, ",")
+
+    max_width_eval = sum_split_nums(MAX_WIDTH)
+
     if (error) {
         printf "%s\n", error
     } else {
-        printf "%s  B %s%%  V %s  T %sC  P %s\n", o_datetime, o_backlight, o_volume, o_thermal, o_power
+        # printf "%s  B %s%%  V %s  T %sC  P %s\n", o_datetime, o_backlight, o_volume, o_thermal, o_power
         # printf "%s  B %s%%  V %s  T %sC  C %s  M %s  P %s\n", o_datetime, o_backlight, o_volume, o_thermal, o_cpu, o_memory, o_power
+
+        i = 0
+        # info priority highest to lowest
+        # spec[i*2-1] = print position
+        # spec[i*2]   = string at the position
+        i++; spec[i*2-1] = 7; spec[i*2] = "P " o_power " "
+        i++; spec[i*2-1] = 3; spec[i*2] = o_date_day_time[3] " "
+        i++; spec[i*2-1] = 5; spec[i*2] = "V " o_volume "  "
+        i++; spec[i*2-1] = 1; spec[i*2] = " " o_date_day_time[1] " "
+        i++; spec[i*2-1] = 2; spec[i*2] = o_date_day_time[2] " "
+        i++; spec[i*2-1] = 4; spec[i*2] = "B " o_backlight "%  "
+        i++; spec[i*2-1] = 6; spec[i*2] = "T " o_thermal "C  "
+        print print_w(max_width_eval, spec)
     }
 
     exit
@@ -76,7 +94,7 @@ function get_thermal(    val) {
 function get_power(    capacity, charging) {
     if ((getline capacity < (DIR_POWER_BAT "/capacity")) != 1) return "?";
     if ((getline charging < (DIR_POWER_AC "/online")) != 1) return "?";
-    if (capacity < 10 && !charging) error = "Battery low";
+    if (capacity < 10 && !charging) error = "Battery low: " capacity "%";
     return capacity "%" (charging ? "+" : "")
 }
 
@@ -100,4 +118,28 @@ function get_memory(    line, total, avail, used) {
     total = int(((total / 100000) + 5) / 10) # round at GB
     used  = int(((used  / 100000) + 5) / 10) # round at GB
     return used "/" total "GB"
+}
+
+function sum_split_nums(str,    sp, sum) {
+    split(str, sp, ",")
+    sum = 0
+    for (i in sp)
+        sum += int(sp[i])
+    return sum
+}
+
+function print_w(cmax, spec,    nspec, c, i, a, out) {
+    nspec = length(spec)
+    c = 0
+    i = 1
+    while (i <= nspec && (c + length(spec[i*2]) <= cmax)) {
+        a[spec[i*2-1]] = i
+        c += length(spec[i*2])
+        i++;
+    }
+    out = ""
+    for (i=1; i<=nspec; i++)
+        if (a[i])
+            out = out spec[a[i]*2]
+    return out
 }

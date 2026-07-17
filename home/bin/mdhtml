@@ -1,0 +1,70 @@
+#!/bin/sh
+
+in="$1"
+
+# https://gist.github.com/gujiaxi/55e4c9c50629b3baeb04723dc99ff7b6
+include_head='
+<meta name="color-scheme" content="dark light">
+<style>
+:root { --bg:Canvas; --fg:CanvasText } }
+@supports not (background:Canvas) {
+    :root { --bg:#fff; --fg:#000 }
+    @media (prefers-color-scheme:dark) { :root { --bg:#000; --fg:#fff } }
+}
+
+body { margin: 0 auto; max-width: 800px; line-height: 1.5em; }
+@media (max-width: 600px) { body { line-height: 1.4em; padding: 0 1em; } }
+
+h1 { background:var(--fg); color:var(--bg); line-height:1; padding:.3em 1ch; border:double var(--bg) 3px }
+h2 { margin:1.5em 0 1em; padding:.3em 1ch; line-height:1; border:solid #888 1px; border-width:0 0 1px 1px; }
+h4 { font-weight:normal } h4::before { content:"◆ " }
+
+img:not(.nocss) { display:block; margin:0 auto }
+img:not(.nocss):not([height]) { max-height:18em }
+figure { display:flex; flex-direction:column; align-items:center; margin:1.5em auto; width:fit-content; padding:0 1ch; border:dotted #888 1px }
+figcaption { font-size:90%; text-align:center }
+
+pre, :not(pre) > code { overflow-x: auto; background-color: #8882 }
+pre { padding: 0.4em 0.6em; border:solid #888 1px }
+:not(pre) > code { padding: 0 0.4em }
+/*@media (prefers-color-scheme: dark) { pre, :not(pre) > code { background-color: #8883 } }*/
+
+blockquote {
+    font-style: italic;
+    margin: 1em 0.8em;
+    padding-left: 0.8em;
+    border-left: 0.3em solid #ccc
+}
+
+table { float: center }
+table, th, td { border: 1px solid grey; }
+th, td { padding: 0.3em 0.5em; }
+
+.footnotes { font-size: 90%; }
+
+todo { display:block; font-size:150%; font-weight:bold; color:red; line-height:1 }
+todo::before { content:"TODO: " }
+</style>
+'
+
+include_before=""
+include_after=
+# include_after="<div style='display:flex; justify-content:end; font-size:small; color:#888'>$(date -Ins)</div>"
+
+tmp_H=$(mktemp)
+tmp_B=$(mktemp)
+tmp_A=$(mktemp)
+trap 'rm "$tmp_H" "$tmp_B" "$tmp_A"' INT TERM EXIT
+printf %s "$include_head" > "$tmp_H"
+printf %s "$include_before" > "$tmp_B"
+printf %s "$include_after" > "$tmp_A"
+
+
+
+pandoc -f markdown -t html \
+    --standalone --embed-resources --webtex --toc --toc-depth=2 --strip-comments \
+    -H "$tmp_H" -B "$tmp_B" -A "$tmp_A" \
+    -V lang=ja -M document-css=false -M maxwidth=100% \
+    -o "${in%.md}.html" "$in"
+
+echo "$(date) ok"
