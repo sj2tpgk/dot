@@ -34,37 +34,6 @@ URxvt*inheritPixmap: false
 
 ! Color constants {{{
 
-! #define urxvt_bg_opacity 85
-! #define urxvt_bg_opacity 99
-
-#define fgcolor  #A6AFB8
-#define bgcolor  #10191F
-#define curcolor #F9F5F4
-
-! #define fgcolor  #000000
-! #define bgcolor  #f0e8e8
-! #define urxvt_bg_opacity 100
-! #define curcolor #c00000
-
-#define dblack   #18262F
-#define bblack   #38464F
-#define dred     #EF5253
-#define bred     #FF6263
-#define dgreen   #7CC844
-#define bgreen   #8CD854
-#define dyellow  #E4B51C
-#define byellow  #F4C52C
-#define dblue    #33B5E1
-#define bblue    #43C5F1
-#define dmagenta #A363D5
-#define bmagenta #B373E5
-#define dcyan    #52CBB0
-#define bcyan    #62DBC0
-! #define dwhite   #A6AFB8
-! #define bwhite   #B6BFC8
-#define dwhite   #C6CfD8
-#define bwhite   #D6DFD8
-
 ! bblack   #38464F 345
 ! bred     #FF6263 f66
 ! bgreen   #8CD854 8d5
@@ -73,6 +42,7 @@ URxvt*inheritPixmap: false
 ! bmagenta #B373E5 a7d
 ! bcyan    #62DBC0 6db
 ! bwhite   #B6BFC8 bbc
+! bwhite   #D6DFD8
 !
 ! dblack   #18262F 123
 ! dred     #EF5253 e55
@@ -82,135 +52,90 @@ URxvt*inheritPixmap: false
 ! dmagenta #A363D5 96c
 ! dcyan    #52CBB0 5ca
 ! dwhite   #A6AFB8 aab
+! dwhite   #C6CfD8
 
 ! }}}
 
 ! Color mapping {{{
 
-! dark
-#define col_db #10191F
-#define col_df #C6CFD8
-#define col_dc #F9F5F4
-#define col_do 85
+! Avoiding using macros so it works when gcc if not installed
 
-#define col_ddk dblack
-#define col_dbk bblack
-#define col_ddr dred
-#define col_dbr bred
-#define col_ddg dgreen
-#define col_dbg bgreen
-#define col_ddy dyellow
-#define col_dby byellow
-#define col_ddb dblue
-#define col_dbb bblue
-#define col_ddm dmagenta
-#define col_dbm bmagenta
-#define col_ddc dcyan
-#define col_dbc bcyan
-! #define col_ddw dwhite
-! #define col_dbw bwhite
-#define col_ddw col_df
-#define col_dbw col_df
+! dark
+! #define col_db #10191F # background
+! #define col_df #C6CFD8 # foreground
+! #define col_dc #F9F5F4 # cursor
+! #define col_do 85      # opacity (user as [opacity]color e.g. [85]#10191F)
+!
+! #define col_ddk dblack
+! #define col_dbk bblack
+! #define col_ddr dred
+! #define col_dbr bred
+! #define col_ddg dgreen
+! #define col_dbg bgreen
+! #define col_ddy dyellow
+! #define col_dby byellow
+! #define col_ddb dblue
+! #define col_dbb bblue
+! #define col_ddm dmagenta
+! #define col_dbm bmagenta
+! #define col_ddc dcyan
+! #define col_dbc bcyan
+! ! #define col_ddw dwhite
+! ! #define col_dbw bwhite
+! #define col_ddw col_df
+! #define col_dbw col_df
 
 ! light
-#define col_bb #f4f2f2
-#define col_bf #443
-#define col_bc #333
-#define col_bo 94
-
-#define col_bdk #f8f4f4
-#define col_bbk #f8f4f4
-#define col_bdr #e22
-#define col_bbr #f33
-#define col_bdg #060
-#define col_bbg #282
-#define col_bdy #c07700
-#define col_bby #c88018
-#define col_bdb #11a
-#define col_bbb #33c
-#define col_bdm #a59
-#define col_bbm #b6a
-#define col_bdc #088
-#define col_bbc #0aa
-! #define col_bdw #111
-! #define col_bbw #111
-#define col_bdw col_bf
-#define col_bbw col_bf
-
-! color for tests
-! #define col_bdk #333
-! #define col_bbk #333
-! #define col_bdr #333
-! #define col_bbr #333
-! #define col_bdg #333
-! #define col_bbg #333
-! #define col_bdy #333
-! #define col_bby #333
-! #define col_bdb #333
-! #define col_bbb #333
-! #define col_bdm #333
-! #define col_bbm #333
-! #define col_bdc #333
-! #define col_bbc #333
-! #define col_bdw #333
-! #define col_bbw #333
+! #define col_bb #f4f2f2
+! #define col_bf #443
+! #define col_bc #333
+! #define col_bo 94
+!
+! #define col_bdk #f8f4f4
+! #define col_bbk #f8f4f4
+! #define col_bdr #e22
+! #define col_bbr #f33
+! #define col_bdg #060
+! #define col_bbg #282
+! #define col_bdy #c07700
+! #define col_bby #c88018
+! #define col_bdb #11a
+! #define col_bbb #33c
+! #define col_bdm #a59
+! #define col_bbm #b6a
+! #define col_bdc #088
+! #define col_bbc #0aa
+! ! #define col_bdw #111
+! ! #define col_bbw #111
+! #define col_bdw col_bf
+! #define col_bbw col_bf
 
 ! }}}
 
 ! Set colors {{{
 
-URxvt.foreground:   col_df
-#ifdef col_do
-URxvt.background: [col_do]col_db
-#else
-URxvt.background:   col_db
-#endif
-URxvt.cursorColor:  col_dc
+URxvt.foreground:   #C6CFD8
+URxvt.background: [85]#10191F
+! URxvt.background:   #10191F
+URxvt.cursorColor:  #F9F5F4
 
-URxvt.color0:  col_ddk
-URxvt.color1:  col_ddr
-URxvt.color2:  col_ddg
-URxvt.color3:  col_ddy
-URxvt.color4:  col_ddb
-URxvt.color5:  col_ddm
-URxvt.color6:  col_ddc
-URxvt.color7:  col_ddw
+URxvt.color0:  #18262F
+URxvt.color1:  #EF5253
+URxvt.color2:  #7CC844
+URxvt.color3:  #E4B51C
+URxvt.color4:  #33B5E1
+URxvt.color5:  #A363D5
+URxvt.color6:  #52CBB0
+URxvt.color7:  #C6CfD8
 
-URxvt.color8:  col_dbk
-URxvt.color9:  col_dbr
-URxvt.color10: col_dbg
-URxvt.color11: col_dby
-URxvt.color12: col_dbb
-URxvt.color13: col_dbm
-URxvt.color14: col_dbc
-URxvt.color15: col_dbw
-
-! URxvt.foreground:   col_bf
-! #ifdef col_bo
-! URxvt.background: [col_bo]col_bb
-! #else
-! URxvt.background:   col_bb
-! #endif
-! URxvt.cursorColor:  col_bc
-
-! URxvt.color0:  col_bdk
-! URxvt.color1:  col_bdr
-! URxvt.color2:  col_bdg
-! URxvt.color3:  col_bdy
-! URxvt.color4:  col_bdb
-! URxvt.color5:  col_bdm
-! URxvt.color6:  col_bdc
-! URxvt.color7:  col_bdw
-
-! URxvt.color8:  col_bbk
-! URxvt.color9:  col_bbr
-! URxvt.color10: col_bbg
-! URxvt.color11: col_bby
-! URxvt.color12: col_bbb
-! URxvt.color13: col_bbm
-! URxvt.color14: col_bbc
-! URxvt.color15: col_bbw
-
+URxvt.color8:  #38464F
+URxvt.color9:  #FF6263
+URxvt.color10: #8CD854
+URxvt.color11: #F4C52C
+URxvt.color12: #43C5F1
+URxvt.color13: #B373E5
+URxvt.color14: #62DBC0
+URxvt.color15: #D6DFD8
 
 ! }}}
 
@@ -297,8 +222,9 @@ URxvt.keysym.M-Page_Down: command:\033]710;xft:UnifontMy:size=12:rgba=none,xft:U
 
 ! transparency: see https://gist.github.com/ehegnes/e68ca87e7623d58cfa19
 ! to change colors above 15, for example add "4;238;#d0cccc"
-URxvt.keysym.S-Page_Up:   change-color:10;col_bf,49;[col_bo]col_bb,12;col_bc,4;0;col_bdk,4;1;col_bdr,4;2;col_bdg,4;3;col_bdy,4;4;col_bdb,4;5;col_bdm,4;6;col_bdc,4;7;col_bdw,4;8;col_bbk,4;9;col_bbr,4;10;col_bbg,4;11;col_bby,4;12;col_bbb,4;13;col_bbm,4;14;col_bbc,4;15;col_bbw,4;238;#d0cccc,4;236;#c0bcbc
-URxvt.keysym.S-Page_Down: change-color:10;col_df,49;[col_do]col_db,12;col_dc,4;0;col_ddk,4;1;col_ddr,4;2;col_ddg,4;3;col_ddy,4;4;col_ddb,4;5;col_ddm,4;6;col_ddc,4;7;col_ddw,4;8;col_dbk,4;9;col_dbr,4;10;col_dbg,4;11;col_dby,4;12;col_dbb,4;13;col_dbm,4;14;col_dbc,4;15;col_dbw,4;238;#444444,4;236;#303030
+! Always make sure to change colors in "Color mapping" section for easier management
+URxvt.keysym.S-Page_Up:   change-color:10;#443,49;[94]#f4f2f2,12;#333,4;0;#f8f4f4,4;1;#e22,4;2;#060,4;3;#c07700,4;4;#11a,4;5;#a59,4;6;#088,4;7;#111,4;8;#f8f4f4,4;9;#f33,4;10;#282,4;11;#c88018,4;12;#33c,4;13;#b6a,4;14;#0aa,4;15;#443,4;238;#d0cccc,4;236;#c0bcbc
+URxvt.keysym.S-Page_Down: change-color:10;#C6CFD8,49;[85]#10191F,12;#F9F5F4,4;0;#18262F,4;1;#EF5253,4;2;#7CC844,4;3;#E4B51C,4;4;#33B5E1,4;5;#A363D5,4;6;#52CBB0,4;7;#A6AFB8,4;8;#38464F,4;9;#FF6263,4;10;#8CD854,4;11;#F4C52C,4;12;#43C5F1,4;13;#B373E5,4;14;#62DBC0,4;15;#B6BFC8,4;238;#444444,4;236;#303030
 
 URxvt.internalBorder: 10
 URxvt.borderColor:    #181818
