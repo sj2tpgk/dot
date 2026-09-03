@@ -809,9 +809,11 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     '({off:"none",on:"medium"}[$r] // $r) as $r|{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}+(if($r|length>0)then{"chat_template_kwargs":{reasoning_effort:$r,enable_thinking:(if($r=="none")then false else true end)}}else{}end)' \
 #|     "$histfile" \
 #|     | stdbuf -o0 curl $opt_c -fNs -H 'Content-Type: application/json' "$opt_u"/v1/chat/completions -d @- \
-#|     | stdbuf -i0 -o0 jq -Rcj --unbuffered 'foreach (inputs|if startswith("data: {") then .[6:] else empty end|fromjson) as $x ([null];[$x,.[0]];.)|. as [$x,$y]|(try $y.choices[].delta.reasoning_content catch false) as $pr|if $x.timings then [(if $pr then "\u001b[0m\n" else empty end),"\nTIME: ",($x.timings|{model:$x.model,prompt_ms,predicted_ms,predicted_n,predicted_per_second}),"\n"][] else ($x.choices[].delta|if .reasoning_content then .reasoning_content|[(if $pr then empty else "\u001b[35m" end),.][] else (if .content then .content elif .tool_calls then .tool_calls[0]|((if .id then "TOOL: \(.function.name) " else "" end)+.function.arguments) else empty end)|[(if $pr then "\u001b[0m\n" else empty end),.][] end) end' \
+#|     | stdbuf -i0 -o0 jq -Rcj --unbuffered 'def r2:(.*100+.5|floor/100);foreach (inputs|if startswith("data: {") then .[6:] else empty end|fromjson) as $x ([null];[$x,.[0]];.)|. as [$x,$y]|(try $y.choices[].delta.reasoning_content catch false) as $pr|if $x.timings then [(if $pr then "\u001b[0m\n" else empty end),"\nTIME: Model=",$x.model,", ",($x.timings|"PP=\(.prompt_per_second|r2)(\(.prompt_n)/\(.prompt_ms/1000|r2)), TG=\(.predicted_per_second|r2)(\(.predicted_n)/\(.predicted_ms/1000|r2))"),"\n"][] else ($x.choices[].delta|if .reasoning_content then .reasoning_content|[(if $pr then empty else "\u001b[35m" end),.][] else (if .content then .content elif .tool_calls then .tool_calls[0]|((if .id then "TOOL: \(.function.name) " else "" end)+.function.arguments) else empty end)|[(if $pr then "\u001b[0m\n" else empty end),.][] end) end' \
 #|     | stdbuf -i0 -o0 tee -a "$outfile"
 #| 
+#| 
+#| #"\nTIME: ",($x.timings|{model:$x.model,prompt_ms,predicted_ms,predicted_n,predicted_per_second}),"\n"
 #| [ -f "$outfile" ] || { printf "\n\033[0m"; error "aborted"; }
 #| 
 #| # shellcheck disable=SC2016
@@ -3987,13 +3989,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #- }}}
 
 
-####FILE +x bin/x-hibernate {{{
-#| #!/bin/sh
-#| 
-#| swaylock -c 888888 & sleep .1 && systemctl hibernate
-#- }}}
-
-
 ####FILE +x bin/x-mute {{{
 #| #!/bin/sh
 #| # Usage: ./mute
@@ -4045,6 +4040,31 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     (*) sh -c "$cwd/$cmd" & ;;
 #| esac
 #| # pkill -x -SIGUSR1 wvkbd-mobintl
+#- }}}
+
+
+####FILE +x bin/x-sleep {{{
+#| #!/bin/sh
+#| 
+#| sync # Prevent data loss on potential disk disconnection (esp. USB drive)
+#| 
+#| case "$1" in
+#|     (""|suspend) cmd=suspend ;;
+#|     (hibernate) cmd=hibernate ;;
+#|     (*) echo "Bad command: $1"; exit 1 ;;
+#| esac
+#| 
+#| bgopt=-i
+#| bg=~/.config/background1.jpg
+#| if [ ! -f "$bg" ]; then
+#|     bg=~/.config/background.jpg
+#|     if [ ! -f "$bg" ]; then
+#|         bgopt=-c
+#|         bg=888888
+#|     fi
+#| fi
+#| 
+#| swaylock $bgopt "$bg" & sleep .1 && systemctl "$cmd"
 #- }}}
 
 

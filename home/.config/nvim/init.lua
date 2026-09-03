@@ -1817,7 +1817,7 @@ vim.cmd [[ " llama.vim (experimental) <<<
             \ 'endpoint_fim': g:env.llama . "/infill",
             \ 'endpoint_inst': g:env.llama . "/v1/chat/completions",
             \ 'model_fim': "fim",
-            \ 'model_inst': "fim",
+            \ 'model_inst': "moe",
             \ 'show_info': 0,
             \ 't_max_prompt_ms': 1000,
             \ 't_max_predict_ms': 1000,

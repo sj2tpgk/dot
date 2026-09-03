@@ -1,0 +1,21 @@
+#!/bin/sh
+
+sync # Prevent data loss on potential disk disconnection (esp. USB drive)
+
+case "$1" in
+    (""|suspend) cmd=suspend ;;
+    (hibernate) cmd=hibernate ;;
+    (*) echo "Bad command: $1"; exit 1 ;;
+esac
+
+bgopt=-i
+bg=~/.config/background1.jpg
+if [ ! -f "$bg" ]; then
+    bg=~/.config/background.jpg
+    if [ ! -f "$bg" ]; then
+        bgopt=-c
+        bg=888888
+    fi
+fi
+
+swaylock $bgopt "$bg" & sleep .1 && systemctl "$cmd"

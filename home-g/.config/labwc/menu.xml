@@ -169,22 +169,28 @@
         <action name="Reconfigure">
         </action>
       </item>
-      <item label="Exit">
-        <action name="Exit">
-        </action>
-      </item>
       <item label="Hibernate">
-        <action name="Execute" command="x-hibernate">
+        <action name="Execute" command="x-sleep hibernate">
         </action>
       </item>
-      <item label="Reboot">
-        <action name="Execute" command="systemctl reboot">
+      <item label="Suspend">
+        <action name="Execute" command="x-sleep suspend">
         </action>
       </item>
-      <item label="Poweroff">
-        <action name="Execute" command="systemctl -i poweroff">
-        </action>
-      </item>
+      <menu id="ExitMenu" label="Exit ...">
+        <item label="Exit">
+          <action name="Exit">
+          </action>
+        </item>
+        <item label="Reboot">
+          <action name="Execute" command="systemctl reboot">
+          </action>
+        </item>
+        <item label="Poweroff">
+          <action name="Execute" command="systemctl -i poweroff">
+          </action>
+        </item>
+      </menu>
     </menu>
   </menu>
   <menu id="some-custom-menu">

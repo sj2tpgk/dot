@@ -1,3 +1,0 @@
-#!/bin/sh
-
-swaylock -c 888888 & sleep .1 && systemctl hibernate
