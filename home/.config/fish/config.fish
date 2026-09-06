@@ -74,6 +74,7 @@ if has flatpak
     abbr fl        flatpak
     abbr fli  sudo flatpak install
     abbr flr       flatpak run
+    abbr fll       flatpak list --app
     abbr fls       flatpak search
     abbr flui      flatpak uninstall
     abbr flup      flatpak update
