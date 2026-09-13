@@ -5,8 +5,10 @@
 
 # Arguments
 
+default_s='Respond concisely. Use lists instead of tables. Do not use bold or italic text. When coding, prefer shorter syntax and minimal comments. When writing math expressions, avoid using tex notations and make it easy to read in plaintext. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output'
+
 flag_a=; flag_e=; flag_p=
-opt_c=; opt_m=Qwen3.8-27B; opt_r=off; opt_s=; opt_u="http://localhost:11434"
+opt_c=; opt_m=Qwen3.8-27B; opt_r=; opt_s=$default_s; opt_u="http://localhost:11434"
 
 show_help(){
     local basename0=$(basename "$0")
@@ -80,7 +82,7 @@ def r2:(.*100+.5|floor/100);
 # Functions
 
 error(){ echo "Error: $*" >&2; exit 1; }
-clean(){ rm -f "$tmp/chat_"*; rmdir "$tmp"; [[ "$flag_p" ]] && rm -f "$HISTFILE"; return 0; }
+clean(){ rm -f "$tmp/chat_"*; rmdir "$tmp" 2>/dev/null; [[ "$flag_p" ]] && rm -f "$HISTFILE"; return 0; }
 trap clean INT TERM EXIT
 
 check_deps(){
@@ -126,6 +128,14 @@ parse_sse_meta(){
     jq -R 'inputs|if(startswith("data: {"))then(.[6:])else(empty)end|fromjson|if(.timings)then(.)else(empty)end|{model,timings:(.timings|{cache_n,prompt_per_second,prompt_n,prompt_ms,predicted_per_second,predicted_n,predicted_ms})}' "$1"
 }
 
+merge_prompt_stdin(){
+    printf %s "$prompt"
+    if [ ! -t 0 ]; then
+        [ "$prompt" ] && printf "\n\n"
+        cat
+    fi
+}
+
 # Main
 
 main(){
@@ -138,12 +148,11 @@ main(){
         :
     else
         [[ "$flag_e" ]] && rm -f "$HISTFILE"
-        jq -rnc --arg prompt "$prompt" '{"role":"user","content":$prompt}' >> "$HISTFILE"
+        merge_prompt_stdin | jq -Rsc '{role:"user",content:.}' >> "$HISTFILE"
         call_llm "$HISTFILE" "$tmp/chat_sse"
         parse_sse_message "$tmp/chat_sse" >> "$HISTFILE"
         echo
         parse_sse_meta "$tmp/chat_sse" | jq -r "$jqlib"'"TIME: Model=\(.model), \(.timings|"PP=\(.prompt_per_second|r2)(\(.prompt_n)(\(.cache_n+.prompt_n))/\(.prompt_ms/1000|r2)), TG=\(.predicted_per_second|r2)(\(.predicted_n)/\(.predicted_ms/1000|r2))")"'
-        parse_sse_meta "$tmp/chat_sse" | jq -r "$jqlib"'.timings'
     fi
 }
 
