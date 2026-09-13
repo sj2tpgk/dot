@@ -95,7 +95,7 @@ do -- Plugins <<<
 
     -- Better syntax highlighting and indent for langs
     plug "Vimjas/vim-python-pep8-indent"
-    plug "elkasztano/nushell-syntax-vim"
+    -- plug "elkasztano/nushell-syntax-vim"
 
     -- Treesitter
     -- plug ("nvim-treesitter/nvim-treesitter", 1) -- lazy loading (experimental)
@@ -1317,10 +1317,8 @@ function lsp_config() -- <<<
     if can_require"lspconfig" then
         lsp_config_1_misc()
         lsp_config_2_eldoc()
-        if can_require"mason" and can_require"mason-lspconfig" then
-            -- mason is an auto lang server installer. this is optional
-            lsp_config_3_mason()
-        end
+        -- mason is an auto lang server installer. this is optional
+        -- if can_require"mason" and can_require"mason-lspconfig" then lsp_config_3_mason() end
         lsp_config_4_servers()
     end
 end -- >>>
@@ -1359,12 +1357,12 @@ function lsp_config_1_misc() -- Lsp (1) misc config <<<
     diagToggleLevel()
 
     -- Disable in insert mode
-    vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
-        vim.lsp.diagnostic.on_publish_diagnostics, {
-            -- delay update diagnostics
-            update_in_insert = false,
-        }
-    )
+    -- vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
+    --     vim.lsp.diagnostic.on_publish_diagnostics, {
+    --         -- delay update diagnostics
+    --         update_in_insert = false,
+    --     }
+    -- )
 
     -- LSP action menu
     vim.cmd [[
@@ -1449,25 +1447,16 @@ function lsp_config_4_servers() -- Lsp (4) configure servers <<<
     local a = { on_attach = my_lsp_on_attach }
     local s = { single_file_support = true }
 
-    f("ansible", "ansiblels", { "ansible-language-server" },            a, s)
     f("c",       "clangd",    { "clangd" },                             a, s)
     f("css",     "cssls",     { "vscode-css-language-server" },         a, s)
     f("go",      "gopls",     { "gopls" },                              a)
     f("html",    "html",      { "vscode-html-language-server" },        a)
-    f("js/ts",   "ts_ls",     { "typescript-language-server" },         a, s)
+    f("js/ts",   "ts_ls",     { "typescript-language-server" },         a, s) -- put libs in node_modules/ to let LSP recognize it
     f("lua",     "lua_ls",    { "lua-language-server" },                a)
     f("python",  "pyright",   { "pyright" },                            a)
-    f("python",  "pylsp",     { "pylsp" },                              a)
     f("rust",    "rust_analyzer", { "rust-analyzer" },                  a)
     f("shell",   "bashls",    { "bash-language-server", "shellcheck" }, a)
     f("zig",     "zls",       { "zls" },                                a)
-
-
-    -- f("python", "basedpyright", a)
-    -- setup("pylsp",                  nil,                      { on_attach = on_attach, settings = { pylsp = { plugins = { pycodestyle = { ignore = {'W391'}, maxLineLength = 100 } } } } })
-    -- setup("ruff_lsp",               "ruff",                   { on_attach = on_attach, init_options = { settings = { args = { "--config", 'lint.ignore = ["E401", "E731"]' } } } })
-
-    -- For JS/TS: put libaries in node_modules/ to let LSP recognize it.
 
 end -- >>>
 

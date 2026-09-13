@@ -1,0 +1,150 @@
+#!/bin/bash -e
+
+# model name fish complete
+# multi image?
+
+# Arguments
+
+flag_a=; flag_e=; flag_p=
+opt_c=; opt_m=Qwen3.8-27B; opt_r=off; opt_s=; opt_u="http://localhost:11434"
+
+show_help(){
+    local basename0=$(basename "$0")
+    echo "Usage: $basename0 [options ...] [prompt ...]"
+    echo "       cmd | $basename0 [options ...]"
+    echo
+    echo "Options:"
+    # echo "  -c, --curlopts <opts>  Curl options (splitted at spaces)"
+    # echo "      --continue         Continue upon previous tool calling"
+    echo "  -e, --erase            Erase history before starting"
+    echo "  -h, --help             Help"
+    # echo "      --help-all         Help (extended)"
+    echo "  -l, --list             List models"
+    # echo "  -i, --image            Image file (local)"
+    echo "  -m, --model <model>    Model (default: auto)"
+    echo "  -p, --private          Erase history after finished" # TODO remove added history only
+    echo "  -r, --reason <val>     Reasoning effort (off,none,minimal,low,on,medium,high,xhigh,on) (default: not set)"
+    echo "  -s, --system <prompt>  System prompt"
+    # echo "  -t, --tool <spec>      Define additional tools (\"default\" will enable default tools)"
+    echo "  -u, --url <url>        URL of server (default: $default_u)"
+    # [ -n "$1" ] || return
+    # echo
+    # echo "Default system prompt:"
+    # echo "$default_s"
+    # echo
+    # echo "Tool spec when \"default\" is specified:"
+    # echo "$toolsDefault"
+}
+
+parse_opts(){
+    while [[ $# -ge 1 ]]; do
+        case "$1" in
+            (-[!-][!-]*)    _1=${1#?} ; shift ; set -- "-${_1%"${_1#?}"}" "-${_1#?}" "$@" ;;
+            (-a|--agent)    flag_a=1  ; shift ;;
+            (-e|--erase)    flag_e=1  ; shift ;;
+            (-h|--help)     flag_h=1  ; shift ;;
+            (-l|--list)     flag_l=1  ; shift ;;
+            (-p|--private)  flag_p=1  ; shift ;;
+            # (-c|--curlopts) opt_c="$2"; shift 2 ;;
+            # (-i|--image)    opt_i="$2"; shift 2 ;;
+            (-m|--model)    opt_m="$2"; shift 2 ;;
+            (-r|--reason)   opt_r="$2"; shift 2 ;;
+            (-s|--system)   opt_s="$2"; shift 2 ;;
+            (-u|--url)      opt_u="$2"; shift 2 ;;
+            # (-t|--tool)     [ "$2" = default ] && tools="$tools$NEWL$toolsDefault" || tools="$tools$NEWL$2"; shift 2 ;;
+            # (--continue)    flag_continue=1 ; shift ;;
+            # (--help-all)    flag_helpall=1  ; shift ;;
+            (*) prompt="$*" ; break ;;
+        esac
+    done
+}
+
+# Variables
+
+HISTFILE=~/.chat_hist
+
+COLOR_TOOL=34
+COLOR_USER=33
+COLOR_REASON=35
+
+tools_api='[]'
+tmp=$(mktemp -d)
+
+# shellcheck disable=SC2016
+jqlib='
+# get reasoning chat kwargs
+def reason(x):if(x and(x|length))then(({off:"none",on:"medium"}[x]//x)|{reasoning_effort:.,enable_thinking:(.!="none")})else{}end;
+def r2:(.*100+.5|floor/100);
+'
+
+# Functions
+
+error(){ echo "Error: $*" >&2; exit 1; }
+clean(){ rm -f "$tmp/chat_"*; rmdir "$tmp"; [[ "$flag_p" ]] && rm -f "$HISTFILE"; return 0; }
+trap clean INT TERM EXIT
+
+check_deps(){
+    local missing
+    for i in curl jq stdbuf; do
+        command -v "$i" >/dev/null || missing="$missing $i"
+    done
+    [[ "$missing" ]] && error "command not available:$missing"
+    return 0 # without this, this function returns nonzero even if the last command is "X && Y" and "Y" was not executed. note you must not omit the "0"
+}
+
+show_models(){
+    local res
+    res=$(curl $opt_c -fs -H 'Content-Type: application/json' "$opt_u"/v1/models) || error "getting model list: server error"
+    # |sort_by(.id|ascii_downcase)
+    jq --argjson res "$res" -nr '$res|([.data[]|"\(.id)\(.aliases|if(length>0)then" (\(join(", ")))"else""end)\(if(.status)then(.status.value|if(.=="loaded")then" L"else""end)else" ?"end)"]|join("\n"))'
+}
+
+# Usage: call_llm HISTFILE SSEFILE
+call_llm(){
+    [[ -f "$1" ]] || error "call_llm: histfile not found: $1"
+    jq -s --arg m "$opt_m" --arg r "$opt_r" --arg s "$opt_s" --argjson t "$tools_api" \
+        "$jqlib"'{model:$m,stream:true,tools:$t,chat_template_kwargs:reason($r),messages:[{role:"system",content:$s},.[]]}' \
+        "$1" > "$tmp/chat_req"
+    # cat "$tmp/chat_req"
+    # shellcheck disable=SC2016
+    local jq_parse_sse_print='foreach (inputs|if(startswith("data: {"))then(.[6:])else(empty)end|fromjson|.choices[0].delta) as $x ([false,false]; [.[1],$x.reasoning_content]; [(if $x.reasoning_content then "\u001b['"$COLOR_REASON"'m\($x.reasoning_content)\u001b[0m" else empty end),if(.[0]and(.[1]|not))then"\n"else empty end,$x.content//empty][])'
+    # shellcheck disable=SC2086
+    stdbuf -o0 curl $opt_c -fNs -H 'Content-Type: application/json' "$opt_u"/v1/chat/completions -d @"$tmp/chat_req" \
+        | stdbuf -i0 -o0 tee "$2" \
+        | stdbuf -i0 -o0 jq -Rrj --unbuffered "$jq_parse_sse_print"
+}
+
+# Usage: parse_sse SSEFILE
+parse_sse_message(){
+    # shellcheck disable=SC2016
+    local jq_parse_sse='[inputs|if(startswith("data: {"))then(.[6:])else(empty)end|fromjson] | reduce (.[].choices[0].delta) as $x ({reasoning_content:"",content:"",tool_calls:[]}; (if($x.role)then(.role=$x.role)end|if($x.reasoning_content)then(.reasoning_content+=$x.reasoning_content)end|if($x.content)then(.content+=$x.content)end|if($x.tool_calls)then(.tool_calls+=$x.tool_calls)end))|(.tool_calls|=(group_by(.index)|map((.[0]|{index,id,type})+([.[].function]|{function:{name:([.[].name]|join("")),arguments:([.[].arguments]|join(""))}})))) | if(.tool_calls|length==0)then(del(.tool_calls))end | {role:"assistant",content:(.reasoning_content+.content)}+(if(.tool_calls)then{tool_calls}else{}end)'
+    jq -Rcr "$jq_parse_sse" "$1"
+}
+
+# Usage: parse_sse_meta SSEFILE
+parse_sse_meta(){
+    jq -R 'inputs|if(startswith("data: {"))then(.[6:])else(empty)end|fromjson|if(.timings)then(.)else(empty)end|{model,timings:(.timings|{cache_n,prompt_per_second,prompt_n,prompt_ms,predicted_per_second,predicted_n,predicted_ms})}' "$1"
+}
+
+# Main
+
+main(){
+    parse_opts "$@"
+    [[ "$flag_h" ]] && { show_help; exit 0; }
+    check_deps
+    if [[ "$flag_l" ]]; then
+        show_models
+    elif [[ "$flag_a" ]]; then
+        :
+    else
+        [[ "$flag_e" ]] && rm -f "$HISTFILE"
+        jq -rnc --arg prompt "$prompt" '{"role":"user","content":$prompt}' >> "$HISTFILE"
+        call_llm "$HISTFILE" "$tmp/chat_sse"
+        parse_sse_message "$tmp/chat_sse" >> "$HISTFILE"
+        echo
+        parse_sse_meta "$tmp/chat_sse" | jq -r "$jqlib"'"TIME: Model=\(.model), \(.timings|"PP=\(.prompt_per_second|r2)(\(.prompt_n)(\(.cache_n+.prompt_n))/\(.prompt_ms/1000|r2)), TG=\(.predicted_per_second|r2)(\(.predicted_n)/\(.predicted_ms/1000|r2))")"'
+        parse_sse_meta "$tmp/chat_sse" | jq -r "$jqlib"'.timings'
+    fi
+}
+
+main "$@"
