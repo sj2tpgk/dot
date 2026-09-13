@@ -940,8 +940,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|         merge_prompt_stdin | jq -Rsc '{role:"user",content:.}' >> "$HISTFILE"
 #|         call_llm "$HISTFILE" "$tmp/chat_sse"
 #|         parse_sse_message "$tmp/chat_sse" >> "$HISTFILE"
-#|         echo
-#|         parse_sse_meta "$tmp/chat_sse" | jq -r "$jqlib"'"TIME: Model=\(.model), \(.timings|"PP=\(.prompt_per_second|r2)(\(.prompt_n)(\(.cache_n+.prompt_n))/\(.prompt_ms/1000|r2)), TG=\(.predicted_per_second|r2)(\(.predicted_n)/\(.predicted_ms/1000|r2))")"'
+#|         parse_sse_meta "$tmp/chat_sse" | jq -r "$jqlib"'"\nTIME: Model=\(.model), \(.timings|"PP=\(.prompt_per_second|r2)(\(.prompt_n)(\(.cache_n+.prompt_n))/\(.prompt_ms/1000|r2)), TG=\(.predicted_per_second|r2)(\(.predicted_n)/\(.predicted_ms/1000|r2))")"' >&2
 #|     fi
 #| }
 #| 
