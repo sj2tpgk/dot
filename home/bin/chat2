@@ -5,25 +5,27 @@
 
 # Arguments
 
-default_s='Respond concisely. Use lists instead of tables. Do not use bold or italic text. When coding, prefer shorter syntax and minimal comments. When writing math expressions, avoid using tex notations and make it easy to read in plaintext. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output'
+default_s='Respond concisely. Use lists instead of tables. Do not use bold or italic text. When coding, prefer shorter syntax and minimal comments. When writing math expressions, avoid using tex notations and make it easy to read in plaintext. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output'; default_u='localhost:11434'
 
 flag_a=; flag_e=; flag_p=
-opt_c=; opt_m=Qwen3.8-27B; opt_r=; opt_s=$default_s; opt_u="http://localhost:11434"
+opt_m=Qwen3.8-27B; opt_r=; opt_s=$default_s; opt_u=$default_u
+opt_curlopts=
 
 show_help(){
-    local basename0=$(basename "$0")
+    local basename0; basename0=$(basename "$0")
     echo "Usage: $basename0 [options ...] [prompt ...]"
     echo "       cmd | $basename0 [options ...]"
     echo
     echo "Options:"
-    # echo "  -c, --curlopts <opts>  Curl options (splitted at spaces)"
+    echo "  -a, --agent            Agent (repl) mode"
+    echo "      --curlopts <opts>  Curl options (splitted at spaces)"
     # echo "      --continue         Continue upon previous tool calling"
     echo "  -e, --erase            Erase history before starting"
     echo "  -h, --help             Help"
     # echo "      --help-all         Help (extended)"
     echo "  -l, --list             List models"
     # echo "  -i, --image            Image file (local)"
-    echo "  -m, --model <model>    Model (default: auto)"
+    echo "  -m, --model <model>    Model (default: not set)"
     echo "  -p, --private          Erase history after finished" # TODO remove added history only
     echo "  -r, --reason <val>     Reasoning effort (off,none,minimal,low,on,medium,high,xhigh,on) (default: not set)"
     echo "  -s, --system <prompt>  System prompt"
@@ -47,12 +49,12 @@ parse_opts(){
             (-h|--help)     flag_h=1  ; shift ;;
             (-l|--list)     flag_l=1  ; shift ;;
             (-p|--private)  flag_p=1  ; shift ;;
-            # (-c|--curlopts) opt_c="$2"; shift 2 ;;
             # (-i|--image)    opt_i="$2"; shift 2 ;;
             (-m|--model)    opt_m="$2"; shift 2 ;;
             (-r|--reason)   opt_r="$2"; shift 2 ;;
             (-s|--system)   opt_s="$2"; shift 2 ;;
             (-u|--url)      opt_u="$2"; shift 2 ;;
+            (--curlopts)    opt_curlopts="$2"; shift 2 ;;
             # (-t|--tool)     [ "$2" = default ] && tools="$tools$NEWL$toolsDefault" || tools="$tools$NEWL$2"; shift 2 ;;
             # (--continue)    flag_continue=1 ; shift ;;
             # (--help-all)    flag_helpall=1  ; shift ;;
@@ -70,12 +72,12 @@ COLOR_USER=33
 COLOR_REASON=35
 
 tools_api='[]'
-tmp=$(mktemp -d)
+tmp=
 
 # shellcheck disable=SC2016
 jqlib='
 # get reasoning chat kwargs
-def reason(x):if(x and(x|length))then(({off:"none",on:"medium"}[x]//x)|{reasoning_effort:.,enable_thinking:(.!="none")})else{}end;
+def reason(x):if(x and(x|length>0))then(({off:"none",on:"medium"}[x]//x)|{reasoning_effort:.,enable_thinking:(.!="none")})else{}end;
 def r2:(.*100+.5|floor/100);
 '
 
@@ -83,7 +85,10 @@ def r2:(.*100+.5|floor/100);
 
 error(){ echo "Error: $*" >&2; exit 1; }
 clean(){ rm -f "$tmp/chat_"*; rmdir "$tmp" 2>/dev/null; [[ "$flag_p" ]] && rm -f "$HISTFILE"; return 0; }
-trap clean INT TERM EXIT
+init(){
+    tmp=$(mktemp -d)
+    trap clean INT TERM EXIT
+}
 
 check_deps(){
     local missing
@@ -96,7 +101,8 @@ check_deps(){
 
 show_models(){
     local res
-    res=$(curl $opt_c -fs -H 'Content-Type: application/json' "$opt_u"/v1/models) || error "getting model list: server error"
+    # shellcheck disable=SC2086
+    res=$(curl -fs -H 'Content-Type: application/json' $opt_curlopts "$opt_u"/v1/models) || error "getting model list: server error"
     # |sort_by(.id|ascii_downcase)
     jq --argjson res "$res" -nr '$res|([.data[]|"\(.id)\(.aliases|if(length>0)then" (\(join(", ")))"else""end)\(if(.status)then(.status.value|if(.=="loaded")then" L"else""end)else" ?"end)"]|join("\n"))'
 }
@@ -107,11 +113,11 @@ call_llm(){
     jq -s --arg m "$opt_m" --arg r "$opt_r" --arg s "$opt_s" --argjson t "$tools_api" \
         "$jqlib"'{model:$m,stream:true,tools:$t,chat_template_kwargs:reason($r),messages:[{role:"system",content:$s},.[]]}' \
         "$1" > "$tmp/chat_req"
-    # cat "$tmp/chat_req"
+    cat "$tmp/chat_req"
     # shellcheck disable=SC2016
     local jq_parse_sse_print='foreach (inputs|if(startswith("data: {"))then(.[6:])else(empty)end|fromjson|.choices[0].delta) as $x ([false,false]; [.[1],$x.reasoning_content]; [(if $x.reasoning_content then "\u001b['"$COLOR_REASON"'m\($x.reasoning_content)\u001b[0m" else empty end),if(.[0]and(.[1]|not))then"\n"else empty end,$x.content//empty][])'
     # shellcheck disable=SC2086
-    stdbuf -o0 curl $opt_c -fNs -H 'Content-Type: application/json' "$opt_u"/v1/chat/completions -d @"$tmp/chat_req" \
+    stdbuf -o0 curl -fNs -H 'Content-Type: application/json' $opt_curlopts "$opt_u"/v1/chat/completions -d @"$tmp/chat_req" \
         | stdbuf -i0 -o0 tee "$2" \
         | stdbuf -i0 -o0 jq -Rrj --unbuffered "$jq_parse_sse_print"
 }
@@ -141,6 +147,7 @@ merge_prompt_stdin(){
 main(){
     parse_opts "$@"
     [[ "$flag_h" ]] && { show_help; exit 0; }
+    init
     check_deps
     if [[ "$flag_l" ]]; then
         show_models
