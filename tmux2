@@ -377,61 +377,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #- }}}
 
 
-####FILE +x bin/aider-local {{{
-#| #!/bin/sh
-#| 
-#| export OPENAI_API_BASE="${OPENAI_API_BASE:-http://localhost:8888/v1}"
-#| export OPENAI_API_KEY="${OPENAI_API_BASE:-NONE}" # important: see https://github.com/Aider-AI/aider/issues/2209#issuecomment-2888776946
-#| export OPENAI_API_KEY="${OPENAI_API_BASE:-NONE}" # important: see https://github.com/Aider-AI/aider/issues/2209#issuecomment-2888776946
-#| 
-#| if ! command -v aider >/dev/null; then
-#|     echo "Aider not found"
-#|     aider_dir=~/.local/share/aider
-#|     printf %s "install to $aider_dir now? [y/n] "
-#|     read -r answer
-#|     if [ "$answer" != y ]; then
-#|         exit 1
-#|     fi
-#|     mkdir -p "$aider_dir"
-#|     cd "$aider_dir" || exit 1
-#|     python -m venv .venv
-#|     .venv/bin/pip install aider-install
-#|     .venv/bin/aider-install
-#| fi
-#| 
-#| #model_settings=/tmp/aider_model_settings
-#| #echo '
-#| #- name: llama_cpp/Qwen3-30B-A3B
-#| #  extra_params:
-#| #    api_key: NONE
-#| #- name: llama_cpp/Qwen3-0.6B
-#| #  extra_params:
-#| #    api_key: NONE
-#| #' > "$model_settings"
-#| # api_base: http://localhost:8889/ # seems setting different endpoint (port) per model is not working?
-#| 
-#| # note: extra_params sets .options.keepalive, .options.think etc. field of request body not the .keepalive or .think at the root of the json object
-#| 
-#| export TERM=linux # force 16 colors
-#| 
-#| exec aider \
-#|     --user-input-color       white   \
-#|     --tool-warning-color     yellow  \
-#|     --tool-error-color       red     \
-#|     --assistant-output-color green   \
-#|     --code-theme             monokai \
-#|     --weak-model             openai/"${WEAK_MODEL:-Qwen3-0.6B}" \
-#|     --model                  openai/"${MODEL:-Qwen3-32B}" \
-#|     --no-check-update \
-#|     --no-show-release-notes \
-#|     --no-show-model-warnings \
-#|     --analytics-disable \
-#|     "$@"
-#|      # --model-settings-file   "$model_settings" \
-#|     # --weak-model             openai/Qwen3-0.6B \
-#- }}}
-
-
 ####FILE +x bin/archsetup {{{
 #| #!/bin/sh
 #| 
@@ -838,6 +783,168 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     "$0" -u "$opt_u" -m "$opt_m" --continue "${flag_n:+-n}"
 #| fi
 #| 
+#- }}}
+
+
+####FILE +x bin/chat2 {{{
+#| #!/bin/bash -e
+#| 
+#| # model name fish complete
+#| # multi image?
+#| 
+#| # Arguments
+#| 
+#| default_s='Respond concisely. Use lists instead of tables. Do not use bold or italic text. When coding, prefer shorter syntax and minimal comments. When writing math expressions, avoid using tex notations and make it easy to read in plaintext. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output'
+#| 
+#| flag_a=; flag_e=; flag_p=
+#| opt_c=; opt_m=Qwen3.8-27B; opt_r=; opt_s=$default_s; opt_u="http://localhost:11434"
+#| 
+#| show_help(){
+#|     local basename0=$(basename "$0")
+#|     echo "Usage: $basename0 [options ...] [prompt ...]"
+#|     echo "       cmd | $basename0 [options ...]"
+#|     echo
+#|     echo "Options:"
+#|     # echo "  -c, --curlopts <opts>  Curl options (splitted at spaces)"
+#|     # echo "      --continue         Continue upon previous tool calling"
+#|     echo "  -e, --erase            Erase history before starting"
+#|     echo "  -h, --help             Help"
+#|     # echo "      --help-all         Help (extended)"
+#|     echo "  -l, --list             List models"
+#|     # echo "  -i, --image            Image file (local)"
+#|     echo "  -m, --model <model>    Model (default: auto)"
+#|     echo "  -p, --private          Erase history after finished" # TODO remove added history only
+#|     echo "  -r, --reason <val>     Reasoning effort (off,none,minimal,low,on,medium,high,xhigh,on) (default: not set)"
+#|     echo "  -s, --system <prompt>  System prompt"
+#|     # echo "  -t, --tool <spec>      Define additional tools (\"default\" will enable default tools)"
+#|     echo "  -u, --url <url>        URL of server (default: $default_u)"
+#|     # [ -n "$1" ] || return
+#|     # echo
+#|     # echo "Default system prompt:"
+#|     # echo "$default_s"
+#|     # echo
+#|     # echo "Tool spec when \"default\" is specified:"
+#|     # echo "$toolsDefault"
+#| }
+#| 
+#| parse_opts(){
+#|     while [[ $# -ge 1 ]]; do
+#|         case "$1" in
+#|             (-[!-][!-]*)    _1=${1#?} ; shift ; set -- "-${_1%"${_1#?}"}" "-${_1#?}" "$@" ;;
+#|             (-a|--agent)    flag_a=1  ; shift ;;
+#|             (-e|--erase)    flag_e=1  ; shift ;;
+#|             (-h|--help)     flag_h=1  ; shift ;;
+#|             (-l|--list)     flag_l=1  ; shift ;;
+#|             (-p|--private)  flag_p=1  ; shift ;;
+#|             # (-c|--curlopts) opt_c="$2"; shift 2 ;;
+#|             # (-i|--image)    opt_i="$2"; shift 2 ;;
+#|             (-m|--model)    opt_m="$2"; shift 2 ;;
+#|             (-r|--reason)   opt_r="$2"; shift 2 ;;
+#|             (-s|--system)   opt_s="$2"; shift 2 ;;
+#|             (-u|--url)      opt_u="$2"; shift 2 ;;
+#|             # (-t|--tool)     [ "$2" = default ] && tools="$tools$NEWL$toolsDefault" || tools="$tools$NEWL$2"; shift 2 ;;
+#|             # (--continue)    flag_continue=1 ; shift ;;
+#|             # (--help-all)    flag_helpall=1  ; shift ;;
+#|             (*) prompt="$*" ; break ;;
+#|         esac
+#|     done
+#| }
+#| 
+#| # Variables
+#| 
+#| HISTFILE=~/.chat_hist
+#| 
+#| COLOR_TOOL=34
+#| COLOR_USER=33
+#| COLOR_REASON=35
+#| 
+#| tools_api='[]'
+#| tmp=$(mktemp -d)
+#| 
+#| # shellcheck disable=SC2016
+#| jqlib='
+#| # get reasoning chat kwargs
+#| def reason(x):if(x and(x|length))then(({off:"none",on:"medium"}[x]//x)|{reasoning_effort:.,enable_thinking:(.!="none")})else{}end;
+#| def r2:(.*100+.5|floor/100);
+#| '
+#| 
+#| # Functions
+#| 
+#| error(){ echo "Error: $*" >&2; exit 1; }
+#| clean(){ rm -f "$tmp/chat_"*; rmdir "$tmp" 2>/dev/null; [[ "$flag_p" ]] && rm -f "$HISTFILE"; return 0; }
+#| trap clean INT TERM EXIT
+#| 
+#| check_deps(){
+#|     local missing
+#|     for i in curl jq stdbuf; do
+#|         command -v "$i" >/dev/null || missing="$missing $i"
+#|     done
+#|     [[ "$missing" ]] && error "command not available:$missing"
+#|     return 0 # without this, this function returns nonzero even if the last command is "X && Y" and "Y" was not executed. note you must not omit the "0"
+#| }
+#| 
+#| show_models(){
+#|     local res
+#|     res=$(curl $opt_c -fs -H 'Content-Type: application/json' "$opt_u"/v1/models) || error "getting model list: server error"
+#|     # |sort_by(.id|ascii_downcase)
+#|     jq --argjson res "$res" -nr '$res|([.data[]|"\(.id)\(.aliases|if(length>0)then" (\(join(", ")))"else""end)\(if(.status)then(.status.value|if(.=="loaded")then" L"else""end)else" ?"end)"]|join("\n"))'
+#| }
+#| 
+#| # Usage: call_llm HISTFILE SSEFILE
+#| call_llm(){
+#|     [[ -f "$1" ]] || error "call_llm: histfile not found: $1"
+#|     jq -s --arg m "$opt_m" --arg r "$opt_r" --arg s "$opt_s" --argjson t "$tools_api" \
+#|         "$jqlib"'{model:$m,stream:true,tools:$t,chat_template_kwargs:reason($r),messages:[{role:"system",content:$s},.[]]}' \
+#|         "$1" > "$tmp/chat_req"
+#|     # cat "$tmp/chat_req"
+#|     # shellcheck disable=SC2016
+#|     local jq_parse_sse_print='foreach (inputs|if(startswith("data: {"))then(.[6:])else(empty)end|fromjson|.choices[0].delta) as $x ([false,false]; [.[1],$x.reasoning_content]; [(if $x.reasoning_content then "\u001b['"$COLOR_REASON"'m\($x.reasoning_content)\u001b[0m" else empty end),if(.[0]and(.[1]|not))then"\n"else empty end,$x.content//empty][])'
+#|     # shellcheck disable=SC2086
+#|     stdbuf -o0 curl $opt_c -fNs -H 'Content-Type: application/json' "$opt_u"/v1/chat/completions -d @"$tmp/chat_req" \
+#|         | stdbuf -i0 -o0 tee "$2" \
+#|         | stdbuf -i0 -o0 jq -Rrj --unbuffered "$jq_parse_sse_print"
+#| }
+#| 
+#| # Usage: parse_sse SSEFILE
+#| parse_sse_message(){
+#|     # shellcheck disable=SC2016
+#|     local jq_parse_sse='[inputs|if(startswith("data: {"))then(.[6:])else(empty)end|fromjson] | reduce (.[].choices[0].delta) as $x ({reasoning_content:"",content:"",tool_calls:[]}; (if($x.role)then(.role=$x.role)end|if($x.reasoning_content)then(.reasoning_content+=$x.reasoning_content)end|if($x.content)then(.content+=$x.content)end|if($x.tool_calls)then(.tool_calls+=$x.tool_calls)end))|(.tool_calls|=(group_by(.index)|map((.[0]|{index,id,type})+([.[].function]|{function:{name:([.[].name]|join("")),arguments:([.[].arguments]|join(""))}})))) | if(.tool_calls|length==0)then(del(.tool_calls))end | {role:"assistant",content:(.reasoning_content+.content)}+(if(.tool_calls)then{tool_calls}else{}end)'
+#|     jq -Rcr "$jq_parse_sse" "$1"
+#| }
+#| 
+#| # Usage: parse_sse_meta SSEFILE
+#| parse_sse_meta(){
+#|     jq -R 'inputs|if(startswith("data: {"))then(.[6:])else(empty)end|fromjson|if(.timings)then(.)else(empty)end|{model,timings:(.timings|{cache_n,prompt_per_second,prompt_n,prompt_ms,predicted_per_second,predicted_n,predicted_ms})}' "$1"
+#| }
+#| 
+#| merge_prompt_stdin(){
+#|     printf %s "$prompt"
+#|     if [ ! -t 0 ]; then
+#|         [ "$prompt" ] && printf "\n\n"
+#|         cat
+#|     fi
+#| }
+#| 
+#| # Main
+#| 
+#| main(){
+#|     parse_opts "$@"
+#|     [[ "$flag_h" ]] && { show_help; exit 0; }
+#|     check_deps
+#|     if [[ "$flag_l" ]]; then
+#|         show_models
+#|     elif [[ "$flag_a" ]]; then
+#|         :
+#|     else
+#|         [[ "$flag_e" ]] && rm -f "$HISTFILE"
+#|         merge_prompt_stdin | jq -Rsc '{role:"user",content:.}' >> "$HISTFILE"
+#|         call_llm "$HISTFILE" "$tmp/chat_sse"
+#|         parse_sse_message "$tmp/chat_sse" >> "$HISTFILE"
+#|         parse_sse_meta "$tmp/chat_sse" | jq -r "$jqlib"'"\nTIME: Model=\(.model), \(.timings|"PP=\(.prompt_per_second|r2)(\(.prompt_n)(\(.cache_n+.prompt_n))/\(.prompt_ms/1000|r2)), TG=\(.predicted_per_second|r2)(\(.predicted_n)/\(.predicted_ms/1000|r2))")"' >&2
+#|     fi
+#| }
+#| 
+#| main "$@"
 #- }}}
 
 
@@ -1410,33 +1517,54 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #- }}}
 
 
-####FILE +x bin/im-ascii {{{
+####FILE +x bin/im {{{
 #| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 image"; exit 1; }
-#| magick "$1" -geometry "$(($(tput cols) - 1))x" -colorspace Gray -colors 8 txt: | sed -n 's/\([0-9][0-9]*\),\([0-9][0-9]*\).*(\([0-9][0-9]*\).*/\1 \2 \3/p' | awk 'BEGIN{T="#+- "}{if($2%2<=0){if(y!=$2){print "";y=$2}v=($3/100)*length(T);v=v-(v%1);c=substr(T,v+1,1);printf c}}END{print ""}'
-#- }}}
-
-
-####FILE +x bin/im-diff {{{
-#| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 image1 image2 [fuzz%] [outfile]"; exit 1; }
-#| image1=$1
-#| image2=$2
-#| fuzz=${3:-10%}
-#| out=${4:-NULL:}
 #| 
-#| wh=$(magick identify -ping -format '%w %h' "$image1")
-#| w=${wh% *}
-#| h=${wh#* }
+#| L(){ echo "$*"; "$@"; }
+#| error(){ echo "Error: $*"; exit 1; }
 #| 
-#| ae=$(magick compare -fuzz "$fuzz" -metric AE \
-#|     \( -resize "${w}x${h}" "$image1" \) \
-#|     \( -resize "${w}x${h}" "$image2" \) \
-#|     "$out" 2>&1)
+#| im_ascii(){
+#|     img=${1:?Usage: im ascii IMAGE [XZOOM=188%]}
+#|     magick "$img" -scale ${2:-188%}x100% -geometry "$(($(tput cols) - 1))x$(($(tput lines) - 1))>" -colorspace Gray -colors 8 txt: | awk 'BEGIN{c[0]=" ";c[1]="-";c[2]="+";c[3]="#"}(NR>=2){a=index($0,",");x=substr($0,1,a-1);a=index($0,"(");v=int(substr($0,a+1,index($0,")")-a-1));v=(1<256)?v:255;if(x==0&&NR>=3){print""}printf"%s",c[int(v/64)]}END{print""}'
+#| }
 #| 
-#| echo "$w,$h,$ae"
-#| echo $(( ( 100 * ae ) / ( w * h ) ))
+#| im_diff(){
+#|     [ $# -lt 2 ] && error "Usage: $0 IMAGE1 IMAGE2 [OUTPUT=NULL:] [FUZZ=10%]"
+#|     img1=$1
+#|     img2=$2
+#|     out=${3:-NULL:}
+#|     fuzz=${4:-10%}
 #| 
+#|     wh=$(magick identify -ping -format '%w %h' "$img1")
+#|     w=${wh% *}
+#|     h=${wh#* }
+#| 
+#|     ae=$(magick compare -fuzz "$fuzz" -metric AE \
+#|         \( -resize "${w}x$h" "$img1" \) \
+#|         \( -resize "${w}x$h" "$img2" \) \
+#|         "$out" 2>&1)
+#| 
+#|     echo "w=$w, h=$h, ae(n,rate)=$ae"
+#| }
+#| 
+#| im_sixel(){
+#|     img=${1:?Usage: im sixel IMAGE [HEIGHT=100]}
+#|     magick "$img" -geometry "x${2:-100}" sixel:-
+#| }
+#| 
+#| im_tile(){
+#|     [ $# -lt 2 ] && error "Usage: im tile [IMAGE ...] OUTPUT"
+#|     for i in "$@"; do last="$i"; done
+#|     [ -f "$last" ] && error "output file $last already exists"
+#|     L montage -bordercolor white -border 20 -geometry x600 -tile 3x -fill red -label %f -family sans-serif -pointsize 16 "$@"
+#| }
+#| 
+#| cmds='ascii|diff|sixel|tile'
+#| cmd=${1:?Command not specified (expected one of: $cmds)}
+#| case "$cmd" in
+#|     (ascii|diff|sixel|tile) "im_$cmd" "$@" ;;
+#|     (*) echo "Unknown command: $cmd (expected one of: $cmds)" ;;
+#| esac
 #- }}}
 
 
@@ -1465,13 +1593,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| input=$*
 #| # echo "[$input]"
 #| rclip -f -t 30 "$input" 2>/dev/null | grep -v TensorList | sxiv -t -i -
-#- }}}
-
-
-####FILE +x bin/im-sixel {{{
-#| #!/bin/sh
-#| [ $# -eq 0 ] && { echo "Usage: $0 image [width]"; exit 1; }
-#| magick "$1" -geometry "x${2:-100}" sixel:-
 #- }}}
 
 

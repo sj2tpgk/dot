@@ -1,0 +1,47 @@
+#!/bin/sh
+
+L(){ echo "$*"; "$@"; }
+error(){ echo "Error: $*"; exit 1; }
+
+im_ascii(){
+    img=${1:?Usage: im ascii IMAGE [XZOOM=188%]}
+    magick "$img" -scale ${2:-188%}x100% -geometry "$(($(tput cols) - 1))x$(($(tput lines) - 1))>" -colorspace Gray -colors 8 txt: | awk 'BEGIN{c[0]=" ";c[1]="-";c[2]="+";c[3]="#"}(NR>=2){a=index($0,",");x=substr($0,1,a-1);a=index($0,"(");v=int(substr($0,a+1,index($0,")")-a-1));v=(1<256)?v:255;if(x==0&&NR>=3){print""}printf"%s",c[int(v/64)]}END{print""}'
+}
+
+im_diff(){
+    [ $# -lt 2 ] && error "Usage: $0 IMAGE1 IMAGE2 [OUTPUT=NULL:] [FUZZ=10%]"
+    img1=$1
+    img2=$2
+    out=${3:-NULL:}
+    fuzz=${4:-10%}
+
+    wh=$(magick identify -ping -format '%w %h' "$img1")
+    w=${wh% *}
+    h=${wh#* }
+
+    ae=$(magick compare -fuzz "$fuzz" -metric AE \
+        \( -resize "${w}x$h" "$img1" \) \
+        \( -resize "${w}x$h" "$img2" \) \
+        "$out" 2>&1)
+
+    echo "w=$w, h=$h, ae(n,rate)=$ae"
+}
+
+im_sixel(){
+    img=${1:?Usage: im sixel IMAGE [HEIGHT=100]}
+    magick "$img" -geometry "x${2:-100}" sixel:-
+}
+
+im_tile(){
+    [ $# -lt 2 ] && error "Usage: im tile [IMAGE ...] OUTPUT"
+    for i in "$@"; do last="$i"; done
+    [ -f "$last" ] && error "output file $last already exists"
+    L montage -bordercolor white -border 20 -geometry x600 -tile 3x -fill red -label %f -family sans-serif -pointsize 16 "$@"
+}
+
+cmds='ascii|diff|sixel|tile'
+cmd=${1:?Command not specified (expected one of: $cmds)}
+case "$cmd" in
+    (ascii|diff|sixel|tile) "im_$cmd" "$@" ;;
+    (*) echo "Unknown command: $cmd (expected one of: $cmds)" ;;
+esac

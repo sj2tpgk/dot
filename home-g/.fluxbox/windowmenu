@@ -1,14 +1,16 @@
 [begin]
-
 #  [MacroCmd {ResizeTo 49% 100%} {MoveTo 0% 0% TopLeft}]  ([[]  ])
 #  [MacroCmd {ResizeTo 49% 100%} {MoveTo 0% 0% TopRight}] ([  []])
 #  [maximize]                                             ([[  ]])
-  [maximize]        ([[  ]])
   [SetLayer Dock]   (Layer Dock)
   [SetLayer Top]    (Layer Top)
   [SetLayer Normal] (Layer Normal)
 
   [separator]       # Horizontal line
+  [MacroCmd {Stick} {Exec xprop -id $(xdotool getactivewindow) -f _NET_WM_STATE 32a -set _NET_WM_STATE _NET_WM_STATE_SKIP_TASKBAR}] (StickHide)
+  [stick]           # Show in all workspaces (全てのワークスペースで表示)
+
+  [separator]
 
 # [raise]           # Raise window to the top (最前面に)
 # [lower]           # Raise window to the bottom (最背面に)
@@ -30,11 +32,10 @@
 
   [separator]       # Horizontal line
 
+  [shade]           # Roll-up (バーに格納)
   [close]           # Close (閉じる)
 # [maximize]        # LeftClick=maximize, Middle=vertical, Right=horizontal (最大化)
 # [iconify]         # Minimize (最小化)
-  [shade]           # Roll-up (バーに格納)
-  [stick]           # Show in all workspaces (全てのワークスペースで表示)
 
 
 # [settitledialog]  # Change window's title
