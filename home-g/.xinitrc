@@ -55,6 +55,8 @@ export MYKBD="colemakdh"
 # no gtk3 scrollbar fade
 export GTK_OVERLAY_SCROLLING=0
 
+export MYKBD=colemakdh
+export PATH=~/bin:"$PATH"
 
 # wminit
 sh ~/script/wminit.sh
@@ -68,7 +70,7 @@ amixer set Master 40%
 # /usr/bin/syncthing & # use `systemctl --user enable --now syncthing`
 
 # Auto mount USB etc.
-udiskie --no-automount &
+# udiskie --no-automount &
 
 # Pulseaudio
 # /usr/bin/start-pulseaudio-x11
@@ -76,7 +78,8 @@ udiskie --no-automount &
 # exec openbox
 # exec icewm-session
 # exec icewm
-MYKBD=colemakdh SHELL=/bin/sh exec startfluxbox    # ~/.fluxbox/startup  will be executed
+# SHELL=/bin/sh
+exec startfluxbox    # ~/.fluxbox/startup  will be executed
 # exec pekwm
 # setxkbmap -layout "us,jp" && exec awesome
 # exec i3 -V >> ~/.config/i3/i3log-$(date +'%F-%k-%M-%S') 2>&1

@@ -9,12 +9,17 @@ max_brightness_file=$dir/max_brightness
 as_root() { if command -v sudo >/dev/null; then sudo "$@"; elif command -v doas >/dev/null; then doas "$@"; else echo 'need sudo or doas' >&2; fi }
 
 help() {
-    echo "Usage: $0 <brightness>" >&2
-    echo "<brightness> = 1, +2, -2 etc. Max $(cat $max_brightness_file)" >&2
-    echo 'You should add the following line to the very end of /etc/sudoers (via "sudo visudo")' >&2
-    echo "  ALL ALL=(ALL) NOPASSWD: /usr/bin/tee $brightness_file" >&2
-    echo "Or doas.conf:" >&2
-    echo "  permit nopass :wheel cmd /usr/bin/tee args $brightness_file" >&2
+    {
+        echo "Usage: $0 BRIGHTNESS"
+        echo
+        echo "BRIGHTNESS = 1, +2, -2 etc. Max $(cat $max_brightness_file)"
+        echo
+        echo 'You should add the following line to the very end of /etc/sudoers (via "sudo visudo")'
+        echo "  ALL ALL=(ALL) NOPASSWD: /usr/bin/tee $brightness_file"
+        echo
+        echo "Or doas.conf:"
+        echo "  permit nopass :wheel cmd /usr/bin/tee args $brightness_file"
+    } >&2
 }
 [ $# -eq 0 ] && { help; exit 1; }
 v=$1

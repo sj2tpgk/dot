@@ -1,0 +1,57 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use lib $ENV{RLWRAP_FILTERDIR};
+use RlwrapFilter;
+
+# Recommended in ~/.inputrc
+# "\t":   menu-complete
+# "\e[Z": menu-complete-backward
+
+# log to some other terminal, so rlwrap terminal not cluttered up
+# by any debug output - FIXME
+# my $DEBUG_TERMINAL = '/dev/pts/2';
+# open my $logfh, '>', $DEBUG_TERMINAL or die "aaaaaarrgh: $!\n";
+
+# Load completions for current command
+my $commandline = $ENV{RLWRAP_COMMAND_LINE};
+$commandline =~ s/^(\S*).*/$1/; # e.g. gosh
+my $comps_file = "$ENV{HOME}/.rlwrap/$commandline" . "_completions";
+open IN_TOP, $comps_file;
+my @words = ();
+while (<IN_TOP>) {
+    chomp;
+    push(@words, $_);
+}
+
+my $filter = RlwrapFilter->new;
+$filter->completion_handler(\&completion);
+$filter->run;
+
+sub completion {
+  my ($input, $prefix, @completions) = @_;
+  # @completions として、prefixマッチしたものが渡されている
+  # fuzzy を実現するには、母集団を自分で持つ必要がある
+
+  # print $logfh "I,$input, P,$prefix";
+  # print "\nI:$input, P:$prefix, #C=", scalar(@completions), ", \n";
+
+  # more complicated would be to use a lex-like scanner or Parser::MGC
+  # instead of this dumb regex against the input line, and even more
+  # complicated would be to return "exists" if the user has typed
+  # "file e" and is mashing tab, but that's more work
+
+  # TODO: keep previous result for performance
+  my $re = $prefix;
+  $re =~ s/(.)/$1.*/g;
+  # @completions = qw/exists isdirectory isfile/;
+  my @mycomps = qw//;
+  for (@words) { push(@mycomps, $_) if m/$re/; }
+  return @mycomps;
+
+  # if ($input =~ m/file\s+$/) {
+  #   @completions = qw/exists isdirectory isfile/;
+  # }
+
+  # return @completions;
+}

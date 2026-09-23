@@ -1,0 +1,5 @@
+define
+define-syntax
+define-macro
+define-method
+substring

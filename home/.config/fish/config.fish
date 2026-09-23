@@ -3,19 +3,11 @@
 # Misc {{{
 
 # Path
-set -xg PATH $HOME/bin $PATH
-set -xg PATH $HOME/localbin $PATH
-set -xg PATH $HOME/.local/bin $PATH
-set -xg SHELL /usr/bin/fish
+set -xg PATH $HOME/bin $HOME/.local/bin $PATH
 
 # Golang
 set -xg GOPATH $HOME/.go
 set -xg PATH   $GOPATH/bin $PATH
-
-# Keyboard
-# if [ (machineid) = c0c2 ]
-#     set -xg MYKBD "colemakdh"
-# end
 
 # Helpers
 function has; command -v $argv[1] >/dev/null 2>&1; end
@@ -104,9 +96,6 @@ if has w3m
 end
 
 # Editor
-# if has emacs
-#     set -xg EDITOR ec
-#     set -xg VISUAL ec
 if has nvim
     set -xg EDITOR nvim
     set -xg VISUAL nvim

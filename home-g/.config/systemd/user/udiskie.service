@@ -3,7 +3,7 @@ Description=udiskie daemon
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/udiskie
+ExecStart=/usr/bin/udiskie --no-automount
 Restart=always
 
 [Install]

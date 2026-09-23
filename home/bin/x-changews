@@ -1,0 +1,83 @@
+#!/bin/awk -f
+
+function help() {
+    print "Usage: ./changews -- OPTIONS ..."
+    print "  -e   move to empty workspaces (do nothing if all workspaces are non-empty)"
+    print "  -n   change to next workspace"
+    print "  -p   change to prev workspace"
+    print "  -s   skip empty workspaces"
+    print "  -z   skip workspace 0"
+    print "  -h   print this help"
+}
+
+
+BEGIN {
+    # Parse args
+    for (i=1; i<ARGC; i++) {
+        arg = ARGV[i]
+        ARGV[i] = ""
+        # print i ": " arg
+        if (arg !~ /^-[ehnpsz]+$/) {
+            print "Invalid argument: " arg
+            exit 1
+        }
+        for (j=2; j<=length(arg); j++) {
+            flags[substr(arg, j, 1)] = 1
+        }
+    }
+    # for (k in flags) { print "flag " k }
+    if (flags["h"]) {
+        help()
+        exit
+    } else if (!(flags["n"] || flags["p"] || flags["e"])) {
+        print "Specify one of: -e -n -p"
+        exit 1
+    }
+    # Workspace info
+    cmd = "wmctrl -d"
+    while ((cmd | getline) > 0) {
+        if ($2 == "*") { wsCurrent = $1 }
+        wsCount++
+    }
+    close(cmd)
+    # Window info
+    cmd = "wmctrl -l"
+    while ((cmd | getline) > 0) {
+        wsBusy[$2] = 1
+    }
+    close(cmd)
+    # Compute destination workspace
+    direction = flags["p"] ? -1 : 1
+    if (flags["z"]) { wsSkip[0] = 1 }
+    if (flags["e"]) {
+        for (i in wsBusy) { avoid[i] = 1 }
+        for (i in wsSkip) { avoid[i] = 1 }
+    } else if (flags["s"]) {
+        for (i=0; i<wsCount; i++) { avoid[i] = 1 }
+        for (i in wsBusy) { avoid[i] = 0 }
+        for (i in wsSkip) { avoid[i] = 1 }
+    }
+    wsDest = calc(wsCurrent, wsCount, direction, avoid)
+    # Go!
+    if (wsDest != -1) {
+        # print "wmctrl -s " wsDest
+        system("wmctrl -s " wsDest)
+    }
+    exit
+}
+
+function calc(wsCurrent, wsCount, direction, avoid,   i, wsDest) {
+    # for (i in avoid) { if (avoid[i]) { astr = astr i " " } }
+    # print "wsCurrent = " wsCurrent
+    # print "wsCount   = " wsCount
+    # print "direction = " direction
+    # print "avoid     = " astr
+    for (i=1; i<wsCount; i++) {
+        wsDest = (((wsCurrent + (i * direction)) % wsCount) + wsCount) % wsCount;
+        if (!avoid[wsDest]) {
+            return wsDest
+        }
+    }
+    return -1
+}
+

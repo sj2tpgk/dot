@@ -29,8 +29,8 @@ Mod4 u :Unclutter (layer=Normal)
 Mod4 o :ToggleCmd {ArrangeWindowsStackLeft (layer=Normal)} {ArrangeWindowsStackRight (layer=Normal)}
 # Mod4 o :ArrangeWindows (layer!=Top) (layer!=AboveDock) (layer!=Dock) (layer!=Desktop)
 
-Mod4 r       :Exec ~/bin/xx-movewin counterclock
-Mod4 shift r :Exec ~/bin/xx-movewin clock
+Mod4 r       :Exec xx-movewin counterclock
+Mod4 shift r :Exec xx-movewin clock
 # }}}
 ## Resizing windows {{{
 # Basic Bindings
@@ -85,7 +85,7 @@ OnRightGrip    Mouse3 :MacroCmd {Lower} {NextWindow {groups} (workspace=[current
 # Mod1 Shift Tab  :PrevWindow {groups} (workspace=[current])
 #
 # exclude windows in extreme layers (I place video etc. in those layers)
-Mod1 4          :Exec fluxbox-remote "NextWindow {groups} (workspace=[current]) (layer!=AboveDock) (layer!=Dock) (layer!=Desktop)"; sleep 0.05; xdotool key a
+Mod4 n          :Exec fluxbox-remote "NextWindow {groups} (workspace=[current]) (layer!=AboveDock) (layer!=Dock) (layer!=Desktop)"; sleep 0.05; xdotool key a
 #
 # Mod1 4          :Exec ~/script/nextwindow.pl; sleep 0.05; xdotool key a
 # workaround for fluxbox+xcape? problem
@@ -112,8 +112,8 @@ OnRightGrip    Mouse8       :StartTabbing
 # Cycle through tabs
 OnTitlebar Mouse4 :PrevTab
 OnTitlebar Mouse5 :NextTab
-F4                :NextTab
-Shift F4          :PrevTab
+F6                :NextTab
+Shift F6          :PrevTab
 # }}}
 ## Workspaces {{{
 # Commands:
@@ -121,38 +121,33 @@ Shift F4          :PrevTab
 #  TakeToNextWorkspace, TakeToPrevWorkspace, TakeToWorkspace N
 #  SendToNextWorkspace, SendToPrevWorkspace, SendToWorkspace N
 
-Mod1 2        :PrevWorkspace
-Mod1 3        :NextWorkspace
-Mod1 Shift 2  :TakeToPrevWorkspace
-Mod1 Shift 3  :TakeToNextWorkspace
+Shift F1      :TakeToPrevWorkspace
+Shift F2      :TakeToNextWorkspace
+Mod1 F1       :PrevWorkspace
+Mod1 F2       :NextWorkspace
 Mod4 Mouse5   :TakeToPrevWorkspace
 Mod4 Mouse4   :TakeToNextWorkspace
 
 # Change workspace (skipping empty workspaces)
-F1                    :Exec ~/script/changews -- -pzs
-F2                    :Exec ~/script/changews -- -nzs
-Shift F2              :Exec ~/script/changews -- -pzs
-Mod1 F2               :Workspace 1
-F9 F2                 :Workspace 1
+F1                    :Exec x-changews -- -pzs
+F2                    :Exec x-changews -- -nzs
 
-# OnDesktop Mouse5      :NextWorkspace
-# OnDesktop Mouse4      :PrevWorkspace
-OnDesktop Mouse5      :Exec ~/script/changews -- -nzs   # scroll up
-OnDesktop Mouse4      :Exec ~/script/changews -- -pzs   # scroll down
+OnDesktop Mouse5      :Exec x-changews -- -nzs   # scroll up
+OnDesktop Mouse4      :Exec x-changews -- -pzs   # scroll down
 
-OnWindowBorder Mouse5 :Exec ~/script/changews -- -nzs
-OnWindowBorder Mouse4 :Exec ~/script/changews -- -pzs
-OnLeftGrip     Mouse5 :Exec ~/script/changews -- -nzs
+OnWindowBorder Mouse5 :Exec x-changews -- -nzs
+OnWindowBorder Mouse4 :Exec x-changews -- -pzs
+OnLeftGrip     Mouse5 :Exec x-changews -- -nzs
 
-OnDesktop Mouse5      :Exec ~/script/changews -- -nzs   # scroll up
-OnDesktop Mouse4      :Exec ~/script/changews -- -pzs   # scroll down
+OnDesktop Mouse5      :Exec x-changews -- -nzs   # scroll up
+OnDesktop Mouse4      :Exec x-changews -- -pzs   # scroll down
 
-OnWindowBorder Mouse5 :Exec ~/script/changews -- -nzs
-OnWindowBorder Mouse4 :Exec ~/script/changews -- -pzs
-OnLeftGrip     Mouse5 :Exec ~/script/changews -- -nzs
-OnLeftGrip     Mouse4 :Exec ~/script/changews -- -pzs
-OnRightGrip    Mouse5 :Exec ~/script/changews -- -nzs
-OnRightGrip    Mouse4 :Exec ~/script/changews -- -pzs
+OnWindowBorder Mouse5 :Exec x-changews -- -nzs
+OnWindowBorder Mouse4 :Exec x-changews -- -pzs
+OnLeftGrip     Mouse5 :Exec x-changews -- -nzs
+OnLeftGrip     Mouse4 :Exec x-changews -- -pzs
+OnRightGrip    Mouse5 :Exec x-changews -- -nzs
+OnRightGrip    Mouse4 :Exec x-changews -- -pzs
 # }}}
 
 ## Misc {{{
@@ -214,15 +209,15 @@ XF86AudioPrev :Exec mocp --previous
 XF86AudioNext :Exec mocp --next
 
 # Brightness
-F9 1 :Exec ~/script/backlight.sh 0
-F9 2 :Exec ~/script/backlight.sh 1
-F9 3 :Exec ~/script/backlight.sh 2
-F9 4 :Exec ~/script/backlight.sh 3
-F9 5 :Exec ~/script/backlight.sh 4
-F9 6 :Exec ~/script/backlight.sh 5
-F9 7 :Exec ~/script/backlight.sh 8
-F9 8 :Exec ~/script/backlight.sh 11
-F9 9 :Exec ~/script/backlight.sh 15
+# F9 1 :Exec x-brightness 1
+F9 2 :Exec x-brightness 15
+F9 3 :Exec x-brightness 30
+F9 4 :Exec x-brightness 45
+F9 5 :Exec x-brightness 60
+F9 6 :Exec x-brightness 75
+F9 7 :Exec x-brightness 121
+F9 8 :Exec x-brightness 166
+F9 9 :Exec x-brightness 227
 
 # Toggle toolbar
 Mod4 t :Exec sh ~/bin/fluxbox/toggletoolbar.sh

@@ -16,7 +16,7 @@ COLOR_TOOL=34
 COLOR_REASON=35
 COLOR_STAT=0
 
-DATADIR=~/.local/share/chat2
+DATADIR=~/.cache/chat2
 
 # name:tool description:[param=[r|o]=[a|s|n]=param description[=array param=...]]
 TOOLDEF='
@@ -24,7 +24,7 @@ read:Read a file. For large files use offset (1-indexed line) and limit:path=r=s
 write:Write content to a file. Creates parent directories. Overwrites if exists:path=r=s=Path to the file:content=r=s=Content to write
 edit:Exact text replacement in a file. oldText must match exactly. Multiple non-overlapping edits supported:path=r=s=Path to the file:edits=r=a=Edits to make=[oldText=r=s=Exact text to find and replace:newText=r=s=Replacement text]
 bash:Execute a shell command. Returns stdout and stderr:command=r=s=Command to execute:timeout=o=n=Timeout in seconds
-read_image:Read image file and add to the current chat context. Works with multimodal model only:path=r=s=Path of image file
+read_image:Read image file and add to the current chat context. Works with multimodal models only:path=r=s=Path of image file
 # get_time:Get current time:timezone=r=s=timezone
 '
 
@@ -41,7 +41,7 @@ def ifs(c;v):if(c)then(v)else(empty)end;
 Tmp=
 SessionFile=
 HistoryFile=
-ToolApi='[]'
+ToolApi=
 
 ## Argument parsing
 
@@ -87,6 +87,7 @@ parse_opts(){
             (-u|--url)      opt_u="$2"; shift 2 ;;
             (--curlopts)    opt_curlopts="$2"; shift 2 ;;
             (-i|--image)    opts_i+=("$2"); shift 2 ;;
+            (-*) error "Bad option: $1" ;;
             (*) prompt="$*" ; break ;;
         esac
     done
@@ -129,7 +130,7 @@ save_history(){
 
 # Usage: parse_tools DEF
 parse_tools(){
-    echo "$1" | jq -Rs 'def parse:map(split("="))|{ type:"object", required:map(select(.[1]=="r")[0]), properties:map({key:.[0],value:if(.[2]=="a")then {type:"array",items:.[3:]|join("=")[1:-1]|split(":")|parse} else {type:{s:"string",n:"number"}[.[2]],description:.[3]} end })|from_entries };
+    echo "$1" | jq -Rs 'def parse:map(split("="))|{ type:"object", required:map(select(.[1]=="r")[0]), properties:map({key:.[0],value:if(.[2]=="a")then {type:"array",items:.[4:]|join("=")[1:-1]|split(":")|parse} else {type:{s:"string",n:"number"}[.[2]],description:.[3]} end })|from_entries };
     split("\n")|map(select(length>0 and test("^\\s*[^#]";""))|[match("(\\[[^]]+\\]|[^:])+";"g").string]|{type:"function",function:{name:.[0],description:.[1],parameters:.[2:]|parse}})'
 }
 
@@ -146,10 +147,10 @@ show_models(){
 call_llm(){
     local ssefile="$1"
     shift
-    jq -s --arg m "$opt_m" --arg r "$opt_r" --arg s "$opt_s" --argjson t "$ToolApi" \
+    jq -s --arg m "$opt_m" --arg r "$opt_r" --arg s "$opt_s" --argjson t "${ToolApi:-"[]"}" \
         "$JQLIB"'{model:$m,stream:true,tools:$t,chat_template_kwargs:reason($r),messages:[{role:"system",content:$s},.[]]}' \
         "$@" > "$Tmp/chat_req"
-    # cat "$Tmp/chat_req"
+    # cat "$Tmp/chat_req"; exit
 
     # Notes:
     # - {chat_template_kwargs:{reasoning_effort:xxx}} is needed for llama-server https://github.com/ggml-org/llama.cpp/issues/15130#issuecomment-3162984669
@@ -292,6 +293,7 @@ tool_read_image(){
 
     print_tool_header ReadImage "$path"
     [[ -r "$path" ]] || { echo "Error: file not found or is not a file: $path"; return; }
+    [[ "$(du -b "$path"|cut -f1)" -ge 700000 ]] && { echo "Error: image file $path is too large (is $(du -b "$path"|cut -f1) bytes, max allowed 700KB). Please downscale (be careful not to override the original image)"; return; }
 
     # note: this results in messages in the order assistant (with tool_calls) -> user (with image) -> tool, but it may be invalid in some models
     {
@@ -359,7 +361,7 @@ main(){
             [[ "$flag_a" && "$(jq length "$Tmp/chat_tool_calls")" -ge 1 ]] || break
             call_tool
         done
-        parse_sse_meta "$Tmp/chat_sse" | jq -r "$JQLIB"'"\n\u001b['"$COLOR_STAT"'mTIME: Model=\(.model), \(.timings|"PP=\(.prompt_per_second|r2)(\(.prompt_n)(\(.cache_n+.prompt_n))/\(.prompt_ms/1000|r2)), TG=\(.predicted_per_second|r2)(\(.predicted_n)/\(.predicted_ms/1000|r2))")"' >&2
+        parse_sse_meta "$Tmp/chat_sse" | jq -r "$JQLIB"'"\n\u001b['"$COLOR_STAT"'mSTAT: Model=\(.model), \(.timings|"PP=\(.prompt_per_second|r2)(\(.prompt_n)(\(.cache_n+.prompt_n))/\(.prompt_ms/1000|r2)), TG=\(.predicted_per_second|r2)(\(.predicted_n)/\(.predicted_ms/1000|r2))")"' >&2
         save_history
     fi
 }
