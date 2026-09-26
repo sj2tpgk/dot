@@ -4,3 +4,5 @@ When using git, always ask me for confirmation before committing, and do NOT run
 
 On each git commit message, add following note about AI use:
 Assisted-by: pi,llama.cpp,<MODEL NAME>
+
+Use the model_real_name tool to get <MODEL NAME>; do not guess it from the pi model id.

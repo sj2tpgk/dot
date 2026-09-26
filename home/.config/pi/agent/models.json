@@ -1,11 +1,13 @@
 {
   "providers": {
     "oai-compat": {
-      "baseUrl": "http://172.17.0.1:11434/v1",
+      "baseUrl": "http://localhost:11434/v1",
       "api": "openai-completions",
       "apiKey": "ollama",
       "models": [
-        { "id": "agent" }
+        { "id": "agent", "reasoning": true, "contextWindow": 98304 },
+        { "id": "agent-small", "reasoning": true, "contextWindow": 98304 },
+        { "id": "moe", "reasoning": true, "contextWindow": 65536 }
       ]
     }
   }
