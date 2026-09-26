@@ -398,14 +398,15 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| 
 #| ask pacman --noconfirm -S anthy atool bluez bluez-utils dash entr fish fzf git imagemagick jq man man-db mosh neovim nawk nmap openssh pacman-contrib pv ranger rsync tmux unzip pv w3m wget zip
 #| 
-#| ask pacman --noconfirm -S foot fyi grim keyd labwc ly pipewire swaybg swaylock wl-clipboard wlr-randr
+#| # xorg
+#| ask pacman --noconfirm -S openbox xterm xorg xorg-xinit arandr xclip picom rxvt-unicode feh tint2 lxappearance lxappearance-obconf xorg-xmessage wmctrl xdotool xss-lock
 #| 
-#| ask pacman --noconfirm -S claws-mail firefox mousepad mpv udiskie pcmanfm
+#| # wayland
+#| ask pacman --noconfirm -S foot fyi grim labwc ly swaybg swaylock wl-clipboard wlr-randr
+#| 
+#| ask pacman --noconfirm -S firefox keyd mousepad mpv pipewire udiskie pcmanfm
 #| 
 #| ask pacman --noconfirm -S docker
-#| 
-#| # xorg
-#| # ask pacman -S openbox xterm xorg xorg-xinit arandr xclip picom rxvt-unicode feh tint2 lxappearance lxappearance-obconf
 #- }}}
 
 
@@ -603,206 +604,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 
 
 ####FILE +x bin/chat {{{
-#| #!/bin/sh
-#| 
-#| NEWL='
-#| '
-#| 
-#| # TODO system prompt presets (translation, finding keywords, ocr, detailed/concise)
-#| default_u=localhost:11434; default_s='Respond concisely. Use lists instead of tables. Do not use bold or italic text. When coding, prefer shorter syntax and minimal comments. When writing math expressions, avoid using tex notations and make it easy to read in plaintext. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output'
-#| flag_e=; flag_h=; flag_l=; flag_n=; flag_continue=; flag_helpall=
-#| opt_c=; opt_i=; opt_m=; opt_r=; opt_s=$default_s; opt_u=$default_u
-#| prompt=''
-#| 
-#| # shellcheck disable=SC2016
-#| toolsDefault='ls:safe ls command:path=directory to inspect:l_flag=if true, pass -l flag to ls command:if [ ! -d "$dir" ]; then echo "Directory does not exist:: $dir"; else ls ${l_flag::+-l} -- "$dir"; fi
-#| grep:safe grep command:pat=pattern (extended regular expressions):path=path to grep (if directory, grep recursively):if [ ! -e "$path" ]; then echo "Path does not exist:: $path"; elif [ -f "$path" ]; then grep -Ee "$pat" -- "$path"; elif [ -d "$path" ]; then grep -rEe "$pat" -- "$path"; fi
-#| sed:safe sed command:quiet_flag=if true, pass --quiet flag to suppress automatic printing of pattern space:script=sed script:file=file to run sed on:if [ ! -e "$file" ]; then echo "File does not exist:: $path"; else sed ${quiet_flag::+-n} -e "$script" -- "$file"; fi'
-#| tools=
-#| 
-#| # TODO require tool confirm (e.g. by prefix its name with !)
-#| 
-#| while [ $# -ge 1 ]; do
-#|     case "$1" in
-#|         (-[!-][!-]*)  _1=${1#?} ; shift ; set -- "-${_1%"${_1#?}"}" "-${_1#?}" "$@" ;;
-#|         (-e|--erase)    flag_e=1  ; shift ;;
-#|         (-h|--help)     flag_h=1  ; shift ;;
-#|         (-l|--list)     flag_l=1  ; shift ;;
-#|         (-n|--noout)    flag_n=1  ; shift ;;
-#|         (-c|--curlopts) opt_c="$2"; shift 2 ;;
-#|         (-i|--image)    opt_i="$2"; shift 2 ;;
-#|         (-m|--model)    opt_m="$2"; shift 2 ;;
-#|         (-r|--reason)   opt_r="$2"; shift 2 ;;
-#|         (-s|--system)   opt_s="$2"; shift 2 ;;
-#|         (-u|--url)      opt_u="$2"; shift 2 ;;
-#|         (-t|--tool)     [ "$2" = default ] && tools="$tools$NEWL$toolsDefault" || tools="$tools$NEWL$2"; shift 2 ;;
-#|         (--continue)    flag_continue=1 ; shift ;;
-#|         (--help-all)    flag_helpall=1  ; shift ;;
-#|         (*) prompt="$*" ; break ;;
-#|     esac
-#| done
-#| 
-#| # echo "flag_e=[$flag_e] flag_h=[$flag_h] flag_l=[$flag_l] flag_n=[$flag_n] opt_m=[$opt_m] opt_u=[$opt_u] opt_s=[$opt_s] prompt=[$prompt]"; exit
-#| 
-#| help(){
-#|     basename0=$(basename "$0")
-#|     echo "Usage: $basename0 [options ...] [prompt ...]"
-#|     echo "       cmd | $basename0 [options ...]"
-#|     echo
-#|     echo "Options:"
-#|     echo "  -c, --curlopts <opts>  Curl options (splitted at spaces)"
-#|     echo "      --continue         Continue upon previous tool calling"
-#|     echo "  -e, --erase            Erase history before starting"
-#|     echo "  -h, --help             Help"
-#|     echo "      --help-all         Help (extended)"
-#|     echo "  -l, --list             List models"
-#|     echo "  -i, --image            Image file (local)"
-#|     echo "  -m, --model <model>    Model (default: auto)"
-#|     echo "  -n, --noout            No chat output file (still create history)"
-#|     echo "  -r, --reason <val>     Reasoning effort (off,none,minimal,low,on,medium,high,xhigh,on) (default: not set)"
-#|     echo "  -s, --system <prompt>  System prompt"
-#|     echo "  -t, --tool <spec>      Define additional tools (\"default\" will enable default tools)"
-#|     echo "  -u, --url <url>        URL of server (default: $default_u)"
-#|     [ -n "$1" ] || return
-#|     echo
-#|     echo "Default system prompt:"
-#|     echo "$default_s"
-#|     echo
-#|     echo "Tool spec when \"default\" is specified:"
-#|     echo "$toolsDefault"
-#| }
-#| 
-#| error(){
-#|     echo "Error: $*" >&2; exit 1
-#| }
-#| 
-#| 
-#| ## Various checks
-#| 
-#| missing=
-#| for i in curl jq stdbuf; do
-#|     if ! command -v "$i" >/dev/null; then
-#|         missing="$missing $i"
-#|     fi
-#| done
-#| [ "$missing" ] && error "command not available:$missing"
-#| 
-#| [ "$flag_h" ] && { help; exit 0; }
-#| [ "$flag_helpall" ] && { help all; exit 0; }
-#| 
-#| case "$opt_r" in ("") ;; (off|none|minimal|low|on|medium|high|xhigh) ;; (*) error "Bad reasoning effort" ;; esac
-#| 
-#| # shellcheck disable=SC2086
-#| res=$(curl $opt_c -fs -H 'Content-Type: application/json' "$opt_u"/v1/models) || error "getting model list: server error"
-#| 
-#| [ "$flag_l" ] && { jq --argjson res "$res" -nr '$res|([.data[]|"\(.id)\(.aliases|if(length>0)then" (\(join(", ")))"else""end)\(.status.value|if(.=="loaded")then" L"else""end)"]|join("\n"))'; exit 0; }
-#| 
-#| jq --argjson res "$res" --arg m "$opt_m" -n '$res|halt_error(if(($m|length==0)or([.data[]|[.id,(.aliases//[])[]][]]|index($m)))then 0 else 1 end)' >/dev/null 2>&1 || error "model \"$opt_m\" is not available"
-#| 
-#| model="$opt_m"
-#| 
-#| 
-#| ## Tools
-#| 
-#| tools_api=$(echo "$tools" | jq -R 'select(length>0)|[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{type:"function",function:{name:.[0],description:.[1],parameters:.[2:-1]|{type:"object",required:[.[]|split("=")[0]],properties:[.[]|split("=")|{key:.[0],value:{type:"string",description:.[1]}}]|from_entries}}}' | jq -s .)
-#| tools_int=$(echo "$tools" | jq -R 'select(length>0)|[sub("::";"=x=x=";"g")|split(":")[]|sub("=x=x=";":";"g")]|{key:.[0],value:{flags:"",cmd:.[-1]}}' | jq -s 'from_entries')
-#| 
-#| # printf "tools_api=%s\ntools_int=%s\n" "$tools_api" "$tools_int" >&2; exit
-#| 
-#| # tools='[{
-#| #    "type": "function",
-#| #    "function": {
-#| #        "name": "get_time",
-#| #        "description": "Get current time",
-#| #        "parameters": {
-#| #            "type": "object",
-#| #            "properties": {
-#| #                "timezone": { "type": "string", "description": "timezone" }
-#| #            },
-#| #            "required": ["timezone"]
-#| #        }
-#| #    }
-#| # }]'
-#| 
-#| 
-#| ## Build query
-#| 
-#| histfile=${TMPDIR:-/tmp}/chat-hist
-#| [ "$flag_e" ] && rm -f "$histfile"
-#| touch "$histfile"
-#| 
-#| if [ ! "$flag_continue" ]; then
-#|     if [ -t 0 ]; then printf %s "$prompt"; else cat; fi \
-#|         | jq -Rs '{role:"user",content:.}' \
-#|         >> "$histfile"
-#|     if [ "$opt_i" ]; then
-#|         [ -e "$opt_i" ] || error "Image file does not exist: $opt_i"
-#|         # Example from docs uses content:[{type:text,..},{type:image_url,..}] form, but it seems separate message entries also work
-#|         # Note: \n in image_url is not allowed at least in llama-server (e.g. "data:image/jpeg;base64,xxx...yyy\nzzz"). Use base64's --wrap flag (or tr -d '\n') to convert to a single line string
-#|         base64 --wrap=0 "$opt_i" \
-#|             | jq -Rs '{role:"user",content:[{"type":"image_url","image_url":{"url":("data:image/jpeg;base64,"+.)}}]}' \
-#|             >> "$histfile"
-#|     fi
-#| fi
-#| 
-#| outdir=$HOME/.cache/chat/
-#| mkdir -p "$outdir"
-#| outfile="$outdir"/chat-"$(date +%Y%m%d-%H%M%S)".txt
-#| [ "$flag_n" ] && outfile=${TMPDIR:-/tmp}/chat-out
-#| {
-#|     jq -r 'if .content then "<\(.role)>\n\(.content)\n" else empty end' "$histfile"
-#|     printf "<assistant>\n"
-#| } > "$outfile"
-#| 
-#| cleanup(){ [ ! "$flag_n" ] || rm -f "$outfile"; }
-#| trap cleanup INT TERM EXIT
-#| 
-#| 
-#| ## Main API call
-#| 
-#| # note: avoid including arbitrarily large strings in command parameter (use pipe instead)
-#| # note: {chat_template_kwargs:{reasoning_effort:xxx}} is needed for llama-server https://github.com/ggml-org/llama.cpp/issues/15130#issuecomment-3162984669
-#| # note: reasoning_effort for gpt-oss, enable_thinking for qwen3.6
-#| # note: 'Content-Type: application/json' is important, otherwise the server (cpp-httplib) interprets the request body as a query string (key=val&...), which causes error in router mode
-#| 
-#| # shellcheck disable=SC2016,SC2086
-#| jq -s --arg m "$model" --arg r "$opt_r" --arg s "$opt_s" --argjson t "$tools_api" \
-#|     '({off:"none",on:"medium"}[$r] // $r) as $r|{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}+(if($r|length>0)then{"chat_template_kwargs":{reasoning_effort:$r,enable_thinking:(if($r=="none")then false else true end)}}else{}end)' \
-#|     "$histfile" \
-#|     | stdbuf -o0 curl $opt_c -fNs -H 'Content-Type: application/json' "$opt_u"/v1/chat/completions -d @- \
-#|     | stdbuf -i0 -o0 jq -Rcj --unbuffered 'def r2:(.*100+.5|floor/100);foreach (inputs|if startswith("data: {") then .[6:] else empty end|fromjson) as $x ([null];[$x,.[0]];.)|. as [$x,$y]|(try $y.choices[].delta.reasoning_content catch false) as $pr|if $x.timings then [(if $pr then "\u001b[0m\n" else empty end),"\nTIME: Model=",$x.model,", ",($x.timings|"PP=\(.prompt_per_second|r2)(\(.prompt_n)/\(.prompt_ms/1000|r2)), TG=\(.predicted_per_second|r2)(\(.predicted_n)/\(.predicted_ms/1000|r2))"),"\n"][] else ($x.choices[].delta|if .reasoning_content then .reasoning_content|[(if $pr then empty else "\u001b[35m" end),.][] else (if .content then .content elif .tool_calls then .tool_calls[0]|((if .id then "TOOL: \(.function.name) " else "" end)+.function.arguments) else empty end)|[(if $pr then "\u001b[0m\n" else empty end),.][] end) end' \
-#|     | stdbuf -i0 -o0 tee -a "$outfile"
-#| 
-#| 
-#| #"\nTIME: ",($x.timings|{model:$x.model,prompt_ms,predicted_ms,predicted_n,predicted_per_second}),"\n"
-#| [ -f "$outfile" ] || { printf "\n\033[0m"; error "aborted"; }
-#| 
-#| # shellcheck disable=SC2016
-#| tac "$outfile" | awk -v a="$(printf '\033[35m')" -v b="$(printf '\033[0m')" '/^(TIME|TOOL): /{next}/^<assistant>$/{exit}index($0,b){f=1}(!f){print}index($0,a){f=0}' | tac \
-#|     | jq -Rs '{role:"assistant",content:.}' \
-#|     >> "$histfile"
-#| 
-#| 
-#| ## Tool call
-#| 
-#| tool_call=$(sed -n 's/^TOOL: //p' "$outfile")
-#| if [ "$tool_call" ]; then
-#|     tool_cmd=$(echo "$tool_call" | jq -rR --argjson t "$tools_int" 'split(" ")|[.[0],(.[1:]|join(" ")|fromjson|[to_entries[]|"\(.key|@sh)=\(.value|@sh)"]|join(" "))]|"env \(.[1]) sh -c \($t[.[0]].cmd|@sh)"')
-#|     tool_result=$(eval "$tool_cmd" 2>&1)
-#|     printf "\ncmd:  %s\nout:  %s\n\n" "$tool_cmd" "$tool_result" >&2
-#|     id=$(date +"tc_%Y%m%d_%H%M%S")
-#|     printf %s "$tool_call" | jq -Rsr --arg id "$id" 'split(" ")|{role:"assistant",tool_calls:[{id:$id,type:"function",function:{name:.[0],arguments:(.[1:]|join(" "))}}]}' >> "$histfile"
-#|     printf %s "$tool_result" | jq -Rsr --arg id "$id" '{role:"tool",tool_call_id:$id,content:.}' >> "$histfile"
-#|     # fold consequtive role=assistant
-#|     jq -s '{a:[],b:.}|until(.b|length==0;if((.b|length>=2)and(.b[0].role=="assistant")and(.b[1].role=="assistant"))then{a:(.a+[.b[0]+.b[1]]),b:.b[2:]}else{a:(.a+.b[:1]),b:.b[1:]}end)|.a[]' "$histfile" > "$histfile.1"
-#|     mv -f "$histfile.1" "$histfile"
-#|     "$0" -u "$opt_u" -m "$opt_m" --continue "${flag_n:+-n}"
-#| fi
-#| 
-#- }}}
-
-
-####FILE +x bin/chat2 {{{
 #| #!/bin/bash -e
 #| 
 #| # TODO compaction
@@ -945,7 +746,9 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     local res
 #|     # shellcheck disable=SC2086
 #|     res=$(curl -fs -H 'Content-Type: application/json' $opt_curlopts "$opt_u"/v1/models) || error "getting model list: server error"
-#|     jq --argjson res "$res" -nr '$res|([.data[]|"\(.id)\(.aliases|if(length>0)then" (\(join(", ")))"else""end)\(if(.status)then(.status.value|if(.=="loaded")then" L"else""end)else" ?"end)"]|join("\n"))'
+#|     jq --argjson res "$res" -nr '$res|([.data[]|([.id,.aliases[]]|.[0]+(.[1:]|if(length>0)then" (\(join(",")))"else""end))+(if(.status)then(.status.value|if(.=="loaded")then"\tL"else""end)else"\t?"end)]|join("\n"))'
+#|     # fish config for model name completion:
+#|     # complete -c chat -e; complete -c chat -s m -f -r -k -a '(string replace -r " [(][^)]*[)]" "" (eval (commandline -b) -l -l))'
 #| }
 #| 
 #| # Usage: call_llm SSEFILE JSONLFILE ...
@@ -1814,26 +1617,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #- }}}
 
 
-####FILE +x bin/imgsearch {{{
-#| #!/bin/sh
-#| 
-#| input=$*
-#| # echo "[$input]"
-#| rclip -f -t 30 "$input" 2>/dev/null | grep -v TensorList | sxiv -t -i -
-#- }}}
-
-
-####FILE +x bin/install-tools {{{
-#| #!/bin/sh
-#| 
-#| if command -v pacman >/dev/null; then
-#|     pacman -S tmux vim fish git ranger
-#| elif command -v apt >/dev/null; then
-#|     apt install tmux vim fish git ranger
-#| fi
-#- }}}
-
-
 ####FILE +x bin/l {{{
 #| #!/bin/sh
 #| 
@@ -1969,150 +1752,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| ## [[ "$(f echo a --- b -- c d)"   == "a c d b" ]] || echo fail
 #| #
 #| #f "$@"
-#- }}}
-
-
-####FILE +x bin/lft {{{
-#| #!/bin/sh
-#| 
-#| [ "$MYKBD" = colemakdh ] && flag=a || a=""
-#| 
-#| # shellcheck disable=SC2016
-#| lfrc='
-#| set mouse
-#| set cursorpreviewfmt "" # cursor in preview pane "\033[7;2m"
-#| 
-#| map s shell-wait
-#| map S $$SHELL
-#| map x !$f
-#| 
-#| map H jump-prev
-#| map L jump-next
-#| 
-#| map <enter> open
-#| map O &xdg-open $fx
-#| 
-#| map r
-#| map a rename
-#| # map I :rename; cmd-home
-#| map A :rename; cmd-end
-#| map C :rename; cmd-end; cmd-delete-home
-#| 
-#| map w $tmux -L lf neww $SHELL
-#| map S $tmux -L lf neww $SHELL
-#| 
-#| cmd open ${{
-#|     tmux -L lf neww ${VISUAL:-EDITOR} $fx
-#| }}
-#| 
-#| map <c-z> $kill -STOP "$PPID"
-#| map <f-7> push &mkdir<space>-p<space>
-#| map <f-8> trash
-#| 
-#| map zt push &touch<space>
-#| map zm push &mkdir<space>-p<space>
-#| map zd delete
-#| 
-#| map on :set sortby natural; set info
-#| map os :set sortby size; set info size
-#| map ot :set sortby time; set info time
-#| map oa :set sortby atime; set info atime
-#| map oc :set sortby ctime; set info ctime
-#| map oe :set sortby ext; set info
-#| 
-#| # trash command
-#| cmd trash %set -f; mv $fx ~/.trash
-#| %mkdir -p ~/.trash
-#| 
-#| # delete command
-#| cmd delete ${{
-#|     set -f # disable globbing
-#|     printf "$fx\n"
-#|     printf "delete? [y/n]"
-#|     read ans
-#|     [ "$ans" = "y" ] && rm -rf $fx
-#| }}
-#| 
-#| # extract the current file with the right command
-#| # (xkcd link: https://xkcd.com/1168/)
-#| cmd extract ${{
-#|     set -f
-#|     atool --list --each -- $fx
-#|     atool --extract --each -- $fx
-#| }}
-#| 
-#| # compress current file or selected files with tar and gunzip
-#| cmd tar ${{
-#|     set -f
-#|     mkdir $1
-#|     cp -r $fx $1
-#|     tar czf $1.tar.gz $1
-#|     rm -rf $1
-#| }}
-#| 
-#| # compress current file or selected files with zip
-#| cmd zip ${{
-#|     set -f
-#|     mkdir $1
-#|     cp -r $fx $1
-#|     zip -r $1.zip $1
-#|     rm -rf $1
-#| }}
-#| '
-#| 
-#| lfrc="
-#| $lfrc
-#| map $(x=${flag:+k}; echo ${x:-h}) updir
-#| map $(x=${flag:+n}; echo ${x:-j}) down
-#| map $(x=${flag:+e}; echo ${x:-k}) up
-#| map $(x=${flag:+i}; echo ${x:-l}) open
-#| map $(x=${flag:+K}; echo ${x:-H}) jump-prev
-#| map $(x=${flag:+I}; echo ${x:-L}) jump-next
-#| map $(x=${flag:+N}; echo ${x:-J}) half-down
-#| map $(x=${flag:+E}; echo ${x:-K}) half-up
-#| map $(x=${flag:+j}; echo ${x:-n}) search-next
-#| map $(x=${flag:+J}; echo ${x:-N}) search-prev
-#| map $(x=${flag:+L}; echo ${x:-I}) :rename; cmd-home
-#| "
-#| 
-#| # shellcheck disable=SC2016
-#| tmuxconf='
-#| # Shell
-#| set -g default-shell /bin/sh
-#| set -g default-command "SHELL=$SHELL exec lf -config \"$MYLF_LFRC\"" # without exec, pane_current_command remains $SHELL
-#| 
-#| # Mouse
-#| # set -g mouse on
-#| # bind -n WheelDownPane  send Down
-#| # bind -n WheelUpPane    send Up
-#| # bind -n MouseDown1Pane send right
-#| # bind -n MouseUp1Pane   send left
-#| 
-#| # We expect files are opened from lf in a new tmux window
-#| bind    d display -p "#{pane_current_command} #W #I"
-#| bind -n T   if "test \"#{pane_current_command}\" = lf" "neww"         "send T"
-#| bind -n Q   if "test \"#{pane_current_command}\" = lf" "kill-session" "send Q"
-#| bind -n Tab if "test \"#{pane_current_command}\" = lf" "next"         "send Tab"
-#| 
-#| # Status
-#| set -g status-style                 bold,fg=white,bg=black
-#| set -g status-position              top
-#| set -g status-justify               right
-#| set -g status-left                  "[ LF File Manager ]"
-#| set -g status-left-length           25
-#| set -g status-right                 ""
-#| set -g window-status-current-style  fg=black,bg=green
-#| set -g window-status-format         " #I#{s/^lf$//:window_name} "
-#| set -g window-status-current-format " #I#{s/^lf$//:window_name} "
-#| '
-#| 
-#| export MYLF_LFRC=/tmp/mylfrc
-#| echo "$lfrc" > "$MYLF_LFRC"
-#| 
-#| export MYLF_TMUXCONF=/tmp/mylftmuxconf
-#| echo "$tmuxconf" > "$MYLF_TMUXCONF"
-#| 
-#| exec tmux -L lf -f "$MYLF_TMUXCONF" new
 #- }}}
 
 
@@ -4315,13 +3954,86 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 ####FILE +x bin/x-brightness {{{
 #| #!/bin/sh
 #| 
-#| for dir in /sys/class/backlight/backlight /sys/class/backlight/intel_backlight; do
-#|     [ -d "$dir" ] && break
-#| done
+#| usage(){
+#|     echo "\
+#| Usage: $0 DIR EXP query
+#|        $0 DIR EXP set ARG1 ARG2
+#| 
+#| DIR can be \"-\" for auto discovery
+#| EXP is 1 or 2
+#| ARG1 is - or + or none
+#| ARG2 is a number in 0-100
+#|   - or +  = relative change
+#| 
+#| Query output is 0-100
+#| This does NOT check whether DIR is a directory or ARG is in correct format
+#| 
+#| For sudo, add the following line with \"sudo visudo\" (adjust sysfs path):
+#|   ALL ALL=(ALL) NOPASSWD: /usr/bin/tee /sys/class/backlight/backlight/brightness
+#| 
+#| # note sudo's NOPASSWD won't work if there is a duplicate slash in tee argument
+#| # note sudo's NOPASSWD must be in the last line
+#| 
+#| For doas, add to doas.conf:
+#|   permit nopass :wheel cmd /usr/bin/tee args /sys/class/backlight/backlight/brightness"
+#|     exit 1
+#| }
+#| 
+#| as_root() { if command -v sudo >/dev/null; then sudo "$@"; elif command -v doas >/dev/null; then doas "$@"; else echo 'need sudo or doas' >&2; fi }
+#| 
+#| dir=${1%/}
+#| exp=$2
+#| op=$3
+#| 
+#| case "$dir" in
+#|     (-)
+#|         for i in /sys/class/backlight/backlight /sys/class/backlight/intel_backlight; do
+#|             if [ -d "$i" ]; then
+#|                 dir=$i
+#|                 break
+#|             fi
+#|         done ;;
+#| esac
+#| 
 #| brightness_file=$dir/brightness
 #| max_brightness_file=$dir/max_brightness
 #| 
-#| as_root() { if command -v sudo >/dev/null; then sudo "$@"; elif command -v doas >/dev/null; then doas "$@"; else echo 'need sudo or doas' >&2; fi }
+#| read -r cur < "$brightness_file"
+#| read -r max < "$max_brightness_file"
+#| 
+#| case "$exp" in
+#|     (1) curp100=$((cur * 10000 / max)) ;;
+#|     # (2) curp=$(((10000 - (100 - (100 * cur / max)) * (100 - (100 * cur / max))) / 100)) ;;
+#|     (2) curp100=$((((2000000 * cur / max) - (1000000 * cur * cur / max / max)) / 100)) ;;
+#|     (*) usage ;;
+#| esac
+#| 
+#| case "$op" in
+#|     (query) echo "$((curp100 / 100))" ;;
+#|     (set)
+#|         arg1=$4
+#|         arg2=$5
+#|         case "$arg1" in
+#|             (-) tgtp100=$((curp100 - arg2 * 100)) ;;
+#|             (+) tgtp100=$((curp100 + arg2 * 100)) ;;
+#|             (*) tgtp100=$((arg2 * 100)) ;;
+#|         esac
+#|         case "$exp" in
+#|             (1) tgt=$((tgtp100 * max / 10000)) ;;
+#|             (2) tgt=$(awk -v tgtp100="$tgtp100" -v max="$max" 'BEGIN{print int(max*(100-sqrt(10000-tgtp100))/100)}') ;;
+#|         esac
+#|         if [ "$tgt" -lt 1 ]; then tgt=1; elif [ "$tgt" -gt "$max" ]; then tgt=$max; fi
+#|         echo "$tgt" | as_root /usr/bin/tee "$brightness_file" >/dev/null
+#|         ;;
+#|     (*) usage ;;
+#| esac
+#| exit
+#| for dir in /sys/class/backlight/backlight /sys/class/backlight/intel_backlight; do
+#|     [ -d "$dir" ] && break
+#| done
+#| 
+#| brightness_file=$dir/brightness
+#| max_brightness_file=$dir/max_brightness
 #| 
 #| help() {
 #|     {
@@ -4450,169 +4162,6 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #- }}}
 
 
-####FILE +x bin/x-gestures {{{
-#| #!/bin/sh
-#| pkill -x lisgd
-#| lisgd -d /dev/input/event1 \
-#|     -g '1,LR,T,*,R,pkill -x -SIGUSR2 wvkbd-mobintl' \
-#|     -g '1,RL,T,*,R,pkill -x -SIGUSR1 wvkbd-mobintl' \
-#|     -g '1,UD,R,*,P,~/bin/x-brightness -10' \
-#|     -g '1,DU,R,*,P,~/bin/x-brightness +10' \
-#|     -g '2,UD,T,M,R,swaymsg kill' \
-#|     -g '1,UD,T,*,R,~/bin/x-run'
-#- }}}
-
-
-####FILE +x bin/x-mute {{{
-#| #!/bin/sh
-#| # Usage: ./mute
-#| pactl set-sink-mute @DEFAULT_SINK@ toggle
-#- }}}
-
-
-####FILE +x bin/x-picom {{{
-#| #!/bin/bash
-#| 
-#| # To detach:
-#| #   ./x-picom -b
-#| 
-#| pkill --exact picom
-#| 
-#| picom_args=(
-#|     --config /dev/null         # no default config
-#|     --no-fading-destroyed-argb # prevent urxvt window from flashing on closing
-#|     --no-fading-openclose      # not working? use .config/compton.conf
-#|     --xrender-sync-fence       # Avoid "keyboard/mouse lag"; actually the display is not redrawing
-#|     --backend xrender          # "xrender" is less laggy than "glx"?
-#|     --vsync                    # Avoid tearing
-#|     -I1 -O1                    # No fading (workaround)
-#| 
-#|     # no shadow for maximized windows, unfocused windows and menu
-#|     # --shadow-exclude "(widthb > $wsmall || heightb > $hsmall) || !focused" # || (WM_WINDOW_ROLE@:s *= "fluxbox-menu")'
-#|     --shadow-exclude "!(window_type *= \"menu\") && (focused || !focused)"
-#| )
-#| 
-#| exec picom "${picom_args[@]}" "$@"
-#- }}}
-
-
-####FILE +x bin/x-run {{{
-#| #!/bin/sh
-#| 
-#| b="#000000dd"
-#| f="#00bbdd"
-#| hb="#333333"
-#| # pkill -x -SIGUSR2 wvkbd-mobintl
-#| # bemenu-run -i -l20 --scrollbar auto --counter always -W.3 --nb $b --ab $b --tf $f --hf $f --fbf $f --fbb $hb --hb $hb --fn "Noto Sans Mono 10"
-#| cd "$(dirname "$0")"/rundir
-#| cmd=$(find . -maxdepth 1 -not -type d | sed 's#^..##' | LC_ALL=C sort | bemenu -i -l20 -p ">" --scrollbar auto -W.33 --nb $b --ab $b --tf $f --hf $f --fbf "#ff3333" --fbb $hb --hb $hb --fn "Noto Sans Mono 33")
-#| cwd=$(pwd)
-#| cd ~
-#| case "$cmd" in
-#|     (*@) sh -c "${cmd%@}" ;;
-#|     ("") : ;;
-#|     (*) sh -c "$cwd/$cmd" & ;;
-#| esac
-#| # pkill -x -SIGUSR1 wvkbd-mobintl
-#- }}}
-
-
-####FILE +x bin/x-sleep {{{
-#| #!/bin/sh
-#| 
-#| sync # Prevent data loss on potential disk disconnection (esp. USB drive)
-#| 
-#| case "$1" in
-#|     (""|suspend) cmd=suspend ;;
-#|     (hibernate) cmd=hibernate ;;
-#|     (*) echo "Bad command: $1"; exit 1 ;;
-#| esac
-#| 
-#| bgopt=-i
-#| bg=~/.config/background1.jpg
-#| if [ ! -f "$bg" ]; then
-#|     bg=~/.config/background.jpg
-#|     if [ ! -f "$bg" ]; then
-#|         bgopt=-c
-#|         bg=888888
-#|     fi
-#| fi
-#| 
-#| swaylock $bgopt "$bg" & sleep .1 && systemctl "$cmd"
-#- }}}
-
-
-####FILE +x bin/x-status {{{
-#| #!/bin/sh
-#| 
-#| read bat < /sys/class/power_supply/rk817-battery/capacity
-#| read sta < /sys/class/power_supply/rk817-battery/status
-#| case "$sta" in
-#|     (Charging)         sta=+ ;;
-#|     (Full|Discharging) sta=  ;;
-#|     (*)                sta=? ;;
-#| esac
-#| 
-#| vol=$(pactl get-sink-volume @DEFAULT_SINK@)
-#| vol=${vol% / *}; vol=${vol##* }
-#| 
-#| read br  < /sys/class/backlight/backlight/brightness
-#| read brm < /sys/class/backlight/backlight/max_brightness
-#| br=$((100 * br / brm))
-#| 
-#| dt=$(date +'%Y-%m-%d (%a) %H:%M:%S')
-#| 
-#| #net=$(echo $(ip a | sed -n '/state UP/s/^[^ ]* \([^ :]*\).*/\1/p'))
-#| net=$(echo $(ip -o a | awk '(!/ lo /)&&(!/ inet6 /){if(!a[$2]++){print $2}sub("/.*","",$4);print $4}'))
-#| #net=${net:--}
-#| 
-#| printf '%s  %s :%s *%s  %s\n' "$net" "[$sta$bat%]" "$vol" "$br%" "$dt"
-#- }}}
-
-
-####FILE +x bin/x-term {{{
-#| #!/bin/sh
-#| 
-#| font="Noto Sans Mono:size=10.5"
-#| footclient -o font="$font" -e tmux
-#- }}}
-
-
-####FILE +x bin/x-volume {{{
-#| #!/bin/sh
-#| L(){ echo "$*"; "$@"; }
-#| # L(){ echo "$*"; }
-#| case "$1" in
-#|     ("")
-#|         echo "Usage: $0 <volume>     (<volume> = 20%, +5%, -10% etc.)"
-#|         echo "Usage: $0 sink <sink>  (change sink; useful for eq settings)"
-#|         exit 1
-#|         ;;
-#|     (sink)
-#|         sink=$2
-#|         vol=$(pactl get-sink-volume @DEFAULT_SINK@ | sed -n 's/.* \([0-9][0-9]*%\).*/\1/p')
-#|         # change volume of this sink to current value
-#|         L pactl set-sink-volume "$sink" "$vol"
-#|         # change default sink
-#|         L pactl set-default-sink "$sink"
-#|         # change sink for existing programs
-#|         for id in $(pactl list short sink-inputs | cut -f1); do
-#|             L pactl move-sink-input "$id" "$sink"
-#|         done
-#|         # change volume of other sinks to 100%
-#|         for sink2 in $(pactl list short sinks | cut -f1); do
-#|             if [ "$sink2" != "$sink" ]; then
-#|                 L pactl set-sink-volume "$sink2" 100%
-#|             fi
-#|         done
-#|         ;;
-#|     (*)
-#|         pactl set-sink-volume @DEFAULT_SINK@ "$1" ;;
-#| esac
-#| # [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
-#- }}}
-
-
 ####FILE +x bin/xcopy {{{
 #| #!/bin/sh
 #| 
@@ -4720,6 +4269,26 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #- }}}
 
 
+####FILE +x bin/x-gestures {{{
+#| #!/bin/sh
+#| pkill -x lisgd
+#| lisgd -d /dev/input/event1 \
+#|     -g '1,LR,T,*,R,pkill -x -SIGUSR2 wvkbd-mobintl' \
+#|     -g '1,RL,T,*,R,pkill -x -SIGUSR1 wvkbd-mobintl' \
+#|     -g '1,UD,R,*,P,~/bin/x-brightness -10' \
+#|     -g '1,DU,R,*,P,~/bin/x-brightness +10' \
+#|     -g '2,UD,T,M,R,swaymsg kill' \
+#|     -g '1,UD,T,*,R,~/bin/x-run'
+#- }}}
+
+
+####FILE +x bin/x-mute {{{
+#| #!/bin/sh
+#| # Usage: ./mute
+#| pactl set-sink-mute @DEFAULT_SINK@ toggle
+#- }}}
+
+
 ####FILE +x bin/xpaste {{{
 #| #!/bin/sh
 #| 
@@ -4816,6 +4385,128 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     termux-clipboard-get 2>/dev/null
 #| 
 #| fi
+#- }}}
+
+
+####FILE +x bin/x-picom {{{
+#| #!/bin/bash
+#| 
+#| # To detach:
+#| #   ./x-picom -b
+#| 
+#| pkill --exact picom
+#| 
+#| picom_args=(
+#|     --config /dev/null         # no default config
+#|     --no-fading-destroyed-argb # prevent urxvt window from flashing on closing
+#|     --no-fading-openclose      # not working? use .config/compton.conf
+#|     --xrender-sync-fence       # Avoid "keyboard/mouse lag"; actually the display is not redrawing
+#|     --backend xrender          # "xrender" is less laggy than "glx"?
+#|     --vsync                    # Avoid tearing
+#|     -I1 -O1                    # No fading (workaround)
+#| 
+#|     # no shadow for maximized windows, unfocused windows and menu
+#|     # --shadow-exclude "(widthb > $wsmall || heightb > $hsmall) || !focused" # || (WM_WINDOW_ROLE@:s *= "fluxbox-menu")'
+#|     --shadow-exclude "!(window_type *= \"menu\") && (focused || !focused)"
+#| )
+#| 
+#| exec picom "${picom_args[@]}" "$@"
+#- }}}
+
+
+####FILE +x bin/x-sleep {{{
+#| #!/bin/sh
+#| 
+#| sync # Prevent data loss on potential disk disconnection (esp. USB drive)
+#| 
+#| case "$1" in
+#|     (""|suspend) cmd=suspend ;;
+#|     (hibernate) cmd=hibernate ;;
+#|     (*) echo "Bad command: $1"; exit 1 ;;
+#| esac
+#| 
+#| bgopt=-i
+#| bg=~/.config/background1.jpg
+#| if [ ! -f "$bg" ]; then
+#|     bg=~/.config/background.jpg
+#|     if [ ! -f "$bg" ]; then
+#|         bgopt=-c
+#|         bg=888888
+#|     fi
+#| fi
+#| 
+#| swaylock $bgopt "$bg" & sleep .1 && systemctl "$cmd"
+#- }}}
+
+
+####FILE +x bin/x-status {{{
+#| #!/bin/sh
+#| 
+#| read bat < /sys/class/power_supply/rk817-battery/capacity
+#| read sta < /sys/class/power_supply/rk817-battery/status
+#| case "$sta" in
+#|     (Charging)         sta=+ ;;
+#|     (Full|Discharging) sta=  ;;
+#|     (*)                sta=? ;;
+#| esac
+#| 
+#| vol=$(pactl get-sink-volume @DEFAULT_SINK@)
+#| vol=${vol% / *}; vol=${vol##* }
+#| 
+#| read br  < /sys/class/backlight/backlight/brightness
+#| read brm < /sys/class/backlight/backlight/max_brightness
+#| br=$((100 * br / brm))
+#| 
+#| dt=$(date +'%Y-%m-%d (%a) %H:%M:%S')
+#| 
+#| #net=$(echo $(ip a | sed -n '/state UP/s/^[^ ]* \([^ :]*\).*/\1/p'))
+#| net=$(echo $(ip -o a | awk '(!/ lo /)&&(!/ inet6 /){if(!a[$2]++){print $2}sub("/.*","",$4);print $4}'))
+#| #net=${net:--}
+#| 
+#| printf '%s  %s :%s *%s  %s\n' "$net" "[$sta$bat%]" "$vol" "$br%" "$dt"
+#- }}}
+
+
+####FILE +x bin/x-term {{{
+#| #!/bin/sh
+#| 
+#| font="Noto Sans Mono:size=10.5"
+#| footclient -o font="$font" -e tmux
+#- }}}
+
+
+####FILE +x bin/x-volume {{{
+#| #!/bin/sh
+#| L(){ echo "$*"; "$@"; }
+#| # L(){ echo "$*"; }
+#| case "$1" in
+#|     ("")
+#|         echo "Usage: $0 <volume>     (<volume> = 20%, +5%, -10% etc.)"
+#|         echo "Usage: $0 sink <sink>  (change sink; useful for eq settings)"
+#|         exit 1
+#|         ;;
+#|     (sink)
+#|         sink=$2
+#|         vol=$(pactl get-sink-volume @DEFAULT_SINK@ | sed -n 's/.* \([0-9][0-9]*%\).*/\1/p')
+#|         # change volume of this sink to current value
+#|         L pactl set-sink-volume "$sink" "$vol"
+#|         # change default sink
+#|         L pactl set-default-sink "$sink"
+#|         # change sink for existing programs
+#|         for id in $(pactl list short sink-inputs | cut -f1); do
+#|             L pactl move-sink-input "$id" "$sink"
+#|         done
+#|         # change volume of other sinks to 100%
+#|         for sink2 in $(pactl list short sinks | cut -f1); do
+#|             if [ "$sink2" != "$sink" ]; then
+#|                 L pactl set-sink-volume "$sink2" 100%
+#|             fi
+#|         done
+#|         ;;
+#|     (*)
+#|         pactl set-sink-volume @DEFAULT_SINK@ "$1" ;;
+#| esac
+#| # [ $# -eq 0 ] && { echo "Usage: $0 <volume> (<volume> = 20%, +5%, -10% etc.)"; exit 1; }
 #- }}}
 
 

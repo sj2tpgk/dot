@@ -1,0 +1,3 @@
+Prepend the following to pacman.d/mirrorlist
+
+Server = https://IP:PORT/repo/archlinux/$repo/os/$arch
