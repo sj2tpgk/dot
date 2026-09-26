@@ -1,12 +1,85 @@
 #!/bin/sh
 
-for dir in /sys/class/backlight/backlight /sys/class/backlight/intel_backlight; do
-    [ -d "$dir" ] && break
-done
+usage(){
+    echo "\
+Usage: $0 DIR EXP query
+       $0 DIR EXP set ARG1 ARG2
+
+DIR can be \"-\" for auto discovery
+EXP is 1 or 2
+ARG1 is - or + or none
+ARG2 is a number in 0-100
+  - or +  = relative change
+
+Query output is 0-100
+This does NOT check whether DIR is a directory or ARG is in correct format
+
+For sudo, add the following line with \"sudo visudo\" (adjust sysfs path):
+  ALL ALL=(ALL) NOPASSWD: /usr/bin/tee /sys/class/backlight/backlight/brightness
+
+# note sudo's NOPASSWD won't work if there is a duplicate slash in tee argument
+# note sudo's NOPASSWD must be in the last line
+
+For doas, add to doas.conf:
+  permit nopass :wheel cmd /usr/bin/tee args /sys/class/backlight/backlight/brightness"
+    exit 1
+}
+
+as_root() { if command -v sudo >/dev/null; then sudo "$@"; elif command -v doas >/dev/null; then doas "$@"; else echo 'need sudo or doas' >&2; fi }
+
+dir=${1%/}
+exp=$2
+op=$3
+
+case "$dir" in
+    (-)
+        for i in /sys/class/backlight/backlight /sys/class/backlight/intel_backlight; do
+            if [ -d "$i" ]; then
+                dir=$i
+                break
+            fi
+        done ;;
+esac
+
 brightness_file=$dir/brightness
 max_brightness_file=$dir/max_brightness
 
-as_root() { if command -v sudo >/dev/null; then sudo "$@"; elif command -v doas >/dev/null; then doas "$@"; else echo 'need sudo or doas' >&2; fi }
+read -r cur < "$brightness_file"
+read -r max < "$max_brightness_file"
+
+case "$exp" in
+    (1) curp100=$((cur * 10000 / max)) ;;
+    # (2) curp=$(((10000 - (100 - (100 * cur / max)) * (100 - (100 * cur / max))) / 100)) ;;
+    (2) curp100=$((((2000000 * cur / max) - (1000000 * cur * cur / max / max)) / 100)) ;;
+    (*) usage ;;
+esac
+
+case "$op" in
+    (query) echo "$((curp100 / 100))" ;;
+    (set)
+        arg1=$4
+        arg2=$5
+        case "$arg1" in
+            (-) tgtp100=$((curp100 - arg2 * 100)) ;;
+            (+) tgtp100=$((curp100 + arg2 * 100)) ;;
+            (*) tgtp100=$((arg2 * 100)) ;;
+        esac
+        case "$exp" in
+            (1) tgt=$((tgtp100 * max / 10000)) ;;
+            (2) tgt=$(awk -v tgtp100="$tgtp100" -v max="$max" 'BEGIN{print int(max*(100-sqrt(10000-tgtp100))/100)}') ;;
+        esac
+        if [ "$tgt" -lt 1 ]; then tgt=1; elif [ "$tgt" -gt "$max" ]; then tgt=$max; fi
+        echo "$tgt" | as_root /usr/bin/tee "$brightness_file" >/dev/null
+        ;;
+    (*) usage ;;
+esac
+exit
+for dir in /sys/class/backlight/backlight /sys/class/backlight/intel_backlight; do
+    [ -d "$dir" ] && break
+done
+
+brightness_file=$dir/brightness
+max_brightness_file=$dir/max_brightness
 
 help() {
     {

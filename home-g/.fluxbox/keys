@@ -85,7 +85,7 @@ OnRightGrip    Mouse3 :MacroCmd {Lower} {NextWindow {groups} (workspace=[current
 # Mod1 Shift Tab  :PrevWindow {groups} (workspace=[current])
 #
 # exclude windows in extreme layers (I place video etc. in those layers)
-Mod4 n          :Exec fluxbox-remote "NextWindow {groups} (workspace=[current]) (layer!=AboveDock) (layer!=Dock) (layer!=Desktop)"; sleep 0.05; xdotool key a
+Mod4 n          :Exec fluxbox-remote "NextWindow {groups} (workspace=[current]) (layer!=AboveDock) (layer!=Dock) (layer!=Desktop)" && sleep .05 && xdotool key a
 #
 # Mod1 4          :Exec ~/script/nextwindow.pl; sleep 0.05; xdotool key a
 # workaround for fluxbox+xcape? problem
@@ -209,15 +209,15 @@ XF86AudioPrev :Exec mocp --previous
 XF86AudioNext :Exec mocp --next
 
 # Brightness
-# F9 1 :Exec x-brightness 1
-F9 2 :Exec x-brightness 15
-F9 3 :Exec x-brightness 30
-F9 4 :Exec x-brightness 45
-F9 5 :Exec x-brightness 60
-F9 6 :Exec x-brightness 75
-F9 7 :Exec x-brightness 121
-F9 8 :Exec x-brightness 166
-F9 9 :Exec x-brightness 227
+F9 1 :Exec x-brightness - 2 set none 0
+F9 2 :Exec x-brightness - 2 set none 4
+F9 3 :Exec x-brightness - 2 set none 8
+F9 4 :Exec x-brightness - 2 set none 13
+F9 5 :Exec x-brightness - 2 set none 18
+F9 6 :Exec x-brightness - 2 set none 24
+F9 7 :Exec x-brightness - 2 set none 30
+F9 8 :Exec x-brightness - 2 set none 38
+F9 9 :Exec x-brightness - 2 set none 50
 
 # Toggle toolbar
 Mod4 t :Exec sh ~/bin/fluxbox/toggletoolbar.sh

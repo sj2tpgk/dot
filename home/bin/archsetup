@@ -18,11 +18,12 @@ ask() {
 
 ask pacman --noconfirm -S anthy atool bluez bluez-utils dash entr fish fzf git imagemagick jq man man-db mosh neovim nawk nmap openssh pacman-contrib pv ranger rsync tmux unzip pv w3m wget zip
 
-ask pacman --noconfirm -S foot fyi grim keyd labwc ly pipewire swaybg swaylock wl-clipboard wlr-randr
+# xorg
+ask pacman --noconfirm -S openbox xterm xorg xorg-xinit arandr xclip picom rxvt-unicode feh tint2 lxappearance lxappearance-obconf xorg-xmessage wmctrl xdotool xss-lock
 
-ask pacman --noconfirm -S claws-mail firefox mousepad mpv udiskie pcmanfm
+# wayland
+ask pacman --noconfirm -S foot fyi grim labwc ly swaybg swaylock wl-clipboard wlr-randr
+
+ask pacman --noconfirm -S firefox keyd mousepad mpv pipewire udiskie pcmanfm
 
 ask pacman --noconfirm -S docker
-
-# xorg
-# ask pacman -S openbox xterm xorg xorg-xinit arandr xclip picom rxvt-unicode feh tint2 lxappearance lxappearance-obconf
