@@ -1822,6 +1822,7 @@ vim.cmd [[ " llama.vim (experimental) <<<
             \ 'keymap_inst_cancel':     "<Esc>",
             \ }
         packadd llama.vim
+        nunmap <space>lld
     endif
 ]] -- >>>
 

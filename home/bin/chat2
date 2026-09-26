@@ -130,7 +130,7 @@ save_history(){
 
 # Usage: parse_tools DEF
 parse_tools(){
-    echo "$1" | jq -Rs 'def parse:map(split("="))|{ type:"object", required:map(select(.[1]=="r")[0]), properties:map({key:.[0],value:if(.[2]=="a")then {type:"array",items:.[4:]|join("=")[1:-1]|split(":")|parse} else {type:{s:"string",n:"number"}[.[2]],description:.[3]} end })|from_entries };
+    echo "$1" | jq -Rs 'def parse:map(split("="))|{ type:"object", required:map(select(.[1]=="r")[0]), properties:map({key:.[0],value:(if(.[2]=="a")then {type:"array",items:.[4:]|join("=")[1:-1]|split(":")|parse} else {type:{s:"string",n:"number"}[.[2]],description:.[3]}end)})|from_entries };
     split("\n")|map(select(length>0 and test("^\\s*[^#]";""))|[match("(\\[[^]]+\\]|[^:])+";"g").string]|{type:"function",function:{name:.[0],description:.[1],parameters:.[2:]|parse}})'
 }
 
@@ -181,7 +181,7 @@ call_llm(){
 # Usage: parse_sse SSEFILE
 parse_sse_message(){
     # shellcheck disable=SC2016
-    local jq_parse_sse='[inputs|if(startswith("data: {"))then(.[6:])else(empty)end|fromjson] | reduce (.[].choices[0].delta) as $x ({reasoning_content:"",content:"",tool_calls:[]}; (if($x.role)then(.role=$x.role)end|if($x.reasoning_content)then(.reasoning_content+=$x.reasoning_content)end|if($x.content)then(.content+=$x.content)end|if($x.tool_calls)then(.tool_calls+=$x.tool_calls)end))|(.tool_calls|=(group_by(.index)|map((.[0]|{index,id,type})+([.[].function]|{function:{name:([.[].name]|join("")),arguments:([.[].arguments]|join(""))}})))) | if(.tool_calls|length==0)then(del(.tool_calls))end | {role:"assistant",content:(.reasoning_content+.content)}+(if(.tool_calls)then{tool_calls}else{}end)'
+    local jq_parse_sse='[inputs|if(startswith("data: {"))then(.[6:])else(empty)end|fromjson] | reduce (.[].choices[0].delta) as $x ({reasoning_content:"",content:"",tool_calls:[]}; (if($x.role)then(.role=$x.role)else . end|if($x.reasoning_content)then(.reasoning_content+=$x.reasoning_content)else . end|if($x.content)then(.content+=$x.content)else . end|if($x.tool_calls)then(.tool_calls+=$x.tool_calls)else . end))|(.tool_calls|=(group_by(.index)|map((.[0]|{index,id,type})+([.[].function]|{function:{name:([.[].name]|join("")),arguments:([.[].arguments]|join(""))}})))) | if(.tool_calls|length==0)then(del(.tool_calls))else . end | {role:"assistant",content:(.reasoning_content+.content)}+(if(.tool_calls)then{tool_calls}else{}end)'
     jq -Rcr "$jq_parse_sse" "$1"
 }
 
@@ -335,7 +335,7 @@ call_tool(){
 
 # Usage: bwrap_recurse CMD [ARGS ...]
 bwrap_recurse(){
-    bwrap --ro-bind / / --dev-bind /dev /dev --tmpfs "${TMPDIR:-/tmp}" --bind "$PWD" "$PWD" --bind "$DATADIR" "$DATADIR" --setenv BWRAP 1 "$@"
+    bwrap --ro-bind / / --dev-bind /dev /dev --bind "${TMPDIR:-/tmp}" "${TMPDIR:-/tmp}" --bind "$PWD" "$PWD" --bind "$DATADIR" "$DATADIR" --setenv BWRAP 1 "$@"
 }
 
 # Main

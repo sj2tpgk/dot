@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# pi model name animation just
+# disable keyd auto reload, swap / ;, and = ~
+
+upstream=${1:-172.17.0.1:11434}
+
+if command -v sudo > /dev/null; then SUDO=sudo; elif command -v doas > /dev/null; then SUDO=doas; else echo "No sudo or doas found"; fi
+
+hostwd=$(pwd)
+case "$hostwd" in
+    ("$HOME"|"$HOME"/*) guestwd=${hostwd#"$HOME"}; guestwd=${guestwd#/}; guestwd=/home/node/$guestwd ;;
+    (*) guestwd=/home/node/host ;;
+esac
+
+guestpidir=/home/node/.pi
+
+# shellcheck disable=SC2016
+rc='
+function fish_greeting; end
+cp -r ~/.pi/agent_ro/* ~/.pi/agent/
+socat tcp4-l:11434,fork,reuseaddr tcp4:$upstream &
+disown
+function fish_prompt
+    set -l prompt_status (__fish_print_pipestatus "[" "]" "|" "" "" $pipestatus)
+    echo -ens "\e[33;1m" (prompt_pwd) (fish_vcs_prompt) $prompt_status "\e[0m> "
+end
+'
+
+mkdir -p ~/.local/share/pi/agent/sessions ~/.local/share/pi/agent/extensions
+
+"$SUDO" docker run \
+    -v "$hostwd":"$guestwd" \
+    -w "$guestwd" \
+    -v ~/.config/pi/agent:"$guestpidir"/agent_ro:ro \
+    --tmpfs "$guestpidir"/agent \
+    -v ~/.local/share/pi/agent/sessions:"$guestpidir"/agent/sessions \
+    --rm -it -u node -e upstream="$upstream" --entrypoint fish pi -C "$rc"
+
+    # -v ~/.local/share/pi/agent/extensions:"$guestpidir"/agent/extensions \
+# without --tmpfs, the agent directory is not writable, and pi does not work (even if the files are not supposed to be edited)
