@@ -72,6 +72,7 @@ def rc_py_main():
     set shorten_title     3
     set update_title      on
     set preview_max_size  104857600
+    set preview_files     off
     ''')
 
     # Keys

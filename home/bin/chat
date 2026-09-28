@@ -5,6 +5,7 @@
 # TODO model name fish complete
 # TODO verbose mode
 # TODO new/private defaults should be inverted maybe
+# TODO unify image_url code path (mandatory size check)
 
 # Notes:
 # - avoid including arbitrarily large strings in command parameter (use pipe instead)
@@ -16,17 +17,19 @@ COLOR_TOOL=34
 COLOR_REASON=35
 COLOR_STAT=0
 
+TOOL_DEFAULT_TIMEOUT=100
+
 DATADIR=~/.cache/chat2
 
 # name:tool description:[param=[r|o]=[a|s|n]=param description[=array param=...]]
-TOOLDEF='
+TOOLDEF="
 read:Read a file. For large files use offset (1-indexed line) and limit:path=r=s=Path to the file:offset=o=n=Starting line number (1-indexed):limit=o=n=Max lines to read
 write:Write content to a file. Creates parent directories. Overwrites if exists:path=r=s=Path to the file:content=r=s=Content to write
 edit:Exact text replacement in a file. oldText must match exactly. Multiple non-overlapping edits supported:path=r=s=Path to the file:edits=r=a=Edits to make=[oldText=r=s=Exact text to find and replace:newText=r=s=Replacement text]
-bash:Execute a shell command. Returns stdout and stderr:command=r=s=Command to execute:timeout=o=n=Timeout in seconds
+bash:Execute a shell command. Returns stdout and stderr:command=r=s=Command to execute:timeout=o=n=Timeout in seconds (default $TOOL_DEFAULT_TIMEOUT sec)
 read_image:Read image file and add to the current chat context. Works with multimodal models only:path=r=s=Path of image file
 # get_time:Get current time:timezone=r=s=timezone
-'
+"
 
 # shellcheck disable=SC2016
 JQLIB='
@@ -283,9 +286,9 @@ tool_bash(){
     eval "$(jq -r "$JQLIB"'{command,timeout}|shassign' "$Tmp/chat_tool_args")"
 
     print_tool_header Bash "$command $([[ "$timeout" =~ ^[0-9]*$ ]] && echo "(timeout ${timeout}s")"
-    local ary=(bash -c "$command")
-    [[ "$timeout" =~ ^[0-9]*$ ]] && ary=(timeout "$timeout" "${ary[@]}")
-    if "${ary[@]}" 2>&1; then s=$?; else s=$?; fi
+    [[ "$timeout" =~ ^[0-9]*$ ]] || timeout="$TOOL_DEFAULT_TIMEOUT"
+    if timeout "$timeout" "${ary[@]}" 2>&1; then s=$?; else s=$?; fi
+    [[ "$s" -eq 124 ]] && echo "Reached timeout (${timeout}s)"
     echo "Exit status $s" >&2
 }
 
@@ -297,7 +300,7 @@ tool_read_image(){
     [[ -r "$path" ]] || { echo "Error: file not found or is not a file: $path"; return; }
     [[ "$(du -b "$path"|cut -f1)" -ge 700000 ]] && { echo "Error: image file $path is too large (is $(du -b "$path"|cut -f1) bytes, max allowed 700KB). Please downscale (be careful not to override the original image)"; return; }
 
-    # note: this results in messages in the order assistant (with tool_calls) -> user (with image) -> tool, but it may be invalid in some models
+    # note: this results in messages in the order of assistant (with tool_calls) -> user (with image) -> tool, but it may be invalid in some models
     {
         echo -n '{"role":"user","content":['
         jq -nrcj --arg path "$path" '{type:"text",text:("This is an image read from "+$path+" with read_image tool")}'
