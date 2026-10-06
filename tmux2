@@ -612,6 +612,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| # TODO verbose mode
 #| # TODO new/private defaults should be inverted maybe
 #| # TODO unify image_url code path (mandatory size check)
+#| # TODO ensure request size does not exceed context size
 #| 
 #| # Notes:
 #| # - avoid including arbitrarily large strings in command parameter (use pipe instead)
@@ -623,7 +624,10 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| COLOR_REASON=35
 #| COLOR_STAT=0
 #| 
-#| TOOL_DEFAULT_TIMEOUT=100
+#| TOOL_DEFAULT_TIMEOUT=20
+#| TOOL_OUTPUT_LIMIT=8192
+#| 
+#| AGENT_PREFIX="MESSAGE FROM AGENT:"
 #| 
 #| DATADIR=~/.cache/chat2
 #| 
@@ -632,7 +636,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| read:Read a file. For large files use offset (1-indexed line) and limit:path=r=s=Path to the file:offset=o=n=Starting line number (1-indexed):limit=o=n=Max lines to read
 #| write:Write content to a file. Creates parent directories. Overwrites if exists:path=r=s=Path to the file:content=r=s=Content to write
 #| edit:Exact text replacement in a file. oldText must match exactly. Multiple non-overlapping edits supported:path=r=s=Path to the file:edits=r=a=Edits to make=[oldText=r=s=Exact text to find and replace:newText=r=s=Replacement text]
-#| bash:Execute a shell command. Returns stdout and stderr:command=r=s=Command to execute:timeout=o=n=Timeout in seconds (default $TOOL_DEFAULT_TIMEOUT sec)
+#| bash:Execute a shell command. Returns stdout and stderr. It is recommended to always set timeout:command=r=s=Command to execute:timeout=o=n=Timeout in seconds (default $TOOL_DEFAULT_TIMEOUT sec)
 #| read_image:Read image file and add to the current chat context. Works with multimodal models only:path=r=s=Path of image file
 #| # get_time:Get current time:timezone=r=s=timezone
 #| "
@@ -841,6 +845,20 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     # echo -e "\e[${COLOR_TOOL};1m$1\e[0;${COLOR_TOOL}m $2" >&2
 #| }
 #| 
+#| # Usage: truncate_data INFILE MAXSIZE
+#| # if INFILE is larger than MAXSIZE truncate it, copy original to a temp, write filename, return 0. else return 1
+#| truncate_file(){
+#|     local fullfile infile="$1" maxsize="$2"
+#|     if [[ "$(wc -c < "$infile")" -gt "$maxsize" ]]; then
+#|         fullfile="$Tmp/tmp_$(date +%s%N)"
+#|         mv -f "$infile" "$fullfile"
+#|         head -c "$maxsize" "$fullfile" > "$infile"
+#|         echo "$fullfile"
+#|         return 0
+#|     fi
+#|     return 1
+#| }
+#| 
 #| tool_get_date(){ # sample tool
 #|     TZ=$(jq -r .timezone "$Tmp/chat_tool_args") date
 #| }
@@ -888,14 +906,16 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| }
 #| 
 #| tool_bash(){
-#|     local command timeout s
+#|     local command timeout s t1 t2
 #|     eval "$(jq -r "$JQLIB"'{command,timeout}|shassign' "$Tmp/chat_tool_args")"
 #| 
 #|     print_tool_header Bash "$command $([[ "$timeout" =~ ^[0-9]*$ ]] && echo "(timeout ${timeout}s")"
 #|     [[ "$timeout" =~ ^[0-9]*$ ]] || timeout="$TOOL_DEFAULT_TIMEOUT"
-#|     if timeout "$timeout" "${ary[@]}" 2>&1; then s=$?; else s=$?; fi
-#|     [[ "$s" -eq 124 ]] && echo "Reached timeout (${timeout}s)"
-#|     echo "Exit status $s" >&2
+#|     t1=$(date +%s.%N)
+#|     if timeout "$timeout" bash -c "$command" 2>&1; then s=$?; else s=$?; fi
+#|     t2=$(date +%s.%N)
+#|     echo
+#|     if [[ "$s" -eq 124 ]]; then echo "$AGENT_PREFIX Reached timeout (${timeout}s)"; else echo "$AGENT_PREFIX Exit status $s, took $(awk -v t1="$t1" -v t2="$t2" 'BEGIN{print int(1000*(t2-t1))}') ms"; fi
 #| }
 #| 
 #| tool_read_image(){
@@ -918,7 +938,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| }
 #| 
 #| call_tool(){
-#|     local i n name id
+#|     local i n name id toolfull
 #|     n=$(jq length "$Tmp/chat_tool_calls")
 #|     for i in $(seq 0 $((n - 1))); do
 #| 
@@ -936,6 +956,11 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|             (read_image) tool_read_image ;;
 #|             (*) error "unknown tool: $name" ;;
 #|         esac | stdbuf -i0 -o0 tee "$Tmp/chat_tool_out"
+#| 
+#|         # truncate output
+#|         if toolfull=$(truncate_file "$Tmp/chat_tool_out" "$TOOL_OUTPUT_LIMIT"); then
+#|             echo -e "\n\n${AGENT_PREFIX} tool output has been truncated. Full output is in $toolfull ($(wc -c < "$toolfull") bytes)" >> "$Tmp/chat_tool_out"
+#|         fi
 #| 
 #|         # add response
 #|         jq -Rsc --arg id "$id" '{role:"tool",tool_call_id:$id,content:.}' "$Tmp/chat_tool_out" >> "$SessionFile"
