@@ -175,7 +175,7 @@ call_llm(){
             ifs((.pr and(.r|not));"\u001b[0m\n"),
             (.t[0]|if(.)then(.function as $f|
                 ($f.name|ifs(.;(ifs($z.pt;"\n")//"")+"\u001b['"$COLOR_TOOL"';1m\(.)\u001b[0;'"$COLOR_TOOL"'m ")//"")+
-                ($f.arguments//"")
+                (($f.arguments//"")|gsub("\\\\n";"\n"))
             )else(empty)end),
             .r // $x.content // empty,
             ifs(($y.finish_reason and .pt);"\n"),
@@ -282,8 +282,8 @@ tool_write(){
     validate_path "$path" || { echo "Error: access not allowed: $path"; return; }
 
     mkdir -p "$(dirname "$path")"
-    jq -r .content "$Tmp/chat_tool_args" | tee "$path" >&2
-    echo "Written to $path"
+    jq -r .content "$Tmp/chat_tool_args" > "$path"
+    echo "$AGENT_PREFIX Written to $path"
 }
 
 tool_edit(){

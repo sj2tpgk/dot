@@ -3,6 +3,8 @@
 # pi model name animation just
 # disable keyd auto reload, swap / ;, and = ~
 
+[ "$(cd ~ && pwd)" = "$(pwd)" ] && { echo "Error: do not run in \$HOME"; exit 1; }
+
 upstream=${1:-172.17.0.1:11434}
 
 if command -v sudo > /dev/null; then SUDO=sudo; elif command -v doas > /dev/null; then SUDO=doas; else echo "No sudo or doas found"; fi
@@ -22,7 +24,7 @@ cp -r ~/.pi/agent_ro/* ~/.pi/agent/
 socat tcp4-l:11434,fork,reuseaddr tcp4:$upstream &
 disown
 function fish_prompt
-    set -l prompt_status (__fish_print_pipestatus "[" "]" "|" "" "" $pipestatus)
+    set -l prompt_status (__fish_print_pipestatus " [" "]" "|" "" "" $pipestatus)
     echo -ens "\e[33;1m" (prompt_pwd) (fish_vcs_prompt) $prompt_status "\e[0m> "
 end
 '
