@@ -80,11 +80,11 @@
       </action>
     </keybind>
     <keybind key="XF86MonBrightnessDown">
-      <action name="Execute" command="x-brightness -1%">
+      <action name="Execute" command="x-brightness - 2 set - 2">
       </action>
     </keybind>
     <keybind key="XF86MonBrightnessUp">
-      <action name="Execute" command="x-brightness +1%">
+      <action name="Execute" command="x-brightness - 2 set + 2">
       </action>
     </keybind>
     <keybind key="W-P">
