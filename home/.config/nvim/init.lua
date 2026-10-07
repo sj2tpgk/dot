@@ -1434,14 +1434,14 @@ end -- >>>
 
 function lsp_config_4_servers() -- Lsp (4) configure servers <<<
 
-    local lspconfig = require"lspconfig"
     local function f(lang, lsname, cmds, ...)
         -- setup server `lsname` where the argument is all tables in {...} merged to a single table
         -- abort if at least one command in `cmds` is not executable
         local arg = {}
         for _, cmd in pairs(cmds) do if vim.fn.executable(cmd) == 0 then return end end
         for _, tbl in ipairs({...}) do for k, v in pairs(tbl) do arg[k] = v end end
-        lspconfig[lsname].setup(arg)
+        vim.lsp.config(lsname, arg)
+        vim.lsp.enable(lsname)
     end
 
     local a = { on_attach = my_lsp_on_attach }
