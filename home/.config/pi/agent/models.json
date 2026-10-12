@@ -6,7 +6,7 @@
       "apiKey": "ollama",
       "models": [
         { "id": "agent", "reasoning": true, "contextWindow": 98304 },
-        { "id": "agent-small", "reasoning": true, "contextWindow": 98304 },
+        { "id": "agent-small", "reasoning": true, "contextWindow": 65536 },
         { "id": "moe", "reasoning": true, "contextWindow": 65536 }
       ]
     }

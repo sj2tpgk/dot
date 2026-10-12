@@ -42,9 +42,9 @@ mime ^video|audio|ogg|image|application/pdf, has firefox, X, flag f = firefox --
 mime ^video|audio|ogg|image|application/pdf, has chromium, X, flag f = chromium -- "$@"
 
 # Json
-ext json = ${VISUAL:-$EDITOR} -- "$@"
-ext json = jq . "$1"; read x
-ext json, has tmux-capture-window = tmux-capture-window -e -l "$1"; read x
+ext json|jsonl = ${VISUAL:-$EDITOR} -- "$@"
+ext json|jsonl = jq . "$1"; read x
+ext json|jsonl, has tmux-capture-window = tmux-capture-window -e -l "$1"; read x
 
 # Misc
 ext ply, X, has org.cloudcompare.CloudCompare, flag f = org.cloudcompare.CloudCompare "$@"

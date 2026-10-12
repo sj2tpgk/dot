@@ -1453,7 +1453,8 @@ function lsp_config_4_servers() -- Lsp (4) configure servers <<<
     f("html",    "html",      { "vscode-html-language-server" },        a)
     f("js/ts",   "ts_ls",     { "typescript-language-server" },         a, s) -- put libs in node_modules/ to let LSP recognize it
     f("lua",     "lua_ls",    { "lua-language-server" },                a)
-    f("python",  "pyright",   { "pyright" },                            a)
+    -- f("python",  "pyright",   { "pyright" },                            a)
+    f("python",  "ty",        { "ty" },                                 a)
     f("rust",    "rust_analyzer", { "rust-analyzer" },                  a)
     f("shell",   "bashls",    { "bash-language-server", "shellcheck" }, a)
     f("zig",     "zls",       { "zls" },                                a)

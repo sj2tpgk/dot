@@ -5,7 +5,8 @@
 
 [ "$(cd ~ && pwd)" = "$(pwd)" ] && { echo "Error: do not run in \$HOME"; exit 1; }
 
-upstream=${1:-172.17.0.1:11434}
+upstream_default=${MY_LLAMA:-172.17.0.1:11434}
+upstream=${1:-"$upstream_default"}
 
 if command -v sudo > /dev/null; then SUDO=sudo; elif command -v doas > /dev/null; then SUDO=doas; else echo "No sudo or doas found"; fi
 

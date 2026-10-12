@@ -3,7 +3,7 @@
 # TODO compaction
 # TODO show cumulative stat (time, tokens)
 # TODO model name fish complete
-# TODO verbose mode
+# TODO verbose mode (curl log, set -x)
 # TODO new/private defaults should be inverted maybe
 # TODO unify image_url code path (mandatory size check)
 # TODO ensure request size does not exceed context size
@@ -38,7 +38,7 @@ read_image:Read image file and add to the current chat context. Works with multi
 # shellcheck disable=SC2016
 JQLIB='
 # get reasoning chat kwargs
-def reason(x):if(x and(x|length>0))then(({off:"none",on:"medium"}[x]//x)|{reasoning_effort:.,enable_thinking:(.!="none")})else{}end;
+def reason(x):if(x and(x|length>0))then(({off:"none",on:"medium"}[x]//x)|{reasoning_effort:.,chat_template_kwargs:{reasoning_effort:.,enable_thinking:(.!="none")}})else{}end;
 def r2:(.*100+.5|floor/100);
 def shassign:(to_entries|map("\(.key)=\(.value|if(type=="object")then(tojson)else(.)end|@sh)")|join(";"));
 def exptilde:(sub("^~";$ENV.HOME));
@@ -103,7 +103,7 @@ parse_opts(){
 ## Functions
 
 error(){ echo "Error: $*" >&2; exit 1; }
-clean(){ rm -f "$Tmp/chat_"*; rmdir "$Tmp" 2>/dev/null; return 0; }
+clean(){ if [[ -d "$Tmp" ]]; then rm -f "$Tmp/chat_"*; rmdir "$Tmp"; fi; return 0; }
 init(){
     check_deps
     Tmp=$(mktemp -d)
@@ -146,7 +146,7 @@ parse_tools(){
 show_models(){
     local res
     # shellcheck disable=SC2086
-    res=$(curl -fs -H 'Content-Type: application/json' $opt_curlopts "$opt_u"/v1/models) || error "getting model list: server error"
+    res=$(curl --fail-with-body -s -H 'Content-Type: application/json' $opt_curlopts "$opt_u"/v1/models) || error "getting model list: server error"
     jq --argjson res "$res" -nr '$res|([.data[]|([.id,.aliases[]]|.[0]+(.[1:]|if(length>0)then" (\(join(",")))"else""end))+(if(.status)then(.status.value|if(.=="loaded")then"\tL"else""end)else"\t?"end)]|join("\n"))'
     # fish config for model name completion:
     # complete -c chat -e; complete -c chat -s m -f -r -k -a '(string replace -r " [(][^)]*[)]" "" (eval (commandline -b) -l -l))'
@@ -154,10 +154,11 @@ show_models(){
 
 # Usage: call_llm SSEFILE JSONLFILE ...
 call_llm(){
-    local ssefile="$1"
+    local ssefile="$1" curlstatus
     shift
-    jq -s --arg m "$opt_m" --arg r "$opt_r" --arg s "$opt_s" --argjson t "${ToolApi:-"[]"}" \
-        "$JQLIB"'{model:$m,stream:true,tools:$t,chat_template_kwargs:reason($r),messages:[{role:"system",content:$s},.[]]}' \
+    opt_s2="$opt_s; Information from agent: the current directory is $(pwd). The current time is $(date)."
+    jq -s --arg m "$opt_m" --arg r "$opt_r" --arg s "$opt_s2" --argjson t "${ToolApi:-"[]"}" \
+        "$JQLIB"'{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}+reason($r)' \
         "$@" > "$Tmp/chat_req"
     # cat "$Tmp/chat_req"; exit
 
@@ -182,9 +183,13 @@ call_llm(){
         empty][])'
 
     # shellcheck disable=SC2086
-    stdbuf -o0 curl -fNs -H 'Content-Type: application/json' $opt_curlopts "$opt_u"/v1/chat/completions -d @"$Tmp/chat_req" \
+    stdbuf -o0 curl --fail-with-body -Ns -H 'Content-Type: application/json' $opt_curlopts "$opt_u"/v1/chat/completions -d @"$Tmp/chat_req" \
         | stdbuf -i0 -o0 tee "$ssefile" \
         | stdbuf -i0 -o0 jq -Rrj --unbuffered "$jq_parse_sse_print"
+    curlstatus=${PIPESTATUS[0]}
+
+    # show api error
+    if [[ "$curlstatus" -ne 0 ]]; then error "API call failed: $(cat "$ssefile")"; fi
 }
 
 # Usage: parse_sse SSEFILE
@@ -244,7 +249,7 @@ print_tool_header(){
 truncate_file(){
     local fullfile infile="$1" maxsize="$2"
     if [[ "$(wc -c < "$infile")" -gt "$maxsize" ]]; then
-        fullfile="$Tmp/tmp_$(date +%s%N)"
+        fullfile="$Tmp/chat_tmp_$(date +%s%N)"
         mv -f "$infile" "$fullfile"
         head -c "$maxsize" "$fullfile" > "$infile"
         echo "$fullfile"

@@ -1,0 +1,30 @@
+#!/bin/sh
+
+tmp=$(tr -cd 0-9 < /dev/urandom|head -c 7)
+tmpf=$(mktemp)
+
+trap 'rm -f "$tmpf"' EXIT INT TERM
+
+echo "
+set -g default-shell '$(tmux show -gv default-shell)'
+set -g default-command '$(tmux show -gv default-command)'
+
+unbind-key -a
+set -g prefix S-F5
+bind -n F5 next-window
+bind -n M-F5 new-window -c '#{pane_current_path}'
+
+set -g status-justify right
+set -g status-left ''
+set -g status-position top
+set -g status-right ''
+set -g status-style bg=default
+
+set -g window-status-current-format ':#I'
+set -g window-status-current-style bg=black,fg=red,bold,reverse
+set -g window-status-format ':#I'
+set -g window-status-separator ''
+set -g window-status-style bg=black,fg=red,bold
+" > "$tmpf"
+
+tmux -L "$tmp" -f "$tmpf"
