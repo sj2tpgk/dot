@@ -28,8 +28,8 @@ im_diff(){
 }
 
 im_sixel(){
-    img=${1:?Usage: im sixel IMAGE [HEIGHT=100]}
-    magick "$img" -geometry "x${2:-100}" sixel:-
+    img=${1:?Usage: im sixel IMAGE [SIZE=100]}
+    magick "$img" -geometry "${2:-100}x${2:-100}>" sixel:-
 }
 
 im_tile(){

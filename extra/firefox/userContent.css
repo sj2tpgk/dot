@@ -1,30 +1,56 @@
 /* @import url("UserStyles/test.css"); */
 /* Note: @import must be at the BEGINNING of file */
 
-/* Note: userContens.css has less priority than page's css. So !important is needed when conflicting with page's css. */
+/* Note: userContent.css has less priority than page's css. So !important is needed when conflicting with page's css. */
 
 
 /* ==== Firefox special pages and extension pages ==== */
+
+@-moz-document url-prefix("about:") {
+
+    /* Nova */
+
+    /* Round corners */
+    :root {
+        --border-radius-xsmall: 2px !important; /* Nova Default: 4px, Proton Default: 2px */
+        --border-radius-small: 4px !important; /* Nova Default: 8px, Proton Default: 4px */
+        --border-radius-medium: 6px !important; /* Nova Default: 12px, Proton Default: 8px */
+        --border-radius-large: 4px !important; /* Proton Default: 16px, [Undefined in Nova] */
+        --border-radius-xlarge: 6px !important; /* Nova Default: 24px, [Undefined in Proton] */
+        --border-radius-circle: var(--border-radius-small) !important;
+        --content-area-start-radius: 0px !important;
+    }
+    .toggle-button, .toggle-button::before { border-radius: 999px !important }
+
+    /* Colors */
+    :root {
+        /* adwaita color */
+        --color-accent-primary: light-dark(#3584e4, #3584e4) !important;
+        --color-accent-primary-hover: color-mix(in srgb, var(--color-accent-primary) 80%, light-dark(#000, #fff)) !important;
+        --background-color-canvas: light-dark(#f8f8f8, #282828) !important;
+        --button-background-color-hover: color-mix(in srgb, var(--color-accent-primary) 20%, light-dark(#fff, #282828)) !important;
+        --button-background-color-active: color-mix(in srgb, var(--color-accent-primary) 40%, light-dark(#fff, #282828)) !important;
+    }
+
+    /* No animation */
+    * { transition-duration: 1ms !important; }
+}
 
 @-moz-document url("about:newtab") {
   .logo-and-wordmark, .search-wrapper { display: none !important }
   .tile, .icon-wrapper, .top-site-icon { border-radius: 4px !important }
 }
 
-@-moz-document url("about:privatebrowsing") { .showPrivate { display: none } }
+@-moz-document url("about:privatebrowsing") { body { display: none } }
 
 /* PDF: less brightness (add ? to url to disable) */
-@-moz-document regexp(".*\\.pdf$") { body { filter: brightness(.87) } }
+/* @-moz-document regexp(".*\\.pdf$") { body { filter: brightness(.87) } }  */
 
 /* Dark greasemonkey editor */
-@-moz-document regexp(".*src/content/edit-user-script.html.*") {
-    html { background-color: #444 !important; filter: invert(1) saturate(5) contrast(.7); }
-}
+@-moz-document regexp(".*src/content/edit-user-script.html.*") { html { background-color: #444 !important; filter: invert(1) saturate(5) contrast(.7); } }
 
 /* Dark stylus editor */
-@-moz-document regexp("moz-extension://.*/edit.html.*") {
-    html#stylus.firefox { filter: invert(1) contrast(.7) }
-}
+@-moz-document regexp("moz-extension://.*/edit.html.*") { html#stylus.firefox { filter: invert(1) contrast(.7) } }
 
 
 /* ==== Other websites ==== */
@@ -340,3 +366,4 @@
     table:last-of-type tr:nth-child(4n) { height: 1.0em !important; border-top: solid #aaa 1px !important }
     table:last-of-type tr:not(:nth-child(4n)) { border-right: solid #aaa 1px !important }
 }
+

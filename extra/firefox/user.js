@@ -39,6 +39,7 @@ user_pref("full-screen-api.warning.timeout", 0);
 user_pref("general.smoothScroll", false);
 user_pref("gfx.font_rendering.cleartype_params.enhanced_contrast", 100); // windows font rendering
 user_pref("gfx.font_rendering.cleartype_params.rendering_mode", 5); // windows font rendering
+user_pref("identity.fxaccounts.enabled", false);
 user_pref("layout.css.scrollbar-width-thin.disabled", "true");
 user_pref("layout.testing.overlay-scrollbars.always-visible", "true");
 user_pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);

@@ -1,24 +1,56 @@
 @import url("userChrome-local.css");
 /* Note: @import must be at the BEGINNING of file */
 
+/* @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);  */
+
+/* ==== Nova ==== */
+
+/* Round corners */
 :root {
-    --panelui-subview-transition-duration: 1ms !important;
-    /* various border radius (TODO check if this applies to web page) */
-	--border-radius-xsmall              : 2px;
-	--border-radius-small               : 2px;
-	--border-radius-medium              : 2px;
-	--border-radius-large               : 2px;
-	--arrowpanel-border-radius          : 2px;
-	--arrowpanel-menuitem-border-radius : 2px;
+    --border-radius-xsmall: 2px !important; /* Nova Default: 4px, Proton Default: 2px */
+    --border-radius-small: 4px !important; /* Nova Default: 8px, Proton Default: 4px */
+    --border-radius-medium: 6px !important; /* Nova Default: 12px, Proton Default: 8px */
+    --border-radius-large: 4px !important; /* Proton Default: 16px, [Undefined in Nova] */
+    --border-radius-xlarge: 6px !important; /* Nova Default: 24px, [Undefined in Proton] */
+    --border-radius-circle: var(--border-radius-small) !important;
+    --content-area-start-radius: 0px !important;
+
+    --tab-border-radius: var(--border-radius-small) !important;
+
+    --button-border-radius: var(--border-radius-small) !important;
+    --toolbarbutton-border-radius: var(--border-radius-small) !important;
+
+    --card-border-radius: var(--border-radius-small) !important;
+    --card-border-radius-compact: var(--border-radius-small) !important;
+    --card-cover-image-border-radius: var(--border-radius-small) !important;
+
+    --input-text-border-radius: var(--border-radius-small) !important;
+
+    --menuitem-border-radius: var(--border-radius-small) !important;
+
+    --popup-border-radius: var(--border-radius-small) !important;
+
+    --panel-border-radius: var(--border-radius-small) !important;
+    --panel-menuitem-border-radius: var(--border-radius-small) !important;
+}
+.toggle-button, .toggle-button::before { border-radius: 999px !important }
+
+/* Colors */
+:root {
+    /* adwaita color */
+    --color-accent-primary: light-dark(#3584e4, #15539e) !important;
+    --color-accent-primary-hover: color-mix(in srgb, var(--color-accent-primary) 80%, light-dark(#000, #fff)) !important;
+    --background-color-canvas: light-dark(#f8f8f8, #282828) !important;
+    --button-background-color-hover: color-mix(in srgb, var(--color-accent-primary) 20%, light-dark(#fff, #000)) !important;
+    --button-background-color-active: color-mix(in srgb, var(--color-accent-primary) 40%, light-dark(#fff, #000)) !important;
 }
 
-@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
-
-/* UI font */
-/* * { font-family: Droid Sans Japanese !important; } */
+/* No animation in browser ui  */
+* { transition-duration: 0ms !important; }
+#appMenu-mainView * { transition-duration: 1ms !important }
 
 /* Thin Scrollbar */
-.scroller { overflow-y: scroll; scrollbar-color: #0A4C95 #C2D2E4; }
+/* .scroller { overflow-y: scroll; scrollbar-color: #0A4C95 #C2D2E4; }  */
 
 /* Hide tab bar */
 #TabsToolbar { visibility: collapse !important; }
@@ -27,6 +59,10 @@
 /* No white flash */
 #tabbrowser-tabpanels { background: #111111 !important; }
 .browserContainer { background-color: #111111 !important; }
+
+/* No rounding corner around webpage box, sidebar ?? */
+#sidebar-box, #sidebar-box #sidebar { border-start-start-radius: 0px !important; border-start-end-radius: 0px !important }
+.browserContainer { border-inline-end: none !important; border-block-start: none !important }
 
 /* Sidebar width */
 #sidebar-box { min-width: 2em !important; max-width: 100em !important; }
@@ -38,78 +74,45 @@
 #navigator-toolbox[fullscreenShouldAnimate] { transition: none !important; }
 
 /* Remove border below toolbar */
-#navigator-toolbox { border-bottom: none !important }
+/* #navigator-toolbox { border-bottom: none !important }  */
 
 /* Hide pointer-lock notification */
 #fullscreen-and-pointerlock-wrapper { display: none !important }
 
 /* Disable slide effect for "Search xxx directly from the address bar" */
-.urlbarView-results > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title:not(:empty) ~ .urlbarView-action[slide-in] { animation-name: unset !important; animation-duration: unset !important; animation-timing-function: unset !important; }
+/* .urlbarView-results > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title:not(:empty) ~ .urlbarView-action[slide-in] { animation-name: unset !important; animation-duration: unset !important; animation-timing-function: unset !important; }  */
 
 /* NOT WORKING WHY? No "Firefox Suggest" in urlbar popup */
-.urlbarView-row[label="Firefox Suggest"] { display: none !important; font-size: 100px !important; }
+/* .urlbarView-row[label="Firefox Suggest"] { display: none !important; font-size: 100px !important; }  */
 
 /* Disable sound icon on tabs */
-.tab-icon-overlay[soundplaying][pinned],
-.tab-icon-overlay[muted][pinned],
-.tab-icon-overlay[activemedia-blocked][pinned] { display: none !important; }
-.tab-icon-sound[pinned] { display: none !important; }
+/* .tab-icon-overlay[soundplaying][pinned],  */
+/* .tab-icon-overlay[muted][pinned],  */
+/* .tab-icon-overlay[activemedia-blocked][pinned] { display: none !important; }  */
+/* .tab-icon-sound[pinned] { display: none !important; }  */
 
 /* Disable firefox update notification (2022/12, v107) */
-#appMenu-update-restart-notification, #appMenu-update-manual-notification, #appMenu-update-available-notification, .toolbarbutton-badge { display: none !important; }
+/* #appMenu-update-restart-notification, #appMenu-update-manual-notification, #appMenu-update-available-notification, .toolbarbutton-badge { display: none !important; }  */
 
-/* No fade-in effect when opening hamburger menu */
-.animatable-menupopup, panel[type="arrow"] { transition-duration: 0s !important }
+/* ==== Menu ==== */
 
-/* No slide effect when pressing "More Tools" etc in hamburger menu */
-/* #appMenu-popup */
-/* Note this must be set before @namespace to take effect */
-/* Also, 0ms won't work (cannot go back) */
-/* :root { --panelui-subview-transition-duration: 1ms !important } */
+/* Hamburger menu */
 
-/* force thin url bar */
-/* toolbar#nav-bar { */
-/*   height:     29px; */
-/*   margin-top: -9px; */
-/*   background: #444 !important; */
-/* } */
-/* #urlbar-container { margin-top: 4px; } */
+#appMenu-mainView > .panel-subview-body {
+    /* appMenu-addon-banners, appMenu-update-banner, appMenu-menu-message, appMenu-fxa-status2, appMenu-fxa-sign-in-promo, appMenu-create-profile-button, appMenu-profiles-button, appMenu-fxa-separator, appMenu-new-tab-button2, appMenu-new-window-button2, appMenu-new-ai-window-button, appMenu-new-classic-window-button, appMenu-new-private-window-button2, , appMenu-history-button, appMenu-bookmarks-button, appMenu-tab-groups-button, appMenu-chats-history-button, appMenu-downloads-button, appMenu-passwords-button, appMenu-extensions-themes-button, appMenu-unified-extensions-button, , appMenu-print-button2, appMenu-save-file-button2, appMenu-translate-button, appMenu-find-button2, appMenu-zoom-controls, , appMenu-settings-button, appMenu-more-button2, appMenu-help-button2, appMenu-referrals-separator, appMenu-referrals-button, , appMenu-quit-button2  */
+    & > toolbarbutton::before, & > toolbaritem::before { content: " "; margin-right: 1ch; min-width: 1.5ch; text-align: center; white-space: pre }
+    & > #appMenu-extensions-themes-button::before { content: "E"; color: red }
+}
+
+menupopup {
+    /* context-navigation, context-sep-navigation, context-viewsource-goToLine, context-viewsource-wrapLongLines, context-viewsource-highlightSyntax, context-sep-viewsource-commands, spell-no-suggestions, spell-add-to-dictionary, spell-undo-add-to-dictionary, spell-suggestions-separator, context-openlinkincurrent, context-openlinkincontainertab, context-openlinkintab, context-openlinkinsplitview, context-openlinkinusercontext-menu, context-openlink, context-openlinkprivate, context-openlinksmartwindow, context-previewlink, context-sep-open, context-bookmarklink, context-savelink, context-copyemail, context-copyphone, context-copylink, context-stripOnShareLink, context-sep-copylink, context-sendlinktodevice, context-sep-sendlinktodevice, context-media-play, context-media-pause, context-media-mute, context-media-unmute, context-media-playbackrate, context-media-loop, context-leave-dom-fullscreen, context-video-fullscreen, context-media-hidecontrols, context-media-showcontrols, context-media-sep-video-commands, context-viewvideo, context-video-pictureinpicture, context-media-sep-commands, context-reloadimage, context-viewimage, context-saveimage, context-video-saveimage, context-savevideo, context-saveaudio, context-copyimage-contents, context-copyimage, context-copyvideourl, context-copyaudiourl, context-sendimage, context-sendvideo, context-sendaudio, context-imagetext, context-viewimageinfo, context-viewimagedesc, context-visual-search, context-sep-setbackground, context-setDesktopBackground, context-sep-sharing, context-savepage, fill-login, fill-login-generated-password, use-relay-mask, manage-saved-logins, passwordmgr-items-separator, context-undo, context-redo, context-sep-redo, context-cut, context-copy, context-paste, context-paste-no-formatting, context-delete, context-selectall, context-pdfjs-comment-selection, context-pdfjs-highlight-selection, context-reveal-password, context-print-selection, context-sep-selectall, context-copy-link-to-highlight, context-copy-clean-link-to-highlight, context-remove-highlight, context-sep-highlights, context-pdfjs-undo, context-pdfjs-redo, context-sep-pdfjs-redo, context-pdfjs-cut, context-pdfjs-copy, context-pdfjs-paste, context-pdfjs-delete, context-pdfjs-select-all, context-sep-pdfjs-select-all, context-pdfjs-copy-page, context-pdfjs-cut-page, context-pdfjs-delete-page, context-pdfjs-save-page, context-sep-pdfjs-save-page, context-take-screenshot, context-sep-screenshots, context-add-engine, context-searchselect, context-searchselect-private, context-translate-selection, context-ask-chat, frame-sep, frame, spell-separator, spell-check-enabled, spell-add-dictionaries-main, spell-dictionaries, context-sep-bidi, context-bidi-text-direction-toggle, context-bidi-page-direction-toggle, inspect-separator, context-viewpartialsource-selection, context-viewsource, context-inspect-a11y, context-inspect, context-sep-sendpagetodevice, context-sendpagetodevice, context-media-eme-separator, context-media-eme-learnmore  */
+    & > menu::before, & > menuitem::before { content: " "; margin-right: 1ch; min-width: 1.5ch; text-align: center; white-space: pre }
+    & > [id^=context-save]::before { content: "S"; color: blue; }
+    & > [id^=context-view]::before { content: "V"; color: orange; }
+}
 
 
-/* ---- FF 109 "Extensions" button in toolbar ---- */
-
-/* Sort/hide addons in #unified-extensions-area */
-#unified-extensions-area { display: flex; flex-flow: column }
-.unified-extensions-item[label="Greasemonkey"]
-{ order: 1 }
-.unified-extensions-item[label="Stylus"]
-{ order: 2 }
-.unified-extensions-item[label="Open With"]
-{ display: none }
-.unified-extensions-item[label="Vimium"]
-{ order: 3 }
-
-/* Sort/hide addons in .unified-extensions-list */
-.unified-extensions-list { display: flex; flex-flow: column }
-.unified-extensions-item-action-button[data-extensionid*="dragselectlinktext"],
-.unified-extensions-item-action-button[data-extensionid*="dragselectlinktext"] + *
-{ display: none !important }
-.unified-extensions-item-action-button[data-extensionid*="9b8ce341"],
-.unified-extensions-item-action-button[data-extensionid*="9b8ce341"] + *
-{ display: none !important }
-
-/* Hide permission msg */
-.unified-extensions-item-message-deck { display: none }
-
-/* Hide panel title */
-#unified-extensions-view .panel-header { display: none !important }
-
-/* Make them thinner */
-.unified-extensions-item-action-button { max-height: 20px }
-.unified-extensions-item-action-button .toolbarbutton-badge-stack, .unified-extensions-item-icon { transform: scale(0.7) }
-
-/* -------- */
-
+/* ==== Extensions ==== */
 
 /* Tab Sidebar CSS
 :root { --item-height: 2.4em }
@@ -136,3 +139,4 @@ html { filter: invert(1) }
 .bar { border: none !important; background: transparent !important }
 section.main { margin-bottom: 0 !important }
 */
+

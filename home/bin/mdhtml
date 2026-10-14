@@ -1,6 +1,6 @@
 #!/bin/sh
 
-in="$1"
+in=${1:?"Usage: mdhtml FILE"}
 
 # https://gist.github.com/gujiaxi/55e4c9c50629b3baeb04723dc99ff7b6
 include_head='
@@ -36,8 +36,9 @@ blockquote {
     border-left: 0.3em solid #ccc
 }
 
-table { float: center }
+table { float: center; border-collapse: collapse }
 table, th, td { border: 1px solid grey; }
+thead tr, tr:nth-child(2n) { background: #8881 }
 th, td { padding: 0.3em 0.5em; }
 
 .footnotes { font-size: 90%; }
