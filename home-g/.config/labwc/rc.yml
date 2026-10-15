@@ -100,8 +100,12 @@ labwc_config:
       mousebind button="Right" action="Press":
         action name="ShowMenu" menu="root-menu":
       # not working
-      #mousebind action="Scroll" direction="Down":
-      #  action name="NextWindow":
+      # mousebind action="Scroll" direction="Down":
+      #   action name="NextWindow":
+    # not working
+    # context name="TitleBar":
+    #   mousebind button="Right" action="Press":
+    #     action name="NextWindow":
 
   libinput:
     device category="touchpad":

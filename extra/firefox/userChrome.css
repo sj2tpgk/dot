@@ -7,11 +7,11 @@
 
 /* Round corners */
 :root {
-    --border-radius-xsmall: 2px !important; /* Nova Default: 4px, Proton Default: 2px */
+    --border-radius-xsmall: 4px !important; /* Nova Default: 4px, Proton Default: 2px */
     --border-radius-small: 4px !important; /* Nova Default: 8px, Proton Default: 4px */
-    --border-radius-medium: 6px !important; /* Nova Default: 12px, Proton Default: 8px */
-    --border-radius-large: 4px !important; /* Proton Default: 16px, [Undefined in Nova] */
-    --border-radius-xlarge: 6px !important; /* Nova Default: 24px, [Undefined in Proton] */
+    --border-radius-medium: 4px !important; /* Nova Default: 12px, Proton Default: 8px */
+    --border-radius-large: 8px !important; /* Proton Default: 16px, [Undefined in Nova] */
+    --border-radius-xlarge: 8px !important; /* Nova Default: 24px, [Undefined in Proton] */
     --border-radius-circle: var(--border-radius-small) !important;
     --content-area-start-radius: 0px !important;
 
@@ -46,8 +46,7 @@
 }
 
 /* No animation in browser ui  */
-* { transition-duration: 0ms !important; }
-#appMenu-mainView * { transition-duration: 1ms !important }
+* { transition-duration: 1ms !important; }
 
 /* Thin Scrollbar */
 /* .scroller { overflow-y: scroll; scrollbar-color: #0A4C95 #C2D2E4; }  */

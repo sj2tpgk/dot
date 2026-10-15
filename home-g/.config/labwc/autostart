@@ -11,6 +11,7 @@ set_bg() {
 }
 set_bg
 
+xrdb -merge ~/.config/Xresources
 sfwbar -f myt2.config &
 foot -s &
 uim-xim &
