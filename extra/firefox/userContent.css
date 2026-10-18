@@ -58,6 +58,7 @@
 .scroll-hint-icon-wrap { display: none } /* disable horizontal scroll hint finger icon */
 
 .with-timeline, .with-topic-progress { display: none !important } /* hide progress in forums */
+.discourse-root .with-timeline.topic-navigation { display: none !important } /* discource app: hide timeline */
 
 @-moz-document domain("reddit.com") {
   /* hide logo */

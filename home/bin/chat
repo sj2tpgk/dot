@@ -7,6 +7,7 @@
 # TODO new/private defaults should be inverted maybe
 # TODO unify image_url code path (mandatory size check)
 # TODO ensure request size does not exceed context size
+# TODO confirm tool (if -b and not bwrap)
 
 # Notes:
 # - avoid including arbitrarily large strings in command parameter (use pipe instead)
@@ -336,6 +337,14 @@ tool_read_image(){
     echo "Added image from $path to context"
 }
 
+# Usage: confirm_tool_call TOOLNAME
+confirm_tool_call(){
+    local s to=5
+    read -r -n 1 -t "$to" -p "Calling $1 in ${to}s (press any key to cancel) ..." && s=$? || s=$?
+    echo
+    [[ $s -ge 128 ]]
+}
+
 call_tool(){
     local i n name id toolfull
     n=$(jq length "$Tmp/chat_tool_calls")
@@ -345,20 +354,24 @@ call_tool(){
         jq ".[$i].function.arguments|fromjson" "$Tmp/chat_tool_calls" > "$Tmp/chat_tool_args"
         eval "$(jq -r "$JQLIB"".[$i]|{name:.function.name,id}|shassign" "$Tmp/chat_tool_calls")"
 
-        # call
-        case "$name" in
-            (get_time) tool_get_date ;;
-            (read) tool_read ;;
-            (write) tool_write ;;
-            (edit) tool_edit ;;
-            (bash) tool_bash ;;
-            (read_image) tool_read_image ;;
-            (*) error "unknown tool: $name" ;;
-        esac | stdbuf -i0 -o0 tee "$Tmp/chat_tool_out"
+        if [[ "$flag_b" && -z "$BWRAP" ]] && ! confirm_tool_call "$name"; then
+            echo -e "\n$AGENT_PREFIX tool call $name ($id) was disapproved by user" | tee "$Tmp/chat_tool_out"
+        else
+            # call
+            case "$name" in
+                (get_time) tool_get_date ;;
+                (read) tool_read ;;
+                (write) tool_write ;;
+                (edit) tool_edit ;;
+                (bash) tool_bash ;;
+                (read_image) tool_read_image ;;
+                (*) error "unknown tool: $name" ;;
+            esac | stdbuf -i0 -o0 tee "$Tmp/chat_tool_out"
 
-        # truncate output
-        if toolfull=$(truncate_file "$Tmp/chat_tool_out" "$TOOL_OUTPUT_LIMIT"); then
-            echo -e "\n\n${AGENT_PREFIX} tool output has been truncated. Full output is in $toolfull ($(wc -c < "$toolfull") bytes)" >> "$Tmp/chat_tool_out"
+            # truncate output
+            if toolfull=$(truncate_file "$Tmp/chat_tool_out" "$TOOL_OUTPUT_LIMIT"); then
+                echo -e "\n\n${AGENT_PREFIX} tool output has been truncated. Full output is in $toolfull ($(wc -c < "$toolfull") bytes)" >> "$Tmp/chat_tool_out"
+            fi
         fi
 
         # add response
@@ -370,7 +383,11 @@ call_tool(){
 
 # Usage: bwrap_recurse CMD [ARGS ...]
 bwrap_recurse(){
-    bwrap --ro-bind / / --dev-bind /dev /dev --bind "${TMPDIR:-/tmp}" "${TMPDIR:-/tmp}" --bind "$PWD" "$PWD" --bind "$DATADIR" "$DATADIR" --setenv BWRAP 1 "$@"
+    if command -v bwrap >/dev/null; then
+        bwrap --ro-bind / / --dev-bind /dev /dev --bind "${TMPDIR:-/tmp}" "${TMPDIR:-/tmp}" --bind "$PWD" "$PWD" --bind "$DATADIR" "$DATADIR" --setenv BWRAP 1 "$@"
+    else
+        "$@" # TODO no recursion needed here
+    fi
 }
 
 # Main

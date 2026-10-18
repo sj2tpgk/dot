@@ -137,6 +137,18 @@
         </action>
       </mousebind>
     </context>
+    <context name="TitleBar">
+      <mousebind button="Right" action="Press">
+        <action name="NextWindowImmediate">
+        </action>
+      </mousebind>
+    </context>
+    <context name="Border">
+      <mousebind button="Right" action="Press">
+        <action name="NextWindowImmediate">
+        </action>
+      </mousebind>
+    </context>
   </mouse>
   <libinput>
     <device category="touchpad">

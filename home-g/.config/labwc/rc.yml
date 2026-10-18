@@ -102,6 +102,12 @@ labwc_config:
       # not working
       #mousebind action="Scroll" direction="Down":
       #  action name="NextWindow":
+    context name="TitleBar":
+      mousebind button="Right" action="Press":
+        action name="NextWindowImmediate":
+    context name="Border":
+      mousebind button="Right" action="Press":
+        action name="NextWindowImmediate":
 
   libinput:
     device category="touchpad":
