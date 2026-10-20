@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.80.7",
+  "lastChangelogVersion": "1.3.0",
   "defaultProvider": "oai-compat",
   "defaultModel": "agent",
   "enableInstallTelemetry": false,
@@ -10,5 +10,8 @@
   "theme": "ansi-terminal",
   "transport": "auto",
   "collapseChangelog": true,
-  "defaultThinkingLevel": "medium"
+  "defaultThinkingLevel": "medium",
+  "tuiMode": "regular",
+  "cacheWarming": "off",
+  "showHardwareCursor": true
 }
