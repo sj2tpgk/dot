@@ -137,6 +137,12 @@
         </action>
       </mousebind>
     </context>
+    <context name="Title">
+      <mousebind button="Right" action="Press">
+        <action name="None">
+        </action>
+      </mousebind>
+    </context>
     <context name="TitleBar">
       <mousebind button="Right" action="Press">
         <action name="NextWindowImmediate">
