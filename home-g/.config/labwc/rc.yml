@@ -103,6 +103,9 @@ labwc_config:
       #mousebind action="Scroll" direction="Down":
       #  action name="NextWindow":
     # Note "Immediate" is important
+    context name="Title":
+      mousebind button="Right" action="Press":
+        action name="None":
     context name="TitleBar":
       mousebind button="Right" action="Press":
         action name="NextWindowImmediate":

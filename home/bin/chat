@@ -1,13 +1,12 @@
 #!/bin/bash -e
 
 # TODO compaction
+# TODO ensure request size does not exceed context size
 # TODO show cumulative stat (time, tokens)
 # TODO model name fish complete
 # TODO verbose mode (curl log, set -x)
 # TODO new/private defaults should be inverted maybe
 # TODO unify image_url code path (mandatory size check)
-# TODO ensure request size does not exceed context size
-# TODO confirm tool (if -b and not bwrap)
 
 # Notes:
 # - avoid including arbitrarily large strings in command parameter (use pipe instead)
@@ -55,7 +54,7 @@ ToolApi=
 
 default_s='Respond concisely. Use lists instead of tables. Do not use bold or italic text. When coding, prefer shorter syntax and minimal comments. When writing math expressions, avoid using tex notations and make it easy to read in plaintext. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output'; default_u=localhost:11434
 
-flag_a=; flag_b=; flag_h=; flag_l=; flag_n=; flag_p=
+flag_a=; flag_h=; flag_l=; flag_n=; flag_p=
 opt_m=; opt_r=; opt_s=$default_s; opt_u=$default_u
 opt_curlopts=
 opts_i=()
@@ -65,8 +64,7 @@ show_help(){
     echo "       cmd | chat2 [options ...]"
     echo
     echo "Options:"
-    echo "  -a, --agent            Agent mode"
-    echo "  -b, --bwrap            Bubblewrap"
+    echo "  -a, --agent            Agent mode (& bubblewrap)"
     echo "      --curlopts <opts>  Curl options (space-splitted)"
     echo "  -h, --help             Help"
     echo "  -l, --list             List models"
@@ -84,7 +82,6 @@ parse_opts(){
         case "$1" in
             (-[!-][!-]*)    _1=${1#?} ; shift ; set -- "-${_1%"${_1#?}"}" "-${_1#?}" "$@" ;;
             (-a|--agent)    flag_a=1  ; shift ;;
-            (-b|--bwrap)    flag_b=1  ; shift ;;
             (-h|--help)     flag_h=1  ; shift ;;
             (-l|--list)     flag_l=1  ; shift ;;
             (-n|--new)      flag_n=1  ; shift ;;
@@ -157,8 +154,7 @@ show_models(){
 call_llm(){
     local ssefile="$1" curlstatus
     shift
-    opt_s2="$opt_s; Information from agent: the current directory is $(pwd). The current time is $(date)."
-    jq -s --arg m "$opt_m" --arg r "$opt_r" --arg s "$opt_s2" --argjson t "${ToolApi:-"[]"}" \
+    jq -s --arg m "$opt_m" --arg r "$opt_r" --arg s "$opt_s; The current directory is $(pwd)" --argjson t "${ToolApi:-"[]"}" \
         "$JQLIB"'{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}+reason($r)' \
         "$@" > "$Tmp/chat_req"
     # cat "$Tmp/chat_req"; exit
@@ -236,7 +232,8 @@ build_prompt(){
 
 validate_path(){
     # -m, --canonicalize-missing   no path components need exist or be a directory
-    ! [[ "$(realpath -m --relative-to "$(pwd)" "$1")" =~ ^\.\./ ]]
+    local tmp="${TMPDIR:-/tmp}"
+    [[ "$(realpath -m "$1")" = ${tmp%/}* ]] || ! [[ "$(realpath -m --relative-to "$(pwd)" "$1")" =~ ^\.\./ ]]
 }
 
 # Usage: print_tool_header NAME ARGS
@@ -258,6 +255,19 @@ truncate_file(){
     fi
     return 1
 }
+
+# Usage: truncate MAXSIZE TRUNCFILE FULLFILE
+# Reads from stdin, write at most MAXSIZE to stdout and TRUNCFILE, write full input to FULLFILE.
+# Exits 1 if truncated, 0 otherwise
+truncate(){
+    local s maxsize="$1" truncfile="$2" fullfile="$3"
+    stdbuf -i0 -o0 tee "$fullfile" | stdbuf -i0 -o0 awk -v maxsize="$maxsize" '{if(n+length($0)+1<=maxsize){print;print > "/dev/stderr"}else{e=1}}{n+=length($0)+1}END{exit e}' 2> "$truncfile" && s=$? || s=$?
+    # echo "EXIT $s"
+    return "$s"
+}
+# touch /tmp/atrunc /tmp/afull
+# seq 8|truncate 99 /tmp/atrunc /tmp/afull
+# exit
 
 tool_get_date(){ # sample tool
     TZ=$(jq -r .timezone "$Tmp/chat_tool_args") date
@@ -346,7 +356,7 @@ confirm_tool_call(){
 }
 
 call_tool(){
-    local i n name id toolfull
+    local i n s name id toolfull
     n=$(jq length "$Tmp/chat_tool_calls")
     for i in $(seq 0 $((n - 1))); do
 
@@ -354,7 +364,7 @@ call_tool(){
         jq ".[$i].function.arguments|fromjson" "$Tmp/chat_tool_calls" > "$Tmp/chat_tool_args"
         eval "$(jq -r "$JQLIB"".[$i]|{name:.function.name,id}|shassign" "$Tmp/chat_tool_calls")"
 
-        if [[ "$flag_b" && -z "$BWRAP" ]] && ! confirm_tool_call "$name"; then
+        if [[ "$flag_a" && -z "$BWRAP" ]] && ! confirm_tool_call "$name"; then
             echo -e "\n$AGENT_PREFIX tool call $name ($id) was disapproved by user" | tee "$Tmp/chat_tool_out"
         else
             # call
@@ -366,16 +376,16 @@ call_tool(){
                 (bash) tool_bash ;;
                 (read_image) tool_read_image ;;
                 (*) error "unknown tool: $name" ;;
-            esac | stdbuf -i0 -o0 tee "$Tmp/chat_tool_out"
+            esac | truncate "$TOOL_OUTPUT_LIMIT" "$Tmp/chat_tool_out_trunc" "$Tmp/chat_tool_out_full" && s=$? || s=$?
 
             # truncate output
-            if toolfull=$(truncate_file "$Tmp/chat_tool_out" "$TOOL_OUTPUT_LIMIT"); then
-                echo -e "\n\n${AGENT_PREFIX} tool output has been truncated. Full output is in $toolfull ($(wc -c < "$toolfull") bytes)" >> "$Tmp/chat_tool_out"
+            if [[ "$s" -ne 0 ]]; then
+                echo -e "\n\n${AGENT_PREFIX} tool output has been truncated. Full output is in $Tmp/chat_tool_out_full ($(wc -c < "$Tmp/chat_tool_out_full") bytes)" | tee -a "$Tmp/chat_tool_out_trunc"
             fi
         fi
 
         # add response
-        jq -Rsc --arg id "$id" '{role:"tool",tool_call_id:$id,content:.}' "$Tmp/chat_tool_out" >> "$SessionFile"
+        jq -Rsc --arg id "$id" '{role:"tool",tool_call_id:$id,content:.}' "$Tmp/chat_tool_out_trunc" >> "$SessionFile"
 
     done
     echo -e "\e[0m"
@@ -397,7 +407,7 @@ main(){
     parse_opts "$@"
     [[ "$flag_h" ]] && { show_help; exit 0; }
     mkdir -p "$DATADIR"
-    [[ "$flag_b" && ! "$BWRAP" ]] && { bwrap_recurse "$0" "$@"; exit; }
+    [[ "$flag_a" && ! "$BWRAP" ]] && { bwrap_recurse "$0" "$@"; exit; }
     init
     if [[ "$flag_l" ]]; then
         show_models
