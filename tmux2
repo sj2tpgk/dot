@@ -604,7 +604,8 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 
 
 ####FILE +x bin/chat {{{
-#| #!/bin/bash -e
+#| #!/bin/bash
+#| set -e -o pipefail; shopt -s inherit_errexit
 #| 
 #| # TODO compaction
 #| # TODO ensure request size does not exceed context size
@@ -915,6 +916,9 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     print_tool_header Edit "$path ($n edit$([[ $n -ge 2 ]] && echo s))"
 #|     validate_path "$path" || { echo "Error: access not allowed: $path"; return; }
 #| 
+#|     # it seems (sometimes?) if oldText is incorrect and jq returns nonzero, bash still proceeds to mv command.
+#|     # is this "no errexit in subshell" pitfall (relevant even if subshell from a pipe)?
+#|     # note when this issue happened inherit_errexit and pipefail were not used
 #|     jq -nrj --rawfile file "$path" --slurpfile args "$Tmp/chat_tool_args" \
 #|         'reduce $args[0].edits[] as $e ($file; (index($e.oldText) as $p|if($p==null)then error("oldText not found: " + $e.oldText) else (.[:$p] + $e.newText + .[$p+($e.oldText|length):]) end))' > "$Tmp/chat_tool_edit_tmp"
 #|     mv -f "$Tmp/chat_tool_edit_tmp" "$path"
@@ -3330,6 +3334,84 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     (sub|diff)      comm -23 <(sort "$2") <(sort "$3") ;;
 #|     (add|union)     comm -3  <(sort "$2") <(sort "$3") ;;
 #| esac
+#- }}}
+
+
+####FILE +x bin/sshsh {{{
+#| #!/bin/sh
+#| set -e
+#| error(){ echo "sshsh: $*"; exit 1; }
+#| 
+#| MAX_SCRIPT_SIZE=10000
+#| MAX_ENV_VAR_SIZE=256
+#| MAX_ENV_VAL_SIZE=1024
+#| 
+#| help(){
+#|     echo 'Usage: sshsh [OPTIONS ...] DEST SCRIPT'
+#|     echo 'Run script file on remote host using ssh'
+#|     echo
+#|     echo 'Options:'
+#|     echo '  -e var=val      env var'
+#|     echo '  -h              help'
+#|     echo '  -i identity     identity file'
+#|     echo '  -J jump         jump host'
+#|     echo
+#|     echo 'Use ssh://user@host:port syntax for custom port'
+#| }
+#| 
+#| checklen(){ # checklen LEN STR
+#|     [ "$(echo "$2" | wc -c)" -le "$1" ]
+#| }
+#| 
+#| envscript=
+#| addenv(){ # addenv VAR VAL
+#|     [ $# -eq 1 ] || error "-e requires var=val"
+#|     set -- "$1" "${1%%=*}" "${1#*=}"
+#|     [ "$2=$3" = "$1" ] || error "-e requires var=val"
+#|     echo "$2" | grep -qE '^[a-zA-Z_][a-zA-Z0-9_]*$' || error "\"$2\" is not a valid var name"
+#|     checklen "$MAX_ENV_VAR_SIZE" "$2" || error "var \"$2\" is too long (max $MAX_ENV_VAR_SIZE)"
+#|     checklen "$MAX_ENV_VAL_SIZE" "$3" || error "value for var \"$2\" is too long (max $MAX_ENV_VAL_SIZE)"
+#|     envscript="$envscript
+#| export $2
+#| $2=\"\$(echo $(echo "$3" | base64 -w0) | base64 -d)\"
+#| "
+#| }
+#| 
+#| arg_d=; arg_s=; opt_i=; opt_J=
+#| while [ $# -ge 1 ]; do
+#|     case "$1" in
+#|         (-h) help; exit;;
+#|         (-i) opt_i="$2"; shift 2;;
+#|         (-J) opt_J="$2"; shift 2;;
+#|         (-e) addenv "$2"; shift 2;;
+#|         (*)
+#|             if   [ -z "$arg_d" ]; then arg_d="$1"; shift
+#|             elif [ -z "$arg_s" ]; then arg_s="$1"; shift
+#|             else error "unknown option: $1"; fi
+#|             ;;
+#|     esac
+#| done
+#| 
+#| [ "$arg_d" ] || error "destination required"
+#| [ -f "$arg_s" ] || error "script \"$arg_s\" does not exist"
+#| checklen "$MAX_SCRIPT_SIZE" "$(cat "$arg_s")" || error "script is too large (max $MAX_SCRIPT_SIZE)"
+#| 
+#| script='set -e; #set -x
+#| cleanup(){ rm -f "$tmp"; }
+#| trap cleanup INT TERM EXIT
+#| tmp=$(mktemp)
+#| echo '"$(base64 -w0 "$arg_s")"' | base64 -d > "$tmp"
+#| chmod +x "$tmp"
+#| '"$envscript"'
+#| "$tmp"'
+#| 
+#| set -- ssh
+#| [ "$opt_J" ] && set -- "$@" -J "$opt_J"
+#| [ "$opt_i" ] && set -- "$@" -i "$opt_i"
+#| set -- "$@" "$arg_d" "$script"
+#| 
+#| # args "$@"
+#| ssh "$arg_d" "$script"
 #- }}}
 
 
