@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/bin/bash
+set -e -o pipefail; shopt -s inherit_errexit
 
 # TODO compaction
 # TODO ensure request size does not exceed context size
@@ -309,6 +310,9 @@ tool_edit(){
     print_tool_header Edit "$path ($n edit$([[ $n -ge 2 ]] && echo s))"
     validate_path "$path" || { echo "Error: access not allowed: $path"; return; }
 
+    # it seems (sometimes?) if oldText is incorrect and jq returns nonzero, bash still proceeds to mv command.
+    # is this "no errexit in subshell" pitfall (relevant even if subshell from a pipe)?
+    # note when this issue happened inherit_errexit and pipefail were not used
     jq -nrj --rawfile file "$path" --slurpfile args "$Tmp/chat_tool_args" \
         'reduce $args[0].edits[] as $e ($file; (index($e.oldText) as $p|if($p==null)then error("oldText not found: " + $e.oldText) else (.[:$p] + $e.newText + .[$p+($e.oldText|length):]) end))' > "$Tmp/chat_tool_edit_tmp"
     mv -f "$Tmp/chat_tool_edit_tmp" "$path"
