@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2016
 set -e -o pipefail; shopt -s inherit_errexit
 
 # TODO compaction
@@ -8,10 +9,23 @@ set -e -o pipefail; shopt -s inherit_errexit
 # TODO verbose mode (curl log, set -x)
 # TODO new/private defaults should be inverted maybe
 # TODO unify image_url code path (mandatory size check)
+# TODO extend hist on each req/res/tool?
+# TODO better bubblewrap args
 
 # Notes:
 # - avoid including arbitrarily large strings in command parameter (use pipe instead)
 # - assume concurrent run
+
+# Note when running llama-server:
+# - set cram=0 if you get oom-like behavior
+
+# Memo:
+# - split validate_path into is_parent and validate_path
+# - pure functions (verifiable with args,stdin,stdout,stderr,returncode)
+# - make $Tmp available early unless -h
+# - main_test() mode
+# - distinguish output by color and where it is sent
+# - no error in concurrent requests?
 
 ## Constants/variables
 
@@ -20,7 +34,7 @@ COLOR_REASON=35
 COLOR_STAT=0
 
 TOOL_DEFAULT_TIMEOUT=20
-TOOL_OUTPUT_LIMIT=8192
+TOOL_OUTPUT_LIMIT=12288
 
 AGENT_PREFIX="MESSAGE FROM AGENT:"
 
@@ -36,7 +50,6 @@ read_image:Read image file and add to the current chat context. Works with multi
 # get_time:Get current time:timezone=r=s=timezone
 "
 
-# shellcheck disable=SC2016
 JQLIB='
 # get reasoning chat kwargs
 def reason(x):if(x and(x|length>0))then(({off:"none",on:"medium"}[x]//x)|{reasoning_effort:.,chat_template_kwargs:{reasoning_effort:.,enable_thinking:(.!="none")}})else{}end;
@@ -53,7 +66,8 @@ ToolApi=
 
 ## Argument parsing
 
-default_s='Respond concisely. Use lists instead of tables. Do not use bold or italic text. When coding, prefer shorter syntax and minimal comments. When writing math expressions, avoid using tex notations and make it easy to read in plaintext. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output'; default_u=localhost:11434
+default_s="Respond concisely. Use lists instead of tables. Do not use bold or italic text. When coding, prefer shorter syntax and minimal comments. When writing math expressions, avoid using tex notations and make it easy to read in plaintext. When translating, also explain non-trivial grammar/phrases/words/pronunciations. Do not add warnings about the ethics of the input or the output. Do not git commit or push without confirmation. The current directory is $(pwd)"
+default_u=localhost:11434
 
 flag_a=; flag_h=; flag_l=; flag_n=; flag_p=
 opt_m=; opt_r=; opt_s=$default_s; opt_u=$default_u
@@ -74,6 +88,7 @@ show_help(){
     echo "  -n, --new              New chat"
     echo "  -p, --private          Don't save history"
     echo "  -r, --reason <val>     Reasoning effort (off,none,minimal,low,on,medium,high,xhigh,on) (default: not set)"
+    echo "  -R                     \"-r off\""
     echo "  -s, --system <prompt>  System prompt"
     echo "  -u, --url <url>        URL of server (default: $default_u)"
 }
@@ -89,6 +104,7 @@ parse_opts(){
             (-p|--private)  flag_p=1  ; shift ;;
             (-m|--model)    opt_m="$2"; shift 2 ;;
             (-r|--reason)   opt_r="$2"; shift 2 ;;
+            (-R)            opt_r=off ; shift ;;
             (-s|--system)   opt_s="$2"; shift 2 ;;
             (-u|--url)      opt_u="$2"; shift 2 ;;
             (--curlopts)    opt_curlopts="$2"; shift 2 ;;
@@ -102,6 +118,7 @@ parse_opts(){
 ## Functions
 
 error(){ echo "Error: $*" >&2; exit 1; }
+debug(){ echo "Debug: $*" >&2; }
 clean(){ if [[ -d "$Tmp" ]]; then rm -f "$Tmp/chat_"*; rmdir "$Tmp"; fi; return 0; }
 init(){
     check_deps
@@ -155,7 +172,7 @@ show_models(){
 call_llm(){
     local ssefile="$1" curlstatus
     shift
-    jq -s --arg m "$opt_m" --arg r "$opt_r" --arg s "$opt_s; The current directory is $(pwd)" --argjson t "${ToolApi:-"[]"}" \
+    jq -s --arg m "$opt_m" --arg r "$opt_r" --arg s "$opt_s" --argjson t "${ToolApi:-"[]"}" \
         "$JQLIB"'{model:$m,stream:true,tools:$t,messages:[{role:"system",content:$s},.[]]}+reason($r)' \
         "$@" > "$Tmp/chat_req"
     # cat "$Tmp/chat_req"; exit
@@ -165,7 +182,6 @@ call_llm(){
     # - reasoning_effort for gpt-oss, enable_thinking for qwen3.6
     # - 'Content-Type: application/json' is important, otherwise the server (cpp-httplib) interprets the request body as a query string (key=val&...), which causes error in router mode
 
-    # shellcheck disable=SC2016
     local jq_parse_sse_print="$JQLIB"'foreach (inputs|if(startswith("data: {"))then(.[6:])else(empty)end|fromjson|.choices[0]) as $y (
         {r:false,t:false,pr:false,pt:false};
         {r:$y.delta.reasoning_content,t:$y.delta.tool_calls,false,pr:.r,pt:.t};
@@ -174,7 +190,7 @@ call_llm(){
             ifs((.pr and(.r|not));"\u001b[0m\n"),
             (.t[0]|if(.)then(.function as $f|
                 ($f.name|ifs(.;(ifs($z.pt;"\n")//"")+"\u001b['"$COLOR_TOOL"';1m\(.)\u001b[0;'"$COLOR_TOOL"'m ")//"")+
-                (($f.arguments//"")|gsub("\\\\n";"\n"))
+                (($f.arguments//"")|gsub("\\\\n";"\n")|gsub("\\\\t";"\t"))
             )else(empty)end),
             .r // $x.content // empty,
             ifs(($y.finish_reason and .pt);"\n"),
@@ -183,8 +199,10 @@ call_llm(){
     # shellcheck disable=SC2086
     stdbuf -o0 curl --fail-with-body -Ns -H 'Content-Type: application/json' $opt_curlopts "$opt_u"/v1/chat/completions -d @"$Tmp/chat_req" \
         | stdbuf -i0 -o0 tee "$ssefile" \
-        | stdbuf -i0 -o0 jq -Rrj --unbuffered "$jq_parse_sse_print"
-    curlstatus=${PIPESTATUS[0]}
+        | stdbuf -i0 -o0 jq -Rrj --unbuffered "$jq_parse_sse_print" && curlstatus=${PIPESTATUS[0]} || curlstatus=${PIPESTATUS[0]}
+
+    # print error response body
+    if [[ "$curlstatus" -ne 0 ]]; then tail -5 "$ssefile"; return "$curlstatus"; fi
 
     # show api error
     if [[ "$curlstatus" -ne 0 ]]; then error "API call failed: $(cat "$ssefile")"; fi
@@ -192,7 +210,6 @@ call_llm(){
 
 # Usage: parse_sse SSEFILE
 parse_sse_message(){
-    # shellcheck disable=SC2016
     local jq_parse_sse='[inputs|if(startswith("data: {"))then(.[6:])else(empty)end|fromjson] | reduce (.[].choices[0].delta) as $x ({reasoning_content:"",content:"",tool_calls:[]}; (if($x.role)then(.role=$x.role)else . end|if($x.reasoning_content)then(.reasoning_content+=$x.reasoning_content)else . end|if($x.content)then(.content+=$x.content)else . end|if($x.tool_calls)then(.tool_calls+=$x.tool_calls)else . end))|(.tool_calls|=(group_by(.index)|map((.[0]|{index,id,type})+([.[].function]|{function:{name:([.[].name]|join("")),arguments:([.[].arguments]|join(""))}})))) | if(.tool_calls|length==0)then(del(.tool_calls))else . end | {role:"assistant",content:(.reasoning_content+.content)}+(if(.tool_calls)then{tool_calls}else{}end)'
     jq -Rcr "$jq_parse_sse" "$1"
 }
@@ -237,28 +254,8 @@ validate_path(){
     [[ "$(realpath -m "$1")" = ${tmp%/}* ]] || ! [[ "$(realpath -m --relative-to "$(pwd)" "$1")" =~ ^\.\./ ]]
 }
 
-# Usage: print_tool_header NAME ARGS
-print_tool_header(){
-    :
-    # echo -e "\e[${COLOR_TOOL};1m$1\e[0;${COLOR_TOOL}m $2" >&2
-}
-
-# Usage: truncate_data INFILE MAXSIZE
-# if INFILE is larger than MAXSIZE truncate it, copy original to a temp, write filename, return 0. else return 1
-truncate_file(){
-    local fullfile infile="$1" maxsize="$2"
-    if [[ "$(wc -c < "$infile")" -gt "$maxsize" ]]; then
-        fullfile="$Tmp/chat_tmp_$(date +%s%N)"
-        mv -f "$infile" "$fullfile"
-        head -c "$maxsize" "$fullfile" > "$infile"
-        echo "$fullfile"
-        return 0
-    fi
-    return 1
-}
-
 # Usage: truncate MAXSIZE TRUNCFILE FULLFILE
-# Reads from stdin, write at most MAXSIZE to stdout and TRUNCFILE, write full input to FULLFILE.
+# Read from stdin, write at most MAXSIZE to stdout and TRUNCFILE, and write full input to FULLFILE.
 # Exits 1 if truncated, 0 otherwise
 truncate(){
     local s maxsize="$1" truncfile="$2" fullfile="$3"
@@ -266,19 +263,11 @@ truncate(){
     # echo "EXIT $s"
     return "$s"
 }
-# touch /tmp/atrunc /tmp/afull
-# seq 8|truncate 99 /tmp/atrunc /tmp/afull
-# exit
-
-tool_get_date(){ # sample tool
-    TZ=$(jq -r .timezone "$Tmp/chat_tool_args") date
-}
 
 tool_read(){
     local path offset limit
     eval "$(jq -r "$JQLIB"'{path:(.path|exptilde),offset,limit}|shassign' "$Tmp/chat_tool_args")"
 
-    print_tool_header Read "$path"
     validate_path "$path" || { echo "Error: access not allowed: $path"; return; }
     [[ -r "$path" ]] || { echo "Error: file not found or is not a file: $path"; return; }
 
@@ -295,7 +284,6 @@ tool_write(){
     local path
     eval "$(jq -r "$JQLIB"'{path:(.path|exptilde)}|shassign' "$Tmp/chat_tool_args")"
 
-    print_tool_header Write "$path"
     validate_path "$path" || { echo "Error: access not allowed: $path"; return; }
 
     mkdir -p "$(dirname "$path")"
@@ -304,10 +292,9 @@ tool_write(){
 }
 
 tool_edit(){
-    local i n path
+    local i n path s
     eval "$(jq -r "$JQLIB"'{path:(.path|exptilde), n:(.edits|length)}|shassign' "$Tmp/chat_tool_args")"
 
-    print_tool_header Edit "$path ($n edit$([[ $n -ge 2 ]] && echo s))"
     validate_path "$path" || { echo "Error: access not allowed: $path"; return; }
 
     # it seems (sometimes?) if oldText is incorrect and jq returns nonzero, bash still proceeds to mv command.
@@ -315,6 +302,8 @@ tool_edit(){
     # note when this issue happened inherit_errexit and pipefail were not used
     jq -nrj --rawfile file "$path" --slurpfile args "$Tmp/chat_tool_args" \
         'reduce $args[0].edits[] as $e ($file; (index($e.oldText) as $p|if($p==null)then error("oldText not found: " + $e.oldText) else (.[:$p] + $e.newText + .[$p+($e.oldText|length):]) end))' > "$Tmp/chat_tool_edit_tmp"
+    s=$?; debug "tool_edit: jq $s"
+    if [[ $s -ne 0 ]]; then echo "$AGENT_PREFIX Edit failed (incorrect oldText?)"; return 1; fi
     mv -f "$Tmp/chat_tool_edit_tmp" "$path"
     echo "Made $n edit$([[ $n -ge 2 ]] && echo s) to $path"
 }
@@ -323,7 +312,6 @@ tool_bash(){
     local command timeout s t1 t2
     eval "$(jq -r "$JQLIB"'{command,timeout}|shassign' "$Tmp/chat_tool_args")"
 
-    print_tool_header Bash "$command $([[ "$timeout" =~ ^[0-9]*$ ]] && echo "(timeout ${timeout}s")"
     [[ "$timeout" =~ ^[0-9]*$ ]] || timeout="$TOOL_DEFAULT_TIMEOUT"
     t1=$(date +%s.%N)
     if timeout "$timeout" bash -c "$command" 2>&1; then s=$?; else s=$?; fi
@@ -336,7 +324,6 @@ tool_read_image(){
     local path
     eval "$(jq -r "$JQLIB"'{path:(.path|exptilde)}|shassign' "$Tmp/chat_tool_args")"
 
-    print_tool_header ReadImage "$path"
     [[ -r "$path" ]] || { echo "Error: file not found or is not a file: $path"; return; }
     [[ "$(du -b "$path"|cut -f1)" -ge 700000 ]] && { echo "Error: image file $path is too large (is $(du -b "$path"|cut -f1) bytes, max allowed 700KB). Please downscale (be careful not to override the original image)"; return; }
 

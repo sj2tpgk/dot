@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck disable=SC2016
 set -e
 error(){ echo "sshsh: $*"; exit 1; }
 
@@ -12,6 +13,7 @@ help(){
     echo
     echo 'Options:'
     echo '  -e var=val      env var'
+    echo '  -f file         file to send'
     echo '  -h              help'
     echo '  -i identity     identity file'
     echo '  -J jump         jump host'
@@ -20,11 +22,11 @@ help(){
 }
 
 checklen(){ # checklen LEN STR
-    [ "$(echo "$2" | wc -c)" -le "$1" ]
+    [ "${#2}" -le "$1" ]
 }
 
 envscript=
-addenv(){ # addenv VAR VAL
+addenv(){ # addenv VAR=VAL
     [ $# -eq 1 ] || error "-e requires var=val"
     set -- "$1" "${1%%=*}" "${1#*=}"
     [ "$2=$3" = "$1" ] || error "-e requires var=val"
@@ -37,6 +39,18 @@ $2=\"\$(echo $(echo "$3" | base64 -w0) | base64 -d)\"
 "
 }
 
+filescript=
+addfile(){ # addfile FILE
+    [ -e "$1" ] || error "-f requires file"
+    basename "$1" | grep -qE '^[-0-9a-zA-Z_. ]+$' || error "bad file name"
+    [ "$(wc -c < "$1")" -le "$MAX_ENV_VAL_SIZE" ] || error "file too large: $1"
+    filescript="$filescript
+f=\$(echo $(basename "$1" | base64 -w0) | base64 -d)
+[ -e \"\$f\" ] && { echo \"duplicate file: \$f\"; exit 1; }
+echo $(base64 -w0 "$1") | base64 -d > \"\$f\"
+"
+}
+
 arg_d=; arg_s=; opt_i=; opt_J=
 while [ $# -ge 1 ]; do
     case "$1" in
@@ -44,6 +58,7 @@ while [ $# -ge 1 ]; do
         (-i) opt_i="$2"; shift 2;;
         (-J) opt_J="$2"; shift 2;;
         (-e) addenv "$2"; shift 2;;
+        (-f) addfile "$2"; shift 2;;
         (*)
             if   [ -z "$arg_d" ]; then arg_d="$1"; shift
             elif [ -z "$arg_s" ]; then arg_s="$1"; shift
@@ -56,19 +71,22 @@ done
 [ -f "$arg_s" ] || error "script \"$arg_s\" does not exist"
 checklen "$MAX_SCRIPT_SIZE" "$(cat "$arg_s")" || error "script is too large (max $MAX_SCRIPT_SIZE)"
 
-script='set -e; #set -x
-cleanup(){ rm -f "$tmp"; }
+script='set -eu; set -x
+cleanup(){ rm -f "$tmpd/"* "$tmpd/".[!.]* 2>/dev/null || true; rmdir "$tmpd" 2>/dev/null || true; }
 trap cleanup INT TERM EXIT
-tmp=$(mktemp)
-echo '"$(base64 -w0 "$arg_s")"' | base64 -d > "$tmp"
-chmod +x "$tmp"
+tmpd=$(mktemp -d)
+cd "$tmpd"
+echo '"$(base64 -w0 "$arg_s")"' | base64 -d > __sshsh
+'"$filescript"'
 '"$envscript"'
-"$tmp"'
+chmod +x __sshsh
+./__sshsh'
 
 set -- ssh
 [ "$opt_J" ] && set -- "$@" -J "$opt_J"
 [ "$opt_i" ] && set -- "$@" -i "$opt_i"
 set -- "$@" "$arg_d" "$script"
-
 # args "$@"
+
+# shellcheck disable=SC2029
 ssh "$arg_d" "$script"
