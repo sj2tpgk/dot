@@ -46,7 +46,15 @@
 }
 
 /* No animation in browser ui  */
-* { transition-duration: 1ms !important; }
+/* * { transition-duration: 1ms !important; } */ /* setting everything to 0 breaks alert() etc */
+.animatable-menupopup, panel[type="arrow"] { transition-duration: 0s !important }
+:root { --panelui-subview-transition-duration: 1ms !important } /* 0s makes menu not clickable */
+
+/* Less spacing on text complete popup */
+autocomplete-row-item { border-radius: 0 !important }
+.autocomplete-richlistbox { padding-block: 0 !important; padding-inline: 0 !important }
+.row-item { padding: 0 !important }
+.row-item .icon { display: none !important }
 
 /* Thin Scrollbar */
 /* .scroller { overflow-y: scroll; scrollbar-color: #0A4C95 #C2D2E4; }  */
@@ -100,14 +108,15 @@
 #appMenu-mainView > .panel-subview-body {
     /* appMenu-addon-banners, appMenu-update-banner, appMenu-menu-message, appMenu-fxa-status2, appMenu-fxa-sign-in-promo, appMenu-create-profile-button, appMenu-profiles-button, appMenu-fxa-separator, appMenu-new-tab-button2, appMenu-new-window-button2, appMenu-new-ai-window-button, appMenu-new-classic-window-button, appMenu-new-private-window-button2, , appMenu-history-button, appMenu-bookmarks-button, appMenu-tab-groups-button, appMenu-chats-history-button, appMenu-downloads-button, appMenu-passwords-button, appMenu-extensions-themes-button, appMenu-unified-extensions-button, , appMenu-print-button2, appMenu-save-file-button2, appMenu-translate-button, appMenu-find-button2, appMenu-zoom-controls, , appMenu-settings-button, appMenu-more-button2, appMenu-help-button2, appMenu-referrals-separator, appMenu-referrals-button, , appMenu-quit-button2  */
     & > toolbarbutton::before, & > toolbaritem::before { content: " "; margin-right: 1ch; min-width: 1.5ch; text-align: center; white-space: pre }
-    & > #appMenu-extensions-themes-button::before { content: "E"; color: red }
+    /* & > #appMenu-extensions-themes-button::before { content: "E"; color: red }  */
 }
 
 menupopup {
     /* context-navigation, context-sep-navigation, context-viewsource-goToLine, context-viewsource-wrapLongLines, context-viewsource-highlightSyntax, context-sep-viewsource-commands, spell-no-suggestions, spell-add-to-dictionary, spell-undo-add-to-dictionary, spell-suggestions-separator, context-openlinkincurrent, context-openlinkincontainertab, context-openlinkintab, context-openlinkinsplitview, context-openlinkinusercontext-menu, context-openlink, context-openlinkprivate, context-openlinksmartwindow, context-previewlink, context-sep-open, context-bookmarklink, context-savelink, context-copyemail, context-copyphone, context-copylink, context-stripOnShareLink, context-sep-copylink, context-sendlinktodevice, context-sep-sendlinktodevice, context-media-play, context-media-pause, context-media-mute, context-media-unmute, context-media-playbackrate, context-media-loop, context-leave-dom-fullscreen, context-video-fullscreen, context-media-hidecontrols, context-media-showcontrols, context-media-sep-video-commands, context-viewvideo, context-video-pictureinpicture, context-media-sep-commands, context-reloadimage, context-viewimage, context-saveimage, context-video-saveimage, context-savevideo, context-saveaudio, context-copyimage-contents, context-copyimage, context-copyvideourl, context-copyaudiourl, context-sendimage, context-sendvideo, context-sendaudio, context-imagetext, context-viewimageinfo, context-viewimagedesc, context-visual-search, context-sep-setbackground, context-setDesktopBackground, context-sep-sharing, context-savepage, fill-login, fill-login-generated-password, use-relay-mask, manage-saved-logins, passwordmgr-items-separator, context-undo, context-redo, context-sep-redo, context-cut, context-copy, context-paste, context-paste-no-formatting, context-delete, context-selectall, context-pdfjs-comment-selection, context-pdfjs-highlight-selection, context-reveal-password, context-print-selection, context-sep-selectall, context-copy-link-to-highlight, context-copy-clean-link-to-highlight, context-remove-highlight, context-sep-highlights, context-pdfjs-undo, context-pdfjs-redo, context-sep-pdfjs-redo, context-pdfjs-cut, context-pdfjs-copy, context-pdfjs-paste, context-pdfjs-delete, context-pdfjs-select-all, context-sep-pdfjs-select-all, context-pdfjs-copy-page, context-pdfjs-cut-page, context-pdfjs-delete-page, context-pdfjs-save-page, context-sep-pdfjs-save-page, context-take-screenshot, context-sep-screenshots, context-add-engine, context-searchselect, context-searchselect-private, context-translate-selection, context-ask-chat, frame-sep, frame, spell-separator, spell-check-enabled, spell-add-dictionaries-main, spell-dictionaries, context-sep-bidi, context-bidi-text-direction-toggle, context-bidi-page-direction-toggle, inspect-separator, context-viewpartialsource-selection, context-viewsource, context-inspect-a11y, context-inspect, context-sep-sendpagetodevice, context-sendpagetodevice, context-media-eme-separator, context-media-eme-learnmore  */
     & > menu::before, & > menuitem::before { content: " "; margin-right: 1ch; min-width: 1.5ch; text-align: center; white-space: pre }
-    & > [id^=context-save]::before { content: "S"; color: blue; }
-    & > [id^=context-view]::before { content: "V"; color: orange; }
+    & > [id=context-savepage]::before   { content: "P"; color: blue; }
+    & > [id=context-viewsource]::before { content: "V"; color: orange; }
+    & > [id=context-inspect]::before    { content: "Q"; color: red; }
 }
 
 

@@ -75,6 +75,11 @@ labwc_config:
     keybind key="F10":
       action name="ToggleMaximize":
 
+    keybind key="W-a":
+      action name="ToggleAlwaysOnTop":
+    keybind key="W-b":
+      action name="ToggleAlwaysOnBottom":
+
     keybind key="W-F5":
       action name="Execute" command="sh -c 'cd ~/.config/labwc; ./_reload'":
     keybind key="W-F11":
@@ -103,6 +108,15 @@ labwc_config:
       #mousebind action="Scroll" direction="Down":
       #  action name="NextWindow":
     # Note "Immediate" is important
+    context name="Title":
+      mousebind button="Middle" action="Press":
+        action name="ShowMenu" menu="client-menu":
+    context name="TitleBar":
+      mousebind button="Middle" action="Press":
+        action name="ShowMenu" menu="client-menu":
+    context name="Border":
+      mousebind button="Middle" action="Press":
+        action name="ShowMenu" menu="client-menu":
     context name="Title":
       mousebind button="Right" action="Press":
         action name="None":
