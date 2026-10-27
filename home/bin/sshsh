@@ -17,6 +17,7 @@ help(){
     echo '  -h              help'
     echo '  -i identity     identity file'
     echo '  -J jump         jump host'
+    echo '  -P              private mode (no sig check)'
     echo
     echo 'Use ssh://user@host:port syntax for custom port'
 }
@@ -51,10 +52,11 @@ echo $(base64 -w0 "$1") | base64 -d > \"\$f\"
 "
 }
 
-arg_d=; arg_s=; opt_i=; opt_J=
+arg_d=; arg_s=; flag_P=; opt_i=; opt_J=
 while [ $# -ge 1 ]; do
     case "$1" in
         (-h) help; exit;;
+        (-P) flag_P=1; shift;;
         (-i) opt_i="$2"; shift 2;;
         (-J) opt_J="$2"; shift 2;;
         (-e) addenv "$2"; shift 2;;
@@ -83,10 +85,11 @@ chmod +x __sshsh
 ./__sshsh'
 
 set -- ssh
+[ "$flag_P" ] && set -- "$@" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR
 [ "$opt_J" ] && set -- "$@" -J "$opt_J"
 [ "$opt_i" ] && set -- "$@" -i "$opt_i"
 set -- "$@" "$arg_d" "$script"
 # args "$@"
 
 # shellcheck disable=SC2029
-ssh "$arg_d" "$script"
+"$@"

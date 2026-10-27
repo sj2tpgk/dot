@@ -11,6 +11,7 @@ set -e -o pipefail; shopt -s inherit_errexit
 # TODO unify image_url code path (mandatory size check)
 # TODO extend hist on each req/res/tool?
 # TODO better bubblewrap args
+# TODO save config? (chat -u ... -r --save will save to config.json and future call (in that directory?) uses the same config)
 
 # Notes:
 # - avoid including arbitrarily large strings in command parameter (use pipe instead)
