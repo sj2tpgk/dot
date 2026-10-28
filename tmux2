@@ -3331,6 +3331,8 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| set -e
 #| error(){ echo "sshsh: $*"; exit 1; }
 #| 
+#| # TODO read env var from file (also merge sudo)
+#| 
 #| MAX_SCRIPT_SIZE=10000
 #| MAX_ENV_VAR_SIZE=256
 #| MAX_ENV_VAL_SIZE=1024
@@ -3346,6 +3348,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     echo '  -i identity     identity file'
 #|     echo '  -J jump         jump host'
 #|     echo '  -P              private mode (no sig check)'
+#|     echo '  -s pass         sudo with password'
 #|     echo
 #|     echo 'Use ssh://user@host:port syntax for custom port'
 #| }
@@ -3354,7 +3357,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     [ "${#2}" -le "$1" ]
 #| }
 #| 
-#| envscript=
+#| envscript=env
 #| addenv(){ # addenv VAR=VAL
 #|     [ $# -eq 1 ] || error "-e requires var=val"
 #|     set -- "$1" "${1%%=*}" "${1#*=}"
@@ -3362,10 +3365,11 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     echo "$2" | grep -qE '^[a-zA-Z_][a-zA-Z0-9_]*$' || error "\"$2\" is not a valid var name"
 #|     checklen "$MAX_ENV_VAR_SIZE" "$2" || error "var \"$2\" is too long (max $MAX_ENV_VAR_SIZE)"
 #|     checklen "$MAX_ENV_VAL_SIZE" "$3" || error "value for var \"$2\" is too long (max $MAX_ENV_VAL_SIZE)"
-#|     envscript="$envscript
-#| export $2
-#| $2=\"\$(echo $(echo "$3" | base64 -w0) | base64 -d)\"
-#| "
+#|     envscript="$envscript \"$2=\$(echo $(echo "$3" | base64 -w0) | base64 -d)\""
+#| #    envscript="$envscript
+#| #export $2
+#| #$2=\"\$(echo $(echo "$3" | base64 -w0) | base64 -d)\"
+#| #"
 #| }
 #| 
 #| filescript=
@@ -3380,6 +3384,8 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| "
 #| }
 #| 
+#| sudoscript=
+#| 
 #| arg_d=; arg_s=; flag_P=; opt_i=; opt_J=
 #| while [ $# -ge 1 ]; do
 #|     case "$1" in
@@ -3389,6 +3395,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|         (-J) opt_J="$2"; shift 2;;
 #|         (-e) addenv "$2"; shift 2;;
 #|         (-f) addfile "$2"; shift 2;;
+#|         (-s) sudoscript="echo $(echo "$2" | base64 -w0) | base64 -d | sudo -S"; shift 2;;
 #|         (*)
 #|             if   [ -z "$arg_d" ]; then arg_d="$1"; shift
 #|             elif [ -z "$arg_s" ]; then arg_s="$1"; shift
@@ -3397,7 +3404,7 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #|     esac
 #| done
 #| 
-#| [ "$arg_d" ] || error "destination required"
+#| [ "$arg_d" ] || { help; error "destination required"; }
 #| [ -f "$arg_s" ] || error "script \"$arg_s\" does not exist"
 #| checklen "$MAX_SCRIPT_SIZE" "$(cat "$arg_s")" || error "script is too large (max $MAX_SCRIPT_SIZE)"
 #| 
@@ -3408,9 +3415,8 @@ if-shell "test -f '$HOME/.tmux.conf.local'" "source \"$HOME/.tmux.conf.local\""
 #| cd "$tmpd"
 #| echo '"$(base64 -w0 "$arg_s")"' | base64 -d > __sshsh
 #| '"$filescript"'
-#| '"$envscript"'
 #| chmod +x __sshsh
-#| ./__sshsh'
+#| '"$sudoscript"' '"$envscript"' ./__sshsh'
 #| 
 #| set -- ssh
 #| [ "$flag_P" ] && set -- "$@" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR

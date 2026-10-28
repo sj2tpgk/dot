@@ -154,6 +154,7 @@ set confirm           " Ask on :q :wq etc.
 set autochdir         " Auto change working directory to current files' like in emacs
 set wildignorecase    " Case-insensitive filename completion
 "set paste             " No auto-indent on paste
+set isfname-==        " Pressing c-x c-f at "=" will start file comp
 
 if exists("&mousescroll") | set mousescroll=ver:5,hor:6 | endif
 if exists("&ttymouse") | set ttymouse=xterm2 | endif " Mouse drag to resize windows
